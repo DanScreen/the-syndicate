@@ -1,0 +1,12 @@
+---
+description: Expo mobile patterns for The Syndicate
+globs: apps/mobile/**/*
+alwaysApply: false
+---
+
+# Mobile patterns
+
+- Expo + TypeScript; call web API at `EXPO_PUBLIC_API_URL`
+- Reuse types from `@the-syndicate/shared`
+- Match web flows: auth, dashboard, group detail, submit leg
+- Use `fetch` with session token header (future) or stored credentials

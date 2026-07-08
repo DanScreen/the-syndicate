@@ -1,0 +1,13 @@
+---
+description: API and database conventions for The Syndicate
+globs: packages/database/**/*,apps/web/src/app/api/**/*
+alwaysApply: false
+---
+
+# API conventions
+
+- Prisma models: User, Group, GroupMember, Round, Leg
+- One leg per user per round (`@@unique([roundId, userId])`)
+- Round auto-locks when `legs.length >= group.members.length`
+- Settlement updates GroupMember points, User totals, and round P/L
+- Use transactions for multi-table settlement updates when extending

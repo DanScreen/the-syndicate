@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(cuid())
+  name         String
+  email        String        @unique
+  passwordHash String
+  totalPoints  Int           @default(0)
+  legsWon      Int           @default(0)
+  legsLost     Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  ownedGroups  Group[]       @relation("GroupOwner")
+  memberships  GroupMember[]
+  legs         Leg[]
+}
+
+model Group {
+  id         String        @id @default(cuid())
+  name       String
+  inviteCode String        @unique
+  sport      String        @default("football")
+  maxMembers Int           @default(10)
+  status     String        @default("open")
+  ownerId    String
+  owner      User          @relation("GroupOwner", fields: [ownerId], references: [id])
+  members    GroupMember[]
+  rounds     Round[]
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+}
+
+model GroupMember {
+  id        String   @id @default(cuid())
+  groupId   String
+  userId    String
+  role      String   @default("member")
+  points    Int      @default(0)
+  legsWon   Int      @default(0)
+  legsLost  Int      @default(0)
+  joinedAt  DateTime @default(now())
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+}
+
+model Round {
+  id              String   @id @default(cuid())
+  groupId         String
+  status          String   @default("collecting")
+  combinedOdds    Float?
+  bestBookmakerId String?
+  stakeGbp        Float    @default(10)
+  profitLossGbp   Float?
+  lockedAt        DateTime?
+  settledAt       DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  group           Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  legs            Leg[]
+}
+
+model Leg {
+  id            String   @id @default(cuid())
+  roundId       String
+  userId        String
+  fixtureId     String
+  homeTeam      String
+  awayTeam      String
+  competition   String
+  kickoff       DateTime
+  marketType    String
+  marketLabel   String
+  selectionId   String
+  selectionLabel String
+  odds          Float
+  bookmakerId   String
+  bookmakerName String
+  outcome       String   @default("pending")
+  pointsAwarded Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  round         Round    @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([roundId, userId])
+}

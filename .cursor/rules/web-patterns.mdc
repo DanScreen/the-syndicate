@@ -1,0 +1,14 @@
+---
+description: Next.js and React patterns for The Syndicate web app
+globs: apps/web/**/*
+alwaysApply: false
+---
+
+# Web patterns
+
+- Use App Router; server components for data fetch, client components for forms
+- API routes return `NextResponse.json()` with correct status codes
+- Validate request bodies with Zod schemas from `@the-syndicate/shared`
+- Use `requireSession()` from `@/lib/api-auth` on protected routes
+- Tailwind only; dark theme tokens in `globals.css`
+- Prefer `prisma` from `@the-syndicate/database` — never raw SQL
