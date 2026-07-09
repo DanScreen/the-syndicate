@@ -1,11 +1,21 @@
 import { getFixtures } from "@/lib/odds/provider";
 import { requireSession } from "@/lib/api-auth";
+import { isValidCompetitionId } from "@the-syndicate/shared";
 import { NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(request: Request) {
   const { error } = await requireSession();
   if (error) return error;
 
-  const { fixtures, source } = await getFixtures();
-  return NextResponse.json({ fixtures, source });
+  const competition = new URL(request.url).searchParams.get("competition");
+  if (!competition) {
+    return NextResponse.json({ error: "competition query parameter is required" }, { status: 400 });
+  }
+
+  if (!isValidCompetitionId(competition)) {
+    return NextResponse.json({ error: "Unknown competition" }, { status: 400 });
+  }
+
+  const { fixtures, source } = await getFixtures(competition);
+  return NextResponse.json({ fixtures, source, competitionId: competition });
 }

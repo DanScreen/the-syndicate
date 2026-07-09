@@ -97,6 +97,8 @@ export function RoundProgress({
   );
 }
 
+type Competition = { id: string; name: string };
+
 export function SubmitLegForm({
   roundId,
   onSubmitted,
@@ -104,9 +106,12 @@ export function SubmitLegForm({
   roundId: string;
   onSubmitted: () => void;
 }) {
+  const [competitions, setCompetitions] = useState<Competition[]>([]);
+  const [loadingCompetitions, setLoadingCompetitions] = useState(true);
+  const [competitionId, setCompetitionId] = useState("");
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
   const [source, setSource] = useState<"live" | "mock">("mock");
-  const [loadingFixtures, setLoadingFixtures] = useState(true);
+  const [loadingFixtures, setLoadingFixtures] = useState(false);
   const [fixtureId, setFixtureId] = useState("");
   const [fixtureMarkets, setFixtureMarkets] = useState<Market[]>([]);
   const [loadingMarkets, setLoadingMarkets] = useState(false);
@@ -117,24 +122,45 @@ export function SubmitLegForm({
   const [marketsError, setMarketsError] = useState("");
 
   useEffect(() => {
-    fetch("/api/fixtures")
+    fetch("/api/competitions")
+      .then((r) => r.json())
+      .then((d) => {
+        setCompetitions(d.competitions ?? []);
+      })
+      .finally(() => setLoadingCompetitions(false));
+  }, []);
+
+  useEffect(() => {
+    if (!competitionId) {
+      setFixtures([]);
+      setFixtureId("");
+      return;
+    }
+
+    setLoadingFixtures(true);
+    setFixtureId("");
+    setMarketType("");
+    setSelectionId("");
+    fetch(`/api/fixtures?competition=${encodeURIComponent(competitionId)}`)
       .then((r) => r.json())
       .then((d) => {
         setFixtures(d.fixtures ?? []);
         setSource(d.source ?? "mock");
       })
       .finally(() => setLoadingFixtures(false));
-  }, []);
+  }, [competitionId]);
 
   useEffect(() => {
-    if (!fixtureId) {
+    if (!fixtureId || !competitionId) {
       setFixtureMarkets([]);
       return;
     }
 
     setLoadingMarkets(true);
     setMarketsError("");
-    fetch(`/api/fixtures/${fixtureId}/markets`)
+    fetch(
+      `/api/fixtures/${fixtureId}/markets?competition=${encodeURIComponent(competitionId)}`
+    )
       .then(async (r) => {
         const d = await r.json();
         if (!r.ok) {
@@ -149,7 +175,7 @@ export function SubmitLegForm({
         setMarketsError("Failed to load extra markets");
       })
       .finally(() => setLoadingMarkets(false));
-  }, [fixtureId]);
+  }, [fixtureId, competitionId]);
 
   const fixture = fixtures.find((f) => f.id === fixtureId);
   const allMarkets = fixtureMarkets.length > 0 ? fixtureMarkets : (fixture?.markets ?? []);
@@ -165,7 +191,7 @@ export function SubmitLegForm({
     const res = await fetch("/api/legs", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ roundId, fixtureId, marketType, selectionId }),
+      body: JSON.stringify({ roundId, competitionId, fixtureId, marketType, selectionId }),
     });
 
     const data = await res.json();
@@ -179,18 +205,10 @@ export function SubmitLegForm({
     onSubmitted();
   }
 
-  if (loadingFixtures) {
+  if (loadingCompetitions) {
     return (
       <div className="rounded-xl border border-border bg-card p-4 text-sm text-muted">
-        Loading fixtures...
-      </div>
-    );
-  }
-
-  if (fixtures.length === 0) {
-    return (
-      <div className="rounded-xl border border-border bg-card p-4 text-sm text-muted">
-        No upcoming fixtures available right now. Try again later.
+        Loading competitions...
       </div>
     );
   }
@@ -199,43 +217,80 @@ export function SubmitLegForm({
     <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-border bg-card p-4">
       <div className="flex items-center justify-between gap-2">
         <h3 className="font-semibold">Submit your leg</h3>
-        <span className="rounded-full bg-accent-muted px-2 py-0.5 text-xs text-accent">
-          {source === "live" ? "Live odds" : "Demo odds"}
-        </span>
+        {competitionId && (
+          <span className="rounded-full bg-accent-muted px-2 py-0.5 text-xs text-accent">
+            {source === "live" ? "Live odds" : "Demo odds"}
+          </span>
+        )}
       </div>
 
       <div className="space-y-2">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted">1. Pick a fixture</p>
+        <p className="text-xs font-medium uppercase tracking-wide text-muted">1. Pick a competition</p>
         <div className="grid gap-2 sm:grid-cols-2">
-          {fixtures.map((f) => (
+          {competitions.map((c) => (
             <button
-              key={f.id}
+              key={c.id}
               type="button"
               onClick={() => {
-                setFixtureId(f.id);
+                setCompetitionId(c.id);
+                setFixtureId("");
                 setMarketType("");
                 setSelectionId("");
               }}
               className={`rounded-lg border px-3 py-3 text-left text-sm transition-colors ${
-                fixtureId === f.id
+                competitionId === c.id
                   ? "border-accent bg-accent-muted/30"
                   : "border-border hover:border-accent/40"
               }`}
             >
-              <p className="font-medium">
-                {f.homeTeam} vs {f.awayTeam}
-              </p>
-              <p className="mt-1 text-xs text-muted">
-                {f.competition} · {formatKickoff(f.kickoff)}
-              </p>
+              <p className="font-medium">{c.name}</p>
             </button>
           ))}
         </div>
       </div>
 
+      {competitionId && loadingFixtures && (
+        <p className="text-sm text-muted">Loading fixtures...</p>
+      )}
+
+      {competitionId && !loadingFixtures && fixtures.length === 0 && (
+        <p className="text-sm text-muted">
+          No upcoming fixtures for this competition right now. Try another competition.
+        </p>
+      )}
+
+      {competitionId && !loadingFixtures && fixtures.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted">2. Pick a fixture</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {fixtures.map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => {
+                  setFixtureId(f.id);
+                  setMarketType("");
+                  setSelectionId("");
+                }}
+                className={`rounded-lg border px-3 py-3 text-left text-sm transition-colors ${
+                  fixtureId === f.id
+                    ? "border-accent bg-accent-muted/30"
+                    : "border-border hover:border-accent/40"
+                }`}
+              >
+                <p className="font-medium">
+                  {f.homeTeam} vs {f.awayTeam}
+                </p>
+                <p className="mt-1 text-xs text-muted">{formatKickoff(f.kickoff)}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {fixture && (
         <div className="space-y-3">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted">2. Pick a market</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-muted">3. Pick a market</p>
           {loadingMarkets && (
             <p className="text-sm text-muted">Loading BTTS, double chance & more...</p>
           )}
@@ -271,7 +326,7 @@ export function SubmitLegForm({
 
       {market && (
         <div className="space-y-2">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted">3. Pick your selection</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-muted">4. Pick your selection</p>
           <div className="grid gap-2 sm:grid-cols-3">
             {market.selections.map((s) => {
               const top = sortQuotesByBestOdds(s.odds)[0];

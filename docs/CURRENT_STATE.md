@@ -45,25 +45,25 @@ Mobile app (`apps/mobile/`) is **paused** — web only.
 
 ## Odds & competitions (today)
 
-- **Single sport via env:** `ODDS_API_SPORT=soccer_fifa_world_cup` in production (World Cup).
-- **Regions:** `uk` — retail bookmakers; exchanges filtered in `lib/odds/bookmakers.ts`.
-- **Cache:** in-memory per Cloud Run instance (~10 min odds, ~5 min football-data).
-- **Per-leg competition picker:** not built — [specs/competitions-and-results.md](./specs/competitions-and-results.md).
+- **Per-leg competition picker:** ✅ five leagues + World Cup — [specs/competitions-and-results.md](./specs/competitions-and-results.md) Phase A
+- **Single sport via env:** `ODDS_API_SPORT` still used as fallback in odds client; fixtures are fetched per `?competition=` slug
 
 ### Odds flow
 
 ```
-GET /api/fixtures                    → bulk markets (h2h, totals, spreads)
-GET /api/fixtures/[id]/markets       → lazy: btts, double_chance, draw_no_bet
-POST /api/legs                       → best retail quote auto-selected
-(lock) lockRoundWithAccaPricing()    → re-fetch quotes, findBestAccaBookmaker
+GET /api/competitions                 → active catalogue (id + name)
+GET /api/fixtures?competition=epl     → bulk markets (h2h, totals, spreads)
+GET /api/fixtures/[id]/markets?competition=epl → lazy: btts, double_chance, draw_no_bet
+POST /api/legs                        → best retail quote; stores competitionId slug
+(lock) lockRoundWithAccaPricing()     → re-fetch quotes per leg competition, findBestAccaBookmaker
 ```
 
 Key files:
 
 | Path | Role |
 |------|------|
-| `apps/web/src/lib/odds/provider.ts` | Live vs mock orchestration |
+| `apps/web/src/lib/odds/provider.ts` | Live vs mock orchestration (per competition) |
+| `packages/shared/src/competitions.ts` | Competition catalogue (slug, odds API sport, football-data code) |
 | `apps/web/src/lib/odds/the-odds-api.ts` | Bulk + per-event API |
 | `apps/web/src/lib/odds/event-markets.ts` | BTTS, double chance, DNB |
 | `apps/web/src/lib/odds/acca.ts` | Best combined acca bookmaker |
@@ -118,8 +118,8 @@ Env vars on Cloud Run: `NEXTAUTH_URL`, `ODDS_API_SPORT`, `ODDS_API_REGIONS=uk`, 
 Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`.
 
 - One leg per user per round (`@@unique([roundId, userId])`).
-- Leg stores fixture snapshot: teams, kickoff, competition, market, odds, bookmaker, outcome.
-- No `Match` or `competitionId` slug yet.
+- Leg stores fixture snapshot: teams, kickoff, `competitionId` (slug), `competition` (display name), market, odds, bookmaker, outcome.
+- No `Match` table or `matchId` FK yet.
 
 Schema: `packages/database/prisma/schema.prisma`
 
@@ -129,8 +129,9 @@ Schema: `packages/database/prisma/schema.prisma`
 
 | Route | Auth | Purpose |
 |-------|------|---------|
-| `GET /api/fixtures` | Session | List fixtures |
-| `GET /api/fixtures/[id]/markets` | Session | Extended markets |
+| `GET /api/competitions` | Session | Active competition catalogue |
+| `GET /api/fixtures` | Session | List fixtures (`?competition=` required) |
+| `GET /api/fixtures/[id]/markets` | Session | Extended markets (`?competition=` required) |
 | `POST /api/legs` | Session | Submit leg |
 | `POST /api/groups/[id]/rounds` | Owner | Start round |
 | `POST /api/rounds/[id]/settle` | Owner | Manual settle |

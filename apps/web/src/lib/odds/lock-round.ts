@@ -7,7 +7,12 @@ import type { Leg } from "@prisma/client";
 export async function lockRoundWithAccaPricing(roundId: string, legs: Leg[]) {
   const legQuotes = await Promise.all(
     legs.map(async (leg) => {
-      const selection = await findSelection(leg.fixtureId, leg.marketType, leg.selectionId);
+      const selection = await findSelection(
+        leg.fixtureId,
+        leg.marketType,
+        leg.selectionId,
+        leg.competitionId
+      );
       return {
         leg,
         quotes: selection?.selection.odds ?? [],

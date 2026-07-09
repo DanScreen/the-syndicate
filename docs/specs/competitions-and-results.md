@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | Partially implemented (odds UX done; picker & Match table not) |
+| **Status** | Phase A done; Phase B (Match table + ingest) not built |
 | **Depends on** | — |
 | **Blocks** | Member stats favourites (`competitionId` on legs) |
 | **As-built reference** | [../CURRENT_STATE.md](../CURRENT_STATE.md) |
@@ -118,11 +118,11 @@ flowchart LR
 
 ### Phase A — Competition picker
 
-- [ ] `packages/shared/src/competitions.ts`
-- [ ] `GET /api/competitions`
-- [ ] Competition step in `SubmitLegForm`
-- [ ] `GET /api/fixtures?competition=`
-- [ ] `Leg.competitionId` migration
+- [x] `packages/shared/src/competitions.ts`
+- [x] `GET /api/competitions`
+- [x] Competition step in `SubmitLegForm`
+- [x] `GET /api/fixtures?competition=`
+- [x] `Leg.competitionId` migration
 
 ### Phase B — Match table + ingest
 

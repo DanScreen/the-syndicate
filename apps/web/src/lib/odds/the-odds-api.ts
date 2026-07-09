@@ -219,13 +219,15 @@ function mapEventToFixture(event: OddsApiEvent): Fixture | null {
   };
 }
 
-export async function fetchOddsApiFixtures(): Promise<Fixture[]> {
+export async function fetchOddsApiFixtures(
+  sport: string = process.env.ODDS_API_SPORT ?? DEFAULT_ODDS_SPORT,
+  competitionName?: string
+): Promise<Fixture[]> {
   const apiKey = process.env.ODDS_API_KEY;
   if (!apiKey) {
     throw new Error("ODDS_API_KEY is not configured");
   }
 
-  const sport = process.env.ODDS_API_SPORT ?? DEFAULT_ODDS_SPORT;
   const regions = process.env.ODDS_API_REGIONS ?? "uk";
   const cacheTtlMs = Number(process.env.ODDS_API_CACHE_TTL_MS ?? 600_000);
   const cacheKey = `odds-api:v2:${sport}:${regions}`;
@@ -247,18 +249,24 @@ export async function fetchOddsApiFixtures(): Promise<Fixture[]> {
 
   const events = (await res.json()) as OddsApiEvent[];
   const fixtures = events
-    .map(mapEventToFixture)
+    .map((event) => {
+      const fixture = mapEventToFixture(event);
+      if (!fixture) return null;
+      return competitionName ? { ...fixture, competition: competitionName } : fixture;
+    })
     .filter((f): f is Fixture => f !== null)
     .sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime());
 
   return setCached(cacheKey, fixtures, cacheTtlMs);
 }
 
-export async function fetchOddsApiEvent(eventId: string): Promise<OddsApiEvent | null> {
+export async function fetchOddsApiEvent(
+  eventId: string,
+  sport: string = process.env.ODDS_API_SPORT ?? DEFAULT_ODDS_SPORT
+): Promise<OddsApiEvent | null> {
   const apiKey = process.env.ODDS_API_KEY;
   if (!apiKey) return null;
 
-  const sport = process.env.ODDS_API_SPORT ?? DEFAULT_ODDS_SPORT;
   const regions = process.env.ODDS_API_REGIONS ?? "uk";
   const cacheTtlMs = Number(process.env.ODDS_API_CACHE_TTL_MS ?? 600_000);
   const cacheKey = `odds-api-event:v2:${sport}:${regions}:${eventId}`;

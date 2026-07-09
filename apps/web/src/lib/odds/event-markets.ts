@@ -154,8 +154,11 @@ function mapEventToExtendedMarkets(event: OddsApiEvent): Market[] {
   ].filter((m): m is Market => m !== null);
 }
 
-export async function fetchExtendedMarkets(eventId: string): Promise<Market[]> {
-  const event = await fetchOddsApiEvent(eventId);
+export async function fetchExtendedMarkets(
+  eventId: string,
+  sport: string
+): Promise<Market[]> {
+  const event = await fetchOddsApiEvent(eventId, sport);
   if (!event) return [];
   return mapEventToExtendedMarkets(event);
 }

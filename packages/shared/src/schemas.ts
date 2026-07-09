@@ -22,6 +22,7 @@ export const joinGroupSchema = z.object({
 
 export const submitLegSchema = z.object({
   roundId: z.string(),
+  competitionId: z.string(),
   fixtureId: z.string(),
   marketType: z.string(),
   selectionId: z.string(),

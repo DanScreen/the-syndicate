@@ -1,18 +1,26 @@
 import type { Fixture, Market } from "@the-syndicate/shared";
+import { getCompetitionById } from "@the-syndicate/shared";
 import { getMockFixtures } from "./mock-provider";
 import { fetchExtendedMarkets } from "./event-markets";
 import { fetchOddsApiFixtures } from "./the-odds-api";
 
 export type OddsSource = "live" | "mock";
 
-export async function getFixtures(): Promise<{ fixtures: Fixture[]; source: OddsSource }> {
+export async function getFixtures(
+  competitionId: string
+): Promise<{ fixtures: Fixture[]; source: OddsSource }> {
+  const competition = getCompetitionById(competitionId);
+  if (!competition) {
+    return { fixtures: [], source: "mock" };
+  }
+
   if (process.env.ODDS_API_KEY) {
     try {
-      const fixtures = await fetchOddsApiFixtures();
+      const fixtures = await fetchOddsApiFixtures(competition.oddsApiSport, competition.name);
       if (fixtures.length > 0) {
         return { fixtures, source: "live" };
       }
-      console.warn("[odds] live API returned no fixtures for current sport");
+      console.warn(`[odds] live API returned no fixtures for ${competition.id}`);
     } catch (err) {
       console.error("[odds] live fetch failed, falling back to mock:", err);
     }
@@ -20,23 +28,30 @@ export async function getFixtures(): Promise<{ fixtures: Fixture[]; source: Odds
     console.warn("[odds] ODDS_API_KEY not set, using mock fixtures");
   }
 
-  return { fixtures: getMockFixtures(), source: "mock" };
+  return { fixtures: getMockFixtures(competitionId), source: "mock" };
 }
 
-export async function findFixture(fixtureId: string): Promise<Fixture | undefined> {
-  const { fixtures } = await getFixtures();
+export async function findFixture(
+  fixtureId: string,
+  competitionId: string
+): Promise<Fixture | undefined> {
+  const { fixtures } = await getFixtures(competitionId);
   return fixtures.find((f) => f.id === fixtureId);
 }
 
-export async function getFixtureMarkets(fixtureId: string): Promise<Market[]> {
-  const fixture = await findFixture(fixtureId);
+export async function getFixtureMarkets(
+  fixtureId: string,
+  competitionId: string
+): Promise<Market[]> {
+  const competition = getCompetitionById(competitionId);
+  const fixture = await findFixture(fixtureId, competitionId);
   if (!fixture) return [];
 
   const baseTypes = new Set(fixture.markets.map((m) => m.type));
 
-  if (process.env.ODDS_API_KEY) {
+  if (process.env.ODDS_API_KEY && competition) {
     try {
-      const extended = await fetchExtendedMarkets(fixtureId);
+      const extended = await fetchExtendedMarkets(fixtureId, competition.oddsApiSport);
       const extra = extended.filter((m) => !baseTypes.has(m.type));
       return [...fixture.markets, ...extra];
     } catch (err) {
@@ -50,10 +65,11 @@ export async function getFixtureMarkets(fixtureId: string): Promise<Market[]> {
 export async function findSelection(
   fixtureId: string,
   marketType: string,
-  selectionId: string
+  selectionId: string,
+  competitionId: string
 ) {
-  const markets = await getFixtureMarkets(fixtureId);
-  const fixture = await findFixture(fixtureId);
+  const markets = await getFixtureMarkets(fixtureId, competitionId);
+  const fixture = await findFixture(fixtureId, competitionId);
   if (!fixture) return null;
 
   const market = markets.find((m) => m.type === marketType);

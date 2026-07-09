@@ -1,4 +1,5 @@
 import type { Fixture } from "@the-syndicate/shared";
+import { getCompetitionById } from "@the-syndicate/shared";
 
 const kickoff = (daysFromNow: number, hour = 15): string => {
   const d = new Date();
@@ -7,8 +8,53 @@ const kickoff = (daysFromNow: number, hour = 15): string => {
   return d.toISOString();
 };
 
-export function getMockFixtures(): Fixture[] {
-  return [
+function simpleMatchWinner(
+  id: string,
+  homeTeam: string,
+  awayTeam: string,
+  competition: string,
+  daysFromNow: number,
+  hour: number
+): Fixture {
+  return {
+    id,
+    homeTeam,
+    awayTeam,
+    competition,
+    kickoff: kickoff(daysFromNow, hour),
+    markets: [
+      {
+        type: "match_winner",
+        label: "Match Winner",
+        selections: [
+          {
+            id: "home",
+            label: homeTeam,
+            odds: [
+              { bookmakerId: "bet365", bookmakerName: "Bet365", odds: 2.1 },
+              { bookmakerId: "williamhill", bookmakerName: "William Hill", odds: 2.05 },
+            ],
+          },
+          {
+            id: "draw",
+            label: "Draw",
+            odds: [{ bookmakerId: "bet365", bookmakerName: "Bet365", odds: 3.4 }],
+          },
+          {
+            id: "away",
+            label: awayTeam,
+            odds: [
+              { bookmakerId: "bet365", bookmakerName: "Bet365", odds: 3.2 },
+              { bookmakerId: "skybet", bookmakerName: "Sky Bet", odds: 3.25 },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+}
+
+const WORLD_CUP_FIXTURES: Fixture[] = [
     {
       id: "fx-mex-kor",
       homeTeam: "Mexico",
@@ -289,5 +335,37 @@ export function getMockFixtures(): Fixture[] {
         },
       ],
     },
+  ];
+
+const MOCK_FIXTURES_BY_COMPETITION: Record<string, Fixture[]> = {
+  "world-cup": WORLD_CUP_FIXTURES,
+  epl: [
+    simpleMatchWinner("fx-ars-liv", "Arsenal", "Liverpool", "Premier League", 2, 15),
+    simpleMatchWinner("fx-mci-che", "Man City", "Chelsea", "Premier League", 3, 17),
+  ],
+  championship: [
+    simpleMatchWinner("fx-lee-she", "Leeds", "Sheffield Utd", "Championship", 2, 15),
+  ],
+  "league-one": [
+    simpleMatchWinner("fx-bol-wig", "Bolton", "Wigan", "League One", 2, 15),
+  ],
+  "league-two": [
+    simpleMatchWinner("fx-wre-not", "Wrexham", "Notts County", "League Two", 2, 15),
+  ],
+};
+
+export function getMockFixtures(competitionId: string): Fixture[] {
+  const competition = getCompetitionById(competitionId);
+  if (!competition) return [];
+
+  return MOCK_FIXTURES_BY_COMPETITION[competitionId] ?? [
+    simpleMatchWinner(
+      `fx-demo-${competitionId}`,
+      "Home FC",
+      "Away FC",
+      competition.name,
+      2,
+      15
+    ),
   ];
 }

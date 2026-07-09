@@ -75,6 +75,7 @@ model Leg {
   fixtureId     String
   homeTeam      String
   awayTeam      String
+  competitionId String   @default("world-cup")
   competition   String
   kickoff       DateTime
   marketType    String

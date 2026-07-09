@@ -3,7 +3,7 @@ import { sortQuotesByBestOdds } from "@/lib/odds/bookmakers";
 import { lockRoundWithAccaPricing } from "@/lib/odds/lock-round";
 import { findSelection } from "@/lib/odds/provider";
 import { prisma } from "@the-syndicate/database";
-import { submitLegSchema } from "@the-syndicate/shared";
+import { getCompetitionById, submitLegSchema } from "@the-syndicate/shared";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -42,10 +42,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "You already submitted a leg" }, { status: 409 });
   }
 
+  const competition = getCompetitionById(parsed.data.competitionId);
+  if (!competition) {
+    return NextResponse.json({ error: "Unknown competition" }, { status: 400 });
+  }
+
   const selectionData = await findSelection(
     parsed.data.fixtureId,
     parsed.data.marketType,
-    parsed.data.selectionId
+    parsed.data.selectionId,
+    parsed.data.competitionId
   );
 
   if (!selectionData) {
@@ -65,7 +71,8 @@ export async function POST(request: Request) {
       fixtureId: fixture.id,
       homeTeam: fixture.homeTeam,
       awayTeam: fixture.awayTeam,
-      competition: fixture.competition,
+      competitionId: competition.id,
+      competition: competition.name,
       kickoff: new Date(fixture.kickoff),
       marketType: market.type,
       marketLabel: market.label,
