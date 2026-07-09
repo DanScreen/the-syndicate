@@ -1,6 +1,9 @@
 export const POINTS = {
+  /** @deprecated Use legPointsForOutcome() — unit-stake model */
   LEG_WON: 3,
+  /** @deprecated Use legPointsForOutcome() — unit-stake model */
   LEG_VOID: 1,
+  /** @deprecated Use legPointsForOutcome() — unit-stake model */
   LEG_LOST: 0,
 } as const;
 

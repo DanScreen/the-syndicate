@@ -10,6 +10,7 @@ type FootballDataTeam = {
 };
 
 export type FootballDataMatch = {
+  id: number;
   utcDate: string;
   status: string;
   homeTeam: FootballDataTeam;
@@ -29,11 +30,11 @@ const TEAM_ALIASES: Record<string, string[]> = {
   england: ["england"],
 };
 
-function normalizeTeamName(name: string): string {
+export function normalizeTeamName(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
-function teamNamesMatch(a: string, b: string): boolean {
+export function teamNamesMatch(a: string, b: string): boolean {
   const na = normalizeTeamName(a);
   const nb = normalizeTeamName(b);
   if (na === nb) return true;
@@ -48,7 +49,7 @@ function teamNamesMatch(a: string, b: string): boolean {
 
 const VOID_STATUSES = new Set(["POSTPONED", "CANCELLED", "SUSPENDED", "AWARDED"]);
 
-function toMatchResult(match: FootballDataMatch): MatchResult | null {
+export function toMatchResult(match: FootballDataMatch): MatchResult | null {
   const homeGoals = match.score.fullTime.home;
   const awayGoals = match.score.fullTime.away;
 
@@ -70,23 +71,23 @@ function formatDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-export async function fetchMatchesInRange(
-  from: Date,
-  to: Date
-): Promise<FootballDataMatch[]> {
+export function syncDateRange(): { from: Date; to: Date } {
+  const from = new Date();
+  from.setDate(from.getDate() - 3);
+  from.setHours(0, 0, 0, 0);
+
+  const to = new Date();
+  to.setDate(to.getDate() + 14);
+  to.setHours(23, 59, 59, 999);
+
+  return { from, to };
+}
+
+async function fetchFromFootballData(url: URL): Promise<FootballDataMatch[]> {
   const apiKey = process.env.FOOTBALL_DATA_API_KEY;
   if (!apiKey) {
     throw new Error("FOOTBALL_DATA_API_KEY is not configured");
   }
-
-  const cacheTtlMs = Number(process.env.FOOTBALL_DATA_CACHE_TTL_MS ?? 300_000);
-  const cacheKey = `football-data:${formatDate(from)}:${formatDate(to)}`;
-  const cached = getCached<FootballDataMatch[]>(cacheKey);
-  if (cached) return cached;
-
-  const url = new URL(`${API_BASE}/matches`);
-  url.searchParams.set("dateFrom", formatDate(from));
-  url.searchParams.set("dateTo", formatDate(to));
 
   const res = await fetch(url.toString(), {
     headers: { "X-Auth-Token": apiKey },
@@ -99,7 +100,42 @@ export async function fetchMatchesInRange(
   }
 
   const data = (await res.json()) as FootballDataMatchesResponse;
-  return setCached(cacheKey, data.matches ?? [], cacheTtlMs);
+  return data.matches ?? [];
+}
+
+export async function fetchCompetitionMatches(
+  footballDataCode: string,
+  from: Date,
+  to: Date
+): Promise<FootballDataMatch[]> {
+  const cacheTtlMs = Number(process.env.FOOTBALL_DATA_CACHE_TTL_MS ?? 300_000);
+  const cacheKey = `football-data:comp:${footballDataCode}:${formatDate(from)}:${formatDate(to)}`;
+  const cached = getCached<FootballDataMatch[]>(cacheKey);
+  if (cached) return cached;
+
+  const url = new URL(`${API_BASE}/competitions/${footballDataCode}/matches`);
+  url.searchParams.set("dateFrom", formatDate(from));
+  url.searchParams.set("dateTo", formatDate(to));
+
+  const matches = await fetchFromFootballData(url);
+  return setCached(cacheKey, matches, cacheTtlMs);
+}
+
+export async function fetchMatchesInRange(
+  from: Date,
+  to: Date
+): Promise<FootballDataMatch[]> {
+  const cacheTtlMs = Number(process.env.FOOTBALL_DATA_CACHE_TTL_MS ?? 300_000);
+  const cacheKey = `football-data:${formatDate(from)}:${formatDate(to)}`;
+  const cached = getCached<FootballDataMatch[]>(cacheKey);
+  if (cached) return cached;
+
+  const url = new URL(`${API_BASE}/matches`);
+  url.searchParams.set("dateFrom", formatDate(from));
+  url.searchParams.set("dateTo", formatDate(to));
+
+  const matches = await fetchFromFootballData(url);
+  return setCached(cacheKey, matches, cacheTtlMs);
 }
 
 export function findMatchForLeg(

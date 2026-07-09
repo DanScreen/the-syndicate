@@ -1,5 +1,5 @@
 import { requireSession } from "@/lib/api-auth";
-import { getMatchResultForLeg, fetchMatchesForLegs } from "@/lib/results/football-data";
+import { getMatchResultForLegFromDb } from "@/lib/results/match-store";
 import { resolveLegOutcome } from "@/lib/results/resolve-leg";
 import { applyRoundSettlement } from "@/lib/settlement/apply-round-settlement";
 import { prisma } from "@the-syndicate/database";
@@ -35,48 +35,36 @@ export async function POST(_request: Request, { params }: Params) {
     return NextResponse.json({ error: "Round must be locked first" }, { status: 400 });
   }
 
-  if (!process.env.FOOTBALL_DATA_API_KEY) {
-    return NextResponse.json(
-      {
-        error:
-          "FOOTBALL_DATA_API_KEY is not configured. Add it to enable automatic settlement.",
-      },
-      { status: 503 }
-    );
-  }
-
   const outcomeMap = new Map<string, LegOutcome>();
   const pending: { legId: string; reason: string }[] = [];
 
-  const matches = await fetchMatchesForLegs(round.legs);
-
   for (const leg of round.legs) {
-    const matchResult = await getMatchResultForLeg(
-      {
-        homeTeam: leg.homeTeam,
-        awayTeam: leg.awayTeam,
-        kickoff: leg.kickoff,
-      },
-      matches
-    );
+    const matchData = await getMatchResultForLegFromDb({
+      id: leg.id,
+      matchId: leg.matchId,
+      competitionId: leg.competitionId,
+      homeTeam: leg.homeTeam,
+      awayTeam: leg.awayTeam,
+      kickoff: leg.kickoff,
+    });
 
-    if (!matchResult) {
+    if (!matchData) {
       pending.push({
         legId: leg.id,
-        reason: `No match found for ${leg.homeTeam} vs ${leg.awayTeam}`,
+        reason: `No synced match for ${leg.homeTeam} vs ${leg.awayTeam} (${leg.competition})`,
       });
       continue;
     }
 
     const outcome = resolveLegOutcome(
       { marketType: leg.marketType, selectionId: leg.selectionId },
-      matchResult
+      matchData.result
     );
 
     if (!outcome) {
       pending.push({
         legId: leg.id,
-        reason: `Match not finished (${matchResult.status})`,
+        reason: `Match not finished (${matchData.result.status})`,
       });
       continue;
     }

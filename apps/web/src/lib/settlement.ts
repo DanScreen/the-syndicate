@@ -1,16 +1,10 @@
-import { POINTS, DEFAULT_STAKE_GBP } from "@the-syndicate/shared";
+import { legPointsForOutcome } from "@the-syndicate/shared";
 import type { LegOutcome } from "@the-syndicate/shared";
+import { DEFAULT_STAKE_GBP } from "@the-syndicate/shared";
 import { calculateCombinedOdds } from "./odds/betslip-links";
 
-export function pointsForOutcome(outcome: LegOutcome): number {
-  switch (outcome) {
-    case "won":
-      return POINTS.LEG_WON;
-    case "void":
-      return POINTS.LEG_VOID;
-    default:
-      return POINTS.LEG_LOST;
-  }
+export function pointsForOutcome(outcome: LegOutcome, odds: number): number {
+  return legPointsForOutcome(outcome, odds);
 }
 
 export function calculateGroupProfitLoss(

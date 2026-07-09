@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/header";
+import { formatLegPoints } from "@the-syndicate/shared";
 import { auth } from "@/lib/auth";
 import { prisma } from "@the-syndicate/database";
 import Link from "next/link";
@@ -37,7 +38,7 @@ export default async function DashboardPage() {
           <div>
             <h1 className="text-2xl font-bold">Dashboard</h1>
             <p className="mt-1 text-muted">
-              {user?.totalPoints ?? 0} pts · {user?.legsWon ?? 0} won ·{" "}
+              {formatLegPoints(user?.totalPoints ?? 0)} pts · {user?.legsWon ?? 0} won ·{" "}
               {user?.legsLost ?? 0} lost
             </p>
           </div>
@@ -105,7 +106,7 @@ export default async function DashboardPage() {
                     <p className="mt-2 text-sm text-muted">
                       {m.group._count.members} members · Owner: {m.group.owner.name}
                     </p>
-                    <p className="mt-1 text-sm">Your points: {m.points}</p>
+                    <p className="mt-1 text-sm">Your points: {formatLegPoints(m.points)}</p>
                     {activeRound && activeRound.status !== "settled" && (
                       <p className="mt-2 text-xs text-accent capitalize">
                         Active round: {activeRound.status}

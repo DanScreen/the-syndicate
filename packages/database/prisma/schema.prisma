@@ -12,7 +12,7 @@ model User {
   name         String
   email        String        @unique
   passwordHash String
-  totalPoints  Int           @default(0)
+  totalPoints  Float         @default(0)
   legsWon      Int           @default(0)
   legsLost     Int           @default(0)
   createdAt    DateTime      @default(now())
@@ -42,7 +42,7 @@ model GroupMember {
   groupId   String
   userId    String
   role      String   @default("member")
-  points    Int      @default(0)
+  points    Float    @default(0)
   legsWon   Int      @default(0)
   legsLost  Int      @default(0)
   joinedAt  DateTime @default(now())
@@ -77,6 +77,7 @@ model Leg {
   awayTeam      String
   competitionId String   @default("world-cup")
   competition   String
+  matchId       String?
   kickoff       DateTime
   marketType    String
   marketLabel   String
@@ -86,11 +87,29 @@ model Leg {
   bookmakerId   String
   bookmakerName String
   outcome       String   @default("pending")
-  pointsAwarded Int      @default(0)
+  pointsAwarded Float    @default(0)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   round         Round    @relation(fields: [roundId], references: [id], onDelete: Cascade)
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  match         Match?   @relation(fields: [matchId], references: [id])
 
   @@unique([roundId, userId])
+}
+
+model Match {
+  id             String    @id @default(cuid())
+  competitionId  String
+  kickoff        DateTime
+  homeTeam       String
+  awayTeam       String
+  status         String    @default("SCHEDULED")
+  homeGoals      Int?
+  awayGoals      Int?
+  externalOddsId String?   @unique
+  externalDataId Int?      @unique
+  lastSyncedAt   DateTime?
+  legs           Leg[]
+
+  @@index([competitionId, kickoff])
 }

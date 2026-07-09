@@ -20,26 +20,28 @@ Mobile app (`apps/mobile/`) is **paused** — web only.
 | Leg picker: best odds only per selection | ✅ |
 | Acca lock: best combined bookmaker across all legs | ✅ |
 | Manual settle + auto-settle (football-data.org) | ✅ |
-| Leaderboard (flat points — see Scoring) | ✅ |
+| Leaderboard (unit-stake points) | ✅ |
 | Round history, progress UI, landing/SEO | ✅ |
 
 \*Asian handicap only from exchange bookmakers in current World Cup UK feed — filtered out; handicap UI empty for those fixtures.
 
 ---
 
-## Scoring (today vs planned)
+## Scoring (today)
 
-**Today (implemented):** flat leg points in `packages/shared/src/constants.ts`
+**Unit-stake leg points** in `packages/shared/src/scoring.ts`
 
 | Outcome | Points |
 |---------|--------|
-| Won | +3 |
-| Void | +1 |
-| Lost | 0 |
+| Won | `odds − 1` |
+| Void | `0` |
+| Lost | `−1` |
 
-**Planned:** unit-stake model (`odds − 1` win, `−1` loss) — [specs/group-stats-and-points.md](./specs/group-stats-and-points.md)
+Examples: win @ 2.50 → +1.50; loss → −1.00.
 
-**Group acca P/L (today):** theoretical **£10** stake on combined acca odds. All legs won → `stake × combinedOdds − stake`; any loss → `−stake`. See `lib/settlement.ts`.
+**Group acca P/L:** theoretical **£10** stake on combined acca odds. All legs won → `stake × combinedOdds − stake`; any loss → `−stake`. See `lib/settlement.ts`.
+
+**Planned:** group/member stats + charts — [specs/group-stats-and-points.md](./specs/group-stats-and-points.md)
 
 ---
 
@@ -78,17 +80,20 @@ Key files:
 | Method | Route | Notes |
 |--------|-------|-------|
 | Manual | `POST /api/rounds/[id]/settle` | Owner marks won/lost/void per leg |
-| Auto | `POST /api/rounds/[id]/auto-settle` | football-data.org by team + date; one fetch per round |
+| Auto | `POST /api/rounds/[id]/auto-settle` | Reads synced `Match` rows by competition + teams + kickoff |
+| Sync | `POST /api/internal/sync-matches` | Cron: football-data.org per competition → `Match` table |
 
 Key files:
 
 | Path | Role |
 |------|------|
-| `apps/web/src/lib/results/football-data.ts` | Fetch matches, team matching |
+| `apps/web/src/lib/results/football-data.ts` | football-data.org fetch, team matching |
+| `apps/web/src/lib/results/sync-matches.ts` | Upsert matches for all competitions |
+| `apps/web/src/lib/results/match-store.ts` | DB lookup for auto-settle |
 | `apps/web/src/lib/results/resolve-leg.ts` | Market → outcome logic |
 | `apps/web/src/lib/settlement/apply-round-settlement.ts` | DB updates, P/L |
 
-**Planned:** shared `Match` table + cron ingest — [specs/competitions-and-results.md](./specs/competitions-and-results.md)
+**Planned:** post-ingest auto-settle + notifications — [specs/competitions-and-results.md](./specs/competitions-and-results.md) Phase C
 
 ---
 
@@ -103,11 +108,12 @@ Key files:
 | `NEXTAUTH_URL` | Yes | e.g. `http://localhost:3000` |
 | `ODDS_API_KEY` | No | Live odds; omit = mock |
 | `ODDS_API_SPORT` | No | Default `soccer_fifa_world_cup` |
-| `FOOTBALL_DATA_API_KEY` | No | Auto-settle |
+| `FOOTBALL_DATA_API_KEY` | No | Match sync (`/api/internal/sync-matches`) |
+| `CRON_SECRET` | No | Bearer token for internal sync endpoint |
 
 ### Production (GitHub Actions → Cloud Run)
 
-Secrets: `DATABASE_URL`, `AUTH_SECRET`, `ODDS_API_KEY`, `FOOTBALL_DATA_API_KEY`, GCP deploy secrets.
+Secrets: `DATABASE_URL`, `AUTH_SECRET`, `ODDS_API_KEY`, `FOOTBALL_DATA_API_KEY`, `CRON_SECRET`, GCP deploy secrets.
 
 Env vars on Cloud Run: `NEXTAUTH_URL`, `ODDS_API_SPORT`, `ODDS_API_REGIONS=uk`, etc. See `.github/workflows/deploy.yml`.
 
@@ -115,11 +121,11 @@ Env vars on Cloud Run: `NEXTAUTH_URL`, `ODDS_API_SPORT`, `ODDS_API_REGIONS=uk`, 
 
 ## Database (Prisma)
 
-Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`.
+Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`.
 
 - One leg per user per round (`@@unique([roundId, userId])`).
-- Leg stores fixture snapshot: teams, kickoff, `competitionId` (slug), `competition` (display name), market, odds, bookmaker, outcome.
-- No `Match` table or `matchId` FK yet.
+- Leg stores fixture snapshot: teams, kickoff, `competitionId` (slug), `competition` (display name), optional `matchId` FK, market, odds, bookmaker, outcome.
+- `Match` — canonical result per fixture (`externalDataId` from football-data.org).
 
 Schema: `packages/database/prisma/schema.prisma`
 
@@ -135,7 +141,8 @@ Schema: `packages/database/prisma/schema.prisma`
 | `POST /api/legs` | Session | Submit leg |
 | `POST /api/groups/[id]/rounds` | Owner | Start round |
 | `POST /api/rounds/[id]/settle` | Owner | Manual settle |
-| `POST /api/rounds/[id]/auto-settle` | Owner | Auto settle |
+| `POST /api/rounds/[id]/auto-settle` | Owner | Auto settle from `Match` table |
+| `POST /api/internal/sync-matches` | `CRON_SECRET` | Sync football-data.org → `Match` |
 | `GET /api/groups/[id]` | Member | Group + active round + betslip link |
 | `GET /api/health` | Public | Health check |
 
@@ -145,7 +152,7 @@ Schema: `packages/database/prisma/schema.prisma`
 
 1. **Terraform CI** may fail on GCS state bucket permissions — app deploy unaffected.
 2. **Cloud Run in-memory cache** — cold instances miss cache; not shared across instances.
-3. **Auto-settle** matches by team name + kickoff date — aliases in `football-data.ts`; no `Match` FK yet.
+3. **Auto-settle** requires synced `Match` rows — run cron sync or `POST /api/internal/sync-matches` first.
 4. **Cross-competition acca** — often no single bookmaker for full acca; UI explains place individually.
 5. **The Odds API quota** — per-event market calls cost credits; lazy-loaded on fixture select.
 
@@ -155,5 +162,6 @@ Schema: `packages/database/prisma/schema.prisma`
 
 - [ ] `ODDS_API_KEY` in GitHub secrets  
 - [ ] `FOOTBALL_DATA_API_KEY` in GitHub secrets  
+- [ ] `CRON_SECRET` in GitHub secrets + Cloud Scheduler job (see DEPLOYMENT.md)  
 - [ ] `NEXTAUTH_URL=https://www.the-syndicate.uk`  
 - [ ] Cloudflare Worker + www redirect configured  

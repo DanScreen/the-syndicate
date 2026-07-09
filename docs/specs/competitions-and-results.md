@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | Phase A done; Phase B (Match table + ingest) not built |
+| **Status** | Phase B done; Phase C (hands-off settle + notifications) not built |
 | **Depends on** | — |
 | **Blocks** | Member stats favourites (`competitionId` on legs) |
 | **As-built reference** | [../CURRENT_STATE.md](../CURRENT_STATE.md) |
@@ -126,9 +126,9 @@ flowchart LR
 
 ### Phase B — Match table + ingest
 
-- [ ] `Match` model + migration
-- [ ] Sync job
-- [ ] Auto-settle from DB
+- [x] `Match` model + migration
+- [x] Sync job
+- [x] Auto-settle from DB
 
 ### Phase C — Hands-off
 

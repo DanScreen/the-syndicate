@@ -1,6 +1,7 @@
 "use client";
 
 import type { Fixture, Market } from "@the-syndicate/shared";
+import { formatLegPoints } from "@the-syndicate/shared";
 import { useEffect, useMemo, useState } from "react";
 import { sortQuotesByBestOdds } from "@/lib/odds/bookmakers";
 import { groupMarkets } from "@/lib/odds/market-groups";
@@ -471,7 +472,7 @@ export function SettleRoundForm({
     <form onSubmit={handleSubmit} className="space-y-3 rounded-xl border border-border bg-card p-4">
       <h3 className="font-semibold">Settle round (owner)</h3>
       <p className="text-sm text-muted">
-        Auto-settle from match results, or mark each leg manually.
+        Auto-settle uses synced match results. If legs are pending, run match sync or wait for the next cron run.
       </p>
       <button
         type="button"
@@ -534,7 +535,7 @@ export function LegsList({ legs }: { legs: Leg[] }) {
           <p className="text-xs text-muted">
             {leg.competition}
             {leg.outcome !== "pending" && (
-              <> · {leg.outcome} (+{leg.pointsAwarded} pts)</>
+              <> · {leg.outcome} ({formatLegPoints(leg.pointsAwarded)} pts)</>
             )}
           </p>
         </li>
@@ -576,7 +577,7 @@ export function Leaderboard({
               </p>
             </div>
           </div>
-          <span className="font-semibold text-accent">{entry.points} pts</span>
+          <span className="font-semibold text-accent">{formatLegPoints(entry.points)} pts</span>
         </li>
       ))}
     </ol>

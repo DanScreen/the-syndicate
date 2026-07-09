@@ -24,7 +24,7 @@ export async function applyRoundSettlement(
 
   for (const leg of round.legs) {
     const outcome = outcomeMap.get(leg.id) ?? "lost";
-    const points = pointsForOutcome(outcome);
+    const points = pointsForOutcome(outcome, leg.odds);
 
     await prisma.leg.update({
       where: { id: leg.id },

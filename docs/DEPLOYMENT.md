@@ -95,6 +95,24 @@ gcloud run deploy the-syndicate-web \
   --set-env-vars NEXTAUTH_URL=https://your-domain.com,AUTH_TRUST_HOST=true,NODE_ENV=production
 ```
 
+## Match results sync (Cloud Scheduler)
+
+Auto-settle reads from the `Match` table. Populate it on a schedule:
+
+1. Create `CRON_SECRET` in Secret Manager (long random string).
+2. Add `CRON_SECRET` to GitHub secrets and Cloud Run deploy (`deploy.yml`).
+3. Create a Cloud Scheduler job (e.g. hourly):
+
+```bash
+gcloud scheduler jobs create http sync-matches \
+  --schedule="0 * * * *" \
+  --uri="https://www.the-syndicate.uk/api/internal/sync-matches" \
+  --http-method=POST \
+  --headers="Authorization=Bearer YOUR_CRON_SECRET"
+```
+
+Requires `FOOTBALL_DATA_API_KEY` on Cloud Run.
+
 ## GitHub repository configuration
 
 ### Secrets (Settings → Secrets and variables → Actions)
@@ -106,6 +124,7 @@ gcloud run deploy the-syndicate-web \
 | `GCP_SERVICE_ACCOUNT` | Deploy service account email |
 | `CLOUD_SQL_CONNECTION_NAME` | `terraform output cloud_sql_connection_name` |
 | `DATABASE_URL` | `terraform output -json github_actions_secrets` (for migration step) |
+| `CRON_SECRET` | Long random string for `/api/internal/sync-matches` |
 | `TF_STATE_BUCKET` | GCS bucket for Terraform remote state |
 
 ### Variables
