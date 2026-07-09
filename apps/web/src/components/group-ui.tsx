@@ -115,6 +115,7 @@ export function SubmitLegForm({
   const [bookmakerLimit, setBookmakerLimit] = useState(3);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [marketsError, setMarketsError] = useState("");
 
   useEffect(() => {
     fetch("/api/fixtures")
@@ -133,10 +134,21 @@ export function SubmitLegForm({
     }
 
     setLoadingMarkets(true);
+    setMarketsError("");
     fetch(`/api/fixtures/${fixtureId}/markets`)
-      .then((r) => r.json())
-      .then((d) => setFixtureMarkets(d.markets ?? []))
-      .catch(() => setFixtureMarkets([]))
+      .then(async (r) => {
+        const d = await r.json();
+        if (!r.ok) {
+          setFixtureMarkets([]);
+          setMarketsError(d.error ?? "Failed to load extra markets");
+          return;
+        }
+        setFixtureMarkets(d.markets ?? []);
+      })
+      .catch(() => {
+        setFixtureMarkets([]);
+        setMarketsError("Failed to load extra markets");
+      })
       .finally(() => setLoadingMarkets(false));
   }, [fixtureId]);
 
@@ -233,7 +245,10 @@ export function SubmitLegForm({
         <div className="space-y-3">
           <p className="text-xs font-medium uppercase tracking-wide text-muted">2. Pick a market</p>
           {loadingMarkets && (
-            <p className="text-sm text-muted">Loading extra markets...</p>
+            <p className="text-sm text-muted">Loading BTTS, double chance & more...</p>
+          )}
+          {marketsError && (
+            <p className="text-sm text-amber-400">{marketsError}</p>
           )}
           {marketGroups.map((group) => (
             <div key={group.id} className="space-y-2">

@@ -11,7 +11,18 @@ export const DEFAULT_ODDS_SPORT = "soccer_fifa_world_cup";
 /** Markets on the bulk /odds endpoint (btts etc. are per-event only). */
 const BULK_SOCCER_MARKETS = "h2h,spreads,totals";
 
-const TOTAL_LINES = [1.5, 2.5, 3.5] as const;
+function collectTotalLines(bookmakers: OddsApiBookmaker[]): number[] {
+  const lines = new Set<number>();
+  for (const bookmaker of bookmakers) {
+    for (const market of bookmaker.markets) {
+      if (market.key !== "totals") continue;
+      for (const outcome of market.outcomes) {
+        if (outcome.point !== undefined) lines.add(outcome.point);
+      }
+    }
+  }
+  return [...lines].sort((a, b) => a - b);
+}
 
 function retailBookmakers(bookmakers: OddsApiBookmaker[]): OddsApiBookmaker[] {
   return bookmakers.filter((b) => isRetailBookmaker(b.key));
@@ -125,9 +136,9 @@ function buildTotalsMarketForLine(
 }
 
 function buildTotalsMarkets(bookmakers: OddsApiBookmaker[]): Market[] {
-  return TOTAL_LINES.map((line) => buildTotalsMarketForLine(bookmakers, line)).filter(
-    (m): m is Market => m !== null
-  );
+  return collectTotalLines(bookmakers)
+    .map((line) => buildTotalsMarketForLine(bookmakers, line))
+    .filter((m): m is Market => m !== null);
 }
 
 function buildSpreadsMarkets(event: OddsApiEvent, bookmakers: OddsApiBookmaker[]): Market[] {
@@ -217,7 +228,7 @@ export async function fetchOddsApiFixtures(): Promise<Fixture[]> {
   const sport = process.env.ODDS_API_SPORT ?? DEFAULT_ODDS_SPORT;
   const regions = process.env.ODDS_API_REGIONS ?? "uk";
   const cacheTtlMs = Number(process.env.ODDS_API_CACHE_TTL_MS ?? 600_000);
-  const cacheKey = `odds-api:${sport}:${regions}`;
+  const cacheKey = `odds-api:v2:${sport}:${regions}`;
 
   const cached = getCached<Fixture[]>(cacheKey);
   if (cached) return cached;
@@ -250,7 +261,7 @@ export async function fetchOddsApiEvent(eventId: string): Promise<OddsApiEvent |
   const sport = process.env.ODDS_API_SPORT ?? DEFAULT_ODDS_SPORT;
   const regions = process.env.ODDS_API_REGIONS ?? "uk";
   const cacheTtlMs = Number(process.env.ODDS_API_CACHE_TTL_MS ?? 600_000);
-  const cacheKey = `odds-api-event:${sport}:${regions}:${eventId}`;
+  const cacheKey = `odds-api-event:v2:${sport}:${regions}:${eventId}`;
 
   const cached = getCached<OddsApiEvent>(cacheKey);
   if (cached) return cached;
@@ -267,8 +278,8 @@ export async function fetchOddsApiEvent(eventId: string): Promise<OddsApiEvent |
     throw new Error(`The Odds API event error ${res.status}: ${body}`);
   }
 
-  const events = (await res.json()) as OddsApiEvent[];
-  const event = events[0] ?? null;
-  if (event) setCached(cacheKey, event, cacheTtlMs);
-  return event;
+  const raw = (await res.json()) as OddsApiEvent | OddsApiEvent[];
+  const event = Array.isArray(raw) ? (raw[0] ?? null) : raw;
+  if (event?.id) setCached(cacheKey, event, cacheTtlMs);
+  return event?.id ? event : null;
 }
