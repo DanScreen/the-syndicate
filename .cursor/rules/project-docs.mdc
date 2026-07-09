@@ -1,0 +1,15 @@
+---
+description: Documentation routing for agents — read before planning features
+globs:
+alwaysApply: true
+---
+
+# Project documentation
+
+Before implementing features, read **docs/README.md** and **docs/CURRENT_STATE.md**.
+
+- **Planned work:** find the spec in `docs/specs/` and follow its checklist.
+- **After shipping:** update `docs/CURRENT_STATE.md` and `docs/ROADMAP.md`.
+- Do not treat conversation history as source of truth — the repo docs are.
+
+Build order: competitions picker → Match ingest → unit-stake points → group stats (see docs/ROADMAP.md).

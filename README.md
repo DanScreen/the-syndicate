@@ -9,7 +9,7 @@ apps/web/          Next.js web app + API
 apps/mobile/       Expo iPhone client
 packages/shared/   Zod schemas, types, constants
 packages/database/ Prisma schema + client
-docs/              Product, architecture, and deployment specs
+docs/              Product specs — start at docs/README.md
 ```
 
 ## Quick start (local)
@@ -75,12 +75,12 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) and [infra/terraform/README.md](inf
 1. Sign up / sign in
 2. Create or join a group (invite code)
 3. Owner starts a round
-4. Members submit one leg each from mock fixtures
-5. Acca auto-locks when all legs in
-6. Open betslip link at best bookmaker
-7. Owner settles round → points + group P/L
+4. Members submit one leg each (live odds when configured)
+5. Acca auto-locks → best combined bookmaker
+6. Owner settles round (manual or auto)
+7. Leaderboard + round history
 
-See [docs/PRODUCT.md](docs/PRODUCT.md) and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+See [docs/README.md](docs/README.md), [docs/PRODUCT.md](docs/PRODUCT.md), [docs/CURRENT_STATE.md](docs/CURRENT_STATE.md).
 
 ## Agent context
 

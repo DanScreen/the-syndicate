@@ -1,64 +1,55 @@
-# The Syndicate — Roadmap
+# Roadmap
 
-Prioritised website improvements. Mobile app is paused; focus is web at [www.the-syndicate.uk](https://www.the-syndicate.uk).
+Production: [www.the-syndicate.uk](https://www.the-syndicate.uk) · **Index:** [README.md](./README.md)
+
+---
 
 ## Success metric
 
-**10 users** complete the full loop: sign up → create/join group → submit leg → acca locks → settle → view leaderboard.
+10 users complete: sign up → group → submit leg → acca locks → settle → leaderboard.
 
 ---
 
-## Tier 1 — Core loop UX
+## Status
 
-| Item | Status |
-|------|--------|
-| The Odds API integration (live fixtures + UK bookmaker odds) | Done |
-| Invite link copy button | Done |
-| Auto-fill join code from invite URL (`/groups/join?code=...`) | Done |
-| Round progress (member checklist, status banners) | Done |
-| Card-based leg picker (fixtures, markets, selections) | Done |
-| Dashboard onboarding for new users | Done |
+### Done — core loop
+- Live odds (The Odds API), extended markets, best-odds leg picker
+- Acca lock with combined bookmaker comparison
+- Invite flow, round progress, leg picker UX, landing/SEO
+- Auto-settle (football-data.org), manual settle
+- Apex → www redirect (Cloudflare)
 
-## Tier 2 — Product polish
+### Next — build in this order
 
-| Item | Status |
-|------|--------|
-| Landing page improvements + responsible gambling footer | Done |
-| SEO / Open Graph meta tags | Done |
-| Recent round history on group page | Done |
-| Production `ODDS_API_KEY` in GitHub secrets | **You:** add secret |
+| # | Feature | Spec |
+|---|---------|------|
+| 1 | Per-leg competition picker | [specs/competitions-and-results.md](./specs/competitions-and-results.md) Phase A |
+| 2 | Shared `Match` table + results cron | [specs/competitions-and-results.md](./specs/competitions-and-results.md) Phase B |
+| 3 | Unit-stake points | [specs/group-stats-and-points.md](./specs/group-stats-and-points.md) Phase 1 |
+| 4 | Group & member stats + charts | [specs/group-stats-and-points.md](./specs/group-stats-and-points.md) Phases 2–3 |
 
-## Tier 3 — Next up
+### Backlog
+- User profile (cross-group stats)
+- Email notifications (round locked, settled)
+- Real bookmaker-specific betslip deeplinks
+- Terraform CI GCS permissions fix
+- Optional: GCP load balancer for custom domain (Cloudflare Worker in use today)
 
-| Item | Status |
-|------|--------|
-| **Apex domain (`the-syndicate.uk`)** — redirects to `www` via Cloudflare rule | Done |
-| **Competition picker + shared results** — [spec](./COMPETITIONS_AND_RESULTS.md) | Spec |
-| **Group stats & performance points** — [spec](./GROUP_STATS_AND_POINTS.md) | Spec |
-| User profile page (stats across groups) | Planned |
-| Email notifications (round locked, leg settled) | Planned |
-| Real betslip deeplinks (bookmaker-specific) | Planned |
-| Results sync job (football-data → `Match` table) | Planned (see spec) |
-| Custom domain via GCP load balancer (optional) | Planned |
-## Tier 4 — Post-MVP
-
-- Push notifications
-- Multiple sports
-- Stake pooling / payments
-- Group chat / activity feed
-- Social sign-in (Apple / Google)
+### Post-MVP
+- Push notifications, chat/feed, stake pooling, social sign-in, more sports
 
 ---
-
-## Odds API setup
-
-1. Sign up at [the-odds-api.com](https://the-odds-api.com/)
-2. Local: add `ODDS_API_KEY` to `apps/web/.env.local`
-3. Production: GitHub → Settings → Secrets → `ODDS_API_KEY`
-4. Redeploy (push to `main`)
-
-Without a key, the app falls back to mock fixtures automatically.
 
 ## Paused
 
-- Expo mobile app (`apps/mobile/`) — resume when web loop is validated with real users
+- **Mobile** (`apps/mobile/`) — resume when web validated with real users
+
+---
+
+## Operator notes
+
+**Secrets (GitHub):** `ODDS_API_KEY`, `FOOTBALL_DATA_API_KEY`, `DATABASE_URL`, `AUTH_SECRET`, GCP deploy secrets.
+
+**Local odds:** `ODDS_API_KEY` in `apps/web/.env.local` — omit for mock fixtures.
+
+After shipping: update [CURRENT_STATE.md](./CURRENT_STATE.md) and check off spec phases.

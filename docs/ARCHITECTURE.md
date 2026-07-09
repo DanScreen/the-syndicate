@@ -1,105 +1,84 @@
 # The Syndicate — Architecture
 
+**As-built detail:** [CURRENT_STATE.md](./CURRENT_STATE.md) · **Index:** [README.md](./README.md)
+
+---
+
 ## Overview
 
-Monorepo with API-first design. Web MVP ships first; iPhone app (Expo) consumes the same REST API.
+Monorepo, API-first. Web is production; mobile consumes same REST API (paused).
 
 ```mermaid
 flowchart TB
-  subgraph clients [Clients]
-    Web[apps/web_Next.js]
-    Mobile[apps/mobile_Expo]
-  end
-  subgraph packages [Packages]
-    Shared[packages/shared]
-    DB[packages/database_Prisma]
-  end
-  subgraph external [External_v1]
-    OddsMock[Mock_odds_provider]
-    BookLinks[Bookmaker_deeplinks]
-  end
-  Web --> Shared
-  Mobile --> Shared
-  Web --> DB
-  Mobile --> Web
-  Web --> OddsMock
-  Web --> BookLinks
+  Web[apps/web] --> Shared[packages/shared]
+  Web --> DB[packages/database]
+  Web --> Odds[lib/odds]
+  Web --> Results[lib/results]
+  Mobile[apps/mobile] -.-> Web
 ```
+
+---
 
 ## Stack
 
-| Layer | Choice | Rationale |
-|-------|--------|-----------|
-| Web | Next.js 15 (App Router) + TypeScript + Tailwind | Fast iteration, SEO, API routes co-located |
-| Mobile | Expo (React Native) + TypeScript | Shared TS types, fast iOS scaffold |
-| API | Next.js Route Handlers (`/api/*`) | Single deploy unit for MVP |
-| Database | PostgreSQL via Prisma; local Docker Compose, Cloud SQL in production | Production-ready, GCP-native |
-| Auth | Auth.js v5 (NextAuth) credentials provider | Simple email/password for v1 |
-| Validation | Zod in `packages/shared` | Shared between web, API, mobile |
-| Monorepo | npm workspaces | Lightweight, no extra tooling required |
+| Layer | Choice |
+|-------|--------|
+| Web | Next.js 15 App Router, TypeScript, Tailwind v4 |
+| API | Next.js Route Handlers `/api/*` |
+| DB | PostgreSQL, Prisma |
+| Auth | Auth.js v5 credentials, JWT sessions |
+| Validation | Zod in `packages/shared` |
+| Deploy | Cloud Run, Cloud SQL, GitHub Actions |
+| IaC | Terraform `infra/terraform/` |
 
-## Repo layout
+---
 
-```
-the-syndicate/
-  apps/
-    web/                 # Next.js app + API routes
-    mobile/              # Expo iOS client
-  packages/
-    shared/              # Zod schemas, types, constants
-    database/            # Prisma schema + client
-  docs/
-  AGENTS.md
-  .cursor/rules/
-```
+## Data model
 
-## Data model (core entities)
+| Entity | Purpose |
+|--------|---------|
+| **User** | Account; aggregate points |
+| **Group** | Name, invite code, owner, status |
+| **GroupMember** | Membership, role, group-scoped points |
+| **Round** | Acca cycle: collecting → locked → settled |
+| **Leg** | One pick per member: fixture, market, odds, outcome |
 
-- **User** — account, aggregate stats (total points, legs won/lost)
-- **Group** — name, invite code, owner, settings, status
-- **GroupMember** — user ↔ group, role (owner/member), points in group
-- **Round** — one group acca cycle (collecting → locked → settled)
-- **Leg** — member's selection: fixture, market, selection, odds, bookmaker, outcome
-- **Fixture** — cached from odds provider (home, away, kickoff, competition)
+Planned: **Match** (shared results), **Leg.competitionId** — [specs/competitions-and-results.md](./specs/competitions-and-results.md)
 
-## Odds and bookmakers
+Schema: `packages/database/prisma/schema.prisma`
 
-- `lib/odds/mock-provider.ts` — demo fixtures when no API key
-- `lib/odds/the-odds-api.ts` — live odds from [The Odds API](https://the-odds-api.com/) (h2h, spreads, totals on bulk; btts/double chance/draw no bet per-event)
-- `lib/odds/event-markets.ts` — lazy-loaded extended markets per fixture
-- `lib/odds/bookmakers.ts` — retail bookmaker filter (excludes exchanges)
-- `lib/odds/provider.ts` — selects live or mock; 10-minute in-memory cache
-- Set `ODDS_API_KEY` for live odds; falls back to mock automatically
-- `lib/odds/betslip-links.ts` — generates bookmaker-specific deeplink URLs
+---
 
-## Settlement logic
+## Subsystems
 
-- **Manual:** group owner marks legs won/lost/void via `POST /api/rounds/[id]/settle`
-- **Automatic (interim):** `POST /api/rounds/[id]/auto-settle` fetches finished matches from [football-data.org](https://www.football-data.org/), matches legs by team names + kickoff date, resolves each market type (`lib/results/resolve-leg.ts`), then applies points
-- **Planned:** shared `Match` table + scheduled ingest per competition — see [COMPETITIONS_AND_RESULTS.md](./COMPETITIONS_AND_RESULTS.md)
-- Set `FOOTBALL_DATA_API_KEY` in production for auto-settle; owner can still override manually
-- Points: **planned** — unit-stake model (`odds − 1` win, `−1` loss); see [GROUP_STATS_AND_POINTS.md](./GROUP_STATS_AND_POINTS.md). Today: flat +3 / +1 / 0.
-- Group P&L: theoretical £10 stake × combined decimal odds if all legs win, else -stake
+### Odds
+Live ([The Odds API](https://the-odds-api.com/)) or mock. Bulk + lazy per-event markets. Retail bookmaker filter. Acca pricing at lock.
 
-## Auth flow
+→ File map in [CURRENT_STATE.md](./CURRENT_STATE.md#odds-flow)
 
-- Credentials provider with bcrypt-hashed passwords
-- JWT session strategy
-- API routes check session via `auth()` helper
+### Settlement
+Manual owner settle or auto via football-data.org. Market resolution in `resolve-leg.ts`.
+
+Planned: shared `Match` ingest — [specs/competitions-and-results.md](./specs/competitions-and-results.md)
+
+### Scoring
+**Today:** flat +3 / +1 / 0 per leg; £10 acca P/L on round.
+
+**Planned:** unit-stake points — [specs/group-stats-and-points.md](./specs/group-stats-and-points.md)
+
+### Auth
+Credentials + bcrypt. Session on web; Bearer JWT for mobile (`/api/auth/mobile/sign-in`).
+
+---
 
 ## Deployment
 
-**Target platform:** Google Cloud Platform
+GCP: Cloud Run + Cloud SQL + Secret Manager. See [DEPLOYMENT.md](./DEPLOYMENT.md).
 
-- **Web + API:** Cloud Run (Docker container, Next.js standalone)
-- **Database:** Cloud SQL for PostgreSQL
-- **CI/CD:** GitHub Actions on push to `main`
-- **Infrastructure:** Terraform (`infra/terraform/`)
-- **Secrets:** GCP Secret Manager
-- **Mobile:** EAS Build → TestFlight (separate from web deploy)
+Production URL via Cloudflare → Cloud Run (region `europe-west2`).
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md) and [infra/terraform/README.md](../infra/terraform/README.md).
+---
 
-## iPhone approach
+## Mobile
 
-**Expo** — reuses `packages/shared` types and calls `apps/web` API over HTTPS. Native enhancements (push, share sheet) added post-MVP.
+Expo app in `apps/mobile/` — **paused**. Resume after web loop validated.
