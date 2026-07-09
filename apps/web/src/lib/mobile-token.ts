@@ -1,9 +1,17 @@
 import { SignJWT, jwtVerify } from "jose";
 
-const secret = () =>
-  new TextEncoder().encode(
-    process.env.AUTH_SECRET ?? "dev-secret-change-in-production-the-syndicate-2026"
-  );
+function getAuthSecret(): Uint8Array {
+  const secret = process.env.AUTH_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("AUTH_SECRET is required in production");
+    }
+    return new TextEncoder().encode(
+      "dev-secret-change-in-production-the-syndicate-2026"
+    );
+  }
+  return new TextEncoder().encode(secret);
+}
 
 export type MobileUser = {
   id: string;
@@ -16,11 +24,11 @@ export async function createMobileToken(user: MobileUser): Promise<string> {
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("30d")
-    .sign(secret());
+    .sign(getAuthSecret());
 }
 
 export async function verifyMobileToken(token: string): Promise<MobileUser> {
-  const { payload } = await jwtVerify(token, secret());
+  const { payload } = await jwtVerify(token, getAuthSecret());
   if (!payload.id || !payload.email || !payload.name) {
     throw new Error("Invalid token payload");
   }

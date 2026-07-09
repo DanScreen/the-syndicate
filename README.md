@@ -9,34 +9,66 @@ apps/web/          Next.js web app + API
 apps/mobile/       Expo iPhone client
 packages/shared/   Zod schemas, types, constants
 packages/database/ Prisma schema + client
-docs/              Product and architecture specs
+docs/              Product, architecture, and deployment specs
 ```
 
-## Quick start
+## Quick start (local)
+
+Requires Docker for local PostgreSQL.
 
 ```bash
+docker compose up -d
+cp apps/web/.env.example apps/web/.env.local
+cp packages/database/.env.example packages/database/.env
 npm install
-npm run db:push
-npm run db:generate
+npm run db:migrate:deploy
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
+### Mobile (Expo)
+
+Start the web API first, then the mobile app:
+
+```bash
+npm run dev              # terminal 1 — web API @ localhost:3000
+cp apps/mobile/.env.example apps/mobile/.env
+npm run dev:mobile       # terminal 2 — press `i` for iOS Simulator
+```
+
+On a physical iPhone, set `EXPO_PUBLIC_API_URL` to your machine's LAN IP.
+
 ## Environment
 
-Copy `apps/web/.env.local` — defaults use SQLite at `packages/database/prisma/dev.db`.
+See `apps/web/.env.example` and `packages/database/.env.example`.
 
-For production, set `DATABASE_URL` to Postgres and generate a strong `AUTH_SECRET`.
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `AUTH_SECRET` | Auth.js + mobile JWT signing secret |
+| `NEXTAUTH_URL` | Public app URL (e.g. `http://localhost:3000`) |
 
 ## Scripts
 
 | Command | Description |
 |---------|-------------|
 | `npm run dev` | Start web dev server |
+| `npm run dev:mobile` | Start Expo dev server |
 | `npm run build` | Production build |
-| `npm run db:push` | Push Prisma schema to DB |
+| `npm run db:migrate` | Create/apply dev migrations |
+| `npm run db:migrate:deploy` | Apply migrations (production/CI) |
 | `npm run db:generate` | Generate Prisma client |
+
+## Deployment
+
+Hosted on **Google Cloud Platform**:
+
+- **Infrastructure:** Terraform ([`infra/terraform/`](infra/terraform/))
+- **App deploy:** GitHub Actions on push to `main`
+- **Infra changes:** GitHub Actions on changes to `infra/terraform/`
+
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) and [infra/terraform/README.md](infra/terraform/README.md).
 
 ## MVP flows
 

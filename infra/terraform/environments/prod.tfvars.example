@@ -1,0 +1,13 @@
+# Copy to prod.tfvars and fill in your values.
+# Do not commit prod.tfvars — it may contain environment-specific settings.
+
+project_id        = "your-gcp-project-id"
+region            = "europe-west2"
+environment       = "prod"
+github_repository = "your-github-username/the-syndicate"
+
+# Optional overrides
+# cloud_run_service_name    = "the-syndicate-web"
+# artifact_registry_repo_id = "the-syndicate"
+# nextauth_url              = "https://the-syndicate.example.com"
+# cloud_sql_tier            = "db-f1-micro"

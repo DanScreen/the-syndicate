@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "The Syndicate",
+    "slug": "the-syndicate",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "the-syndicate",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.thesyndicate.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0a0f0a",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "package": "com.thesyndicate.app"
+    },
+    "plugins": ["expo-router", "expo-secure-store", "expo-status-bar"]
+  }
+}

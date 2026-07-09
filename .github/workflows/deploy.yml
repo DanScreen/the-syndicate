@@ -1,0 +1,74 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches: [main]
+
+env:
+  GCP_REGION: ${{ vars.GCP_REGION || 'europe-west2' }}
+  ARTIFACT_REGISTRY_REPO: ${{ vars.ARTIFACT_REGISTRY_REPO || 'the-syndicate' }}
+  CLOUD_RUN_SERVICE: ${{ vars.CLOUD_RUN_SERVICE || 'the-syndicate-web' }}
+  IMAGE_NAME: web
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
+
+      - name: Build and push Docker image
+        env:
+          PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          IMAGE_TAG: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/${{ env.IMAGE_NAME }}
+        run: |
+          docker build -t "$IMAGE_TAG:${{ github.sha }}" -t "$IMAGE_TAG:latest" .
+          docker push "$IMAGE_TAG:${{ github.sha }}"
+          docker push "$IMAGE_TAG:latest"
+
+      - name: Run database migrations
+        env:
+          PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CLOUD_SQL_CONNECTION_NAME: ${{ secrets.CLOUD_SQL_CONNECTION_NAME }}
+        run: |
+          curl -o cloud-sql-proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.14.3/cloud-sql-proxy.linux.amd64
+          chmod +x cloud-sql-proxy
+          ./cloud-sql-proxy "$CLOUD_SQL_CONNECTION_NAME" &
+          sleep 5
+          npm ci
+          npm run db:generate
+          npm run db:migrate:deploy
+
+      - name: Deploy to Cloud Run
+        env:
+          PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          IMAGE_TAG: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        run: |
+          gcloud run deploy "${{ env.CLOUD_RUN_SERVICE }}" \
+            --project "$PROJECT_ID" \
+            --region "${{ env.GCP_REGION }}" \
+            --image "$IMAGE_TAG" \
+            --platform managed \
+            --allow-unauthenticated \
+            --port 8080 \
+            --add-cloudsql-instances "${{ secrets.CLOUD_SQL_CONNECTION_NAME }}" \
+            --set-secrets "DATABASE_URL=DATABASE_URL:latest,AUTH_SECRET=AUTH_SECRET:latest" \
+            --set-env-vars "NEXTAUTH_URL=${{ vars.NEXTAUTH_URL }},AUTH_TRUST_HOST=true,NODE_ENV=production" \
+            --quiet

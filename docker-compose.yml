@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: the-syndicate-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: syndicate
+      POSTGRES_PASSWORD: syndicate
+      POSTGRES_DB: the_syndicate
+    volumes:
+      - syndicate_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U syndicate -d the_syndicate"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  syndicate_pg_data:

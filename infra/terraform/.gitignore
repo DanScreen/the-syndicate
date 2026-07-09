@@ -1,0 +1,16 @@
+# Local Terraform variable files (may contain project-specific values)
+*.tfvars
+!*.tfvars.example
+
+# Terraform state (remote state uses GCS; never commit local state)
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+tfplan
+tfplan.*

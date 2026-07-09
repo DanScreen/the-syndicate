@@ -9,4 +9,5 @@ alwaysApply: false
 - Expo + TypeScript; call web API at `EXPO_PUBLIC_API_URL`
 - Reuse types from `@the-syndicate/shared`
 - Match web flows: auth, dashboard, group detail, submit leg
-- Use `fetch` with session token header (future) or stored credentials
+- Use `fetch` with `Authorization: Bearer <token>` from SecureStore
+- Sign in via `POST /api/auth/mobile/sign-in`; sign up via `/api/auth/sign-up` then sign in

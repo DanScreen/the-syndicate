@@ -12,23 +12,32 @@ Social group acca platform. Football-first; mock odds in v1.
 | `apps/web` | Next.js 15 App Router, API routes, Tailwind UI |
 | `apps/mobile` | Expo React Native iPhone client |
 | `packages/shared` | Zod schemas, types, constants |
-| `packages/database` | Prisma schema (SQLite dev, Postgres-ready) |
+| `packages/database` | Prisma schema (PostgreSQL; local Docker Compose, Cloud SQL in prod) |
 
 ## Commands
 
 ```bash
 npm install          # from repo root
+docker compose up -d # local Postgres
 npm run dev          # web @ localhost:3000
+npm run dev:mobile   # Expo dev server (iOS simulator)
 npm run build        # production build
-npm run db:push      # sync schema
+npm run db:migrate:deploy  # apply migrations (prod + local)
 npm run db:generate  # prisma generate
 ```
+
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for GCP + GitHub Actions setup.
+See [infra/terraform/README.md](infra/terraform/README.md) for Terraform infrastructure.
+
+### Mobile
+
+Requires the web API running (`npm run dev`). Set `EXPO_PUBLIC_API_URL` in `apps/mobile/.env` — use `http://localhost:3000` for iOS Simulator, or your machine's LAN IP for a physical device.
 
 ## Stack
 
 - Next.js 15, TypeScript, Tailwind CSS v4
 - Auth.js v5 (credentials, JWT sessions)
-- Prisma + SQLite (dev)
+- Prisma + PostgreSQL (local via Docker Compose, Cloud SQL in production)
 - Expo for mobile
 
 ## Conventions
@@ -46,6 +55,8 @@ npm run db:generate  # prisma generate
 - Skip auth checks on protected API routes
 - Start mobile-only features before web API is stable
 
-## First slice (done)
+## Mobile auth
 
-Auth + dashboard + group CRUD + rounds + legs + settlement + leaderboard.
+- `POST /api/auth/mobile/sign-in` returns `{ token, user }` (30-day JWT)
+- Mobile sends `Authorization: Bearer <token>` on protected API routes
+- Token stored in Expo SecureStore

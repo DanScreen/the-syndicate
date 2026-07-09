@@ -1,0 +1,151 @@
+import { api, type GroupSummary } from "@/api/client";
+import { useAuth } from "@/auth/AuthProvider";
+import { Button, Card, Screen, Subtitle, Title } from "@/components/ui";
+import { colors } from "@/config";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+
+export default function GroupsScreen() {
+  const { token, user, signOut } = useAuth();
+  const [groups, setGroups] = useState<GroupSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const load = useCallback(async () => {
+    if (!token) return;
+    const data = await api<{ groups: GroupSummary[] }>("/api/groups", { token });
+    setGroups(data.groups);
+  }, [token]);
+
+  useFocusEffect(
+    useCallback(() => {
+      setLoading(true);
+      load()
+        .catch(() => setGroups([]))
+        .finally(() => setLoading(false));
+    }, [load])
+  );
+
+  async function onRefresh() {
+    setRefreshing(true);
+    try {
+      await load();
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
+  return (
+    <Screen>
+      <View style={styles.header}>
+        <View>
+          <Title>Dashboard</Title>
+          <Subtitle>Welcome, {user?.name}</Subtitle>
+        </View>
+        <Pressable onPress={() => signOut().then(() => router.replace("/sign-in"))}>
+          <Text style={styles.signOut}>Sign out</Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.actions}>
+        <Button label="Create group" onPress={() => router.push("/(main)/create-group")} />
+        <Button
+          label="Join group"
+          variant="secondary"
+          onPress={() => router.push("/(main)/join-group")}
+        />
+      </View>
+
+      {loading ? (
+        <ActivityIndicator color={colors.accent} style={{ marginTop: 32 }} />
+      ) : (
+        <ScrollView
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
+          }
+        >
+          {groups.length === 0 ? (
+            <Card>
+              <Text style={styles.empty}>No groups yet. Create one or join with an invite code.</Text>
+            </Card>
+          ) : (
+            groups.map((g) => (
+              <Pressable
+                key={g.id}
+                onPress={() => router.push(`/(main)/groups/${g.id}`)}
+              >
+                <Card>
+                  <View style={styles.row}>
+                    <Text style={styles.groupName}>{g.name}</Text>
+                    <Text style={styles.badge}>{g.status}</Text>
+                  </View>
+                  <Text style={styles.meta}>
+                    {g.memberCount} members · Owner: {g.ownerName}
+                  </Text>
+                  <Text style={styles.meta}>Your points: {g.points}</Text>
+                </Card>
+              </Pressable>
+            ))
+          )}
+        </ScrollView>
+      )}
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 8,
+  },
+  signOut: {
+    color: colors.muted,
+    fontSize: 14,
+    marginTop: 8,
+  },
+  actions: {
+    gap: 8,
+    marginBottom: 16,
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  groupName: {
+    color: colors.text,
+    fontSize: 17,
+    fontWeight: "600",
+  },
+  badge: {
+    color: colors.accent,
+    fontSize: 12,
+    backgroundColor: colors.accentMuted,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 999,
+    overflow: "hidden",
+  },
+  meta: {
+    color: colors.muted,
+    fontSize: 14,
+    marginTop: 2,
+  },
+  empty: {
+    color: colors.muted,
+    textAlign: "center",
+    fontSize: 15,
+  },
+});

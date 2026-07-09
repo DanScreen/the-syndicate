@@ -33,7 +33,7 @@ flowchart TB
 | Web | Next.js 15 (App Router) + TypeScript + Tailwind | Fast iteration, SEO, API routes co-located |
 | Mobile | Expo (React Native) + TypeScript | Shared TS types, fast iOS scaffold |
 | API | Next.js Route Handlers (`/api/*`) | Single deploy unit for MVP |
-| Database | SQLite (dev) via Prisma; Postgres-ready schema | Zero-config local dev |
+| Database | PostgreSQL via Prisma; local Docker Compose, Cloud SQL in production | Production-ready, GCP-native |
 | Auth | Auth.js v5 (NextAuth) credentials provider | Simple email/password for v1 |
 | Validation | Zod in `packages/shared` | Shared between web, API, mobile |
 | Monorepo | npm workspaces | Lightweight, no extra tooling required |
@@ -81,11 +81,18 @@ the-syndicate/
 - JWT session strategy
 - API routes check session via `auth()` helper
 
-## Deployment (target)
+## Deployment
 
-- **Web + API:** Vercel
-- **Database:** Neon Postgres (swap `DATABASE_URL` from SQLite)
-- **Mobile:** EAS Build → TestFlight
+**Target platform:** Google Cloud Platform
+
+- **Web + API:** Cloud Run (Docker container, Next.js standalone)
+- **Database:** Cloud SQL for PostgreSQL
+- **CI/CD:** GitHub Actions on push to `main`
+- **Infrastructure:** Terraform (`infra/terraform/`)
+- **Secrets:** GCP Secret Manager
+- **Mobile:** EAS Build → TestFlight (separate from web deploy)
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) and [infra/terraform/README.md](../infra/terraform/README.md).
 
 ## iPhone approach
 

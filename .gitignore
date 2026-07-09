@@ -4,6 +4,10 @@ node_modules/
 dist/
 *.db
 *.db-journal
+.terraform/
+*.tfstate
+*.tfstate.*
+tfplan
 .env
 .env.local
 .env*.local
