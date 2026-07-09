@@ -11,9 +11,12 @@ export async function getFixtures(): Promise<{ fixtures: Fixture[]; source: Odds
       if (fixtures.length > 0) {
         return { fixtures, source: "live" };
       }
+      console.warn("[odds] live API returned no fixtures for current sport");
     } catch (err) {
       console.error("[odds] live fetch failed, falling back to mock:", err);
     }
+  } else {
+    console.warn("[odds] ODDS_API_KEY not set, using mock fixtures");
   }
 
   return { fixtures: getMockFixtures(), source: "mock" };

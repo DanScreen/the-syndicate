@@ -10,10 +10,10 @@ const kickoff = (daysFromNow: number, hour = 15): string => {
 export function getMockFixtures(): Fixture[] {
   return [
     {
-      id: "fx-ars-liv",
-      homeTeam: "Arsenal",
-      awayTeam: "Liverpool",
-      competition: "Premier League",
+      id: "fx-mex-kor",
+      homeTeam: "Mexico",
+      awayTeam: "South Korea",
+      competition: "FIFA World Cup",
       kickoff: kickoff(2, 16),
       markets: [
         {
@@ -22,7 +22,7 @@ export function getMockFixtures(): Fixture[] {
           selections: [
             {
               id: "home",
-              label: "Arsenal",
+              label: "Mexico",
               odds: [
                 { bookmakerId: "bet365", bookmakerName: "Bet365", odds: 2.1 },
                 { bookmakerId: "williamhill", bookmakerName: "William Hill", odds: 2.05 },
@@ -39,7 +39,7 @@ export function getMockFixtures(): Fixture[] {
             },
             {
               id: "away",
-              label: "Liverpool",
+              label: "South Korea",
               odds: [
                 { bookmakerId: "bet365", bookmakerName: "Bet365", odds: 3.2 },
                 { bookmakerId: "williamhill", bookmakerName: "William Hill", odds: 3.3 },
@@ -73,10 +73,10 @@ export function getMockFixtures(): Fixture[] {
       ],
     },
     {
-      id: "fx-mci-che",
-      homeTeam: "Man City",
-      awayTeam: "Chelsea",
-      competition: "Premier League",
+      id: "fx-eng-fr",
+      homeTeam: "England",
+      awayTeam: "France",
+      competition: "FIFA World Cup",
       kickoff: kickoff(3, 14),
       markets: [
         {
@@ -85,7 +85,7 @@ export function getMockFixtures(): Fixture[] {
           selections: [
             {
               id: "home",
-              label: "Man City",
+              label: "England",
               odds: [
                 { bookmakerId: "bet365", bookmakerName: "Bet365", odds: 1.65 },
                 { bookmakerId: "williamhill", bookmakerName: "William Hill", odds: 1.62 },
@@ -101,7 +101,7 @@ export function getMockFixtures(): Fixture[] {
             },
             {
               id: "away",
-              label: "Chelsea",
+              label: "France",
               odds: [
                 { bookmakerId: "bet365", bookmakerName: "Bet365", odds: 5.0 },
                 { bookmakerId: "paddypower", bookmakerName: "Paddy Power", odds: 5.25 },
@@ -134,10 +134,10 @@ export function getMockFixtures(): Fixture[] {
       ],
     },
     {
-      id: "fx-tot-new",
-      homeTeam: "Tottenham",
-      awayTeam: "Newcastle",
-      competition: "Premier League",
+      id: "fx-usa-aus",
+      homeTeam: "USA",
+      awayTeam: "Australia",
+      competition: "FIFA World Cup",
       kickoff: kickoff(4, 17),
       markets: [
         {
@@ -146,7 +146,7 @@ export function getMockFixtures(): Fixture[] {
           selections: [
             {
               id: "home",
-              label: "Tottenham",
+              label: "USA",
               odds: [
                 { bookmakerId: "bet365", bookmakerName: "Bet365", odds: 2.3 },
                 { bookmakerId: "paddypower", bookmakerName: "Paddy Power", odds: 2.35 },
@@ -159,7 +159,7 @@ export function getMockFixtures(): Fixture[] {
             },
             {
               id: "away",
-              label: "Newcastle",
+              label: "Australia",
               odds: [
                 { bookmakerId: "bet365", bookmakerName: "Bet365", odds: 2.9 },
                 { bookmakerId: "williamhill", bookmakerName: "William Hill", odds: 2.85 },

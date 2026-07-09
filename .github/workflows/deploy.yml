@@ -70,5 +70,5 @@ jobs:
             --port 8080 \
             --add-cloudsql-instances "${{ secrets.CLOUD_SQL_CONNECTION_NAME }}" \
             --set-secrets "DATABASE_URL=DATABASE_URL:latest,AUTH_SECRET=AUTH_SECRET:latest" \
-            --set-env-vars "NEXTAUTH_URL=${{ vars.NEXTAUTH_URL }},AUTH_TRUST_HOST=true,NODE_ENV=production,ODDS_API_SPORT=soccer_epl,ODDS_API_REGIONS=uk,ODDS_API_KEY=${{ secrets.ODDS_API_KEY }}" \
+            --set-env-vars "NEXTAUTH_URL=${{ vars.NEXTAUTH_URL }},AUTH_TRUST_HOST=true,NODE_ENV=production,ODDS_API_SPORT=soccer_fifa_world_cup,ODDS_API_REGIONS=uk,ODDS_API_KEY=${{ secrets.ODDS_API_KEY }}" \
             --quiet
