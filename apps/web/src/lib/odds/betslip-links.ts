@@ -32,6 +32,16 @@ export function generateBetslipLink(
     unibet_uk: "https://www.unibet.co.uk/betting/sports/filter/football",
     betway: "https://betway.com/en-gb/sports/grp/football",
     boylesports: "https://www.boylesports.com/sports/football",
+    betvictor: "https://www.betvictor.com/en-gb/sports/football",
+    virginbet: "https://www.virginbet.com/sports/football",
+    livescorebet: "https://www.livescorebet.com/uk/sports/football",
+    grosvenor: "https://www.grosvenorcasinos.com/sport/football",
+    casumo: "https://www.casumo.com/en-gb/sports/football",
+    leovegas: "https://www.leovegas.com/en-gb/sports/football",
+    betuk: "https://www.betuk.com/sports/football",
+    betfred: "https://www.betfred.com/sports/football",
+    tote: "https://www.totesport.com/sports/football",
+    copybet: "https://www.copybet.com/sport/football",
   };
 
   const base = baseUrls[bookmakerId] ?? "https://example.com/betslip";

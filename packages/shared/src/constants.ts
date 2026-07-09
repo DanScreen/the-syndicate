@@ -22,5 +22,9 @@ export const BOOKMAKERS = [
 export const MARKET_TYPES = [
   "match_winner",
   "both_teams_score",
+  "over_under_15",
   "over_under_25",
+  "over_under_35",
+  "double_chance",
+  "draw_no_bet",
 ] as const;

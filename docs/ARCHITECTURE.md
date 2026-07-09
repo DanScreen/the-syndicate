@@ -65,15 +65,18 @@ the-syndicate/
 ## Odds and bookmakers
 
 - `lib/odds/mock-provider.ts` — demo fixtures when no API key
-- `lib/odds/the-odds-api.ts` — live Premier League odds from [The Odds API](https://the-odds-api.com/)
+- `lib/odds/the-odds-api.ts` — live odds from [The Odds API](https://the-odds-api.com/) (h2h, spreads, totals on bulk; btts/double chance/draw no bet per-event)
+- `lib/odds/event-markets.ts` — lazy-loaded extended markets per fixture
+- `lib/odds/bookmakers.ts` — retail bookmaker filter (excludes exchanges)
 - `lib/odds/provider.ts` — selects live or mock; 10-minute in-memory cache
 - Set `ODDS_API_KEY` for live odds; falls back to mock automatically
 - `lib/odds/betslip-links.ts` — generates bookmaker-specific deeplink URLs
 
 ## Settlement logic
 
-- Leg outcomes set manually via admin seed / demo "settle" action for v1
-- Production: integrate results API or manual admin override
+- **Manual:** group owner marks legs won/lost/void via `POST /api/rounds/[id]/settle`
+- **Automatic:** `POST /api/rounds/[id]/auto-settle` fetches finished matches from [football-data.org](https://www.football-data.org/), matches legs by team names + kickoff date, resolves each market type (`lib/results/resolve-leg.ts`), then applies points
+- Set `FOOTBALL_DATA_API_KEY` in production for auto-settle; owner can still override manually
 - Points: +3 win, +1 void, 0 loss (configurable in shared constants)
 - Group P&L: theoretical £10 stake × combined decimal odds if all legs win, else -stake
 

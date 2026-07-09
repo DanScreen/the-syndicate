@@ -1,7 +1,9 @@
 "use client";
 
-import type { Fixture } from "@the-syndicate/shared";
-import { useEffect, useState } from "react";
+import type { Fixture, Market } from "@the-syndicate/shared";
+import { useEffect, useMemo, useState } from "react";
+import { sortQuotesByBestOdds } from "@/lib/odds/bookmakers";
+import { groupMarkets } from "@/lib/odds/market-groups";
 
 type Leg = {
   id: string;
@@ -105,9 +107,12 @@ export function SubmitLegForm({
   const [source, setSource] = useState<"live" | "mock">("mock");
   const [loadingFixtures, setLoadingFixtures] = useState(true);
   const [fixtureId, setFixtureId] = useState("");
+  const [fixtureMarkets, setFixtureMarkets] = useState<Market[]>([]);
+  const [loadingMarkets, setLoadingMarkets] = useState(false);
   const [marketType, setMarketType] = useState("");
   const [selectionId, setSelectionId] = useState("");
   const [bookmakerId, setBookmakerId] = useState("");
+  const [bookmakerLimit, setBookmakerLimit] = useState(3);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -121,12 +126,27 @@ export function SubmitLegForm({
       .finally(() => setLoadingFixtures(false));
   }, []);
 
+  useEffect(() => {
+    if (!fixtureId) {
+      setFixtureMarkets([]);
+      return;
+    }
+
+    setLoadingMarkets(true);
+    fetch(`/api/fixtures/${fixtureId}/markets`)
+      .then((r) => r.json())
+      .then((d) => setFixtureMarkets(d.markets ?? []))
+      .catch(() => setFixtureMarkets([]))
+      .finally(() => setLoadingMarkets(false));
+  }, [fixtureId]);
+
   const fixture = fixtures.find((f) => f.id === fixtureId);
-  const market = fixture?.markets.find((m) => m.type === marketType);
+  const allMarkets = fixtureMarkets.length > 0 ? fixtureMarkets : (fixture?.markets ?? []);
+  const marketGroups = useMemo(() => groupMarkets(allMarkets), [allMarkets]);
+  const market = allMarkets.find((m) => m.type === marketType);
   const selection = market?.selections.find((s) => s.id === selectionId);
-  const bestQuote = selection?.odds.reduce((best, q) =>
-    !best || q.odds > best.odds ? q : best
-  );
+  const displayedQuotes = selection ? sortQuotesByBestOdds(selection.odds).slice(0, bookmakerLimit) : [];
+  const bestQuote = displayedQuotes[0];
 
   useEffect(() => {
     if (bestQuote) setBookmakerId(bestQuote.bookmakerId);
@@ -210,28 +230,36 @@ export function SubmitLegForm({
       </div>
 
       {fixture && (
-        <div className="space-y-2">
+        <div className="space-y-3">
           <p className="text-xs font-medium uppercase tracking-wide text-muted">2. Pick a market</p>
-          <div className="flex flex-wrap gap-2">
-            {fixture.markets.map((m) => (
-              <button
-                key={m.type}
-                type="button"
-                onClick={() => {
-                  setMarketType(m.type);
-                  setSelectionId("");
-                  setBookmakerId("");
-                }}
-                className={`rounded-lg border px-3 py-2 text-sm ${
-                  marketType === m.type
-                    ? "border-accent bg-accent-muted/30"
-                    : "border-border hover:border-accent/40"
-                }`}
-              >
-                {m.label}
-              </button>
-            ))}
-          </div>
+          {loadingMarkets && (
+            <p className="text-sm text-muted">Loading extra markets...</p>
+          )}
+          {marketGroups.map((group) => (
+            <div key={group.id} className="space-y-2">
+              <p className="text-xs font-medium text-muted">{group.label}</p>
+              <div className="flex flex-wrap gap-2">
+                {group.markets.map((m) => (
+                  <button
+                    key={m.type}
+                    type="button"
+                    onClick={() => {
+                      setMarketType(m.type);
+                      setSelectionId("");
+                      setBookmakerId("");
+                    }}
+                    className={`rounded-lg border px-3 py-2 text-sm ${
+                      marketType === m.type
+                        ? "border-accent bg-accent-muted/30"
+                        : "border-border hover:border-accent/40"
+                    }`}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -240,7 +268,7 @@ export function SubmitLegForm({
           <p className="text-xs font-medium uppercase tracking-wide text-muted">3. Pick your selection</p>
           <div className="grid gap-2 sm:grid-cols-3">
             {market.selections.map((s) => {
-              const top = s.odds.reduce((best, q) => (!best || q.odds > best.odds ? q : best));
+              const top = sortQuotesByBestOdds(s.odds)[0];
               return (
                 <button
                   key={s.id}
@@ -264,11 +292,26 @@ export function SubmitLegForm({
         </div>
       )}
 
-      {selection && selection.odds.length > 0 && (
+      {selection && displayedQuotes.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted">4. Bookmaker</p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted">4. Bookmaker</p>
+            <label className="flex items-center gap-2 text-xs text-muted">
+              Show
+              <select
+                value={bookmakerLimit}
+                onChange={(e) => setBookmakerLimit(Number(e.target.value))}
+                className="rounded border border-border bg-background px-2 py-1 text-foreground"
+              >
+                <option value={3}>3</option>
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+              </select>
+              best odds
+            </label>
+          </div>
           <div className="grid gap-2 sm:grid-cols-2">
-            {selection.odds.map((o) => (
+            {displayedQuotes.map((o) => (
               <button
                 key={o.bookmakerId}
                 type="button"
@@ -308,7 +351,30 @@ export function SettleRoundForm({
 }) {
   const [outcomes, setOutcomes] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [autoLoading, setAutoLoading] = useState(false);
   const [error, setError] = useState("");
+  const [autoMessage, setAutoMessage] = useState("");
+
+  async function handleAutoSettle() {
+    setAutoLoading(true);
+    setError("");
+    setAutoMessage("");
+
+    const res = await fetch(`/api/rounds/${round.id}/auto-settle`, { method: "POST" });
+    const data = await res.json();
+    setAutoLoading(false);
+
+    if (!res.ok) {
+      if (res.status === 409 && data.resolved) {
+        setOutcomes((prev) => ({ ...prev, ...data.resolved }));
+        setAutoMessage("Some legs are not ready yet — partial results applied below.");
+      }
+      setError(data.error ?? "Auto-settle failed");
+      return;
+    }
+
+    onSettled();
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -340,7 +406,18 @@ export function SettleRoundForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-3 rounded-xl border border-border bg-card p-4">
       <h3 className="font-semibold">Settle round (owner)</h3>
-      <p className="text-sm text-muted">Mark each leg won, lost, or void.</p>
+      <p className="text-sm text-muted">
+        Auto-settle from match results, or mark each leg manually.
+      </p>
+      <button
+        type="button"
+        onClick={handleAutoSettle}
+        disabled={autoLoading || loading}
+        className="w-full rounded-lg bg-accent py-2 text-sm font-medium text-black hover:bg-green-400 disabled:opacity-50"
+      >
+        {autoLoading ? "Fetching results..." : "Auto-settle from results"}
+      </button>
+      {autoMessage && <p className="text-sm text-muted">{autoMessage}</p>}
       {round.legs.map((leg) => (
         <div key={leg.id} className="flex items-center justify-between gap-2 text-sm">
           <span>

@@ -1,4 +1,6 @@
 import type { BookmakerQuote, Fixture, Market, MarketSelection } from "@the-syndicate/shared";
+import type { OddsApiBookmaker, OddsApiEvent } from "./api-types";
+import { isRetailBookmaker } from "./bookmakers";
 import { getCached, setCached } from "./cache";
 
 const API_BASE = "https://api.the-odds-api.com/v4";
@@ -6,34 +8,14 @@ const API_BASE = "https://api.the-odds-api.com/v4";
 /** Default competition when ODDS_API_SPORT is unset. */
 export const DEFAULT_ODDS_SPORT = "soccer_fifa_world_cup";
 
-/** Markets supported on the /odds endpoint for soccer (btts is not valid here). */
-const SOCCER_MARKETS = "h2h,totals";
+/** Markets on the bulk /odds endpoint (btts etc. are per-event only). */
+const BULK_SOCCER_MARKETS = "h2h,spreads,totals";
 
-type OddsApiOutcome = {
-  name: string;
-  price: number;
-  point?: number;
-};
+const TOTAL_LINES = [1.5, 2.5, 3.5] as const;
 
-type OddsApiMarket = {
-  key: string;
-  outcomes: OddsApiOutcome[];
-};
-
-type OddsApiBookmaker = {
-  key: string;
-  title: string;
-  markets: OddsApiMarket[];
-};
-
-type OddsApiEvent = {
-  id: string;
-  sport_title: string;
-  commence_time: string;
-  home_team: string;
-  away_team: string;
-  bookmakers: OddsApiBookmaker[];
-};
+function retailBookmakers(bookmakers: OddsApiBookmaker[]): OddsApiBookmaker[] {
+  return bookmakers.filter((b) => isRetailBookmaker(b.key));
+}
 
 function h2hSelectionId(
   outcomeName: string,
@@ -53,6 +35,15 @@ function totalsSelectionId(outcomeName: string): string | null {
   return null;
 }
 
+function overUnderType(line: number): string {
+  return `over_under_${String(line).replace(".", "")}`;
+}
+
+function asianHandicapType(homePoint: number): string {
+  const encoded = homePoint < 0 ? `m${String(Math.abs(homePoint)).replace(".", "")}` : String(homePoint).replace(".", "");
+  return `asian_handicap_${encoded}`;
+}
+
 function addQuote(
   map: Map<string, BookmakerQuote[]>,
   selectionId: string,
@@ -70,10 +61,7 @@ function addQuote(
   map.set(selectionId, quotes);
 }
 
-function buildH2hMarket(
-  event: OddsApiEvent,
-  bookmakers: OddsApiBookmaker[]
-): Market | null {
+function buildH2hMarket(event: OddsApiEvent, bookmakers: OddsApiBookmaker[]): Market | null {
   const quoteMap = new Map<string, BookmakerQuote[]>();
 
   for (const bookmaker of bookmakers) {
@@ -90,21 +78,9 @@ function buildH2hMarket(
   if (quoteMap.size === 0) return null;
 
   const selections: MarketSelection[] = [
-    {
-      id: "home",
-      label: event.home_team,
-      odds: quoteMap.get("home") ?? [],
-    },
-    {
-      id: "draw",
-      label: "Draw",
-      odds: quoteMap.get("draw") ?? [],
-    },
-    {
-      id: "away",
-      label: event.away_team,
-      odds: quoteMap.get("away") ?? [],
-    },
+    { id: "home", label: event.home_team, odds: quoteMap.get("home") ?? [] },
+    { id: "draw", label: "Draw", odds: quoteMap.get("draw") ?? [] },
+    { id: "away", label: event.away_team, odds: quoteMap.get("away") ?? [] },
   ].filter((s) => s.odds.length > 0);
 
   if (selections.length === 0) return null;
@@ -112,17 +88,20 @@ function buildH2hMarket(
   return { type: "match_winner", label: "Match Winner", selections };
 }
 
-function buildTotalsMarket(bookmakers: OddsApiBookmaker[]): Market | null {
+function buildTotalsMarketForLine(
+  bookmakers: OddsApiBookmaker[],
+  line: number
+): Market | null {
   const quoteMap = new Map<string, BookmakerQuote[]>();
 
   for (const bookmaker of bookmakers) {
     const market = bookmaker.markets.find(
-      (m) => m.key === "totals" && m.outcomes.some((o) => o.point === 2.5)
+      (m) => m.key === "totals" && m.outcomes.some((o) => o.point === line)
     );
     if (!market) continue;
 
     for (const outcome of market.outcomes) {
-      if (outcome.point !== 2.5) continue;
+      if (outcome.point !== line) continue;
       const selectionId = totalsSelectionId(outcome.name);
       if (!selectionId) continue;
       addQuote(quoteMap, selectionId, bookmaker.key, bookmaker.title, outcome.price);
@@ -132,19 +111,89 @@ function buildTotalsMarket(bookmakers: OddsApiBookmaker[]): Market | null {
   if (quoteMap.size === 0) return null;
 
   const selections: MarketSelection[] = [
-    { id: "over", label: "Over 2.5", odds: quoteMap.get("over") ?? [] },
-    { id: "under", label: "Under 2.5", odds: quoteMap.get("under") ?? [] },
+    { id: "over", label: `Over ${line}`, odds: quoteMap.get("over") ?? [] },
+    { id: "under", label: `Under ${line}`, odds: quoteMap.get("under") ?? [] },
   ].filter((s) => s.odds.length > 0);
 
   if (selections.length === 0) return null;
 
-  return { type: "over_under_25", label: "Over/Under 2.5 Goals", selections };
+  return {
+    type: overUnderType(line),
+    label: `Over/Under ${line} Goals`,
+    selections,
+  };
+}
+
+function buildTotalsMarkets(bookmakers: OddsApiBookmaker[]): Market[] {
+  return TOTAL_LINES.map((line) => buildTotalsMarketForLine(bookmakers, line)).filter(
+    (m): m is Market => m !== null
+  );
+}
+
+function buildSpreadsMarkets(event: OddsApiEvent, bookmakers: OddsApiBookmaker[]): Market[] {
+  const lineMaps = new Map<string, Map<string, BookmakerQuote[]>>();
+
+  for (const bookmaker of bookmakers) {
+    const market = bookmaker.markets.find((m) => m.key === "spreads");
+    if (!market) continue;
+
+    for (const outcome of market.outcomes) {
+      if (outcome.point === undefined) continue;
+
+      const isHome = outcome.name === event.home_team;
+      const isAway = outcome.name === event.away_team;
+      if (!isHome && !isAway) continue;
+
+      const homePoint = isHome ? outcome.point : -outcome.point;
+      const type = asianHandicapType(homePoint);
+      const quoteMap = lineMaps.get(type) ?? new Map<string, BookmakerQuote[]>();
+      const selectionId = isHome ? `home_${outcome.point}` : `away_${outcome.point}`;
+      addQuote(quoteMap, selectionId, bookmaker.key, bookmaker.title, outcome.price);
+      lineMaps.set(type, quoteMap);
+    }
+  }
+
+  const markets: Market[] = [];
+
+  for (const [type, quoteMap] of lineMaps) {
+    const homePoint = type.includes("m")
+      ? -Number(type.replace("asian_handicap_m", "")) / 10
+      : Number(type.replace("asian_handicap_", "")) / 10;
+    const awayPoint = -homePoint;
+    const homeLabel = `${event.home_team} ${homePoint > 0 ? "+" : ""}${homePoint}`;
+    const awayLabel = `${event.away_team} ${awayPoint > 0 ? "+" : ""}${awayPoint}`;
+
+    const selections: MarketSelection[] = [
+      {
+        id: `home_${homePoint}`,
+        label: homeLabel,
+        odds: quoteMap.get(`home_${homePoint}`) ?? [],
+      },
+      {
+        id: `away_${awayPoint}`,
+        label: awayLabel,
+        odds: quoteMap.get(`away_${awayPoint}`) ?? [],
+      },
+    ].filter((s) => s.odds.length > 0);
+
+    if (selections.length === 0) continue;
+
+    markets.push({
+      type,
+      label: `Asian Handicap ${homePoint > 0 ? "+" : ""}${homePoint}`,
+      selections,
+    });
+  }
+
+  return markets.sort((a, b) => a.label.localeCompare(b.label));
 }
 
 function mapEventToFixture(event: OddsApiEvent): Fixture | null {
+  const bookmakers = retailBookmakers(event.bookmakers);
   const markets = [
-    buildH2hMarket(event, event.bookmakers),
-    buildTotalsMarket(event.bookmakers),
+    buildH2hMarket(event, bookmakers),
+    ...buildTotalsMarkets(bookmakers),
+    ...buildSpreadsMarkets(event, bookmakers),
   ].filter((m): m is Market => m !== null);
 
   if (markets.length === 0) return null;
@@ -176,7 +225,7 @@ export async function fetchOddsApiFixtures(): Promise<Fixture[]> {
   const url = new URL(`${API_BASE}/sports/${sport}/odds`);
   url.searchParams.set("apiKey", apiKey);
   url.searchParams.set("regions", regions);
-  url.searchParams.set("markets", SOCCER_MARKETS);
+  url.searchParams.set("markets", BULK_SOCCER_MARKETS);
   url.searchParams.set("oddsFormat", "decimal");
 
   const res = await fetch(url.toString(), { next: { revalidate: 0 } });
@@ -192,4 +241,34 @@ export async function fetchOddsApiFixtures(): Promise<Fixture[]> {
     .sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime());
 
   return setCached(cacheKey, fixtures, cacheTtlMs);
+}
+
+export async function fetchOddsApiEvent(eventId: string): Promise<OddsApiEvent | null> {
+  const apiKey = process.env.ODDS_API_KEY;
+  if (!apiKey) return null;
+
+  const sport = process.env.ODDS_API_SPORT ?? DEFAULT_ODDS_SPORT;
+  const regions = process.env.ODDS_API_REGIONS ?? "uk";
+  const cacheTtlMs = Number(process.env.ODDS_API_CACHE_TTL_MS ?? 600_000);
+  const cacheKey = `odds-api-event:${sport}:${regions}:${eventId}`;
+
+  const cached = getCached<OddsApiEvent>(cacheKey);
+  if (cached) return cached;
+
+  const url = new URL(`${API_BASE}/sports/${sport}/events/${eventId}/odds`);
+  url.searchParams.set("apiKey", apiKey);
+  url.searchParams.set("regions", regions);
+  url.searchParams.set("markets", "btts,double_chance,draw_no_bet");
+  url.searchParams.set("oddsFormat", "decimal");
+
+  const res = await fetch(url.toString(), { next: { revalidate: 0 } });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`The Odds API event error ${res.status}: ${body}`);
+  }
+
+  const events = (await res.json()) as OddsApiEvent[];
+  const event = events[0] ?? null;
+  if (event) setCached(cacheKey, event, cacheTtlMs);
+  return event;
 }
