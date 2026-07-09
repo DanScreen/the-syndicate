@@ -10,6 +10,7 @@ type Leg = {
   user: { id: string; name: string };
   homeTeam: string;
   awayTeam: string;
+  competition: string;
   selectionLabel: string;
   marketLabel: string;
   odds: number;
@@ -111,8 +112,6 @@ export function SubmitLegForm({
   const [loadingMarkets, setLoadingMarkets] = useState(false);
   const [marketType, setMarketType] = useState("");
   const [selectionId, setSelectionId] = useState("");
-  const [bookmakerId, setBookmakerId] = useState("");
-  const [bookmakerLimit, setBookmakerLimit] = useState(3);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [marketsError, setMarketsError] = useState("");
@@ -157,12 +156,6 @@ export function SubmitLegForm({
   const marketGroups = useMemo(() => groupMarkets(allMarkets), [allMarkets]);
   const market = allMarkets.find((m) => m.type === marketType);
   const selection = market?.selections.find((s) => s.id === selectionId);
-  const displayedQuotes = selection ? sortQuotesByBestOdds(selection.odds).slice(0, bookmakerLimit) : [];
-  const bestQuote = displayedQuotes[0];
-
-  useEffect(() => {
-    if (bestQuote) setBookmakerId(bestQuote.bookmakerId);
-  }, [bestQuote?.bookmakerId]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -172,7 +165,7 @@ export function SubmitLegForm({
     const res = await fetch("/api/legs", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ roundId, fixtureId, marketType, selectionId, bookmakerId }),
+      body: JSON.stringify({ roundId, fixtureId, marketType, selectionId }),
     });
 
     const data = await res.json();
@@ -222,7 +215,6 @@ export function SubmitLegForm({
                 setFixtureId(f.id);
                 setMarketType("");
                 setSelectionId("");
-                setBookmakerId("");
               }}
               className={`rounded-lg border px-3 py-3 text-left text-sm transition-colors ${
                 fixtureId === f.id
@@ -261,7 +253,6 @@ export function SubmitLegForm({
                     onClick={() => {
                       setMarketType(m.type);
                       setSelectionId("");
-                      setBookmakerId("");
                     }}
                     className={`rounded-lg border px-3 py-2 text-sm ${
                       marketType === m.type
@@ -288,10 +279,7 @@ export function SubmitLegForm({
                 <button
                   key={s.id}
                   type="button"
-                  onClick={() => {
-                    setSelectionId(s.id);
-                    if (top) setBookmakerId(top.bookmakerId);
-                  }}
+                  onClick={() => setSelectionId(s.id)}
                   className={`rounded-lg border px-3 py-3 text-sm ${
                     selectionId === s.id
                       ? "border-accent bg-accent-muted/30"
@@ -307,53 +295,59 @@ export function SubmitLegForm({
         </div>
       )}
 
-      {selection && displayedQuotes.length > 0 && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted">4. Bookmaker</p>
-            <label className="flex items-center gap-2 text-xs text-muted">
-              Show
-              <select
-                value={bookmakerLimit}
-                onChange={(e) => setBookmakerLimit(Number(e.target.value))}
-                className="rounded border border-border bg-background px-2 py-1 text-foreground"
-              >
-                <option value={3}>3</option>
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-              </select>
-              best odds
-            </label>
-          </div>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {displayedQuotes.map((o) => (
-              <button
-                key={o.bookmakerId}
-                type="button"
-                onClick={() => setBookmakerId(o.bookmakerId)}
-                className={`flex items-center justify-between rounded-lg border px-3 py-2 text-sm ${
-                  bookmakerId === o.bookmakerId
-                    ? "border-accent bg-accent-muted/30"
-                    : "border-border hover:border-accent/40"
-                }`}
-              >
-                <span>{o.bookmakerName}</span>
-                <span className="font-medium text-accent">{o.odds}</span>
-              </button>
-            ))}
-          </div>
-        </div>
+      {selection && (
+        <p className="text-sm text-muted">
+          You&apos;ll submit at the best available odds (
+          {sortQuotesByBestOdds(selection.odds)[0]?.odds ?? "—"}). The group acca
+          bookmaker is chosen when all legs are in.
+        </p>
       )}
 
       {error && <p className="text-sm text-red-400">{error}</p>}
       <button
         type="submit"
-        disabled={loading || !bookmakerId}
+        disabled={loading || !selectionId}
         className="w-full rounded-lg bg-accent py-2.5 text-sm font-medium text-black hover:bg-green-400 disabled:opacity-50"
       >
         {loading ? "Submitting..." : "Submit leg"}
       </button>
     </form>
+  );
+}
+
+export function AccaSummary({
+  combinedOdds,
+  bookmakerName,
+  bookmakerId,
+  singleBookmaker,
+}: {
+  combinedOdds: number;
+  bookmakerName?: string | null;
+  bookmakerId?: string | null;
+  singleBookmaker: boolean;
+}) {
+  return (
+    <div className="rounded-xl border border-accent/30 bg-accent-muted/20 p-4 text-sm">
+      <p className="font-semibold">Group acca</p>
+      <p className="mt-1">
+        Combined odds: <span className="text-accent">{combinedOdds}</span>
+      </p>
+      {singleBookmaker && bookmakerName ? (
+        <p className="mt-1 text-muted">
+          Best placed at <span className="text-foreground">{bookmakerName}</span>
+        </p>
+      ) : (
+        <p className="mt-1 text-amber-400">
+          No single bookmaker offers every leg — combined odds use the best price
+          per selection. Place legs individually.
+        </p>
+      )}
+      {singleBookmaker && bookmakerId && (
+        <p className="mt-2 text-xs text-muted">
+          Leg odds below are priced at {bookmakerName ?? bookmakerId} for this acca.
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -483,7 +477,7 @@ export function LegsList({ legs }: { legs: Leg[] }) {
             {leg.homeTeam} vs {leg.awayTeam} · {leg.marketLabel}: {leg.selectionLabel}
           </p>
           <p className="text-xs text-muted">
-            {leg.bookmakerName}
+            {leg.competition}
             {leg.outcome !== "pending" && (
               <> · {leg.outcome} (+{leg.pointsAwarded} pts)</>
             )}

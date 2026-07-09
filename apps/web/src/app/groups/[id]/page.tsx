@@ -2,6 +2,7 @@
 
 import { AppHeader } from "@/components/header";
 import {
+  AccaSummary,
   Leaderboard,
   LegsList,
   RoundHistory,
@@ -45,6 +46,7 @@ type GroupData = {
       user: { id: string; name: string };
       homeTeam: string;
       awayTeam: string;
+      competition: string;
       selectionLabel: string;
       marketLabel: string;
       odds: number;
@@ -162,21 +164,21 @@ export default function GroupPage() {
                   <p>
                     Status: <span className="text-accent">{data.activeRound.status}</span>
                   </p>
-                  {data.activeRound.combinedOdds && (
-                    <p className="mt-1">
-                      Combined odds:{" "}
-                      <span className="font-semibold">{data.activeRound.combinedOdds}</span>
-                      {data.activeRound.bestBookmakerId && (
-                        <> · Best at {data.activeRound.bestBookmakerId}</>
-                      )}
-                    </p>
-                  )}
                   {data.activeRound.profitLossGbp != null && (
                     <p className="mt-1">
                       Group P/L: £{data.activeRound.profitLossGbp.toFixed(2)}
                     </p>
                   )}
                 </div>
+
+                {data.activeRound.status === "locked" && data.activeRound.combinedOdds && (
+                  <AccaSummary
+                    combinedOdds={data.activeRound.combinedOdds}
+                    bookmakerId={data.activeRound.bestBookmakerId}
+                    bookmakerName={data.activeRound.legs[0]?.bookmakerName}
+                    singleBookmaker={Boolean(data.activeRound.bestBookmakerId)}
+                  />
+                )}
 
                 <RoundProgress
                   members={data.group.members}
@@ -197,7 +199,7 @@ export default function GroupPage() {
                     rel="noopener noreferrer"
                     className="block rounded-lg bg-accent px-4 py-3 text-center text-sm font-medium text-black hover:bg-green-400"
                   >
-                    Open betslip at {data.activeRound.bestBookmakerId}
+                    Open betslip at {data.activeRound.legs[0]?.bookmakerName ?? data.activeRound.bestBookmakerId}
                   </a>
                 )}
 

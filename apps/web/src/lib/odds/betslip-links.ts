@@ -51,6 +51,7 @@ export function generateBetslipLink(
 export function findBestBookmaker(
   legs: { bookmakerId: string; odds: number }[]
 ): { bookmakerId: string; combinedOdds: number } {
+  /** @deprecated Use findBestAccaBookmaker in acca.ts — requires full quote lists per leg */
   const byBookmaker = new Map<string, number>();
 
   for (const leg of legs) {

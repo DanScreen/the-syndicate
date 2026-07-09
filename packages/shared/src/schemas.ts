@@ -25,7 +25,6 @@ export const submitLegSchema = z.object({
   fixtureId: z.string(),
   marketType: z.string(),
   selectionId: z.string(),
-  bookmakerId: z.string(),
 });
 
 export const startRoundSchema = z.object({

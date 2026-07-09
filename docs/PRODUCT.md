@@ -26,12 +26,14 @@ The Syndicate lets football betting fans form social groups where each member co
 2. User joins as a member (pending acca if one is in progress)
 
 ### Flow 4: Build the group acca
-1. Group owner opens a new round (or round auto-starts when group is ready)
-2. Each member browses upcoming football fixtures
-3. Site shows betting markets and odds (aggregated from bookmakers)
-4. Member selects their leg and submits to the group
-5. When all members have submitted, acca **locks**
-6. System calculates combined odds and identifies best bookmaker price
+1. Group owner opens a new round
+2. Each member **chooses a competition** (e.g. Premier League, World Cup), then browses fixtures for that competition
+3. Site shows markets with **best odds only** per selection
+4. Member submits their leg
+5. When all members have submitted, acca **locks** — system compares bookmakers across all legs and recommends the best combined acca price
+6. Group sees locked acca with total odds and recommended bookmaker
+
+> Competition picker + shared results: [COMPETITIONS_AND_RESULTS.md](./COMPETITIONS_AND_RESULTS.md).
 
 ### Flow 5: Place and track
 1. Group sees locked acca with total odds and recommended bookmaker

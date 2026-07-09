@@ -1,5 +1,6 @@
 import { requireSession } from "@/lib/api-auth";
-import { findBestBookmaker } from "@/lib/odds/betslip-links";
+import { sortQuotesByBestOdds } from "@/lib/odds/bookmakers";
+import { lockRoundWithAccaPricing } from "@/lib/odds/lock-round";
 import { findSelection } from "@/lib/odds/provider";
 import { prisma } from "@the-syndicate/database";
 import { submitLegSchema } from "@the-syndicate/shared";
@@ -52,9 +53,9 @@ export async function POST(request: Request) {
   }
 
   const { fixture, market, selection } = selectionData;
-  const quote = selection.odds.find((o) => o.bookmakerId === parsed.data.bookmakerId);
+  const quote = sortQuotesByBestOdds(selection.odds)[0];
   if (!quote) {
-    return NextResponse.json({ error: "Bookmaker odds not found" }, { status: 400 });
+    return NextResponse.json({ error: "No odds available for this selection" }, { status: 400 });
   }
 
   const leg = await prisma.leg.create({
@@ -82,23 +83,12 @@ export async function POST(request: Request) {
     include: { legs: true, group: { include: { members: true } } },
   });
 
-  if (
+  const shouldLock =
     updatedRound &&
-    updatedRound.legs.length >= updatedRound.group.members.length
-  ) {
-    const best = findBestBookmaker(
-      updatedRound.legs.map((l) => ({ bookmakerId: l.bookmakerId, odds: l.odds }))
-    );
+    updatedRound.legs.length >= updatedRound.group.members.length;
 
-    await prisma.round.update({
-      where: { id: round.id },
-      data: {
-        status: "locked",
-        combinedOdds: best.combinedOdds,
-        bestBookmakerId: best.bookmakerId,
-        lockedAt: new Date(),
-      },
-    });
+  if (shouldLock) {
+    await lockRoundWithAccaPricing(round.id, updatedRound!.legs);
 
     await prisma.group.update({
       where: { id: round.groupId },
@@ -106,5 +96,8 @@ export async function POST(request: Request) {
     });
   }
 
-  return NextResponse.json({ leg, locked: updatedRound!.legs.length >= updatedRound!.group.members.length });
+  return NextResponse.json({
+    leg,
+    locked: Boolean(shouldLock),
+  });
 }

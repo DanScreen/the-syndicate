@@ -1,5 +1,5 @@
 import { requireSession } from "@/lib/api-auth";
-import { findBestBookmaker, generateBetslipLink } from "@/lib/odds/betslip-links";
+import { generateBetslipLink } from "@/lib/odds/betslip-links";
 import { prisma } from "@the-syndicate/database";
 import { NextResponse } from "next/server";
 
@@ -52,10 +52,14 @@ export async function GET(_request: Request, { params }: Params) {
   const activeRound = group.rounds.find((r) => r.status !== "settled") ?? null;
 
   let betslipLink: string | null = null;
-  if (activeRound?.status === "locked" && activeRound.legs.length > 0) {
+  if (
+    activeRound?.status === "locked" &&
+    activeRound.legs.length > 0 &&
+    activeRound.bestBookmakerId
+  ) {
     const combinedOdds = activeRound.combinedOdds ?? 1;
     betslipLink = generateBetslipLink(
-      activeRound.bestBookmakerId ?? "bet365",
+      activeRound.bestBookmakerId,
       activeRound.legs.map((l) => ({
         fixtureLabel: `${l.homeTeam} vs ${l.awayTeam}`,
         marketLabel: l.marketLabel,

@@ -75,7 +75,8 @@ the-syndicate/
 ## Settlement logic
 
 - **Manual:** group owner marks legs won/lost/void via `POST /api/rounds/[id]/settle`
-- **Automatic:** `POST /api/rounds/[id]/auto-settle` fetches finished matches from [football-data.org](https://www.football-data.org/), matches legs by team names + kickoff date, resolves each market type (`lib/results/resolve-leg.ts`), then applies points
+- **Automatic (interim):** `POST /api/rounds/[id]/auto-settle` fetches finished matches from [football-data.org](https://www.football-data.org/), matches legs by team names + kickoff date, resolves each market type (`lib/results/resolve-leg.ts`), then applies points
+- **Planned:** shared `Match` table + scheduled ingest per competition — see [COMPETITIONS_AND_RESULTS.md](./COMPETITIONS_AND_RESULTS.md)
 - Set `FOOTBALL_DATA_API_KEY` in production for auto-settle; owner can still override manually
 - Points: +3 win, +1 void, 0 loss (configurable in shared constants)
 - Group P&L: theoretical £10 stake × combined decimal odds if all legs win, else -stake

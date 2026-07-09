@@ -33,10 +33,11 @@ Prioritised website improvements. Mobile app is paused; focus is web at [www.the
 | Item | Status |
 |------|--------|
 | **Apex domain (`the-syndicate.uk`)** — redirects to `www` via Cloudflare rule | Done |
+| **Competition picker + shared results** — [spec](./COMPETITIONS_AND_RESULTS.md) | Spec |
 | User profile page (stats across groups) | Planned |
 | Email notifications (round locked, leg settled) | Planned |
 | Real betslip deeplinks (bookmaker-specific) | Planned |
-| Results API for automatic settlement | Planned |
+| Results sync job (football-data → `Match` table) | Planned (see spec) |
 | Custom domain via GCP load balancer (optional) | Planned |
 ## Tier 4 — Post-MVP
 
