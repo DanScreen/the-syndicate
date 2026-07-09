@@ -1,5 +1,6 @@
 "use client";
 
+import { GroupStats } from "@/components/group-stats";
 import { AppHeader } from "@/components/header";
 import {
   AccaSummary,
@@ -227,6 +228,13 @@ export default function GroupPage() {
             </div>
           </section>
         </div>
+
+        <section className="mt-8">
+          <h2 className="text-lg font-semibold">Performance</h2>
+          <div className="mt-4">
+            <GroupStats groupId={groupId} />
+          </div>
+        </section>
 
         <RoundHistory rounds={data.recentRounds} />
       </main>
