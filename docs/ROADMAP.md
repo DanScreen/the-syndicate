@@ -18,6 +18,7 @@ Production: [www.the-syndicate.uk](https://www.the-syndicate.uk) · **Index:** [
 - Shared `Match` table + football-data.org sync cron
 - Unit-stake leg points (win: odds−1, loss: −1)
 - Group stats summary + cumulative points chart
+- Member stats: multi-line chart, favourites, best/worst picks
 - Acca lock with combined bookmaker comparison
 - Invite flow, round progress, leg picker UX, landing/SEO
 - Auto-settle (football-data.org), manual settle
@@ -30,7 +31,8 @@ Production: [www.the-syndicate.uk](https://www.the-syndicate.uk) · **Index:** [
 | 1 | ~~Per-leg competition picker~~ ✅ | [specs/competitions-and-results.md](./specs/competitions-and-results.md) Phase A |
 | 2 | ~~Shared `Match` table + results cron~~ ✅ | [specs/competitions-and-results.md](./specs/competitions-and-results.md) Phase B |
 | 3 | ~~Unit-stake points~~ ✅ | [specs/group-stats-and-points.md](./specs/group-stats-and-points.md) Phase 1 |
-| 4 | ~~Group stats + chart~~ ✅ (member breakdowns next) | [specs/group-stats-and-points.md](./specs/group-stats-and-points.md) Phases 2–3 |
+| 4 | ~~Group stats + chart~~ ✅ | [specs/group-stats-and-points.md](./specs/group-stats-and-points.md) Phase 2 |
+| 5 | ~~Member stats breakdowns~~ ✅ | [specs/group-stats-and-points.md](./specs/group-stats-and-points.md) Phase 3 |
 
 ### Backlog
 - User profile (cross-group stats)

@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | Phase 2 done; Phases 3–4 not built |
+| **Status** | Phase 3 done; Phase 4 not built |
 | **Depends on** | `competitionId` on legs for favourites (Phase 3) |
 | **Replaces** | Flat points (+3 / +1 / 0) in `packages/shared/src/constants.ts` |
 | **As-built reference** | [../CURRENT_STATE.md](../CURRENT_STATE.md) |
@@ -104,8 +104,8 @@ Compute on read initially. Schema change: `Leg.pointsAwarded` → `Float`.
 
 ### Phase 3 — Member breakdowns
 
-- [ ] Multi-member chart
-- [ ] Favourites / best-worst (needs `competitionId`)
+- [x] Multi-member chart
+- [x] Favourites / best-worst (needs `competitionId`)
 
 ### Phase 4 — Polish
 

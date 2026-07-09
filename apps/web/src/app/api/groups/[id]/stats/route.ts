@@ -21,11 +21,22 @@ export async function GET(_request: Request, { params }: Params) {
     return NextResponse.json({ error: "Not a member" }, { status: 403 });
   }
 
-  const rounds = await prisma.round.findMany({
-    where: { groupId, status: "settled" },
-    include: { legs: true },
-    orderBy: { settledAt: "asc" },
-  });
+  const [rounds, groupMembers] = await Promise.all([
+    prisma.round.findMany({
+      where: { groupId, status: "settled" },
+      include: { legs: true },
+      orderBy: { settledAt: "asc" },
+    }),
+    prisma.groupMember.findMany({
+      where: { groupId },
+      include: { user: { select: { id: true, name: true } } },
+    }),
+  ]);
 
-  return NextResponse.json(computeGroupStats(rounds));
+  const members = groupMembers.map((m) => ({
+    userId: m.user.id,
+    name: m.user.name,
+  }));
+
+  return NextResponse.json(computeGroupStats(rounds, members));
 }

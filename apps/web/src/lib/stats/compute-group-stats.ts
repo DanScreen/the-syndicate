@@ -1,7 +1,14 @@
-import type { Leg, Round } from "@prisma/client";
-import { legPointsForOutcome, type LegOutcome } from "@the-syndicate/shared";
-
-export type RoundWithLegs = Round & { legs: Leg[] };
+import {
+  formatRoundLabel,
+  legPoints,
+  sortedSettledRounds,
+  type RoundWithLegs,
+} from "./helpers";
+import {
+  computeMemberChart,
+  type MemberChartPoint,
+  type MemberSeries,
+} from "./compute-member-chart";
 
 export type GroupStatsSummary = {
   totalRounds: number;
@@ -24,32 +31,15 @@ export type GroupStatsChartPoint = {
 export type GroupStatsResult = {
   summary: GroupStatsSummary;
   chart: GroupStatsChartPoint[];
+  members: MemberSeries[];
+  memberChart: MemberChartPoint[];
 };
 
-function roundSortKey(round: Round): number {
-  return (round.settledAt ?? round.createdAt).getTime();
-}
-
-function formatRoundLabel(round: Round, roundNumber: number): string {
-  if (round.settledAt) {
-    return new Date(round.settledAt).toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "short",
-    });
-  }
-  return `Round ${roundNumber}`;
-}
-
-function legPoints(leg: Leg): number {
-  if (leg.outcome === "pending") return 0;
-  return legPointsForOutcome(leg.outcome as LegOutcome, leg.odds);
-}
-
-export function computeGroupStats(rounds: RoundWithLegs[]): GroupStatsResult {
-  const settled = rounds
-    .filter((r) => r.status === "settled")
-    .sort((a, b) => roundSortKey(a) - roundSortKey(b));
-
+export function computeGroupStats(
+  rounds: RoundWithLegs[],
+  members: MemberSeries[] = []
+): GroupStatsResult {
+  const settled = sortedSettledRounds(rounds);
   const allLegs = settled.flatMap((r) => r.legs);
   const wonLegs = allLegs.filter((l) => l.outcome === "won");
   const lostLegs = allLegs.filter((l) => l.outcome === "lost");
@@ -74,6 +64,10 @@ export function computeGroupStats(rounds: RoundWithLegs[]): GroupStatsResult {
 
   const netAccaPlGbp = settled.reduce((sum, r) => sum + (r.profitLossGbp ?? 0), 0);
 
+  const activeMembers = members.filter((m) =>
+    allLegs.some((l) => l.userId === m.userId)
+  );
+
   return {
     summary: {
       totalRounds: settled.length,
@@ -96,5 +90,7 @@ export function computeGroupStats(rounds: RoundWithLegs[]): GroupStatsResult {
           : null,
     },
     chart,
+    members: activeMembers,
+    memberChart: computeMemberChart(rounds, activeMembers),
   };
 }

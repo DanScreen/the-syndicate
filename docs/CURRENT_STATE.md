@@ -23,6 +23,7 @@ Mobile app (`apps/mobile/`) is **paused** — web only.
 | Leaderboard (unit-stake points) | ✅ |
 | Round history, progress UI, landing/SEO | ✅ |
 | Group stats summary + cumulative points chart | ✅ |
+| Member stats breakdowns + multi-member chart | ✅ |
 
 \*Asian handicap only from exchange bookmakers in current World Cup UK feed — filtered out; handicap UI empty for those fixtures.
 
@@ -42,7 +43,7 @@ Examples: win @ 2.50 → +1.50; loss → −1.00.
 
 **Group acca P/L:** theoretical **£10** stake on combined acca odds. All legs won → `stake × combinedOdds − stake`; any loss → `−stake`. See `lib/settlement.ts`.
 
-**Planned:** member breakdowns + favourites — [specs/group-stats-and-points.md](./specs/group-stats-and-points.md) Phase 3
+**Planned:** dashboard cross-group summary — [specs/group-stats-and-points.md](./specs/group-stats-and-points.md) Phase 4
 
 ---
 
@@ -146,6 +147,7 @@ Schema: `packages/database/prisma/schema.prisma`
 | `POST /api/internal/sync-matches` | `CRON_SECRET` | Sync football-data.org → `Match` |
 | `GET /api/groups/[id]` | Member | Group + active round + betslip link |
 | `GET /api/groups/[id]/stats` | Member | Group summary stats + chart series |
+| `GET /api/groups/[id]/members/[userId]/stats` | Member | Member breakdown + favourites |
 | `GET /api/health` | Public | Health check |
 
 ---
