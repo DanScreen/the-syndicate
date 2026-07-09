@@ -1,15 +1,30 @@
 ---
-description: Documentation routing for agents — read before planning features
+description: Documentation routing and maintenance for agents
 globs:
 alwaysApply: true
 ---
 
 # Project documentation
 
-Before implementing features, read **docs/README.md** and **docs/CURRENT_STATE.md**.
+## Before implementing
 
-- **Planned work:** find the spec in `docs/specs/` and follow its checklist.
-- **After shipping:** update `docs/CURRENT_STATE.md` and `docs/ROADMAP.md`.
-- Do not treat conversation history as source of truth — the repo docs are.
+Read **docs/README.md** and **docs/CURRENT_STATE.md**. For planned features, read the matching spec in **docs/specs/**.
 
-Build order: competitions picker → Match ingest → unit-stake points → group stats (see docs/ROADMAP.md).
+Do not treat conversation history as source of truth.
+
+## After shipping (required)
+
+Update repo docs in the **same commit** as code changes:
+
+1. **docs/CURRENT_STATE.md** — always (routes, env vars, file paths, limitations)
+2. **docs/ROADMAP.md** — if a roadmap item is done
+3. **docs/specs/*.md** — check off completed phases; resolve open questions
+4. **docs/PRODUCT.md** — only if user-facing flows or scope changed
+5. **docs/ARCHITECTURE.md** — only if new subsystem or data model pattern
+6. **apps/web/.env.example** — if new env vars
+
+Full matrix: **AGENTS.md** → Documentation maintenance.
+
+## Build order
+
+Competitions picker → Match ingest → unit-stake points → group stats (docs/ROADMAP.md).

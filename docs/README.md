@@ -63,11 +63,18 @@ docs/
 
 ## Updating docs (agents & humans)
 
-After shipping a feature:
+**Rule:** doc updates belong in the **same commit** as the code they describe.
 
-1. Update [CURRENT_STATE.md](./CURRENT_STATE.md) — what changed, new env vars, new routes.
-2. Update [ROADMAP.md](./ROADMAP.md) — mark items Done.
-3. Update the relevant **spec** — check off phases; move “open questions” to decisions.
-4. Only edit [PRODUCT.md](./PRODUCT.md) if user-facing behaviour or vision changed.
+See also [AGENTS.md](../AGENTS.md) → Documentation maintenance.
+
+| Change | Update |
+|--------|--------|
+| Shipped feature / fix | [CURRENT_STATE.md](./CURRENT_STATE.md) |
+| Roadmap item done | [ROADMAP.md](./ROADMAP.md) |
+| Spec phase done | Relevant [specs/](./specs/) checklist |
+| User flow / scope change | [PRODUCT.md](./PRODUCT.md) |
+| Architecture / schema pattern | [ARCHITECTURE.md](./ARCHITECTURE.md) |
+| Deploy / infra / CI | [DEPLOYMENT.md](./DEPLOYMENT.md) |
+| New env var | `apps/web/.env.example` + CURRENT_STATE |
 
 Do **not** duplicate spec content into ARCHITECTURE — link instead.
