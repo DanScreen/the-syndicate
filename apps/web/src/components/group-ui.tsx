@@ -1,7 +1,7 @@
 "use client";
 
 import type { Fixture, Market } from "@the-syndicate/shared";
-import { formatLegPoints } from "@the-syndicate/shared";
+import { formatLegPoints, legPointsForOutcome } from "@the-syndicate/shared";
 import { useEffect, useMemo, useState } from "react";
 import { sortQuotesByBestOdds } from "@/lib/odds/bookmakers";
 import { groupMarkets } from "@/lib/odds/market-groups";
@@ -535,7 +535,7 @@ export function LegsList({ legs }: { legs: Leg[] }) {
           <p className="text-xs text-muted">
             {leg.competition}
             {leg.outcome !== "pending" && (
-              <> · {leg.outcome} ({formatLegPoints(leg.pointsAwarded)} pts)</>
+              <> · {leg.outcome} ({formatLegPoints(legPointsForOutcome(leg.outcome as "won" | "lost" | "void", leg.odds))} pts)</>
             )}
           </p>
         </li>

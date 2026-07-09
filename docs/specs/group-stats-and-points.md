@@ -116,6 +116,6 @@ Compute on read initially. Schema change: `Leg.pointsAwarded` → `Float`.
 
 ## Open questions
 
-1. Void = 0 points?
-2. Reset vs backfill historical points on deploy?
+1. Void = 0 points? **Yes** (implemented).
+2. Reset vs backfill historical points on deploy? **Backfill** — migration `20260710000000_backfill_unit_stake_points`.
 3. Decimal places on leaderboard?

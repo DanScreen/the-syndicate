@@ -1,4 +1,5 @@
 import type { Leg, Round } from "@prisma/client";
+import { legPointsForOutcome, type LegOutcome } from "@the-syndicate/shared";
 
 export type RoundWithLegs = Round & { legs: Leg[] };
 
@@ -39,6 +40,11 @@ function formatRoundLabel(round: Round, roundNumber: number): string {
   return `Round ${roundNumber}`;
 }
 
+function legPoints(leg: Leg): number {
+  if (leg.outcome === "pending") return 0;
+  return legPointsForOutcome(leg.outcome as LegOutcome, leg.odds);
+}
+
 export function computeGroupStats(rounds: RoundWithLegs[]): GroupStatsResult {
   const settled = rounds
     .filter((r) => r.status === "settled")
@@ -55,7 +61,7 @@ export function computeGroupStats(rounds: RoundWithLegs[]): GroupStatsResult {
 
   let cumulativePoints = 0;
   const chart: GroupStatsChartPoint[] = settled.map((round, index) => {
-    const roundPoints = round.legs.reduce((sum, leg) => sum + leg.pointsAwarded, 0);
+    const roundPoints = round.legs.reduce((sum, leg) => sum + legPoints(leg), 0);
     cumulativePoints += roundPoints;
     return {
       roundNumber: index + 1,
@@ -82,7 +88,7 @@ export function computeGroupStats(rounds: RoundWithLegs[]): GroupStatsResult {
         accaOdds.length > 0
           ? Number((accaOdds.reduce((sum, o) => sum + o, 0) / accaOdds.length).toFixed(2))
           : null,
-      netGroupPoints: Number(allLegs.reduce((sum, l) => sum + l.pointsAwarded, 0).toFixed(2)),
+      netGroupPoints: Number(allLegs.reduce((sum, l) => sum + legPoints(l), 0).toFixed(2)),
       netAccaPlGbp: Number(netAccaPlGbp.toFixed(2)),
       winRate:
         decidedLegs > 0
