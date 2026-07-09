@@ -34,6 +34,7 @@ Prioritised website improvements. Mobile app is paused; focus is web at [www.the
 |------|--------|
 | **Apex domain (`the-syndicate.uk`)** — redirects to `www` via Cloudflare rule | Done |
 | **Competition picker + shared results** — [spec](./COMPETITIONS_AND_RESULTS.md) | Spec |
+| **Group stats & performance points** — [spec](./GROUP_STATS_AND_POINTS.md) | Spec |
 | User profile page (stats across groups) | Planned |
 | Email notifications (round locked, leg settled) | Planned |
 | Real betslip deeplinks (bookmaker-specific) | Planned |

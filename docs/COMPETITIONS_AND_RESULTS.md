@@ -185,6 +185,7 @@ flowchart LR
 | Acca bookmaker | Compared at lock across all legs | Same |
 | Competition scope | Single env sport (World Cup) | Per-leg picker |
 | Match results | Fetched on auto-settle click | Shared `Match` table |
+| Points & stats | Flat +3/+0 leaderboard | Unit-stake points + charts — [GROUP_STATS_AND_POINTS.md](./GROUP_STATS_AND_POINTS.md) |
 
 ---
 

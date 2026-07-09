@@ -78,7 +78,7 @@ the-syndicate/
 - **Automatic (interim):** `POST /api/rounds/[id]/auto-settle` fetches finished matches from [football-data.org](https://www.football-data.org/), matches legs by team names + kickoff date, resolves each market type (`lib/results/resolve-leg.ts`), then applies points
 - **Planned:** shared `Match` table + scheduled ingest per competition — see [COMPETITIONS_AND_RESULTS.md](./COMPETITIONS_AND_RESULTS.md)
 - Set `FOOTBALL_DATA_API_KEY` in production for auto-settle; owner can still override manually
-- Points: +3 win, +1 void, 0 loss (configurable in shared constants)
+- Points: **planned** — unit-stake model (`odds − 1` win, `−1` loss); see [GROUP_STATS_AND_POINTS.md](./GROUP_STATS_AND_POINTS.md). Today: flat +3 / +1 / 0.
 - Group P&L: theoretical £10 stake × combined decimal odds if all legs win, else -stake
 
 ## Auth flow

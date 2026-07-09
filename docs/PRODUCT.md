@@ -42,9 +42,11 @@ The Syndicate lets football betting fans form social groups where each member co
 
 ### Flow 6: Settlement and leaderboard
 1. System resolves each leg (won / lost / void)
-2. Points assigned per member based on their leg outcome
-3. Group profit/loss calculated (theoretical stake model)
-4. Leaderboard updated within group and on user profile
+2. Points assigned per member: **+`(odds − 1)`** on a win, **−1** on a loss (unit stake model)
+3. Group profit/loss calculated for the acca (theoretical £10 stake model)
+4. Leaderboard and **group stats** updated — charts, favourites, member performance over time
+
+> Points formula and social stats: [GROUP_STATS_AND_POINTS.md](./GROUP_STATS_AND_POINTS.md).
 
 ## MVP feature list
 
