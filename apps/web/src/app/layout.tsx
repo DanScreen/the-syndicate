@@ -9,7 +9,7 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://the-syndicate.uk"),
+  metadataBase: new URL("https://www.the-syndicate.uk"),
   title: {
     default: "The Syndicate — Social Group Accas",
     template: "%s · The Syndicate",
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     title: "The Syndicate — Social Group Accas",
     description:
       "Build accas with your mates. Each member picks a leg, track combined odds, and compete on the leaderboard.",
-    url: "https://the-syndicate.uk",
+    url: "https://www.the-syndicate.uk",
     siteName: "The Syndicate",
     locale: "en_GB",
     type: "website",
