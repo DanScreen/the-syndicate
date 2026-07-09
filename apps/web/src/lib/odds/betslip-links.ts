@@ -26,6 +26,12 @@ export function generateBetslipLink(
     williamhill: "https://sports.williamhill.com/betting/en-gb/football",
     paddypower: "https://www.paddypower.com/football",
     skybet: "https://skybet.com/football",
+    ladbrokes_uk: "https://sports.ladbrokes.com/football",
+    coral: "https://sports.coral.co.uk/football",
+    betfair: "https://www.betfair.com/betting/football/s-1",
+    unibet_uk: "https://www.unibet.co.uk/betting/sports/filter/football",
+    betway: "https://betway.com/en-gb/sports/grp/football",
+    boylesports: "https://www.boylesports.com/sports/football",
   };
 
   const base = baseUrls[bookmakerId] ?? "https://example.com/betslip";

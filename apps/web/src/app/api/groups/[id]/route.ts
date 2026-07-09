@@ -84,10 +84,16 @@ export async function GET(_request: Request, { params }: Params) {
       maxMembers: group.maxMembers,
       owner: group.owner,
       memberCount: group.members.length,
+      members: group.members.map((m) => ({
+        id: m.user.id,
+        name: m.user.name,
+        role: m.role,
+      })),
     },
     leaderboard,
     activeRound,
     betslipLink,
     isOwner: membership.role === "owner",
+    recentRounds: group.rounds.filter((r) => r.status === "settled"),
   });
 }

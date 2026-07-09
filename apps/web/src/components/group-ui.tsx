@@ -25,16 +25,85 @@ type ActiveRound = {
   legs: Leg[];
 };
 
+type Member = { id: string; name: string; role: string };
+
+function formatKickoff(iso: string) {
+  return new Date(iso).toLocaleString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+export function RoundProgress({
+  members,
+  legs,
+  status,
+}: {
+  members: Member[];
+  legs: Leg[];
+  status: string;
+}) {
+  const submittedIds = new Set(legs.map((l) => l.user.id));
+  const pending = members.filter((m) => !submittedIds.has(m.id));
+
+  let banner = "";
+  if (status === "collecting") {
+    banner =
+      pending.length === 0
+        ? "Everyone has submitted — locking acca..."
+        : `Waiting on ${pending.length} leg${pending.length === 1 ? "" : "s"}`;
+  } else if (status === "locked") {
+    banner = "Acca locked — place your bet at the bookmaker";
+  } else if (status === "settled") {
+    banner = "Round settled";
+  }
+
+  return (
+    <div className="space-y-3">
+      {banner && (
+        <div className="rounded-lg border border-accent/30 bg-accent-muted/40 px-4 py-3 text-sm text-accent">
+          {banner}
+        </div>
+      )}
+      <ul className="space-y-2">
+        {members.map((member) => {
+          const leg = legs.find((l) => l.user.id === member.id);
+          const submitted = Boolean(leg);
+          return (
+            <li
+              key={member.id}
+              className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2 text-sm"
+            >
+              <span>
+                {member.name}
+                {member.role === "owner" && (
+                  <span className="ml-2 text-xs text-muted">owner</span>
+                )}
+              </span>
+              <span className={submitted ? "text-accent" : "text-muted"}>
+                {submitted ? `✓ ${leg!.selectionLabel} @ ${leg!.odds}` : "Pending"}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 export function SubmitLegForm({
   roundId,
-  userId,
   onSubmitted,
 }: {
   roundId: string;
-  userId: string;
   onSubmitted: () => void;
 }) {
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
+  const [source, setSource] = useState<"live" | "mock">("mock");
+  const [loadingFixtures, setLoadingFixtures] = useState(true);
   const [fixtureId, setFixtureId] = useState("");
   const [marketType, setMarketType] = useState("");
   const [selectionId, setSelectionId] = useState("");
@@ -45,12 +114,23 @@ export function SubmitLegForm({
   useEffect(() => {
     fetch("/api/fixtures")
       .then((r) => r.json())
-      .then((d) => setFixtures(d.fixtures ?? []));
+      .then((d) => {
+        setFixtures(d.fixtures ?? []);
+        setSource(d.source ?? "mock");
+      })
+      .finally(() => setLoadingFixtures(false));
   }, []);
 
   const fixture = fixtures.find((f) => f.id === fixtureId);
   const market = fixture?.markets.find((m) => m.type === marketType);
   const selection = market?.selections.find((s) => s.id === selectionId);
+  const bestQuote = selection?.odds.reduce((best, q) =>
+    !best || q.odds > best.odds ? q : best
+  );
+
+  useEffect(() => {
+    if (bestQuote) setBookmakerId(bestQuote.bookmakerId);
+  }, [bestQuote?.bookmakerId]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -74,88 +154,144 @@ export function SubmitLegForm({
     onSubmitted();
   }
 
+  if (loadingFixtures) {
+    return (
+      <div className="rounded-xl border border-border bg-card p-4 text-sm text-muted">
+        Loading fixtures...
+      </div>
+    );
+  }
+
+  if (fixtures.length === 0) {
+    return (
+      <div className="rounded-xl border border-border bg-card p-4 text-sm text-muted">
+        No upcoming fixtures available right now. Try again later.
+      </div>
+    );
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 rounded-xl border border-border bg-card p-4">
-      <h3 className="font-semibold">Submit your leg</h3>
-      <select
-        value={fixtureId}
-        onChange={(e) => {
-          setFixtureId(e.target.value);
-          setMarketType("");
-          setSelectionId("");
-          setBookmakerId("");
-        }}
-        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-        required
-      >
-        <option value="">Select fixture</option>
-        {fixtures.map((f) => (
-          <option key={f.id} value={f.id}>
-            {f.homeTeam} vs {f.awayTeam}
-          </option>
-        ))}
-      </select>
+    <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-border bg-card p-4">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="font-semibold">Submit your leg</h3>
+        <span className="rounded-full bg-accent-muted px-2 py-0.5 text-xs text-accent">
+          {source === "live" ? "Live odds" : "Demo odds"}
+        </span>
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-xs font-medium uppercase tracking-wide text-muted">1. Pick a fixture</p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {fixtures.map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              onClick={() => {
+                setFixtureId(f.id);
+                setMarketType("");
+                setSelectionId("");
+                setBookmakerId("");
+              }}
+              className={`rounded-lg border px-3 py-3 text-left text-sm transition-colors ${
+                fixtureId === f.id
+                  ? "border-accent bg-accent-muted/30"
+                  : "border-border hover:border-accent/40"
+              }`}
+            >
+              <p className="font-medium">
+                {f.homeTeam} vs {f.awayTeam}
+              </p>
+              <p className="mt-1 text-xs text-muted">
+                {f.competition} · {formatKickoff(f.kickoff)}
+              </p>
+            </button>
+          ))}
+        </div>
+      </div>
 
       {fixture && (
-        <select
-          value={marketType}
-          onChange={(e) => {
-            setMarketType(e.target.value);
-            setSelectionId("");
-            setBookmakerId("");
-          }}
-          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-          required
-        >
-          <option value="">Select market</option>
-          {fixture.markets.map((m) => (
-            <option key={m.type} value={m.type}>
-              {m.label}
-            </option>
-          ))}
-        </select>
+        <div className="space-y-2">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted">2. Pick a market</p>
+          <div className="flex flex-wrap gap-2">
+            {fixture.markets.map((m) => (
+              <button
+                key={m.type}
+                type="button"
+                onClick={() => {
+                  setMarketType(m.type);
+                  setSelectionId("");
+                  setBookmakerId("");
+                }}
+                className={`rounded-lg border px-3 py-2 text-sm ${
+                  marketType === m.type
+                    ? "border-accent bg-accent-muted/30"
+                    : "border-border hover:border-accent/40"
+                }`}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+        </div>
       )}
 
       {market && (
-        <select
-          value={selectionId}
-          onChange={(e) => {
-            setSelectionId(e.target.value);
-            setBookmakerId("");
-          }}
-          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-          required
-        >
-          <option value="">Select pick</option>
-          {market.selections.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.label}
-            </option>
-          ))}
-        </select>
+        <div className="space-y-2">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted">3. Pick your selection</p>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {market.selections.map((s) => {
+              const top = s.odds.reduce((best, q) => (!best || q.odds > best.odds ? q : best));
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectionId(s.id);
+                    if (top) setBookmakerId(top.bookmakerId);
+                  }}
+                  className={`rounded-lg border px-3 py-3 text-sm ${
+                    selectionId === s.id
+                      ? "border-accent bg-accent-muted/30"
+                      : "border-border hover:border-accent/40"
+                  }`}
+                >
+                  <p className="font-medium">{s.label}</p>
+                  {top && <p className="mt-1 text-accent">Best {top.odds}</p>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       )}
 
-      {selection && (
-        <select
-          value={bookmakerId}
-          onChange={(e) => setBookmakerId(e.target.value)}
-          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-          required
-        >
-          <option value="">Select bookmaker</option>
-          {selection.odds.map((o) => (
-            <option key={o.bookmakerId} value={o.bookmakerId}>
-              {o.bookmakerName} @ {o.odds}
-            </option>
-          ))}
-        </select>
+      {selection && selection.odds.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted">4. Bookmaker</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {selection.odds.map((o) => (
+              <button
+                key={o.bookmakerId}
+                type="button"
+                onClick={() => setBookmakerId(o.bookmakerId)}
+                className={`flex items-center justify-between rounded-lg border px-3 py-2 text-sm ${
+                  bookmakerId === o.bookmakerId
+                    ? "border-accent bg-accent-muted/30"
+                    : "border-border hover:border-accent/40"
+                }`}
+              >
+                <span>{o.bookmakerName}</span>
+                <span className="font-medium text-accent">{o.odds}</span>
+              </button>
+            ))}
+          </div>
+        </div>
       )}
 
       {error && <p className="text-sm text-red-400">{error}</p>}
       <button
         type="submit"
-        disabled={loading}
-        className="w-full rounded-lg bg-accent py-2 text-sm font-medium text-black hover:bg-green-400 disabled:opacity-50"
+        disabled={loading || !bookmakerId}
+        className="w-full rounded-lg bg-accent py-2.5 text-sm font-medium text-black hover:bg-green-400 disabled:opacity-50"
       >
         {loading ? "Submitting..." : "Submit leg"}
       </button>
@@ -303,5 +439,43 @@ export function Leaderboard({
         </li>
       ))}
     </ol>
+  );
+}
+
+export function RoundHistory({
+  rounds,
+}: {
+  rounds: {
+    id: string;
+    status: string;
+    combinedOdds: number | null;
+    profitLossGbp: number | null;
+    legs: { selectionLabel: string; outcome: string }[];
+  }[];
+}) {
+  if (rounds.length === 0) return null;
+
+  return (
+    <section className="mt-10">
+      <h2 className="text-lg font-semibold">Recent rounds</h2>
+      <ul className="mt-4 space-y-3">
+        {rounds.map((round) => (
+          <li key={round.id} className="rounded-xl border border-border bg-card p-4 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted capitalize">{round.status}</span>
+              {round.combinedOdds && (
+                <span className="text-accent">Combined {round.combinedOdds}</span>
+              )}
+            </div>
+            {round.profitLossGbp != null && (
+              <p className="mt-1">P/L: £{round.profitLossGbp.toFixed(2)}</p>
+            )}
+            <p className="mt-2 text-xs text-muted">
+              {round.legs.map((l) => `${l.selectionLabel} (${l.outcome})`).join(" · ")}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

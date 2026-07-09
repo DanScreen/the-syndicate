@@ -27,6 +27,8 @@ export default async function DashboardPage() {
     orderBy: { joinedAt: "desc" },
   });
 
+  const isNewUser = memberships.length === 0;
+
   return (
     <div className="min-h-screen">
       <AppHeader userName={user?.name ?? "Player"} />
@@ -55,32 +57,63 @@ export default async function DashboardPage() {
           </div>
         </div>
 
+        {isNewUser && (
+          <section className="mt-8 rounded-xl border border-accent/30 bg-accent-muted/20 p-6">
+            <h2 className="font-semibold text-accent">Welcome to The Syndicate</h2>
+            <p className="mt-2 text-sm text-muted">
+              Get your mates together in three steps:
+            </p>
+            <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm text-muted">
+              <li>Create a group and share the invite link</li>
+              <li>Start a round — each member picks one leg</li>
+              <li>When everyone&apos;s in, the acca locks and you get the best combined odds</li>
+            </ol>
+            <Link
+              href="/groups/create"
+              className="mt-4 inline-block rounded-lg bg-accent px-4 py-2 text-sm font-medium text-black hover:bg-green-400"
+            >
+              Create your first syndicate
+            </Link>
+          </section>
+        )}
+
         <section className="mt-8">
           <h2 className="text-lg font-semibold">Your groups</h2>
           {memberships.length === 0 ? (
             <div className="mt-4 rounded-xl border border-dashed border-border p-8 text-center text-muted">
-              No groups yet. Create one or join with an invite code.
+              <p>No groups yet.</p>
+              <p className="mt-2 text-sm">
+                Create a syndicate for your mates or join with an invite code.
+              </p>
             </div>
           ) : (
             <div className="mt-4 grid gap-4 md:grid-cols-2">
-              {memberships.map((m) => (
-                <Link
-                  key={m.group.id}
-                  href={`/groups/${m.group.id}`}
-                  className="rounded-xl border border-border bg-card p-5 hover:border-accent/50"
-                >
-                  <div className="flex items-start justify-between">
-                    <h3 className="font-semibold">{m.group.name}</h3>
-                    <span className="rounded-full bg-accent-muted px-2 py-0.5 text-xs text-accent">
-                      {m.group.status}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm text-muted">
-                    {m.group._count.members} members · Owner: {m.group.owner.name}
-                  </p>
-                  <p className="mt-1 text-sm">Your points: {m.points}</p>
-                </Link>
-              ))}
+              {memberships.map((m) => {
+                const activeRound = m.group.rounds[0];
+                return (
+                  <Link
+                    key={m.group.id}
+                    href={`/groups/${m.group.id}`}
+                    className="rounded-xl border border-border bg-card p-5 hover:border-accent/50"
+                  >
+                    <div className="flex items-start justify-between">
+                      <h3 className="font-semibold">{m.group.name}</h3>
+                      <span className="rounded-full bg-accent-muted px-2 py-0.5 text-xs text-accent">
+                        {m.group.status}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-sm text-muted">
+                      {m.group._count.members} members · Owner: {m.group.owner.name}
+                    </p>
+                    <p className="mt-1 text-sm">Your points: {m.points}</p>
+                    {activeRound && activeRound.status !== "settled" && (
+                      <p className="mt-2 text-xs text-accent capitalize">
+                        Active round: {activeRound.status}
+                      </p>
+                    )}
+                  </Link>
+                );
+              })}
             </div>
           )}
         </section>

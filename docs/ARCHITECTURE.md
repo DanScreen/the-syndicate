@@ -62,10 +62,12 @@ the-syndicate/
 - **Leg** — member's selection: fixture, market, selection, odds, bookmaker, outcome
 - **Fixture** — cached from odds provider (home, away, kickoff, competition)
 
-## Odds and bookmakers (v1)
+## Odds and bookmakers
 
-- `lib/odds/provider.ts` — mock football fixtures and multi-bookmaker prices
-- Structured for swap-in of [The Odds API](https://the-odds-api.com/) or similar
+- `lib/odds/mock-provider.ts` — demo fixtures when no API key
+- `lib/odds/the-odds-api.ts` — live Premier League odds from [The Odds API](https://the-odds-api.com/)
+- `lib/odds/provider.ts` — selects live or mock; 10-minute in-memory cache
+- Set `ODDS_API_KEY` for live odds; falls back to mock automatically
 - `lib/odds/betslip-links.ts` — generates bookmaker-specific deeplink URLs
 
 ## Settlement logic

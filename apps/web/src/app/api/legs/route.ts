@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "You already submitted a leg" }, { status: 409 });
   }
 
-  const selectionData = findSelection(
+  const selectionData = await findSelection(
     parsed.data.fixtureId,
     parsed.data.marketType,
     parsed.data.selectionId

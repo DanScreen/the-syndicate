@@ -28,6 +28,7 @@ npm run db:generate  # prisma generate
 
 See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for GCP + GitHub Actions setup.
 See [infra/terraform/README.md](infra/terraform/README.md) for Terraform infrastructure.
+See [docs/ROADMAP.md](docs/ROADMAP.md) for website improvement backlog.
 
 ### Mobile
 
@@ -44,7 +45,7 @@ Requires the web API running (`npm run dev`). Set `EXPO_PUBLIC_API_URL` in `apps
 
 - API routes in `apps/web/src/app/api/`
 - Shared validation in `packages/shared/src/schemas.ts`
-- Mock odds in `apps/web/src/lib/odds/provider.ts` — swap for real API later
+- Mock odds in `apps/web/src/lib/odds/` — live via [The Odds API](https://the-odds-api.com/) when `ODDS_API_KEY` is set; mock fallback otherwise
 - Build vertical slices; don't add features outside MVP without asking
 - One leg per member per round (enforced in API + DB unique constraint)
 

@@ -4,9 +4,12 @@ import { AppHeader } from "@/components/header";
 import {
   Leaderboard,
   LegsList,
+  RoundHistory,
+  RoundProgress,
   SettleRoundForm,
   SubmitLegForm,
 } from "@/components/group-ui";
+import { CopyInviteButton } from "@/components/site-footer";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -20,6 +23,7 @@ type GroupData = {
     status: string;
     maxMembers: number;
     memberCount: number;
+    members: { id: string; name: string; role: string }[];
     owner: { id: string; name: string };
   };
   leaderboard: {
@@ -49,6 +53,13 @@ type GroupData = {
       pointsAwarded: number;
     }[];
   } | null;
+  recentRounds: {
+    id: string;
+    status: string;
+    combinedOdds: number | null;
+    profitLossGbp: number | null;
+    legs: { selectionLabel: string; outcome: string }[];
+  }[];
   betslipLink: string | null;
   isOwner: boolean;
 };
@@ -61,6 +72,7 @@ export default function GroupPage() {
   const [data, setData] = useState<GroupData | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [inviteUrl, setInviteUrl] = useState("");
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/groups/${groupId}`);
@@ -76,6 +88,10 @@ export default function GroupPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    setInviteUrl(`${window.location.origin}/groups/join?code=${data?.group.inviteCode ?? ""}`);
+  }, [data?.group.inviteCode]);
 
   async function startRound() {
     setActionLoading(true);
@@ -98,10 +114,6 @@ export default function GroupPage() {
 
   const userId = session?.user?.id;
   const hasSubmitted = data.activeRound?.legs.some((l) => l.user.id === userId);
-  const inviteUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/groups/join?code=${data.group.inviteCode}`
-      : `/groups/join?code=${data.group.inviteCode}`;
 
   return (
     <div className="min-h-screen">
@@ -119,12 +131,12 @@ export default function GroupPage() {
               <span className="text-accent">{data.group.status}</span>
             </p>
           </div>
-          <div className="rounded-xl border border-border bg-card px-4 py-3 text-sm">
+          <div className="w-full max-w-xs rounded-xl border border-border bg-card px-4 py-3 text-sm">
             <p className="text-muted">Invite code</p>
             <p className="font-mono text-lg tracking-widest text-accent">
               {data.group.inviteCode}
             </p>
-            <p className="mt-1 break-all text-xs text-muted">{inviteUrl}</p>
+            {inviteUrl && <CopyInviteButton inviteUrl={inviteUrl} />}
           </div>
         </div>
 
@@ -166,17 +178,17 @@ export default function GroupPage() {
                   )}
                 </div>
 
+                <RoundProgress
+                  members={data.group.members}
+                  legs={data.activeRound.legs}
+                  status={data.activeRound.status}
+                />
+
                 <LegsList legs={data.activeRound.legs} />
 
-                {data.activeRound.status === "collecting" &&
-                  userId &&
-                  !hasSubmitted && (
-                    <SubmitLegForm
-                      roundId={data.activeRound.id}
-                      userId={userId}
-                      onSubmitted={load}
-                    />
-                  )}
+                {data.activeRound.status === "collecting" && userId && !hasSubmitted && (
+                  <SubmitLegForm roundId={data.activeRound.id} onSubmitted={load} />
+                )}
 
                 {data.activeRound.status === "locked" && data.betslipLink && (
                   <a
@@ -213,6 +225,8 @@ export default function GroupPage() {
             </div>
           </section>
         </div>
+
+        <RoundHistory rounds={data.recentRounds} />
       </main>
     </div>
   );

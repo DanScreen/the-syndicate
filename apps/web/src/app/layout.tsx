@@ -9,9 +9,28 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "The Syndicate — Social Group Accas",
+  metadataBase: new URL("https://the-syndicate.uk"),
+  title: {
+    default: "The Syndicate — Social Group Accas",
+    template: "%s · The Syndicate",
+  },
   description:
-    "Create social betting groups, contribute legs to shared accumulators, and compete on the leaderboard.",
+    "Create social betting groups, contribute legs to shared football accumulators, and compete on the leaderboard.",
+  openGraph: {
+    title: "The Syndicate — Social Group Accas",
+    description:
+      "Build accas with your mates. Each member picks a leg, track combined odds, and compete on the leaderboard.",
+    url: "https://the-syndicate.uk",
+    siteName: "The Syndicate",
+    locale: "en_GB",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "The Syndicate — Social Group Accas",
+    description:
+      "Build accas with your mates. Each member picks a leg and competes on the leaderboard.",
+  },
 };
 
 export default function RootLayout({
