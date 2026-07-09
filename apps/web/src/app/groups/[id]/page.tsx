@@ -42,6 +42,7 @@ type GroupData = {
     combinedOdds: number | null;
     bestBookmakerId: string | null;
     profitLossGbp: number | null;
+    accaBookmakerRankings?: { bookmakerId: string; bookmakerName: string; combinedOdds: number }[] | null;
     legs: {
       id: string;
       user: { id: string; name: string };
@@ -178,6 +179,7 @@ export default function GroupPage() {
                     bookmakerId={data.activeRound.bestBookmakerId}
                     bookmakerName={data.activeRound.legs[0]?.bookmakerName}
                     singleBookmaker={Boolean(data.activeRound.bestBookmakerId)}
+                    bookmakerRankings={data.activeRound.accaBookmakerRankings ?? []}
                   />
                 )}
 

@@ -19,6 +19,7 @@ Mobile app (`apps/mobile/`) is **paused** — web only.
 | Markets: h2h, totals (dynamic lines), spreads*, BTTS, double chance, draw no bet | ✅ |
 | Leg picker: best odds only per selection | ✅ |
 | Acca lock: best combined bookmaker across all legs | ✅ |
+| Acca bookmaker rankings (best odds first) | ✅ |
 | Manual settle + auto-settle (football-data.org) | ✅ |
 | Leaderboard (unit-stake points) | ✅ |
 | Round history, progress UI, landing/SEO | ✅ |

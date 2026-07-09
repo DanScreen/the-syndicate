@@ -1,6 +1,8 @@
 import { requireSession } from "@/lib/api-auth";
 import { generateBetslipLink } from "@/lib/odds/betslip-links";
+import { computeAccaRankingsForLegs } from "@/lib/odds/lock-round";
 import { prisma } from "@the-syndicate/database";
+import type { AccaBookmakerRanking } from "@the-syndicate/shared";
 import { NextResponse } from "next/server";
 
 type Params = { params: Promise<{ id: string }> };
@@ -49,7 +51,16 @@ export async function GET(_request: Request, { params }: Params) {
     return NextResponse.json({ error: "Group not found" }, { status: 404 });
   }
 
-  const activeRound = group.rounds.find((r) => r.status !== "settled") ?? null;
+  let activeRound = group.rounds.find((r) => r.status !== "settled") ?? null;
+
+  let accaBookmakerRankings: AccaBookmakerRanking[] | null = null;
+  if (activeRound?.status === "locked" && activeRound.legs.length > 0) {
+    const stored = activeRound.accaBookmakerRankings as AccaBookmakerRanking[] | null;
+    accaBookmakerRankings =
+      stored && stored.length > 0
+        ? stored
+        : await computeAccaRankingsForLegs(activeRound.legs);
+  }
 
   let betslipLink: string | null = null;
   if (
@@ -95,7 +106,9 @@ export async function GET(_request: Request, { params }: Params) {
       })),
     },
     leaderboard,
-    activeRound,
+    activeRound: activeRound
+      ? { ...activeRound, accaBookmakerRankings }
+      : null,
     betslipLink,
     isOwner: membership.role === "owner",
     recentRounds: group.rounds.filter((r) => r.status === "settled"),

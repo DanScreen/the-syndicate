@@ -1,7 +1,7 @@
 "use client";
 
 import type { Fixture, Market } from "@the-syndicate/shared";
-import { formatLegPoints, legPointsForOutcome } from "@the-syndicate/shared";
+import { formatLegPoints, legPointsForOutcome, type AccaBookmakerRanking } from "@the-syndicate/shared";
 import { useEffect, useMemo, useState } from "react";
 import { sortQuotesByBestOdds } from "@/lib/odds/bookmakers";
 import { groupMarkets } from "@/lib/odds/market-groups";
@@ -376,11 +376,13 @@ export function AccaSummary({
   bookmakerName,
   bookmakerId,
   singleBookmaker,
+  bookmakerRankings = [],
 }: {
   combinedOdds: number;
   bookmakerName?: string | null;
   bookmakerId?: string | null;
   singleBookmaker: boolean;
+  bookmakerRankings?: AccaBookmakerRanking[];
 }) {
   return (
     <div className="rounded-xl border border-accent/30 bg-accent-muted/20 p-4 text-sm">
@@ -388,7 +390,33 @@ export function AccaSummary({
       <p className="mt-1">
         Combined odds: <span className="text-accent">{combinedOdds}</span>
       </p>
-      {singleBookmaker && bookmakerName ? (
+      {singleBookmaker && bookmakerRankings.length > 0 ? (
+        <div className="mt-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted">
+            Where to place (best odds first)
+          </p>
+          <ol className="mt-2 space-y-1">
+            {bookmakerRankings.map((entry, index) => (
+              <li
+                key={entry.bookmakerId}
+                className={`flex items-center justify-between rounded-lg border px-3 py-2 ${
+                  index === 0
+                    ? "border-accent/50 bg-accent-muted/30"
+                    : "border-border bg-background/40"
+                }`}
+              >
+                <span>
+                  <span className="text-muted">#{index + 1}</span>{" "}
+                  <span className="font-medium">{entry.bookmakerName}</span>
+                </span>
+                <span className={index === 0 ? "font-semibold text-accent" : "text-foreground"}>
+                  {entry.combinedOdds}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      ) : singleBookmaker && bookmakerName ? (
         <p className="mt-1 text-muted">
           Best placed at <span className="text-foreground">{bookmakerName}</span>
         </p>

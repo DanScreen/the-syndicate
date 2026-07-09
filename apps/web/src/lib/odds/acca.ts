@@ -11,13 +11,12 @@ export type AccaBookmakerResult = {
 };
 
 /**
- * Find the bookmaker with the best combined acca odds across all legs.
- * Only considers retail bookmakers that quote every leg.
+ * All retail bookmakers that quote every leg, ranked by combined acca odds (best first).
  */
-export function findBestAccaBookmaker(
+export function rankAccaBookmakers(
   legs: { quotes: BookmakerQuote[] }[]
-): AccaBookmakerResult | null {
-  if (legs.length === 0) return null;
+): AccaBookmakerResult[] {
+  if (legs.length === 0) return [];
 
   const quoteMaps = legs.map((leg) => {
     const map = new Map<string, BookmakerQuote>();
@@ -32,30 +31,38 @@ export function findBestAccaBookmaker(
     candidates = new Set([...candidates].filter((id) => map.has(id)));
   }
 
-  if (candidates.size > 0) {
-    let best: AccaBookmakerResult | null = null;
+  const ranked: AccaBookmakerResult[] = [];
 
-    for (const bmId of candidates) {
-      let combined = 1;
-      let name = "";
-      for (const map of quoteMaps) {
-        const q = map.get(bmId)!;
-        combined *= q.odds;
-        name = q.bookmakerName;
-      }
-      const combinedOdds = Number(combined.toFixed(2));
-      if (!best || combinedOdds > best.combinedOdds) {
-        best = {
-          bookmakerId: bmId,
-          bookmakerName: name,
-          combinedOdds,
-          singleBookmaker: true,
-        };
-      }
+  for (const bmId of candidates) {
+    let combined = 1;
+    let name = "";
+    for (const map of quoteMaps) {
+      const q = map.get(bmId)!;
+      combined *= q.odds;
+      name = q.bookmakerName;
     }
-
-    return best;
+    ranked.push({
+      bookmakerId: bmId,
+      bookmakerName: name,
+      combinedOdds: Number(combined.toFixed(2)),
+      singleBookmaker: true,
+    });
   }
+
+  return ranked.sort((a, b) => b.combinedOdds - a.combinedOdds);
+}
+
+/**
+ * Find the bookmaker with the best combined acca odds across all legs.
+ * Only considers retail bookmakers that quote every leg.
+ */
+export function findBestAccaBookmaker(
+  legs: { quotes: BookmakerQuote[] }[]
+): AccaBookmakerResult | null {
+  if (legs.length === 0) return null;
+
+  const ranked = rankAccaBookmakers(legs);
+  if (ranked.length > 0) return ranked[0];
 
   const bestPerLeg = legs.map((leg) => sortQuotesByBestOdds(leg.quotes)[0]);
   if (bestPerLeg.some((q) => !q)) return null;

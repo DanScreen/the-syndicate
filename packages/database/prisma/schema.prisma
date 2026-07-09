@@ -58,6 +58,7 @@ model Round {
   status          String   @default("collecting")
   combinedOdds    Float?
   bestBookmakerId String?
+  accaBookmakerRankings Json?
   stakeGbp        Float    @default(10)
   profitLossGbp   Float?
   lockedAt        DateTime?
