@@ -7,12 +7,16 @@ import { prisma } from "@the-syndicate/database";
 import { COMPETITIONS } from "@the-syndicate/shared";
 
 function matchDataFromFootballData(competitionId: string, match: FootballDataMatch) {
+  const homeTeam = match.homeTeam?.name;
+  const awayTeam = match.awayTeam?.name;
+  if (!homeTeam || !awayTeam) return null;
+
   const now = new Date();
   return {
     competitionId,
     kickoff: new Date(match.utcDate),
-    homeTeam: match.homeTeam.name,
-    awayTeam: match.awayTeam.name,
+    homeTeam,
+    awayTeam,
     status: match.status,
     homeGoals: match.score.fullTime.home,
     awayGoals: match.score.fullTime.away,
@@ -24,8 +28,9 @@ function matchDataFromFootballData(competitionId: string, match: FootballDataMat
 async function upsertFootballDataMatch(
   competitionId: string,
   match: FootballDataMatch
-): Promise<"created" | "updated"> {
+): Promise<"created" | "updated" | "skipped"> {
   const data = matchDataFromFootballData(competitionId, match);
+  if (!data) return "skipped";
 
   const existing = await prisma.match.findUnique({
     where: { externalDataId: match.id },
@@ -48,11 +53,13 @@ export type SyncMatchesResult = {
     competitionId: string;
     created: number;
     updated: number;
+    skipped: number;
     total: number;
     error?: string;
   }[];
   totalCreated: number;
   totalUpdated: number;
+  totalSkipped: number;
 };
 
 export async function syncAllCompetitionMatches(): Promise<SyncMatchesResult> {
@@ -61,6 +68,7 @@ export async function syncAllCompetitionMatches(): Promise<SyncMatchesResult> {
     competitions: [],
     totalCreated: 0,
     totalUpdated: 0,
+    totalSkipped: 0,
   };
 
   for (const competition of COMPETITIONS) {
@@ -68,6 +76,7 @@ export async function syncAllCompetitionMatches(): Promise<SyncMatchesResult> {
       competitionId: competition.id,
       created: 0,
       updated: 0,
+      skipped: 0,
       total: 0,
     };
 
@@ -80,9 +89,12 @@ export async function syncAllCompetitionMatches(): Promise<SyncMatchesResult> {
         if (action === "created") {
           entry.created++;
           result.totalCreated++;
-        } else {
+        } else if (action === "updated") {
           entry.updated++;
           result.totalUpdated++;
+        } else {
+          entry.skipped++;
+          result.totalSkipped++;
         }
       }
     } catch (err) {
