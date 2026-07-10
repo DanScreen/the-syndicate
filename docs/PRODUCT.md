@@ -55,7 +55,7 @@ Match sync cron auto-settles locked rounds when all fixtures finish. Email on se
 - [x] Dashboard cross-group summary + share cards
 
 ### Backlog
-- [ ] Real bookmaker betslip deeplinks
+- [x] Real bookmaker betslip deeplinks
 - [ ] Dedicated user profile page
 
 Full priority list: [ROADMAP.md](./ROADMAP.md)

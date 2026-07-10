@@ -89,6 +89,8 @@ model Leg {
   odds          Float
   bookmakerId   String
   bookmakerName String
+  betslipUrl    String?
+  bookmakerLinks Json?
   outcome       String   @default("pending")
   pointsAwarded Float    @default(0)
   createdAt     DateTime @default(now())

@@ -5,6 +5,7 @@ import { AppHeader } from "@/components/header";
 import {
   AccaSummary,
   Leaderboard,
+  LegPlacementLinks,
   LegsList,
   RoundHistory,
   RoundProgress,
@@ -65,6 +66,17 @@ type GroupData = {
     legs: { selectionLabel: string; outcome: string }[];
   }[];
   betslipLink: string | null;
+  betslipLinks: {
+    primaryLink: string | null;
+    primaryBookmakerId: string | null;
+    legLinks: {
+      legId: string;
+      userName: string;
+      selectionLabel: string;
+      fixtureLabel: string;
+      url: string | null;
+    }[];
+  } | null;
   isOwner: boolean;
 };
 
@@ -202,8 +214,14 @@ export default function GroupPage() {
                     rel="noopener noreferrer"
                     className="block rounded-lg bg-accent px-4 py-3 text-center text-sm font-medium text-black hover:bg-green-400"
                   >
-                    Open betslip at {data.activeRound.legs[0]?.bookmakerName ?? data.activeRound.bestBookmakerId}
+                    Open betslip at{" "}
+                    {data.activeRound.legs[0]?.bookmakerName ??
+                      data.activeRound.bestBookmakerId}
                   </a>
+                )}
+
+                {data.activeRound.status === "locked" && data.betslipLinks?.legLinks && (
+                  <LegPlacementLinks legLinks={data.betslipLinks.legLinks} />
                 )}
 
                 {data.activeRound.status === "locked" && data.isOwner && (

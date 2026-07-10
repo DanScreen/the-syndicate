@@ -71,6 +71,7 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. Core MVP is shipped.
 | Leg picker: best odds only per selection | ✅ |
 | Acca lock: best combined bookmaker across all legs | ✅ |
 | Acca bookmaker rankings (best odds first, stored at lock) | ✅ |
+| Real bookmaker betslip deeplinks (The Odds API) | ✅ |
 | Match table + football-data.org sync cron | ✅ |
 | Hands-off auto-settle (post-sync cron) | ✅ |
 | Email notifications (round locked / settled) | ✅ |
@@ -114,8 +115,12 @@ GET /api/competitions                 → active catalogue (id + name)
 GET /api/fixtures?competition=epl     → bulk markets (h2h, totals, spreads)
 GET /api/fixtures/[id]/markets?competition=epl → lazy: btts, double_chance, draw_no_bet
 POST /api/legs                        → best retail quote; stores competitionId slug
-(lock) lockRoundWithAccaPricing()     → re-fetch quotes, rankAccaBookmakers(), store on Round
+(lock) lockRoundWithAccaPricing()     → re-fetch quotes, rankAccaBookmakers(), store deeplinks on Leg
 ```
+
+At lock, `Leg.betslipUrl` stores the chosen bookmaker's outcome deeplink; `Leg.bookmakerLinks` maps all retail bookmakers → link. UI shows **Open** on ranked bookmakers and per-leg placement links. Falls back to bookmaker football hub if API omits a link.
+
+Requires live odds (`ODDS_API_KEY`) — mock fixtures have no deeplinks.
 
 ### Acca bookmaker rankings
 
@@ -131,8 +136,10 @@ Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_
 | `packages/shared/src/competitions.ts` | Competition catalogue |
 | `apps/web/src/lib/odds/the-odds-api.ts` | Bulk + per-event API |
 | `apps/web/src/lib/odds/event-markets.ts` | BTTS, double chance, DNB |
+| `apps/web/src/lib/odds/betslip-links.ts` | Deeplink builder + bookmaker hub fallbacks |
+| `apps/web/src/lib/odds/quotes.ts` | Quote helpers + deeplink resolution |
 | `apps/web/src/lib/odds/acca.ts` | Acca bookmaker ranking + best combined |
-| `apps/web/src/lib/odds/lock-round.ts` | Lock + reprice + store rankings |
+| `apps/web/src/lib/odds/lock-round.ts` | Lock + reprice + store deeplinks |
 | `apps/web/src/lib/odds/bookmakers.ts` | Retail filter, sort best odds |
 | `apps/web/src/components/group-ui.tsx` | Leg picker (4-step), AccaSummary, settle UI |
 
@@ -217,14 +224,14 @@ Env vars on Cloud Run: `NEXTAUTH_URL`, `EMAIL_FROM`, `ODDS_API_SPORT`, `ODDS_API
 Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`.
 
 - One leg per user per round (`@@unique([roundId, userId])`).
-- Leg stores fixture snapshot: teams, kickoff, `competitionId` (slug), `competition` (display name), optional `matchId` FK, market, odds, bookmaker, outcome.
+- Leg stores fixture snapshot: teams, kickoff, `competitionId` (slug), `competition` (display name), optional `matchId` FK, market, odds, bookmaker, `betslipUrl`, `bookmakerLinks` JSON, outcome.
 - `Match` — canonical result per fixture (`externalDataId` from football-data.org).
 - `Round.accaBookmakerRankings` — JSON array of ranked bookmakers at lock.
 - `Round.lockedNotificationSentAt` / `settledNotificationSentAt` — email dedup.
 
 Schema: `packages/database/prisma/schema.prisma`
 
-Recent migrations: `20260709120000_leg_competition_id`, `20260709130000_match_table`, `20260709140000_float_points`, `20260710000000_backfill_unit_stake_points`, `20260710010000_acca_bookmaker_rankings`, `20260710020000_round_notification_timestamps`.
+Recent migrations include `20260710030000_leg_betslip_links` (deeplinks on legs).
 
 ---
 
@@ -240,7 +247,7 @@ Recent migrations: `20260709120000_leg_competition_id`, `20260709130000_match_ta
 | `POST /api/rounds/[id]/settle` | Owner | Manual settle |
 | `POST /api/rounds/[id]/auto-settle` | Owner | Auto settle from `Match` table |
 | `POST /api/internal/sync-matches` | `CRON_SECRET` | Sync football-data.org → `Match` |
-| `GET /api/groups/[id]` | Member | Group + active round + betslip link |
+| `GET /api/groups/[id]` | Member | Group + active round + betslip deeplinks |
 | `GET /api/groups/[id]/stats` | Member | Group summary stats + chart series |
 | `GET /api/groups/[id]/members/[userId]/stats` | Member | Member breakdown + favourites |
 | `GET /api/user/stats` | Session | Cross-group dashboard stats |
@@ -254,11 +261,12 @@ Recent migrations: `20260709120000_leg_competition_id`, `20260709130000_match_ta
 2. **Auto-settle** runs automatically after hourly match sync; owner can still trigger manually.
 3. **Email notifications** require Resend setup (`RESEND_API_KEY`, `EMAIL_FROM`); skipped if unset.
 4. **Auto-settle requires synced `Match` rows** — hourly cron or manual `POST /api/internal/sync-matches`.
-5. **Cross-competition acca** — often no single bookmaker; UI shows ranked alternatives + "place individually".
-6. **The Odds API quota** — per-event market calls cost credits; lazy-loaded on fixture select.
-7. **Terraform CI** may fail on GCS state bucket permissions — app deploy unaffected.
-8. **Cloud Run in-memory cache** — cold instances miss cache; not shared across instances.
-9. **Mobile app** — still calls old fixtures API without `?competition=`; paused until web validated.
+5. **Cross-competition acca** — often no single bookmaker; UI shows ranked alternatives + per-leg deeplinks.
+6. **Betslip deeplinks** require live odds API (`includeLinks`); mock mode falls back to bookmaker hub URLs only.
+7. **The Odds API quota** — per-event market calls cost credits; lazy-loaded on fixture select.
+8. **Terraform CI** may fail on GCS state bucket permissions — app deploy unaffected.
+9. **Cloud Run in-memory cache** — cold instances miss cache; not shared across instances.
+10. **Mobile app** — still calls old fixtures API without `?competition=`; paused until web validated.
 
 ## Production checklist (operators)
 

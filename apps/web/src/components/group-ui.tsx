@@ -399,7 +399,7 @@ export function AccaSummary({
             {bookmakerRankings.map((entry, index) => (
               <li
                 key={entry.bookmakerId}
-                className={`flex items-center justify-between rounded-lg border px-3 py-2 ${
+                className={`flex items-center justify-between gap-2 rounded-lg border px-3 py-2 ${
                   index === 0
                     ? "border-accent/50 bg-accent-muted/30"
                     : "border-border bg-background/40"
@@ -408,9 +408,24 @@ export function AccaSummary({
                 <span>
                   <span className="text-muted">#{index + 1}</span>{" "}
                   <span className="font-medium">{entry.bookmakerName}</span>
+                  {entry.hasAllLegLinks === false && entry.url && (
+                    <span className="ml-1 text-xs text-amber-400">(partial)</span>
+                  )}
                 </span>
-                <span className={index === 0 ? "font-semibold text-accent" : "text-foreground"}>
-                  {entry.combinedOdds}
+                <span className="flex items-center gap-2">
+                  <span className={index === 0 ? "font-semibold text-accent" : "text-foreground"}>
+                    {entry.combinedOdds}
+                  </span>
+                  {entry.url && (
+                    <a
+                      href={entry.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded border border-accent/50 px-2 py-0.5 text-xs font-medium text-accent hover:bg-accent-muted/30"
+                    >
+                      Open
+                    </a>
+                  )}
                 </span>
               </li>
             ))}
@@ -423,14 +438,62 @@ export function AccaSummary({
       ) : (
         <p className="mt-1 text-amber-400">
           No single bookmaker offers every leg — combined odds use the best price
-          per selection. Place legs individually.
+          per selection. Place legs individually below.
         </p>
       )}
       {singleBookmaker && bookmakerId && (
         <p className="mt-2 text-xs text-muted">
           Leg odds below are priced at {bookmakerName ?? bookmakerId} for this acca.
+          {bookmakerRankings[0]?.hasAllLegLinks
+            ? " Use Open links to add each leg to your betslip."
+            : " Add each leg via the links below."}
         </p>
       )}
+    </div>
+  );
+}
+
+export function LegPlacementLinks({
+  legLinks,
+}: {
+  legLinks: {
+    legId: string;
+    userName: string;
+    selectionLabel: string;
+    fixtureLabel: string;
+    url: string | null;
+  }[];
+}) {
+  const withLinks = legLinks.filter((l) => l.url);
+  if (withLinks.length === 0) return null;
+
+  return (
+    <div className="rounded-xl border border-border bg-card p-4 text-sm">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted">
+        Place each leg
+      </p>
+      <ul className="mt-2 space-y-2">
+        {withLinks.map((leg) => (
+          <li
+            key={leg.legId}
+            className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2"
+          >
+            <span>
+              <span className="font-medium">{leg.userName}</span>
+              <span className="text-muted"> · {leg.selectionLabel}</span>
+              <span className="block text-xs text-muted">{leg.fixtureLabel}</span>
+            </span>
+            <a
+              href={leg.url!}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 rounded border border-accent/50 px-2 py-1 text-xs font-medium text-accent hover:bg-accent-muted/30"
+            >
+              Open
+            </a>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

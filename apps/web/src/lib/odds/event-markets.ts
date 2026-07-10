@@ -2,26 +2,10 @@ import type { BookmakerQuote, Market, MarketSelection } from "@the-syndicate/sha
 import type { OddsApiBookmaker, OddsApiEvent } from "./api-types";
 import { isRetailBookmaker } from "./bookmakers";
 import { fetchOddsApiEvent } from "./the-odds-api";
+import { addQuote, resolveDeeplink } from "./quotes";
 
 function retailBookmakers(bookmakers: OddsApiBookmaker[]): OddsApiBookmaker[] {
   return bookmakers.filter((b) => isRetailBookmaker(b.key));
-}
-
-function addQuote(
-  map: Map<string, BookmakerQuote[]>,
-  selectionId: string,
-  bookmakerId: string,
-  bookmakerName: string,
-  odds: number
-) {
-  const quotes = map.get(selectionId) ?? [];
-  const existing = quotes.find((q) => q.bookmakerId === bookmakerId);
-  if (existing) {
-    existing.odds = odds;
-    return;
-  }
-  quotes.push({ bookmakerId, bookmakerName, odds });
-  map.set(selectionId, quotes);
 }
 
 function buildBttsMarket(bookmakers: OddsApiBookmaker[]): Market | null {
@@ -33,7 +17,8 @@ function buildBttsMarket(bookmakers: OddsApiBookmaker[]): Market | null {
 
     for (const outcome of market.outcomes) {
       const id = outcome.name.toLowerCase() === "yes" ? "yes" : "no";
-      addQuote(quoteMap, id, bookmaker.key, bookmaker.title, outcome.price);
+      const link = resolveDeeplink(outcome, market, bookmaker.link, bookmaker.key);
+      addQuote(quoteMap, id, bookmaker.key, bookmaker.title, outcome.price, link);
     }
   }
 
@@ -85,7 +70,8 @@ function buildDoubleChanceMarket(
         event.away_team
       );
       if (!selectionId) continue;
-      addQuote(quoteMap, selectionId, bookmaker.key, bookmaker.title, outcome.price);
+      const link = resolveDeeplink(outcome, market, bookmaker.link, bookmaker.key);
+      addQuote(quoteMap, selectionId, bookmaker.key, bookmaker.title, outcome.price, link);
     }
   }
 
@@ -129,7 +115,8 @@ function buildDrawNoBetMarket(
       if (outcome.name === event.home_team) selectionId = "home";
       if (outcome.name === event.away_team) selectionId = "away";
       if (!selectionId) continue;
-      addQuote(quoteMap, selectionId, bookmaker.key, bookmaker.title, outcome.price);
+      const link = resolveDeeplink(outcome, market, bookmaker.link, bookmaker.key);
+      addQuote(quoteMap, selectionId, bookmaker.key, bookmaker.title, outcome.price, link);
     }
   }
 

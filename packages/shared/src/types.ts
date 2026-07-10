@@ -8,6 +8,7 @@ export type BookmakerQuote = {
   bookmakerId: string;
   bookmakerName: string;
   odds: number;
+  link?: string;
 };
 
 export type MarketSelection = {

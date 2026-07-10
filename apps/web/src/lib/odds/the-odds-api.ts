@@ -2,6 +2,7 @@ import type { BookmakerQuote, Fixture, Market, MarketSelection } from "@the-synd
 import type { OddsApiBookmaker, OddsApiEvent } from "./api-types";
 import { isRetailBookmaker } from "./bookmakers";
 import { getCached, setCached } from "./cache";
+import { addQuote, resolveDeeplink } from "./quotes";
 
 const API_BASE = "https://api.the-odds-api.com/v4";
 
@@ -55,23 +56,6 @@ function asianHandicapType(homePoint: number): string {
   return `asian_handicap_${encoded}`;
 }
 
-function addQuote(
-  map: Map<string, BookmakerQuote[]>,
-  selectionId: string,
-  bookmakerId: string,
-  bookmakerName: string,
-  odds: number
-) {
-  const quotes = map.get(selectionId) ?? [];
-  const existing = quotes.find((q) => q.bookmakerId === bookmakerId);
-  if (existing) {
-    existing.odds = odds;
-    return;
-  }
-  quotes.push({ bookmakerId, bookmakerName, odds });
-  map.set(selectionId, quotes);
-}
-
 function buildH2hMarket(event: OddsApiEvent, bookmakers: OddsApiBookmaker[]): Market | null {
   const quoteMap = new Map<string, BookmakerQuote[]>();
 
@@ -82,7 +66,8 @@ function buildH2hMarket(event: OddsApiEvent, bookmakers: OddsApiBookmaker[]): Ma
     for (const outcome of market.outcomes) {
       const selectionId = h2hSelectionId(outcome.name, event.home_team, event.away_team);
       if (!selectionId) continue;
-      addQuote(quoteMap, selectionId, bookmaker.key, bookmaker.title, outcome.price);
+      const link = resolveDeeplink(outcome, market, bookmaker.link, bookmaker.key);
+      addQuote(quoteMap, selectionId, bookmaker.key, bookmaker.title, outcome.price, link);
     }
   }
 
@@ -115,7 +100,8 @@ function buildTotalsMarketForLine(
       if (outcome.point !== line) continue;
       const selectionId = totalsSelectionId(outcome.name);
       if (!selectionId) continue;
-      addQuote(quoteMap, selectionId, bookmaker.key, bookmaker.title, outcome.price);
+      const link = resolveDeeplink(outcome, market, bookmaker.link, bookmaker.key);
+      addQuote(quoteMap, selectionId, bookmaker.key, bookmaker.title, outcome.price, link);
     }
   }
 
@@ -159,7 +145,8 @@ function buildSpreadsMarkets(event: OddsApiEvent, bookmakers: OddsApiBookmaker[]
       const type = asianHandicapType(homePoint);
       const quoteMap = lineMaps.get(type) ?? new Map<string, BookmakerQuote[]>();
       const selectionId = isHome ? `home_${outcome.point}` : `away_${outcome.point}`;
-      addQuote(quoteMap, selectionId, bookmaker.key, bookmaker.title, outcome.price);
+      const link = resolveDeeplink(outcome, market, bookmaker.link, bookmaker.key);
+      addQuote(quoteMap, selectionId, bookmaker.key, bookmaker.title, outcome.price, link);
       lineMaps.set(type, quoteMap);
     }
   }
@@ -230,7 +217,7 @@ export async function fetchOddsApiFixtures(
 
   const regions = process.env.ODDS_API_REGIONS ?? "uk";
   const cacheTtlMs = Number(process.env.ODDS_API_CACHE_TTL_MS ?? 600_000);
-  const cacheKey = `odds-api:v2:${sport}:${regions}`;
+  const cacheKey = `odds-api:v3:${sport}:${regions}`;
 
   const cached = getCached<Fixture[]>(cacheKey);
   if (cached) return cached;
@@ -240,6 +227,7 @@ export async function fetchOddsApiFixtures(
   url.searchParams.set("regions", regions);
   url.searchParams.set("markets", BULK_SOCCER_MARKETS);
   url.searchParams.set("oddsFormat", "decimal");
+  url.searchParams.set("includeLinks", "true");
 
   const res = await fetch(url.toString(), { next: { revalidate: 0 } });
   if (!res.ok) {
@@ -269,7 +257,7 @@ export async function fetchOddsApiEvent(
 
   const regions = process.env.ODDS_API_REGIONS ?? "uk";
   const cacheTtlMs = Number(process.env.ODDS_API_CACHE_TTL_MS ?? 600_000);
-  const cacheKey = `odds-api-event:v2:${sport}:${regions}:${eventId}`;
+  const cacheKey = `odds-api-event:v3:${sport}:${regions}:${eventId}`;
 
   const cached = getCached<OddsApiEvent>(cacheKey);
   if (cached) return cached;
@@ -279,6 +267,7 @@ export async function fetchOddsApiEvent(
   url.searchParams.set("regions", regions);
   url.searchParams.set("markets", "btts,double_chance,draw_no_bet");
   url.searchParams.set("oddsFormat", "decimal");
+  url.searchParams.set("includeLinks", "true");
 
   const res = await fetch(url.toString(), { next: { revalidate: 0 } });
   if (!res.ok) {

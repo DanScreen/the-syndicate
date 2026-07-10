@@ -1,6 +1,8 @@
 import { findSelection } from "@/lib/odds/provider";
 import { findBestAccaBookmaker, quoteForBookmaker, rankAccaBookmakers } from "@/lib/odds/acca";
+import { buildRoundBetslipLinks } from "@/lib/odds/betslip-links";
 import { sortQuotesByBestOdds } from "@/lib/odds/bookmakers";
+import { bookmakerLinksFromQuotes } from "@/lib/odds/quotes";
 import { prisma } from "@the-syndicate/database";
 import type { Leg } from "@prisma/client";
 
@@ -29,6 +31,7 @@ export async function lockRoundWithAccaPricing(roundId: string, legs: Leg[]) {
   }
 
   for (const { leg, quotes } of legQuotes) {
+    const bookmakerLinks = bookmakerLinksFromQuotes(quotes);
     const quote = acca.singleBookmaker
       ? quoteForBookmaker(quotes, acca.bookmakerId)
       : sortQuotesByBestOdds(quotes)[0];
@@ -40,10 +43,31 @@ export async function lockRoundWithAccaPricing(roundId: string, legs: Leg[]) {
           odds: quote.odds,
           bookmakerId: quote.bookmakerId,
           bookmakerName: quote.bookmakerName,
+          betslipUrl: quote.link ?? bookmakerLinks[quote.bookmakerId] ?? null,
+          bookmakerLinks,
         },
       });
     }
   }
+
+  const updatedLegs = await prisma.leg.findMany({
+    where: { roundId, id: { in: legs.map((l) => l.id) } },
+    include: { user: { select: { name: true } } },
+  });
+
+  const betslip = buildRoundBetslipLinks(
+    updatedLegs,
+    rankings,
+    acca.singleBookmaker ? acca.bookmakerId : null
+  );
+
+  const rankingsWithUrls = betslip.rankedLinks.map((r) => ({
+    bookmakerId: r.bookmakerId,
+    bookmakerName: r.bookmakerName,
+    combinedOdds: r.combinedOdds,
+    url: r.url,
+    hasAllLegLinks: r.hasAllLegLinks,
+  }));
 
   await prisma.round.update({
     where: { id: roundId },
@@ -51,11 +75,7 @@ export async function lockRoundWithAccaPricing(roundId: string, legs: Leg[]) {
       status: "locked",
       combinedOdds: acca.combinedOdds,
       bestBookmakerId: acca.singleBookmaker ? acca.bookmakerId : null,
-      accaBookmakerRankings: rankings.map((r) => ({
-        bookmakerId: r.bookmakerId,
-        bookmakerName: r.bookmakerName,
-        combinedOdds: r.combinedOdds,
-      })),
+      accaBookmakerRankings: rankingsWithUrls,
       lockedAt: new Date(),
     },
   });

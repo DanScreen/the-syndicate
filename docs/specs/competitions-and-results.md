@@ -157,4 +157,4 @@ flowchart LR
 |----------|----------|
 | Ship EPL + World Cup first, or all five? | **All five** shipped in Phase A |
 | Ingest frequency | **Hourly UTC** via Cloud Scheduler |
-| Per-leg deeplinks when no single acca bookmaker? | Generic bookmaker links today; real deeplinks in backlog |
+| Per-leg deeplinks when no single acca bookmaker? | Per-leg **Open** links + ranked bookmaker links via The Odds API `includeLinks`; hub URL fallback |

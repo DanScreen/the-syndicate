@@ -1,5 +1,5 @@
 import { requireSession } from "@/lib/api-auth";
-import { generateBetslipLink } from "@/lib/odds/betslip-links";
+import { buildRoundBetslipLinks } from "@/lib/odds/betslip-links";
 import { computeAccaRankingsForLegs } from "@/lib/odds/lock-round";
 import { prisma } from "@the-syndicate/database";
 import type { AccaBookmakerRanking } from "@the-syndicate/shared";
@@ -51,34 +51,34 @@ export async function GET(_request: Request, { params }: Params) {
     return NextResponse.json({ error: "Group not found" }, { status: 404 });
   }
 
-  let activeRound = group.rounds.find((r) => r.status !== "settled") ?? null;
+  const activeRound = group.rounds.find((r) => r.status !== "settled") ?? null;
 
   let accaBookmakerRankings: AccaBookmakerRanking[] | null = null;
+  let betslipLinks = null;
+  let betslipLink: string | null = null;
+
   if (activeRound?.status === "locked" && activeRound.legs.length > 0) {
     const stored = activeRound.accaBookmakerRankings as AccaBookmakerRanking[] | null;
-    accaBookmakerRankings =
+    const rankings =
       stored && stored.length > 0
         ? stored
         : await computeAccaRankingsForLegs(activeRound.legs);
-  }
 
-  let betslipLink: string | null = null;
-  if (
-    activeRound?.status === "locked" &&
-    activeRound.legs.length > 0 &&
-    activeRound.bestBookmakerId
-  ) {
-    const combinedOdds = activeRound.combinedOdds ?? 1;
-    betslipLink = generateBetslipLink(
-      activeRound.bestBookmakerId,
-      activeRound.legs.map((l) => ({
-        fixtureLabel: `${l.homeTeam} vs ${l.awayTeam}`,
-        marketLabel: l.marketLabel,
-        selectionLabel: l.selectionLabel,
-        odds: l.odds,
-      })),
-      combinedOdds
+    betslipLinks = buildRoundBetslipLinks(
+      activeRound.legs,
+      rankings,
+      activeRound.bestBookmakerId
     );
+
+    accaBookmakerRankings = betslipLinks.rankedLinks.map((r) => ({
+      bookmakerId: r.bookmakerId,
+      bookmakerName: r.bookmakerName,
+      combinedOdds: r.combinedOdds,
+      url: r.url,
+      hasAllLegLinks: r.hasAllLegLinks,
+    }));
+
+    betslipLink = betslipLinks.primaryLink;
   }
 
   const leaderboard = group.members.map((m) => ({
@@ -110,6 +110,7 @@ export async function GET(_request: Request, { params }: Params) {
       ? { ...activeRound, accaBookmakerRankings }
       : null,
     betslipLink,
+    betslipLinks,
     isOwner: membership.role === "owner",
     recentRounds: group.rounds.filter((r) => r.status === "settled"),
   });

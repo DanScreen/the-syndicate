@@ -2,17 +2,20 @@ export type OddsApiOutcome = {
   name: string;
   price: number;
   point?: number;
+  link?: string | null;
 };
 
 export type OddsApiMarket = {
   key: string;
   outcomes: OddsApiOutcome[];
+  link?: string | null;
 };
 
 export type OddsApiBookmaker = {
   key: string;
   title: string;
   markets: OddsApiMarket[];
+  link?: string | null;
 };
 
 export type OddsApiEvent = {

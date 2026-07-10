@@ -25,6 +25,7 @@ Core loop is **shipped**:
 - **Group stats** (summary, cumulative chart, multi-member chart)
 - **Member stats** (breakdown, favourites, best/worst picks)
 - **Dashboard cross-group summary** + share cards
+- **Real bookmaker betslip deeplinks** (The Odds API `includeLinks`)
 - Leaderboard, round history, landing/SEO
 - Deploy: Cloud Run + Cloud SQL + GitHub Actions; Cloud Scheduler for match sync
 
@@ -34,12 +35,11 @@ Core loop is **shipped**:
 
 | # | Feature | Notes |
 |---|---------|-------|
-| 1 | Real bookmaker betslip deeplinks | Beyond generic links today |
-| 2 | User profile page | Cross-group stats in dedicated view |
-| 3 | football-data.org tier upgrade | L1/L2 sync returns 403 on free tier |
-| 4 | FA Cup + EFL Cup | Phase 1b in competitions spec |
-| 5 | Mobile app catch-up | `apps/mobile/` needs `?competition=` API |
-| 6 | Terraform CI GCS permissions fix | App deploy unaffected |
+| 1 | User profile page | Cross-group stats in dedicated view |
+| 2 | football-data.org tier upgrade | L1/L2 sync returns 403 on free tier |
+| 3 | FA Cup + EFL Cup | Phase 1b in competitions spec |
+| 4 | Mobile app catch-up | `apps/mobile/` needs `?competition=` API |
+| 5 | Terraform CI GCS permissions fix | App deploy unaffected |
 
 ---
 

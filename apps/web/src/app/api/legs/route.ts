@@ -65,6 +65,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No odds available for this selection" }, { status: 400 });
   }
 
+  const bookmakerLinks = Object.fromEntries(
+    selection.odds.filter((q) => q.link).map((q) => [q.bookmakerId, q.link!])
+  );
+
   const leg = await prisma.leg.create({
     data: {
       roundId: round.id,
@@ -82,6 +86,8 @@ export async function POST(request: Request) {
       odds: quote.odds,
       bookmakerId: quote.bookmakerId,
       bookmakerName: quote.bookmakerName,
+      betslipUrl: quote.link ?? null,
+      bookmakerLinks: Object.keys(bookmakerLinks).length > 0 ? bookmakerLinks : undefined,
     },
     include: { user: { select: { name: true } } },
   });

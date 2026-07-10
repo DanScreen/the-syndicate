@@ -10,7 +10,7 @@ Social group football acca platform. **Read [docs/README.md](docs/README.md) fir
 | [docs/PRODUCT.md](docs/PRODUCT.md) | User flows & vision |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Stack & data model |
 
-**Current priorities (July 2026):** Backlog items in [docs/ROADMAP.md](docs/ROADMAP.md) — betslip deeplinks, user profile, mobile catch-up.
+**Current priorities (July 2026):** User profile page, FA Cup + EFL Cup — see [docs/ROADMAP.md](docs/ROADMAP.md).
 
 After shipping: follow **Documentation maintenance** below.
 
