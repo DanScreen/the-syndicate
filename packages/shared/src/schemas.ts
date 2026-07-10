@@ -13,7 +13,6 @@ export const signInSchema = z.object({
 
 export const createGroupSchema = z.object({
   name: z.string().min(3).max(60),
-  maxMembers: z.number().int().min(2).max(20).default(10),
 });
 
 export const joinGroupSchema = z.object({

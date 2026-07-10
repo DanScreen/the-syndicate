@@ -16,7 +16,6 @@ export type GroupData = {
     name: string;
     inviteCode: string;
     status: string;
-    maxMembers: number;
     memberCount: number;
     members: { id: string; name: string; role: string }[];
     owner: { id: string; name: string };

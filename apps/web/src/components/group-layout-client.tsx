@@ -41,7 +41,7 @@ function GroupShell({ groupId, children }: { groupId: string; children: React.Re
           <div>
             <h1 className="text-2xl font-bold">{data.group.name}</h1>
             <p className="mt-1 text-sm text-muted">
-              {data.group.memberCount}/{data.group.maxMembers} members ·{" "}
+              {data.group.memberCount} members ·{" "}
               <span className="capitalize text-accent">{data.group.status}</span>
             </p>
           </div>

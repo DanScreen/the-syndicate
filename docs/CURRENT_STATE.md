@@ -69,7 +69,7 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 | Area | Status |
 |------|--------|
 | Auth (email/password, Auth.js JWT sessions) | ✅ |
-| Groups, invite codes, join links (`?code=`) | ✅ |
+| Groups, invite codes, join links (`?code=`), no member cap | ✅ |
 | Rounds: collecting → locked → settled | ✅ |
 | Live odds ([The Odds API](https://the-odds-api.com/)) + mock fallback | ✅ |
 | Markets: h2h, totals (dynamic lines), spreads*, BTTS, double chance, draw no bet | ✅ |

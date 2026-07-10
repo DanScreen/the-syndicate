@@ -21,7 +21,7 @@
 Sign up → **Groups** home (`/dashboard`) listing syndicates. Cross-group stats on **Performance** (`/performance`).
 
 ### 2. Create / join group
-Owner creates group (name, max members) → invite code + link. Members join via code or `/groups/join?code=`.
+Owner creates group (name only) → invite code + link. Anyone with the link can join via code or `/groups/join?code=`.
 
 ### 3. Build the acca
 1. Owner starts a round (group **Round** tab)

@@ -17,7 +17,7 @@ export default function CreateGroupScreen() {
       const data = await api<{ group: { id: string } }>("/api/groups", {
         method: "POST",
         token,
-        body: JSON.stringify({ name: name.trim(), maxMembers: 10 }),
+        body: JSON.stringify({ name: name.trim() }),
       });
       router.replace(`/(main)/groups/${data.group.id}`);
     } catch (e) {

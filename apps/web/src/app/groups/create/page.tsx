@@ -7,7 +7,6 @@ import { useState } from "react";
 export default function CreateGroupPage() {
   const router = useRouter();
   const [name, setName] = useState("");
-  const [maxMembers, setMaxMembers] = useState(6);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -19,7 +18,7 @@ export default function CreateGroupPage() {
     const res = await fetch("/api/groups", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, maxMembers }),
+      body: JSON.stringify({ name }),
     });
 
     const data = await res.json();
@@ -38,6 +37,9 @@ export default function CreateGroupPage() {
       <AppHeader userName="" />
       <main className="mx-auto max-w-md px-4 py-8">
         <h1 className="text-2xl font-bold">Create a group</h1>
+        <p className="mt-2 text-sm text-muted">
+          Anyone with the invite link can join — no member cap.
+        </p>
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
             <label className="text-sm text-muted">Group name</label>
@@ -47,17 +49,6 @@ export default function CreateGroupPage() {
               className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2"
               placeholder="Saturday Lads Acca"
               required
-            />
-          </div>
-          <div>
-            <label className="text-sm text-muted">Max members</label>
-            <input
-              type="number"
-              min={2}
-              max={20}
-              value={maxMembers}
-              onChange={(e) => setMaxMembers(Number(e.target.value))}
-              className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2"
             />
           </div>
           {error && <p className="text-sm text-red-400">{error}</p>}

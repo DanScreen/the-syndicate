@@ -96,7 +96,6 @@ export async function GET(_request: Request, { params }: Params) {
       name: group.name,
       inviteCode: group.inviteCode,
       status: group.status,
-      maxMembers: group.maxMembers,
       owner: group.owner,
       memberCount: group.members.length,
       members: group.members.map((m) => ({

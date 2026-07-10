@@ -33,7 +33,7 @@ export const howItWorks = [
   {
     step: "01",
     title: "Start a syndicate",
-    body: "Create a group, set a member limit, and drop the invite link in your group chat.",
+    body: "Create a group and drop the invite link in your group chat.",
   },
   {
     step: "02",

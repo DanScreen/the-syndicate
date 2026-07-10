@@ -34,7 +34,6 @@ export type Fixture = {
 
 export type GroupSettings = {
   sport: "football";
-  maxMembers: number;
 };
 
 export type LeaderboardEntry = {

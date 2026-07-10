@@ -15,15 +15,10 @@ export async function POST(request: Request) {
 
   const group = await prisma.group.findUnique({
     where: { inviteCode: parsed.data.inviteCode.toUpperCase() },
-    include: { _count: { select: { members: true } } },
   });
 
   if (!group) {
     return NextResponse.json({ error: "Invalid invite code" }, { status: 404 });
-  }
-
-  if (group._count.members >= group.maxMembers) {
-    return NextResponse.json({ error: "Group is full" }, { status: 400 });
   }
 
   const existing = await prisma.groupMember.findUnique({

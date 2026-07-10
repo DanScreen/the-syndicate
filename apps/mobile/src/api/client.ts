@@ -84,7 +84,6 @@ export type GroupDetail = {
     name: string;
     inviteCode: string;
     status: string;
-    maxMembers: number;
     owner: { id: string; name: string };
     memberCount: number;
   };
