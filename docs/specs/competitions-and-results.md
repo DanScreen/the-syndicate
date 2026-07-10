@@ -37,7 +37,7 @@ If no single bookmaker covers all legs → show best-per-leg combined odds; no u
 - `Match` model, `Leg.matchId` FK
 - `POST /api/internal/sync-matches` (Bearer `CRON_SECRET`)
 - Auto-settle reads from `Match` table via `match-store.ts`
-- Cloud Scheduler: hourly UTC in production
+- Cloud Scheduler: every 5 min UTC in production
 
 ---
 
@@ -103,7 +103,7 @@ Full schema: `packages/database/prisma/schema.prisma`
 
 ```mermaid
 flowchart LR
-  FD[football-data.org] -->|cron hourly| Match[(Match)]
+  FD[football-data.org] -->|cron every 5 min| Match[(Match)]
   Match --> Resolve[resolveLegOutcome]
   Leg --> Resolve
 ```

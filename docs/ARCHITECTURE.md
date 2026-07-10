@@ -59,7 +59,7 @@ Live ([The Odds API](https://the-odds-api.com/)) or mock. Fixtures fetched **per
 → [CURRENT_STATE.md](./CURRENT_STATE.md#odds--competitions-today)
 
 ### Settlement
-Manual owner settle, owner-triggered auto-settle, or **hands-off** after hourly match sync. Market resolution in `resolve-leg.ts`. Email notifications on lock/settle (Resend, optional).
+Manual owner settle, owner-triggered auto-settle, or **hands-off** after match sync (every 5 min). Market resolution in `resolve-leg.ts`. Email notifications on lock/settle (Resend, optional).
 
 → [CURRENT_STATE.md](./CURRENT_STATE.md#settlement)
 

@@ -34,7 +34,7 @@ Omit `ODDS_API_KEY` for mock fixtures. Add `FOOTBALL_DATA_API_KEY` + `CRON_SECRE
 
 Push to `main` → GitHub Actions (`.github/workflows/deploy.yml`): build → `db:migrate:deploy` → Cloud Run.
 
-Match sync: Cloud Scheduler → `POST /api/internal/sync-matches` with Bearer `CRON_SECRET` (hourly UTC). See [DEPLOYMENT.md](./DEPLOYMENT.md).
+Match sync: Cloud Scheduler → `POST /api/internal/sync-matches` with Bearer `CRON_SECRET` (every 5 min UTC). See [DEPLOYMENT.md](./DEPLOYMENT.md).
 
 ### Code map
 
@@ -356,9 +356,9 @@ Recent migrations include `20260710100000_user_role_analytics` (admin role + ana
 ## Known limitations
 
 1. **football-data.org free tier:** World Cup syncs; League One/Two return 403; EPL/Championship may be empty off-season.
-2. **Auto-settle** runs automatically after hourly match sync; owner can still trigger manually.
+2. **Auto-settle** runs automatically after match sync (every 5 min); owner can still trigger manually.
 3. **Email notifications** require Resend setup (`RESEND_API_KEY`, `EMAIL_FROM`); skipped if unset.
-4. **Auto-settle requires synced `Match` rows** — hourly cron or manual `POST /api/internal/sync-matches`.
+4. **Auto-settle requires synced `Match` rows** — 5-min cron or manual `POST /api/internal/sync-matches`.
 5. **Cross-competition acca** — often no single bookmaker; UI shows ranked alternatives + per-leg deeplinks.
 6. **Betslip deeplinks** require live odds API (`includeLinks`); mock mode falls back to bookmaker hub URLs only.
 7. **The Odds API quota** — per-event market calls cost credits; lazy-loaded on fixture select.
@@ -371,7 +371,7 @@ Recent migrations include `20260710100000_user_role_analytics` (admin role + ana
 
 - [x] `ODDS_API_KEY` in GitHub secrets
 - [x] `FOOTBALL_DATA_API_KEY` in GitHub secrets
-- [x] `CRON_SECRET` in GitHub secrets + Cloud Scheduler job (hourly UTC)
+- [x] `CRON_SECRET` in GitHub secrets + Cloud Scheduler job (every 5 min UTC)
 - [x] `NEXTAUTH_URL=https://www.the-syndicate.uk`
 - [x] Cloudflare Worker + www redirect configured
 - [x] `RESEND_API_KEY` + `EMAIL_FROM` in GitHub (optional, for email notifications)
