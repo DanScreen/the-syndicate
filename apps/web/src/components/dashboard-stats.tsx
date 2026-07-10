@@ -68,21 +68,24 @@ export function DashboardStats({ userName }: { userName: string }) {
   if (loading) {
     return (
       <section className="mt-8 rounded-xl border border-border bg-card p-4 text-sm text-muted">
-        Loading your stats...
+        Loading stats...
       </section>
     );
   }
 
   if (!data || data.summary.legsPlayed === 0) {
-    return null;
+    return (
+      <section className="mt-8 rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted">
+        <p>No settled legs yet.</p>
+        <p className="mt-2">Stats appear after your first round is settled.</p>
+      </section>
+    );
   }
 
   const { summary, chart, groups } = data;
 
   return (
-    <section className="mt-8 space-y-6">
-      <h2 className="text-lg font-semibold">Your performance</h2>
-
+    <section className="space-y-6">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <StatCard label="Groups" value={String(summary.groupCount)} />
         <StatCard label="Rounds" value={String(summary.settledRounds)} />

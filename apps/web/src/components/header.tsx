@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { SignOutButton } from "./sign-out-button";
+import { AppNav } from "./app-nav";
 
 export function SiteHeader() {
   return (
@@ -27,12 +31,15 @@ export function SiteHeader() {
 export function AppHeader({ userName }: { userName: string }) {
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-        <Link href="/dashboard" className="text-lg font-bold tracking-tight">
-          The <span className="text-accent">Syndicate</span>
-        </Link>
+      <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4">
+        <div className="flex items-center gap-6">
+          <Link href="/dashboard" className="text-lg font-bold tracking-tight">
+            The <span className="text-accent">Syndicate</span>
+          </Link>
+          <AppNav />
+        </div>
         <div className="flex items-center gap-4 text-sm">
-          <span className="text-muted">Hi, {userName}</span>
+          <span className="hidden text-muted sm:inline">Hi, {userName}</span>
           <SignOutButton />
         </div>
       </div>

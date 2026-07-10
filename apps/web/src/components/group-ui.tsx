@@ -88,7 +88,7 @@ export function RoundProgress({
                 )}
               </span>
               <span className={submitted ? "text-accent" : "text-muted"}>
-                {submitted ? `✓ ${leg!.selectionLabel} @ ${leg!.odds}` : "Pending"}
+                {submitted ? "✓ Submitted" : "Pending"}
               </span>
             </li>
           );
@@ -377,123 +377,100 @@ export function AccaSummary({
   bookmakerId,
   singleBookmaker,
   bookmakerRankings = [],
+  betslipLink,
 }: {
   combinedOdds: number;
   bookmakerName?: string | null;
   bookmakerId?: string | null;
   singleBookmaker: boolean;
   bookmakerRankings?: AccaBookmakerRanking[];
+  betslipLink?: string | null;
 }) {
+  const [bookmakersOpen, setBookmakersOpen] = useState(false);
+  const topBookmaker = bookmakerRankings[0];
+
   return (
-    <div className="rounded-xl border border-accent/30 bg-accent-muted/20 p-4 text-sm">
-      <p className="font-semibold">Group acca</p>
-      <p className="mt-1">
-        Combined odds: <span className="text-accent">{combinedOdds}</span>
-      </p>
-      {singleBookmaker && bookmakerRankings.length > 0 ? (
-        <div className="mt-3">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted">
-            Where to place (best odds first)
-          </p>
-          <ol className="mt-2 space-y-1">
-            {bookmakerRankings.map((entry, index) => (
-              <li
-                key={entry.bookmakerId}
-                className={`flex items-center justify-between gap-2 rounded-lg border px-3 py-2 ${
-                  index === 0
-                    ? "border-accent/50 bg-accent-muted/30"
-                    : "border-border bg-background/40"
-                }`}
-              >
-                <span>
-                  <span className="text-muted">#{index + 1}</span>{" "}
-                  <span className="font-medium">{entry.bookmakerName}</span>
-                  {entry.hasAllLegLinks === false && entry.url && (
-                    <span className="ml-1 text-xs text-amber-400">(partial)</span>
-                  )}
-                </span>
-                <span className="flex items-center gap-2">
-                  <span className={index === 0 ? "font-semibold text-accent" : "text-foreground"}>
-                    {entry.combinedOdds}
-                  </span>
-                  {entry.url && (
-                    <a
-                      href={entry.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="rounded border border-accent/50 px-2 py-0.5 text-xs font-medium text-accent hover:bg-accent-muted/30"
-                    >
-                      Open
-                    </a>
-                  )}
-                </span>
-              </li>
-            ))}
-          </ol>
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent/30 bg-accent-muted/20 px-4 py-3 text-sm">
+        <div>
+          <p className="font-semibold">Combined odds</p>
+          <p className="text-2xl font-bold text-accent">{combinedOdds}</p>
+          {singleBookmaker && bookmakerName && (
+            <p className="mt-0.5 text-xs text-muted">Best at {bookmakerName}</p>
+          )}
+          {!singleBookmaker && (
+            <p className="mt-0.5 text-xs text-amber-400">Place legs individually</p>
+          )}
         </div>
-      ) : singleBookmaker && bookmakerName ? (
-        <p className="mt-1 text-muted">
-          Best placed at <span className="text-foreground">{bookmakerName}</span>
-        </p>
-      ) : (
-        <p className="mt-1 text-amber-400">
-          No single bookmaker offers every leg — combined odds use the best price
-          per selection. Place legs individually below.
-        </p>
-      )}
-      {singleBookmaker && bookmakerId && (
-        <p className="mt-2 text-xs text-muted">
-          Leg odds below are priced at {bookmakerName ?? bookmakerId} for this acca.
-          {bookmakerRankings[0]?.hasAllLegLinks
-            ? " Use Open links to add each leg to your betslip."
-            : " Add each leg via the links below."}
-        </p>
-      )}
-    </div>
-  );
-}
-
-export function LegPlacementLinks({
-  legLinks,
-}: {
-  legLinks: {
-    legId: string;
-    userName: string;
-    selectionLabel: string;
-    fixtureLabel: string;
-    url: string | null;
-  }[];
-}) {
-  const withLinks = legLinks.filter((l) => l.url);
-  if (withLinks.length === 0) return null;
-
-  return (
-    <div className="rounded-xl border border-border bg-card p-4 text-sm">
-      <p className="text-xs font-medium uppercase tracking-wide text-muted">
-        Place each leg
-      </p>
-      <ul className="mt-2 space-y-2">
-        {withLinks.map((leg) => (
-          <li
-            key={leg.legId}
-            className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2"
+        {betslipLink && (
+          <a
+            href={betslipLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-black hover:bg-green-400"
           >
-            <span>
-              <span className="font-medium">{leg.userName}</span>
-              <span className="text-muted"> · {leg.selectionLabel}</span>
-              <span className="block text-xs text-muted">{leg.fixtureLabel}</span>
+            Open betslip
+            {topBookmaker ? ` · ${topBookmaker.bookmakerName}` : ""}
+          </a>
+        )}
+      </div>
+
+      {bookmakerRankings.length > 0 && (
+        <div className="rounded-xl border border-border bg-card text-sm">
+          <button
+            type="button"
+            onClick={() => setBookmakersOpen((o) => !o)}
+            className="flex w-full items-center justify-between px-4 py-3 text-left"
+          >
+            <span className="font-medium">
+              Compare bookmakers
+              <span className="ml-2 text-muted">({bookmakerRankings.length})</span>
             </span>
-            <a
-              href={leg.url!}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="shrink-0 rounded border border-accent/50 px-2 py-1 text-xs font-medium text-accent hover:bg-accent-muted/30"
-            >
-              Open
-            </a>
-          </li>
-        ))}
-      </ul>
+            <span className="text-muted">{bookmakersOpen ? "▲" : "▼"}</span>
+          </button>
+          {bookmakersOpen && (
+            <ol className="space-y-1 border-t border-border px-2 py-2">
+              {bookmakerRankings.map((entry, index) => (
+                <li
+                  key={entry.bookmakerId}
+                  className={`flex items-center justify-between gap-2 rounded-lg px-2 py-2 ${
+                    index === 0 ? "bg-accent-muted/20" : ""
+                  }`}
+                >
+                  <span>
+                    <span className="text-muted">#{index + 1}</span>{" "}
+                    <span className="font-medium">{entry.bookmakerName}</span>
+                    {entry.hasAllLegLinks === false && entry.url && (
+                      <span className="ml-1 text-xs text-amber-400">partial</span>
+                    )}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <span className={index === 0 ? "font-semibold text-accent" : ""}>
+                      {entry.combinedOdds}
+                    </span>
+                    {entry.url && (
+                      <a
+                        href={entry.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded border border-accent/50 px-2 py-0.5 text-xs font-medium text-accent hover:bg-accent-muted/30"
+                      >
+                        Open
+                      </a>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+      )}
+
+      {singleBookmaker && bookmakerId && !betslipLink && (
+        <p className="text-xs text-muted">
+          Leg odds are priced at {bookmakerName ?? bookmakerId} for this acca.
+        </p>
+      )}
     </div>
   );
 }
@@ -604,33 +581,73 @@ export function SettleRoundForm({
   );
 }
 
-export function LegsList({ legs }: { legs: Leg[] }) {
+export function LegsList({
+  legs,
+  legLinks,
+  showOpenLinks = false,
+}: {
+  legs: Leg[];
+  legLinks?: { legId: string; url: string | null }[];
+  showOpenLinks?: boolean;
+}) {
   if (legs.length === 0) {
     return <p className="text-sm text-muted">No legs submitted yet.</p>;
   }
 
+  const linkByLegId = new Map(
+    (legLinks ?? []).filter((l) => l.url).map((l) => [l.legId, l.url!])
+  );
+
   return (
     <ul className="space-y-2">
-      {legs.map((leg) => (
-        <li
-          key={leg.id}
-          className="rounded-lg border border-border bg-card px-4 py-3 text-sm"
-        >
-          <div className="flex justify-between">
-            <span className="font-medium">{leg.user.name}</span>
-            <span className="text-accent">{leg.odds}</span>
-          </div>
-          <p className="text-muted">
-            {leg.homeTeam} vs {leg.awayTeam} · {leg.marketLabel}: {leg.selectionLabel}
-          </p>
-          <p className="text-xs text-muted">
-            {leg.competition}
-            {leg.outcome !== "pending" && (
-              <> · {leg.outcome} ({formatLegPoints(legPointsForOutcome(leg.outcome as "won" | "lost" | "void", leg.odds))} pts)</>
-            )}
-          </p>
-        </li>
-      ))}
+      {legs.map((leg) => {
+        const openUrl = showOpenLinks ? linkByLegId.get(leg.id) : undefined;
+        return (
+          <li
+            key={leg.id}
+            className="rounded-lg border border-border bg-card px-4 py-3 text-sm"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex justify-between gap-2">
+                  <span className="font-medium">{leg.user.name}</span>
+                  <span className="shrink-0 text-accent">{leg.odds}</span>
+                </div>
+                <p className="text-muted">
+                  {leg.homeTeam} vs {leg.awayTeam} · {leg.marketLabel}:{" "}
+                  {leg.selectionLabel}
+                </p>
+                <p className="text-xs text-muted">
+                  {leg.competition}
+                  {leg.outcome !== "pending" && (
+                    <>
+                      {" "}
+                      · {leg.outcome} (
+                      {formatLegPoints(
+                        legPointsForOutcome(
+                          leg.outcome as "won" | "lost" | "void",
+                          leg.odds
+                        )
+                      )}{" "}
+                      pts)
+                    </>
+                  )}
+                </p>
+              </div>
+              {openUrl && (
+                <a
+                  href={openUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 rounded border border-accent/50 px-2 py-1 text-xs font-medium text-accent hover:bg-accent-muted/30"
+                >
+                  Open
+                </a>
+              )}
+            </div>
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -689,7 +706,7 @@ export function RoundHistory({
   if (rounds.length === 0) return null;
 
   return (
-    <section className="mt-10">
+    <section className="mt-8">
       <h2 className="text-lg font-semibold">Recent rounds</h2>
       <ul className="mt-4 space-y-3">
         {rounds.map((round) => (

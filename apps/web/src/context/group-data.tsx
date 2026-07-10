@@ -1,0 +1,127 @@
+"use client";
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
+import { useRouter } from "next/navigation";
+
+export type GroupData = {
+  group: {
+    id: string;
+    name: string;
+    inviteCode: string;
+    status: string;
+    maxMembers: number;
+    memberCount: number;
+    members: { id: string; name: string; role: string }[];
+    owner: { id: string; name: string };
+  };
+  leaderboard: {
+    userId: string;
+    name: string;
+    points: number;
+    legsWon: number;
+    legsLost: number;
+    role: string;
+  }[];
+  activeRound: {
+    id: string;
+    status: string;
+    combinedOdds: number | null;
+    bestBookmakerId: string | null;
+    profitLossGbp: number | null;
+    accaBookmakerRankings?: {
+      bookmakerId: string;
+      bookmakerName: string;
+      combinedOdds: number;
+      url?: string | null;
+      hasAllLegLinks?: boolean;
+    }[] | null;
+    legs: {
+      id: string;
+      user: { id: string; name: string };
+      homeTeam: string;
+      awayTeam: string;
+      competition: string;
+      selectionLabel: string;
+      marketLabel: string;
+      odds: number;
+      bookmakerName: string;
+      outcome: string;
+      pointsAwarded: number;
+    }[];
+  } | null;
+  recentRounds: {
+    id: string;
+    status: string;
+    combinedOdds: number | null;
+    profitLossGbp: number | null;
+    legs: { selectionLabel: string; outcome: string }[];
+  }[];
+  betslipLink: string | null;
+  betslipLinks: {
+    primaryLink: string | null;
+    primaryBookmakerId: string | null;
+    legLinks: {
+      legId: string;
+      userName: string;
+      selectionLabel: string;
+      fixtureLabel: string;
+      url: string | null;
+    }[];
+  } | null;
+  isOwner: boolean;
+};
+
+type GroupDataContextValue = {
+  data: GroupData | null;
+  loading: boolean;
+  reload: () => Promise<void>;
+};
+
+const GroupDataContext = createContext<GroupDataContextValue | null>(null);
+
+export function GroupDataProvider({
+  groupId,
+  children,
+}: {
+  groupId: string;
+  children: ReactNode;
+}) {
+  const router = useRouter();
+  const [data, setData] = useState<GroupData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const reload = useCallback(async () => {
+    const res = await fetch(`/api/groups/${groupId}`);
+    if (res.status === 403 || res.status === 404) {
+      router.push("/dashboard");
+      return;
+    }
+    const json = await res.json();
+    setData(json);
+    setLoading(false);
+  }, [groupId, router]);
+
+  useEffect(() => {
+    setLoading(true);
+    reload();
+  }, [reload]);
+
+  return (
+    <GroupDataContext.Provider value={{ data, loading, reload }}>
+      {children}
+    </GroupDataContext.Provider>
+  );
+}
+
+export function useGroupData() {
+  const ctx = useContext(GroupDataContext);
+  if (!ctx) throw new Error("useGroupData must be used within GroupDataProvider");
+  return ctx;
+}

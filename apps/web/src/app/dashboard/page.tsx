@@ -1,5 +1,4 @@
 import { AppHeader } from "@/components/header";
-import { DashboardStats } from "@/components/dashboard-stats";
 import { formatLegPoints } from "@the-syndicate/shared";
 import { auth } from "@/lib/auth";
 import { prisma } from "@the-syndicate/database";
@@ -12,7 +11,7 @@ export default async function DashboardPage() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { name: true, totalPoints: true, legsWon: true, legsLost: true },
+    select: { name: true, totalPoints: true },
   });
 
   const memberships = await prisma.groupMember.findMany({
@@ -37,10 +36,13 @@ export default async function DashboardPage() {
       <main className="mx-auto max-w-5xl px-4 py-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold">Dashboard</h1>
-            <p className="mt-1 text-muted">
-              {formatLegPoints(user?.totalPoints ?? 0)} pts · {user?.legsWon ?? 0} won ·{" "}
-              {user?.legsLost ?? 0} lost
+            <h1 className="text-2xl font-bold">Your groups</h1>
+            <p className="mt-1 text-sm text-muted">
+              {memberships.length} group{memberships.length === 1 ? "" : "s"} ·{" "}
+              {formatLegPoints(user?.totalPoints ?? 0)} pts total ·{" "}
+              <Link href="/performance" className="text-accent hover:underline">
+                View performance
+              </Link>
             </p>
           </div>
           <div className="flex gap-2">
@@ -79,19 +81,16 @@ export default async function DashboardPage() {
           </section>
         )}
 
-        <DashboardStats userName={user?.name ?? "Player"} />
-
         <section className="mt-8">
-          <h2 className="text-lg font-semibold">Your groups</h2>
           {memberships.length === 0 ? (
-            <div className="mt-4 rounded-xl border border-dashed border-border p-8 text-center text-muted">
+            <div className="rounded-xl border border-dashed border-border p-8 text-center text-muted">
               <p>No groups yet.</p>
               <p className="mt-2 text-sm">
                 Create a syndicate for your mates or join with an invite code.
               </p>
             </div>
           ) : (
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2">
               {memberships.map((m) => {
                 const activeRound = m.group.rounds[0];
                 return (
@@ -102,7 +101,7 @@ export default async function DashboardPage() {
                   >
                     <div className="flex items-start justify-between">
                       <h3 className="font-semibold">{m.group.name}</h3>
-                      <span className="rounded-full bg-accent-muted px-2 py-0.5 text-xs text-accent">
+                      <span className="rounded-full bg-accent-muted px-2 py-0.5 text-xs text-accent capitalize">
                         {m.group.status}
                       </span>
                     </div>

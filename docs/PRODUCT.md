@@ -16,25 +16,25 @@
 ## Core flows
 
 ### 1. Onboarding
-Sign up → dashboard with cross-group stats summary.
+Sign up → **Groups** home (`/dashboard`) listing syndicates. Cross-group stats on **Performance** (`/performance`).
 
 ### 2. Create / join group
 Owner creates group (name, max members) → invite code + link. Members join via code or `/groups/join?code=`.
 
 ### 3. Build the acca
-1. Owner starts a round
+1. Owner starts a round (group **Round** tab)
 2. Each member picks a **competition**, fixture, market, selection (4-step form)
 3. **Best odds only** shown per selection
-4. All legs in → acca **locks** with best combined bookmaker + ranked bookmaker list
+4. All legs in → acca **locks** with best combined bookmaker
 5. Members receive **email notification** when acca locks (if Resend configured)
 
 → [specs/competitions-and-results.md](./specs/competitions-and-results.md)
 
 ### 4. Place & track
-Locked acca shows combined odds, recommended bookmaker, ranked alternatives ("Where to place"), betslip link. Track until fixtures finish.
+Locked round: **Picks** list first, then combined odds + primary betslip CTA. **Compare bookmakers** is collapsible below. Track until fixtures finish.
 
 ### 5. Settle & stats
-Match sync cron auto-settles locked rounds when all fixtures finish. Email on settle. Unit-stake points + leaderboard. **Group stats** and **member stats** on group page. **Dashboard** shows cross-group performance + share cards.
+Match sync cron auto-settles locked rounds when all fixtures finish. Email on settle. **Leaderboard** tab for points; **Performance** tab for group charts and member breakdowns. User-level **Performance** nav for cross-group stats.
 
 → [specs/group-stats-and-points.md](./specs/group-stats-and-points.md)
 
