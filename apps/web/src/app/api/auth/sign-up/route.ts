@@ -1,4 +1,5 @@
 import { isAdminEmail } from "@/lib/admin";
+import { normalizeEmail } from "@/lib/auth-email";
 import { recordAnalyticsEventAsync } from "@/lib/analytics";
 import { prisma } from "@the-syndicate/database";
 import bcrypt from "bcryptjs";
@@ -16,8 +17,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const existing = await prisma.user.findUnique({
-      where: { email: parsed.data.email },
+    const email = normalizeEmail(parsed.data.email);
+    const existing = await prisma.user.findFirst({
+      where: { email: { equals: email, mode: "insensitive" } },
     });
     if (existing) {
       return NextResponse.json(
@@ -27,11 +29,11 @@ export async function POST(request: Request) {
     }
 
     const passwordHash = await bcrypt.hash(parsed.data.password, 10);
-    const role = isAdminEmail(parsed.data.email) ? "admin" : "user";
+    const role = isAdminEmail(email) ? "admin" : "user";
     const user = await prisma.user.create({
       data: {
         name: parsed.data.name,
-        email: parsed.data.email,
+        email,
         passwordHash,
         role,
       },

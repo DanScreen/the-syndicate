@@ -1,5 +1,6 @@
 import { createMobileToken } from "@/lib/mobile-token";
 import { resolveUserRole } from "@/lib/admin";
+import { normalizeEmail } from "@/lib/auth-email";
 import { recordAnalyticsEventAsync } from "@/lib/analytics";
 import { prisma } from "@the-syndicate/database";
 import bcrypt from "bcryptjs";
@@ -17,8 +18,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: parsed.data.email },
+    const email = normalizeEmail(parsed.data.email);
+    const user = await prisma.user.findFirst({
+      where: { email: { equals: email, mode: "insensitive" } },
     });
     if (!user) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
