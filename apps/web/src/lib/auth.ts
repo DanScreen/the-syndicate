@@ -4,10 +4,12 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { signInSchema } from "@the-syndicate/shared";
 import { resolveUserRole } from "@/lib/admin";
+import { authConfig } from "@/lib/auth.config";
 import { normalizeEmail } from "@/lib/auth-email";
 import { recordAnalyticsEventAsync } from "@/lib/analytics";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   providers: [
     Credentials({
       credentials: {
@@ -47,47 +49,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
-  session: { strategy: "jwt" },
-  pages: {
-    signIn: "/sign-in",
-  },
-  callbacks: {
-    authorized({ auth, request }) {
-      const isLoggedIn = !!auth?.user;
-      const path = request.nextUrl.pathname;
-      const isProtected =
-        path.startsWith("/dashboard") ||
-        path.startsWith("/groups") ||
-        path.startsWith("/admin") ||
-        path === "/performance";
-      if (isProtected) return isLoggedIn;
-      return true;
-    },
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.role = user.role ?? "user";
-      } else if (token.id) {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: token.id as string },
-          select: { role: true, email: true },
-        });
-        if (dbUser) {
-          token.role = await resolveUserRole(
-            token.id as string,
-            dbUser.email,
-            dbUser.role
-          );
-        }
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user && token.id) {
-        session.user.id = token.id as string;
-        session.user.role = (token.role as "user" | "admin") ?? "user";
-      }
-      return session;
-    },
-  },
 });

@@ -1,12 +1,16 @@
-import { auth } from "@/lib/auth";
 import { recordAnalyticsEventAsync } from "@/lib/analytics";
 
-export async function PageView({ path }: { path: string }) {
-  const session = await auth();
+export function PageView({
+  path,
+  userId,
+}: {
+  path: string;
+  userId?: string | null;
+}) {
   recordAnalyticsEventAsync({
     type: "page_view",
     path,
-    userId: session?.user?.id,
+    userId: userId ?? undefined,
   });
   return null;
 }

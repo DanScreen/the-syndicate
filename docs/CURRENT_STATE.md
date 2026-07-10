@@ -165,7 +165,7 @@ Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_
 
 ## Web pages
 
-Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/groups/*`, `/performance`, `/admin`.
+Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/groups/*`, `/performance`, `/admin`. Middleware uses edge-safe `auth.config.ts` only (no Prisma); credentials + DB live in `auth.ts`.
 
 | Path | Purpose |
 |------|---------|
@@ -365,6 +365,7 @@ Recent migrations include `20260710100000_user_role_analytics` (admin role + ana
 8. **Terraform CI** may fail on GCS state bucket permissions — app deploy unaffected.
 9. **Cloud Run in-memory cache** — cold instances miss cache; not shared across instances.
 10. **Mobile app** — still calls old fixtures API without `?competition=`; paused until web validated.
+11. **Auth JWT** — role is set at sign-in only; middleware uses `auth.config.ts` (no DB). Re-login after `ADMIN_EMAILS` changes to refresh admin role in session.
 
 ## Production checklist (operators)
 

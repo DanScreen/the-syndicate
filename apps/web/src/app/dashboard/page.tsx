@@ -33,7 +33,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen">
-      <PageView path="/dashboard" />
+      <PageView path="/dashboard" userId={session.user.id} />
       <AppHeader userName={user?.name ?? "Player"} />
       <main className="mx-auto max-w-5xl px-4 py-8">
         <div className="flex flex-wrap items-end justify-between gap-4">

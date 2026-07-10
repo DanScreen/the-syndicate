@@ -20,7 +20,7 @@ export async function AdminPageShell({
 
   return (
     <div className="min-h-screen">
-      <PageView path={path} />
+      <PageView path={path} userId={session!.user?.id} />
       <AppHeader userName={session!.user?.name ?? "Admin"} />
       <main className="mx-auto max-w-5xl px-4 py-8">
         <AdminNav />

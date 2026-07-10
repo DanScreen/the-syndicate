@@ -12,7 +12,7 @@ export default async function PerformancePage() {
 
   return (
     <div className="min-h-screen">
-      <PageView path="/performance" />
+      <PageView path="/performance" userId={session.user.id} />
       <AppHeader userName={userName} />
       <main className="mx-auto max-w-5xl px-4 py-8">
         <h1 className="text-2xl font-bold">Your performance</h1>

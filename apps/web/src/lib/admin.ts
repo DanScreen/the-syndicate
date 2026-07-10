@@ -23,16 +23,21 @@ export async function resolveUserRole(
   email: string,
   currentRole: string
 ): Promise<UserRole> {
-  if (isAdminEmail(email)) {
-    if (currentRole !== "admin") {
-      await prisma.user.update({
-        where: { id: userId },
-        data: { role: "admin" },
-      });
+  try {
+    if (isAdminEmail(email)) {
+      if (currentRole !== "admin") {
+        await prisma.user.update({
+          where: { id: userId },
+          data: { role: "admin" },
+        });
+      }
+      return "admin";
     }
-    return "admin";
+    return currentRole === "admin" ? "admin" : "user";
+  } catch (err) {
+    console.error("[admin] resolveUserRole failed", err);
+    return currentRole === "admin" ? "admin" : "user";
   }
-  return currentRole === "admin" ? "admin" : "user";
 }
 
 export async function requireAdmin() {
