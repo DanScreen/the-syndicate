@@ -6,11 +6,11 @@ import type { Match } from "@prisma/client";
 const VOID_STATUSES = new Set(["POSTPONED", "CANCELLED", "SUSPENDED", "AWARDED"]);
 
 function kickoffDayBounds(kickoff: Date): { start: Date; end: Date } {
-  const start = new Date(kickoff);
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(kickoff);
-  end.setHours(23, 59, 59, 999);
-  return { start, end };
+  const day = kickoff.toISOString().slice(0, 10);
+  return {
+    start: new Date(`${day}T00:00:00.000Z`),
+    end: new Date(`${day}T23:59:59.999Z`),
+  };
 }
 
 export function dbMatchToResult(match: Match): MatchResult | null {

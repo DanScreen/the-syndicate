@@ -1,5 +1,8 @@
 import { applyRoundSettlement } from "@/lib/settlement/apply-round-settlement";
-import { resolveRoundOutcomes } from "@/lib/settlement/resolve-round-outcomes";
+import {
+  persistResolvableLegOutcomes,
+  resolveRoundOutcomes,
+} from "@/lib/settlement/resolve-round-outcomes";
 import { prisma } from "@the-syndicate/database";
 
 export type AutoSettleRoundResult =
@@ -26,6 +29,8 @@ export async function tryAutoSettleRound(roundId: string): Promise<AutoSettleRou
   }
 
   const resolved = await resolveRoundOutcomes(round.legs);
+  const knownOutcomes = resolved.ready ? resolved.outcomeMap : resolved.resolved;
+  await persistResolvableLegOutcomes(round.legs, knownOutcomes);
 
   if (!resolved.ready) {
     return { status: "pending", roundId, pending: resolved.pending };

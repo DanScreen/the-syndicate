@@ -17,5 +17,12 @@ export async function POST(request: Request) {
   const sync = await syncAllCompetitionMatches();
   const autoSettle = await autoSettleLockedRounds();
 
+  if (autoSettle.pending.length > 0) {
+    console.info(
+      "sync-matches: auto-settle pending",
+      JSON.stringify(autoSettle.pending)
+    );
+  }
+
   return NextResponse.json({ sync, autoSettle });
 }

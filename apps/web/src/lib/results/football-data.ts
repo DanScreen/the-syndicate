@@ -106,12 +106,15 @@ async function fetchFromFootballData(url: URL): Promise<FootballDataMatch[]> {
 export async function fetchCompetitionMatches(
   footballDataCode: string,
   from: Date,
-  to: Date
+  to: Date,
+  options?: { bypassCache?: boolean }
 ): Promise<FootballDataMatch[]> {
-  const cacheTtlMs = Number(process.env.FOOTBALL_DATA_CACHE_TTL_MS ?? 300_000);
+  const cacheTtlMs = Number(process.env.FOOTBALL_DATA_CACHE_TTL_MS ?? 60_000);
   const cacheKey = `football-data:comp:${footballDataCode}:${formatDate(from)}:${formatDate(to)}`;
-  const cached = getCached<FootballDataMatch[]>(cacheKey);
-  if (cached) return cached;
+  if (!options?.bypassCache) {
+    const cached = getCached<FootballDataMatch[]>(cacheKey);
+    if (cached) return cached;
+  }
 
   const url = new URL(`${API_BASE}/competitions/${footballDataCode}/matches`);
   url.searchParams.set("dateFrom", formatDate(from));
@@ -123,12 +126,15 @@ export async function fetchCompetitionMatches(
 
 export async function fetchMatchesInRange(
   from: Date,
-  to: Date
+  to: Date,
+  options?: { bypassCache?: boolean }
 ): Promise<FootballDataMatch[]> {
-  const cacheTtlMs = Number(process.env.FOOTBALL_DATA_CACHE_TTL_MS ?? 300_000);
+  const cacheTtlMs = Number(process.env.FOOTBALL_DATA_CACHE_TTL_MS ?? 60_000);
   const cacheKey = `football-data:${formatDate(from)}:${formatDate(to)}`;
-  const cached = getCached<FootballDataMatch[]>(cacheKey);
-  if (cached) return cached;
+  if (!options?.bypassCache) {
+    const cached = getCached<FootballDataMatch[]>(cacheKey);
+    if (cached) return cached;
+  }
 
   const url = new URL(`${API_BASE}/matches`);
   url.searchParams.set("dateFrom", formatDate(from));

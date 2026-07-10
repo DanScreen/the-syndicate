@@ -81,7 +81,9 @@ export async function syncAllCompetitionMatches(): Promise<SyncMatchesResult> {
     };
 
     try {
-      const matches = await fetchCompetitionMatches(competition.footballDataCode, from, to);
+      const matches = await fetchCompetitionMatches(competition.footballDataCode, from, to, {
+        bypassCache: true,
+      });
       entry.total = matches.length;
 
       for (const match of matches) {

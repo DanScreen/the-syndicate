@@ -34,10 +34,19 @@ export async function POST(_request: Request, { params }: Params) {
   const result = await tryAutoSettleRound(roundId);
 
   if (result.status === "pending") {
+    const legs = await prisma.leg.findMany({
+      where: { roundId },
+      select: { id: true, outcome: true },
+    });
+    const resolved = Object.fromEntries(
+      legs.filter((l) => l.outcome !== "pending").map((l) => [l.id, l.outcome])
+    );
+
     return NextResponse.json(
       {
         error: "Not all legs can be settled yet",
         pending: result.pending,
+        resolved,
       },
       { status: 409 }
     );

@@ -193,7 +193,7 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 |--------|-------|-------|
 | Manual | `POST /api/rounds/[id]/settle` | Owner marks won/lost/void per leg |
 | Auto (owner) | `POST /api/rounds/[id]/auto-settle` | Reads synced `Match` rows |
-| Auto (hands-off) | Via `POST /api/internal/sync-matches` | Cron sync → auto-settles all ready locked rounds |
+| Auto (hands-off) | Via `POST /api/internal/sync-matches` | Cron sync → auto-settles all ready locked rounds; resolved legs update before full acca settles |
 | Sync | `POST /api/internal/sync-matches` | Cron: football-data.org → `Match` table |
 
 Email notifications (Resend) fire on lock and settle when `RESEND_API_KEY` + `EMAIL_FROM` are set. Deduped via `Round.lockedNotificationSentAt` / `settledNotificationSentAt`.
@@ -356,7 +356,7 @@ Recent migrations include `20260710100000_user_role_analytics` (admin role + ana
 ## Known limitations
 
 1. **football-data.org free tier:** World Cup syncs; League One/Two return 403; EPL/Championship may be empty off-season.
-2. **Auto-settle** runs automatically after match sync (every 5 min); owner can still trigger manually.
+2. **Auto-settle** runs automatically after match sync (every 5 min); individual leg outcomes update as matches finish; round settles when all legs are ready. Owner can still trigger manually.
 3. **Email notifications** require Resend setup (`RESEND_API_KEY`, `EMAIL_FROM`); skipped if unset.
 4. **Auto-settle requires synced `Match` rows** — 5-min cron or manual `POST /api/internal/sync-matches`.
 5. **Cross-competition acca** — often no single bookmaker; UI shows ranked alternatives + per-leg deeplinks.

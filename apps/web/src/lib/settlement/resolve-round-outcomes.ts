@@ -1,5 +1,6 @@
 import { getMatchResultForLegFromDb } from "@/lib/results/match-store";
 import { resolveLegOutcome } from "@/lib/results/resolve-leg";
+import { prisma } from "@the-syndicate/database";
 import type { Leg } from "@prisma/client";
 import type { LegOutcome } from "@the-syndicate/shared";
 
@@ -41,7 +42,10 @@ export async function resolveRoundOutcomes(
     if (!outcome) {
       pending.push({
         legId: leg.id,
-        reason: `Match not finished (${matchData.result.status})`,
+        reason:
+          matchData.result.status === "FINISHED"
+            ? `Could not resolve ${leg.marketType} (${leg.selectionId})`
+            : `Match not finished (${matchData.result.status})`,
       });
       continue;
     }
@@ -54,4 +58,25 @@ export async function resolveRoundOutcomes(
   }
 
   return { ready: true, outcomeMap };
+}
+
+/** Update leg outcomes as matches finish; points are awarded only when the round settles. */
+export async function persistResolvableLegOutcomes(
+  legs: Leg[],
+  outcomeMap: Map<string, LegOutcome>
+): Promise<number> {
+  let updated = 0;
+
+  for (const leg of legs) {
+    const outcome = outcomeMap.get(leg.id);
+    if (!outcome || leg.outcome !== "pending") continue;
+
+    await prisma.leg.update({
+      where: { id: leg.id },
+      data: { outcome },
+    });
+    updated++;
+  }
+
+  return updated;
 }
