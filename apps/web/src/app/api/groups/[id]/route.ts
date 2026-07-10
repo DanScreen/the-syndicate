@@ -111,6 +111,18 @@ export async function GET(_request: Request, { params }: Params) {
     betslipLink,
     betslipLinks,
     isOwner: membership.role === "owner",
-    recentRounds: group.rounds.filter((r) => r.status === "settled"),
+    recentRounds: group.rounds
+      .filter((r) => r.status === "settled")
+      .map((r) => ({
+        id: r.id,
+        status: r.status,
+        combinedOdds: r.combinedOdds,
+        legs: r.legs.map((leg) => ({
+          selectionLabel: leg.selectionLabel,
+          outcome: leg.outcome,
+          odds: leg.odds,
+          pointsAwarded: leg.pointsAwarded,
+        })),
+      })),
   });
 }

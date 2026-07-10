@@ -41,6 +41,20 @@ function formatKickoff(iso: string) {
   });
 }
 
+function legOutcomeLabel(outcome: string): string {
+  if (outcome === "won") return "Won";
+  if (outcome === "lost") return "Lost";
+  if (outcome === "void") return "Void";
+  return "Awaiting";
+}
+
+function legOutcomeClass(outcome: string): string {
+  if (outcome === "won") return "border-green-500/40 bg-green-500/10 text-green-400";
+  if (outcome === "lost") return "border-red-500/40 bg-red-500/10 text-red-400";
+  if (outcome === "void") return "border-border bg-card text-muted";
+  return "border-border bg-card text-muted";
+}
+
 export function RoundProgress({
   members,
   legs,
@@ -378,6 +392,7 @@ export function AccaSummary({
   singleBookmaker,
   bookmakerRankings = [],
   betslipLink,
+  inProgress = false,
 }: {
   combinedOdds: number;
   bookmakerName?: string | null;
@@ -385,21 +400,28 @@ export function AccaSummary({
   singleBookmaker: boolean;
   bookmakerRankings?: AccaBookmakerRanking[];
   betslipLink?: string | null;
+  /** Locked acca — show frozen odds only, hide bookmaker comparison. */
+  inProgress?: boolean;
 }) {
   const [bookmakersOpen, setBookmakersOpen] = useState(false);
   const topBookmaker = bookmakerRankings[0];
+  const showCompare = !inProgress && bookmakerRankings.length > 0;
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent/30 bg-accent-muted/20 px-4 py-3 text-sm">
         <div>
-          <p className="font-semibold">Combined odds</p>
+          <p className="font-semibold">{inProgress ? "Locked combined odds" : "Combined odds"}</p>
           <p className="text-2xl font-bold text-accent">{combinedOdds}</p>
           {singleBookmaker && bookmakerName && (
-            <p className="mt-0.5 text-xs text-muted">Best at {bookmakerName}</p>
+            <p className="mt-0.5 text-xs text-muted">
+              {inProgress ? `Locked at ${bookmakerName}` : `Best at ${bookmakerName}`}
+            </p>
           )}
           {!singleBookmaker && (
-            <p className="mt-0.5 text-xs text-amber-400">Place legs individually</p>
+            <p className="mt-0.5 text-xs text-amber-400">
+              {inProgress ? "Best per-leg odds locked at submission" : "Place legs individually"}
+            </p>
           )}
         </div>
         {betslipLink && (
@@ -410,12 +432,13 @@ export function AccaSummary({
             className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-black hover:bg-green-400"
           >
             Open betslip
-            {topBookmaker ? ` · ${topBookmaker.bookmakerName}` : ""}
+            {topBookmaker && !inProgress ? ` · ${topBookmaker.bookmakerName}` : ""}
+            {inProgress && bookmakerName ? ` · ${bookmakerName}` : ""}
           </a>
         )}
       </div>
 
-      {bookmakerRankings.length > 0 && (
+      {showCompare && (
         <div className="rounded-xl border border-border bg-card text-sm">
           <button
             type="button"
@@ -466,7 +489,7 @@ export function AccaSummary({
         </div>
       )}
 
-      {singleBookmaker && bookmakerId && !betslipLink && (
+      {singleBookmaker && bookmakerId && !betslipLink && !inProgress && (
         <p className="text-xs text-muted">
           Leg odds are priced at {bookmakerName ?? bookmakerId} for this acca.
         </p>
@@ -585,10 +608,13 @@ export function LegsList({
   legs,
   legLinks,
   showOpenLinks = false,
+  inProgress = false,
 }: {
   legs: Leg[];
   legLinks?: { legId: string; url: string | null }[];
   showOpenLinks?: boolean;
+  /** Locked acca awaiting results — show outcomes and frozen leg odds. */
+  inProgress?: boolean;
 }) {
   if (legs.length === 0) {
     return <p className="text-sm text-muted">No legs submitted yet.</p>;
@@ -602,16 +628,42 @@ export function LegsList({
     <ul className="space-y-2">
       {legs.map((leg) => {
         const openUrl = showOpenLinks ? linkByLegId.get(leg.id) : undefined;
+        const showOutcome = inProgress || leg.outcome !== "pending";
+        const legPoints =
+          leg.outcome !== "pending"
+            ? legPointsForOutcome(leg.outcome as "won" | "lost" | "void", leg.odds)
+            : null;
+
         return (
           <li
             key={leg.id}
-            className="rounded-lg border border-border bg-card px-4 py-3 text-sm"
+            className={`rounded-lg border px-4 py-3 text-sm ${
+              inProgress && leg.outcome !== "pending"
+                ? legOutcomeClass(leg.outcome)
+                : "border-border bg-card"
+            }`}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <div className="flex justify-between gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="font-medium">{leg.user.name}</span>
-                  <span className="shrink-0 text-accent">{leg.odds}</span>
+                  <div className="flex shrink-0 items-center gap-2">
+                    {showOutcome && (
+                      <span
+                        className={`rounded-full border px-2 py-0.5 text-xs font-medium ${
+                          inProgress ? legOutcomeClass(leg.outcome) : "border-border text-muted"
+                        }`}
+                      >
+                        {legOutcomeLabel(leg.outcome)}
+                        {legPoints !== null && (
+                          <span className="ml-1 opacity-80">
+                            {formatLegPoints(legPoints)} pts
+                          </span>
+                        )}
+                      </span>
+                    )}
+                    <span className="text-accent">{leg.odds}</span>
+                  </div>
                 </div>
                 <p className="text-muted">
                   {leg.homeTeam} vs {leg.awayTeam} · {leg.marketLabel}:{" "}
@@ -619,17 +671,13 @@ export function LegsList({
                 </p>
                 <p className="text-xs text-muted">
                   {leg.competition}
-                  {leg.outcome !== "pending" && (
+                  {inProgress && (
+                    <span> · Locked at {leg.bookmakerName}</span>
+                  )}
+                  {!inProgress && leg.outcome !== "pending" && legPoints !== null && (
                     <>
                       {" "}
-                      · {leg.outcome} (
-                      {formatLegPoints(
-                        legPointsForOutcome(
-                          leg.outcome as "won" | "lost" | "void",
-                          leg.odds
-                        )
-                      )}{" "}
-                      pts)
+                      · {leg.outcome} ({formatLegPoints(legPoints)} pts)
                     </>
                   )}
                 </p>
@@ -699,7 +747,12 @@ export function RoundHistory({
     id: string;
     status: string;
     combinedOdds: number | null;
-    legs: { selectionLabel: string; outcome: string; pointsAwarded?: number }[];
+    legs: {
+      selectionLabel: string;
+      outcome: string;
+      odds?: number;
+      pointsAwarded?: number;
+    }[];
   }[];
 }) {
   if (rounds.length === 0) return null;
@@ -710,7 +763,15 @@ export function RoundHistory({
       <ul className="mt-4 space-y-3">
         {rounds.map((round) => {
           const roundPoints = round.legs.reduce(
-            (sum, leg) => sum + (leg.pointsAwarded ?? 0),
+            (sum, leg) =>
+              sum +
+              (leg.pointsAwarded ??
+                (leg.outcome !== "pending"
+                  ? legPointsForOutcome(
+                      leg.outcome as "won" | "lost" | "void",
+                      leg.odds ?? 1
+                    )
+                  : 0)),
             0
           );
           return (
@@ -718,15 +779,24 @@ export function RoundHistory({
             <div className="flex justify-between">
               <span className="text-muted capitalize">{round.status}</span>
               {round.combinedOdds && (
-                <span className="text-accent">Combined {round.combinedOdds}</span>
+                <span className="text-accent">Locked {round.combinedOdds}</span>
               )}
             </div>
             <p className="mt-1 font-semibold text-accent">
               {formatLegPoints(roundPoints)} pts
             </p>
-            <p className="mt-2 text-xs text-muted">
-              {round.legs.map((l) => `${l.selectionLabel} (${l.outcome})`).join(" · ")}
-            </p>
+            <ul className="mt-2 space-y-1 text-xs text-muted">
+              {round.legs.map((l, i) => (
+                <li key={i}>
+                  {l.selectionLabel}
+                  {l.odds != null && <span> @ {l.odds}</span>}
+                  {" "}
+                  <span className={l.outcome === "won" ? "text-green-400" : l.outcome === "lost" ? "text-red-400" : ""}>
+                    ({legOutcomeLabel(l.outcome)})
+                  </span>
+                </li>
+              ))}
+            </ul>
           </li>
           );
         })}

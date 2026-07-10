@@ -59,7 +59,7 @@ export type GroupData = {
     id: string;
     status: string;
     combinedOdds: number | null;
-    legs: { selectionLabel: string; outcome: string; pointsAwarded: number }[];
+    legs: { selectionLabel: string; outcome: string; odds: number; pointsAwarded: number }[];
   }[];
   betslipLink: string | null;
   betslipLinks: {
@@ -110,6 +110,15 @@ export function GroupDataProvider({
     setLoading(true);
     reload();
   }, [reload]);
+
+  // Refresh locked accas so leg results appear as matches finish.
+  useEffect(() => {
+    if (data?.activeRound?.status !== "locked") return;
+    const interval = setInterval(() => {
+      void reload();
+    }, 60_000);
+    return () => clearInterval(interval);
+  }, [data?.activeRound?.status, data?.activeRound?.id, reload]);
 
   return (
     <GroupDataContext.Provider value={{ data, loading, reload }}>

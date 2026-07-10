@@ -91,7 +91,7 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 | Product analytics (logins, signups, page views) | ✅ |
 | Marketing site (homepage, about, Turf Green + Acca stack logo) | ✅ |
 | Points-first stats UX + stake → profit converter | ✅ |
-| Locked round UX: picks first, collapsible bookmaker comparison | ✅ |
+| Locked round UX: picks first, locked odds only (no bookmaker comparison), in-progress leg results | ✅ |
 | Round history, progress UI, landing/SEO | ✅ |
 
 \*Asian handicap only from exchange bookmakers in current World Cup UK feed — filtered out; handicap UI empty for those fixtures.
@@ -138,7 +138,7 @@ Requires live odds (`ODDS_API_KEY`) — mock fixtures have no deeplinks.
 
 ### Acca bookmaker rankings
 
-At lock, `rankAccaBookmakers()` in `apps/web/src/lib/odds/acca.ts` ranks all retail bookmakers by combined acca odds. Stored as `Round.accaBookmakerRankings` (JSON). Older locked rounds backfill lazily on `GET /api/groups/[id]`. UI: collapsible **Compare bookmakers** section on locked round.
+At lock, `rankAccaBookmakers()` in `apps/web/src/lib/odds/acca.ts` ranks all retail bookmakers by combined acca odds. Stored as `Round.accaBookmakerRankings` (JSON). Older locked rounds backfill lazily on `GET /api/groups/[id]`. Rankings used for betslip deeplinks at lock; **not shown in UI** once acca is locked (frozen odds only).
 
 Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_rankings`.
 
@@ -183,7 +183,7 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 
 **Navigation:** `AppNav` in header (Groups ↔ Performance). Inside a group, `GroupNav` tabs share data via `GroupDataProvider` (fetched once in group layout).
 
-**Locked round UI:** Picks list first → combined odds + primary betslip CTA → **Compare bookmakers** collapsible section (ranked acca bookmakers + per-leg **Open** links).
+**Locked round UI:** Picks list with per-leg outcomes as matches finish (Won/Lost/Awaiting badges) → locked combined odds + bookmaker (no comparison panel) → betslip CTA until first result, then tracking only. Polls every 60s while locked. **Recent rounds** show locked odds per leg.
 
 ---
 

@@ -54,6 +54,18 @@ export default function GroupRoundPage() {
 
   const isLocked = activeRound.status === "locked";
   const isCollecting = activeRound.status === "collecting";
+  const resolvedLegs = activeRound.legs.filter((l) => l.outcome !== "pending").length;
+  const lockedBookmakerName =
+    activeRound.accaBookmakerRankings?.find(
+      (r) => r.bookmakerId === activeRound.bestBookmakerId
+    )?.bookmakerName ?? activeRound.legs[0]?.bookmakerName;
+
+  let lockedBanner = "Acca locked — place your bet at the bookmaker";
+  if (resolvedLegs > 0 && resolvedLegs < activeRound.legs.length) {
+    lockedBanner = `Acca in progress — ${resolvedLegs} of ${activeRound.legs.length} legs settled`;
+  } else if (resolvedLegs === activeRound.legs.length && activeRound.legs.length > 0) {
+    lockedBanner = "All legs settled — acca will finalize shortly";
+  }
 
   return (
     <div className="space-y-6">
@@ -67,7 +79,7 @@ export default function GroupRoundPage() {
 
       {isLocked && (
         <div className="rounded-lg border border-accent/30 bg-accent-muted/40 px-4 py-3 text-sm text-accent">
-          Acca locked — add each leg to your betslip, then place your acca.
+          {lockedBanner}
         </div>
       )}
 
@@ -77,7 +89,8 @@ export default function GroupRoundPage() {
           <LegsList
             legs={activeRound.legs}
             legLinks={betslipLinks?.legLinks}
-            showOpenLinks={isLocked}
+            showOpenLinks={isLocked && resolvedLegs === 0}
+            inProgress={isLocked}
           />
         </div>
       </section>
@@ -86,10 +99,10 @@ export default function GroupRoundPage() {
         <AccaSummary
           combinedOdds={activeRound.combinedOdds}
           bookmakerId={activeRound.bestBookmakerId}
-          bookmakerName={activeRound.legs[0]?.bookmakerName}
+          bookmakerName={lockedBookmakerName}
           singleBookmaker={Boolean(activeRound.bestBookmakerId)}
-          bookmakerRankings={activeRound.accaBookmakerRankings ?? []}
-          betslipLink={betslipLink}
+          betslipLink={resolvedLegs === 0 ? betslipLink : null}
+          inProgress
         />
       )}
 
