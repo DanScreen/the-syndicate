@@ -1,4 +1,5 @@
 import { requireCronSecret } from "@/lib/internal-auth";
+import { autoSettleLockedRounds } from "@/lib/settlement/auto-settle-round";
 import { syncAllCompetitionMatches } from "@/lib/results/sync-matches";
 import { NextResponse } from "next/server";
 
@@ -13,6 +14,8 @@ export async function POST(request: Request) {
     );
   }
 
-  const result = await syncAllCompetitionMatches();
-  return NextResponse.json(result);
+  const sync = await syncAllCompetitionMatches();
+  const autoSettle = await autoSettleLockedRounds();
+
+  return NextResponse.json({ sync, autoSettle });
 }

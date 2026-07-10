@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/header";
+import { DashboardStats } from "@/components/dashboard-stats";
 import { formatLegPoints } from "@the-syndicate/shared";
 import { auth } from "@/lib/auth";
 import { prisma } from "@the-syndicate/database";
@@ -77,6 +78,8 @@ export default async function DashboardPage() {
             </Link>
           </section>
         )}
+
+        <DashboardStats userName={user?.name ?? "Player"} />
 
         <section className="mt-8">
           <h2 className="text-lg font-semibold">Your groups</h2>

@@ -3,6 +3,7 @@
 import type { GroupStatsChartPoint, GroupStatsSummary } from "@/lib/stats/compute-group-stats";
 import type { MemberChartPoint, MemberSeries } from "@/lib/stats/compute-member-chart";
 import type { MemberStatsResult } from "@/lib/stats/compute-member-stats";
+import { ShareCard } from "@/components/share-card";
 import { formatLegPoints } from "@the-syndicate/shared";
 import { useEffect, useState } from "react";
 import {
@@ -201,7 +202,7 @@ function MemberBreakdown({
   );
 }
 
-export function GroupStats({ groupId }: { groupId: string }) {
+export function GroupStats({ groupId, groupName }: { groupId: string; groupName?: string }) {
   const [data, setData] = useState<GroupStatsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -382,6 +383,15 @@ export function GroupStats({ groupId }: { groupId: string }) {
           )}
         </div>
       )}
+
+      <ShareCard
+        title={groupName ? `${groupName} stats` : "Group stats"}
+        netPoints={summary.netGroupPoints}
+        legsPlayed={summary.totalBets}
+        winRate={summary.winRate}
+        netAccaPlGbp={summary.netAccaPlGbp}
+        subtitle={`${summary.totalRounds} settled round${summary.totalRounds === 1 ? "" : "s"}`}
+      />
     </div>
   );
 }

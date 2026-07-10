@@ -2,7 +2,7 @@
 
 **Pitch:** Social groups where each member adds one leg to a shared football acca, track performance together, compete on picks.
 
-**As-built detail:** [CURRENT_STATE.md](./CURRENT_STATE.md) · **Planned features:** [specs/](./specs/)
+**As-built detail:** [CURRENT_STATE.md](./CURRENT_STATE.md) · **Planned features:** [specs/](./specs/) · **Next work:** [ROADMAP.md](./ROADMAP.md)
 
 ---
 
@@ -16,24 +16,25 @@
 ## Core flows
 
 ### 1. Onboarding
-Sign up → dashboard with groups and stats.
+Sign up → dashboard with cross-group stats summary.
 
 ### 2. Create / join group
 Owner creates group (name, max members) → invite code + link. Members join via code or `/groups/join?code=`.
 
 ### 3. Build the acca
-1. Owner starts a round  
-2. Each member picks a **competition** *(planned)*, fixture, market, selection  
-3. **Best odds only** shown per selection *(live today)*  
-4. All legs in → acca **locks** with best combined bookmaker *(live today)*  
+1. Owner starts a round
+2. Each member picks a **competition**, fixture, market, selection (4-step form)
+3. **Best odds only** shown per selection
+4. All legs in → acca **locks** with best combined bookmaker + ranked bookmaker list
+5. Members receive **email notification** when acca locks (if Resend configured)
 
 → [specs/competitions-and-results.md](./specs/competitions-and-results.md)
 
 ### 4. Place & track
-Locked acca shows combined odds, recommended bookmaker, betslip link. Track until fixtures finish.
+Locked acca shows combined odds, recommended bookmaker, ranked alternatives ("Where to place"), betslip link. Track until fixtures finish.
 
 ### 5. Settle & stats
-Resolve legs (manual or auto). Points + leaderboard. **Group stats & charts** *(planned)*.
+Match sync cron auto-settles locked rounds when all fixtures finish. Email on settle. Unit-stake points + leaderboard. **Group stats** and **member stats** on group page. **Dashboard** shows cross-group performance + share cards.
 
 → [specs/group-stats-and-points.md](./specs/group-stats-and-points.md)
 
@@ -44,14 +45,18 @@ Resolve legs (manual or auto). Points + leaderboard. **Group stats & charts** *(
 ### Shipped
 - [x] Auth, groups, invite flow
 - [x] Live odds (The Odds API) + extended markets
-- [x] Leg submit, acca lock, acca bookmaker comparison
-- [x] Manual + auto settle (football-data.org)
-- [x] Leaderboard, round history, landing/SEO
+- [x] Per-leg competition picker (5 leagues + World Cup)
+- [x] Leg submit, acca lock, acca bookmaker rankings
+- [x] Match table + football-data.org sync
+- [x] Hands-off auto-settle + owner-triggered auto-settle
+- [x] Email notifications (round locked / settled)
+- [x] Unit-stake points + leaderboard
+- [x] Group stats + member stats (charts, favourites)
+- [x] Dashboard cross-group summary + share cards
 
-### Planned (see specs)
-- [ ] Per-leg competition picker
-- [ ] Shared match results table
-- [ ] Unit-stake points + group/member stats
+### Backlog
+- [ ] Real bookmaker betslip deeplinks
+- [ ] Dedicated user profile page
 
 Full priority list: [ROADMAP.md](./ROADMAP.md)
 

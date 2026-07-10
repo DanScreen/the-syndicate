@@ -111,7 +111,18 @@ gcloud scheduler jobs create http sync-matches \
   --headers="Authorization=Bearer YOUR_CRON_SECRET"
 ```
 
-Requires `FOOTBALL_DATA_API_KEY` on Cloud Run.
+Requires `FOOTBALL_DATA_API_KEY` on Cloud Run. Response includes `sync` and `autoSettle` results.
+
+## Email notifications (Resend)
+
+Optional. When configured, members receive email on round lock and settle.
+
+1. Create account at [resend.com](https://resend.com) and verify sending domain.
+2. Add `RESEND_API_KEY` to GitHub secrets.
+3. Add `EMAIL_FROM` GitHub variable (e.g. `The Syndicate <notifications@the-syndicate.uk>`).
+4. Deploy — `deploy.yml` passes both to Cloud Run.
+
+Omit either variable to skip emails (no-op).
 
 ## GitHub repository configuration
 
@@ -125,6 +136,7 @@ Requires `FOOTBALL_DATA_API_KEY` on Cloud Run.
 | `CLOUD_SQL_CONNECTION_NAME` | `terraform output cloud_sql_connection_name` |
 | `DATABASE_URL` | `terraform output -json github_actions_secrets` (for migration step) |
 | `CRON_SECRET` | Long random string for `/api/internal/sync-matches` |
+| `RESEND_API_KEY` | (Optional) Resend API key for email notifications |
 | `TF_STATE_BUCKET` | GCS bucket for Terraform remote state |
 
 ### Variables
@@ -135,6 +147,7 @@ Requires `FOOTBALL_DATA_API_KEY` on Cloud Run.
 | `ARTIFACT_REGISTRY_REPO` | `the-syndicate` |
 | `CLOUD_RUN_SERVICE` | `the-syndicate-web` |
 | `NEXTAUTH_URL` | `https://the-syndicate.example.com` |
+| `EMAIL_FROM` | `The Syndicate <notifications@the-syndicate.uk>` (optional) |
 
 ## Deployment flow (on push to `main`)
 

@@ -2,9 +2,8 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | Phase B done; Phase C (hands-off settle + notifications) not built |
+| **Status** | Phases A–C done |
 | **Depends on** | — |
-| **Blocks** | Member stats favourites (`competitionId` on legs) |
 | **As-built reference** | [../CURRENT_STATE.md](../CURRENT_STATE.md) |
 
 ---
@@ -22,10 +21,23 @@
 ### Odds UX
 
 - **Leg submit:** best retail odds only — `sortQuotesByBestOdds`, no bookmaker picker.
-- **Acca lock:** `findBestAccaBookmaker` in `lib/odds/acca.ts`, `lockRoundWithAccaPricing` in `lib/odds/lock-round.ts`.
-- **UI:** `AccaSummary` in `group-ui.tsx`.
+- **Acca lock:** `rankAccaBookmakers()` + `findBestAccaBookmaker` in `lib/odds/acca.ts`, `lockRoundWithAccaPricing` in `lib/odds/lock-round.ts`.
+- **UI:** `AccaSummary` in `group-ui.tsx` — ranked bookmaker list at lock.
 
 If no single bookmaker covers all legs → show best-per-leg combined odds; no unified betslip.
+
+### Competition picker (Phase A)
+
+- Catalogue: `packages/shared/src/competitions.ts`
+- `GET /api/competitions`, `GET /api/fixtures?competition=`, `Leg.competitionId`
+- 4-step `SubmitLegForm`: competition → fixture → market → selection
+
+### Match table + sync (Phase B)
+
+- `Match` model, `Leg.matchId` FK
+- `POST /api/internal/sync-matches` (Bearer `CRON_SECRET`)
+- Auto-settle reads from `Match` table via `match-store.ts`
+- Cloud Scheduler: hourly UTC in production
 
 ---
 
@@ -39,9 +51,7 @@ If no single bookmaker covers all legs → show best-per-leg combined odds; no u
 | `league-two` | League Two | `soccer_england_league2` | `EL2` |
 | `world-cup` | FIFA World Cup | `soccer_fifa_world_cup` | `WC` |
 
-**Phase 1b:** FA Cup (`soccer_fa_cup` / `FAC`), EFL Cup.
-
-Add catalogue: `packages/shared/src/competitions.ts`.
+**Phase 1b (backlog):** FA Cup (`soccer_fa_cup` / `FAC`), EFL Cup.
 
 ---
 
@@ -57,17 +67,16 @@ Submit leg form
 
 - **No `competitionId` on `Round`** — rounds are competition-agnostic.
 - `Leg.competitionId` (slug) + existing `Leg.competition` (display name).
-- `GET /api/fixtures?competition=epl` — replace global `ODDS_API_SPORT` default.
 
 ---
 
-## Data model (planned)
+## Data model (as-built)
 
 ```prisma
 model Leg {
-  competitionId String  // NEW slug
-  competition   String  // exists
-  matchId       String? // NEW FK → Match
+  competitionId String
+  competition   String
+  matchId       String?  // FK → Match
 }
 
 model Match {
@@ -86,37 +95,42 @@ model Match {
 }
 ```
 
+Full schema: `packages/database/prisma/schema.prisma`
+
 ---
 
-## Results sync (planned)
+## Results sync (as-built)
 
 ```mermaid
 flowchart LR
-  FD[football-data.org] -->|cron per competition| Match[(Match)]
+  FD[football-data.org] -->|cron hourly| Match[(Match)]
   Match --> Resolve[resolveLegOutcome]
   Leg --> Resolve
 ```
 
 - Ingest: `GET /v4/competitions/{code}/matches` on schedule.
-- Settle: read `Match` table — no per-group API calls.
-- Endpoint: `POST /api/internal/sync-matches` (cron secret).
+- Settle: read `Match` table — no per-group API calls at settle time.
+- Endpoint: `POST /api/internal/sync-matches` (Bearer `CRON_SECRET`).
+
+**Known:** football-data.org free tier — League One/Two return 403; EPL/Championship empty off-season.
 
 ---
 
-## API changes (planned)
+## API (as-built)
 
-| Endpoint | Change |
+| Endpoint | Status |
 |----------|--------|
-| `GET /api/competitions` | Active catalogue |
-| `GET /api/fixtures?competition=` | Filter by sport key |
-| `POST /api/legs` | Validate `competitionId` |
-| Auto-settle | Read from `Match` not football-data live |
+| `GET /api/competitions` | ✅ Active catalogue |
+| `GET /api/fixtures?competition=` | ✅ Filter by sport key |
+| `POST /api/legs` | ✅ Validates `competitionId` |
+| `POST /api/internal/sync-matches` | ✅ Cron sync |
+| `POST /api/rounds/[id]/auto-settle` | ✅ Reads from `Match` (owner-triggered) |
 
 ---
 
 ## Implementation checklist
 
-### Phase A — Competition picker
+### Phase A — Competition picker ✅
 
 - [x] `packages/shared/src/competitions.ts`
 - [x] `GET /api/competitions`
@@ -124,21 +138,23 @@ flowchart LR
 - [x] `GET /api/fixtures?competition=`
 - [x] `Leg.competitionId` migration
 
-### Phase B — Match table + ingest
+### Phase B — Match table + ingest ✅
 
 - [x] `Match` model + migration
-- [x] Sync job
+- [x] Sync job + Cloud Scheduler
 - [x] Auto-settle from DB
 
-### Phase C — Hands-off
+### Phase C — Hands-off ✅
 
-- [ ] Post-ingest auto-settle
-- [ ] Notifications
+- [x] Post-ingest auto-settle — `autoSettleLockedRounds()` runs after sync
+- [x] Email notifications — round locked / settled via Resend
 
 ---
 
-## Open questions
+## Decisions (resolved)
 
-1. Ship EPL + World Cup first, or all five leagues?
-2. Per-leg deeplinks when no single acca bookmaker?
-3. Ingest frequency — hourly vs match-day?
+| Question | Decision |
+|----------|----------|
+| Ship EPL + World Cup first, or all five? | **All five** shipped in Phase A |
+| Ingest frequency | **Hourly UTC** via Cloud Scheduler |
+| Per-leg deeplinks when no single acca bookmaker? | Generic bookmaker links today; real deeplinks in backlog |

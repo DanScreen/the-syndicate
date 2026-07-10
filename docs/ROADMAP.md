@@ -10,39 +10,42 @@ Production: [www.the-syndicate.uk](https://www.the-syndicate.uk) · **Index:** [
 
 ---
 
-## Status
+## Done (July 2026)
 
-### Done — core loop
-- Live odds (The Odds API), extended markets, best-odds leg picker
-- Per-leg competition picker (EPL, Championship, L1, L2, World Cup)
-- Shared `Match` table + football-data.org sync cron
-- Unit-stake leg points (win: odds−1, loss: −1)
-- Group stats summary + cumulative points chart
-- Member stats: multi-line chart, favourites, best/worst picks
-- Acca lock with combined bookmaker comparison
-- Invite flow, round progress, leg picker UX, landing/SEO
-- Auto-settle (football-data.org), manual settle
-- Apex → www redirect (Cloudflare)
+Core loop is **shipped**:
 
-### Next — build in this order
+- Auth, groups, invite links, rounds (collecting → locked → settled)
+- Live odds (The Odds API) + mock fallback; extended markets (BTTS, double chance, DNB)
+- Per-leg **competition picker** (EPL, Championship, L1, L2, World Cup)
+- **Acca lock** with best combined bookmaker + **ranked bookmaker list** at lock
+- **Match table** + football-data.org sync cron + auto-settle from DB
+- **Hands-off auto-settle** — cron sync settles locked rounds when all matches finished
+- **Email notifications** — round locked / round settled (Resend; optional)
+- **Unit-stake points** (win: `odds−1`, loss: `−1`, void: `0`)
+- **Group stats** (summary, cumulative chart, multi-member chart)
+- **Member stats** (breakdown, favourites, best/worst picks)
+- **Dashboard cross-group summary** + share cards
+- Leaderboard, round history, landing/SEO
+- Deploy: Cloud Run + Cloud SQL + GitHub Actions; Cloud Scheduler for match sync
 
-| # | Feature | Spec |
-|---|---------|------|
-| 1 | ~~Per-leg competition picker~~ ✅ | [specs/competitions-and-results.md](./specs/competitions-and-results.md) Phase A |
-| 2 | ~~Shared `Match` table + results cron~~ ✅ | [specs/competitions-and-results.md](./specs/competitions-and-results.md) Phase B |
-| 3 | ~~Unit-stake points~~ ✅ | [specs/group-stats-and-points.md](./specs/group-stats-and-points.md) Phase 1 |
-| 4 | ~~Group stats + chart~~ ✅ | [specs/group-stats-and-points.md](./specs/group-stats-and-points.md) Phase 2 |
-| 5 | ~~Member stats breakdowns~~ ✅ | [specs/group-stats-and-points.md](./specs/group-stats-and-points.md) Phase 3 |
+---
 
-### Backlog
-- User profile (cross-group stats)
-- Email notifications (round locked, settled)
-- Real bookmaker-specific betslip deeplinks
-- Terraform CI GCS permissions fix
-- Optional: GCP load balancer for custom domain (Cloudflare Worker in use today)
+## Next — backlog
 
-### Post-MVP
-- Push notifications, chat/feed, stake pooling, social sign-in, more sports
+| # | Feature | Notes |
+|---|---------|-------|
+| 1 | Real bookmaker betslip deeplinks | Beyond generic links today |
+| 2 | User profile page | Cross-group stats in dedicated view |
+| 3 | football-data.org tier upgrade | L1/L2 sync returns 403 on free tier |
+| 4 | FA Cup + EFL Cup | Phase 1b in competitions spec |
+| 5 | Mobile app catch-up | `apps/mobile/` needs `?competition=` API |
+| 6 | Terraform CI GCS permissions fix | App deploy unaffected |
+
+---
+
+## Post-MVP
+
+Push notifications, chat/feed, stake pooling, social sign-in, more sports.
 
 ---
 
@@ -54,7 +57,9 @@ Production: [www.the-syndicate.uk](https://www.the-syndicate.uk) · **Index:** [
 
 ## Operator notes
 
-**Secrets (GitHub):** `ODDS_API_KEY`, `FOOTBALL_DATA_API_KEY`, `DATABASE_URL`, `AUTH_SECRET`, GCP deploy secrets.
+**Secrets (GitHub):** `ODDS_API_KEY`, `FOOTBALL_DATA_API_KEY`, `DATABASE_URL`, `AUTH_SECRET`, `CRON_SECRET`, `RESEND_API_KEY` (optional), GCP deploy secrets.
+
+**Variables (GitHub):** `EMAIL_FROM` (optional, e.g. `The Syndicate <notifications@the-syndicate.uk>`).
 
 **Local odds:** `ODDS_API_KEY` in `apps/web/.env.local` — omit for mock fixtures.
 

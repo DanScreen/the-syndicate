@@ -1,9 +1,6 @@
 import { requireSession } from "@/lib/api-auth";
-import { getMatchResultForLegFromDb } from "@/lib/results/match-store";
-import { resolveLegOutcome } from "@/lib/results/resolve-leg";
-import { applyRoundSettlement } from "@/lib/settlement/apply-round-settlement";
+import { tryAutoSettleRound } from "@/lib/settlement/auto-settle-round";
 import { prisma } from "@the-syndicate/database";
-import type { LegOutcome } from "@the-syndicate/shared";
 import { NextResponse } from "next/server";
 
 type Params = { params: Promise<{ id: string }> };
@@ -17,7 +14,6 @@ export async function POST(_request: Request, { params }: Params) {
   const round = await prisma.round.findUnique({
     where: { id: roundId },
     include: {
-      legs: true,
       group: { include: { members: true } },
     },
   });
@@ -35,58 +31,24 @@ export async function POST(_request: Request, { params }: Params) {
     return NextResponse.json({ error: "Round must be locked first" }, { status: 400 });
   }
 
-  const outcomeMap = new Map<string, LegOutcome>();
-  const pending: { legId: string; reason: string }[] = [];
+  const result = await tryAutoSettleRound(roundId);
 
-  for (const leg of round.legs) {
-    const matchData = await getMatchResultForLegFromDb({
-      id: leg.id,
-      matchId: leg.matchId,
-      competitionId: leg.competitionId,
-      homeTeam: leg.homeTeam,
-      awayTeam: leg.awayTeam,
-      kickoff: leg.kickoff,
-    });
-
-    if (!matchData) {
-      pending.push({
-        legId: leg.id,
-        reason: `No synced match for ${leg.homeTeam} vs ${leg.awayTeam} (${leg.competition})`,
-      });
-      continue;
-    }
-
-    const outcome = resolveLegOutcome(
-      { marketType: leg.marketType, selectionId: leg.selectionId },
-      matchData.result
-    );
-
-    if (!outcome) {
-      pending.push({
-        legId: leg.id,
-        reason: `Match not finished (${matchData.result.status})`,
-      });
-      continue;
-    }
-
-    outcomeMap.set(leg.id, outcome);
-  }
-
-  if (pending.length > 0) {
+  if (result.status === "pending") {
     return NextResponse.json(
       {
         error: "Not all legs can be settled yet",
-        pending,
-        resolved: Object.fromEntries(outcomeMap),
+        pending: result.pending,
       },
       { status: 409 }
     );
   }
 
-  const result = await applyRoundSettlement(roundId, outcomeMap);
+  if (result.status === "skipped") {
+    return NextResponse.json({ error: result.reason }, { status: 400 });
+  }
 
   return NextResponse.json({
-    ...result,
-    legOutcomes: Object.fromEntries(outcomeMap),
+    profitLossGbp: result.profitLossGbp,
+    status: "settled",
   });
 }

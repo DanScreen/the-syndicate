@@ -1,8 +1,20 @@
 # Documentation index
 
-**Start here** if you are an agent or developer new to this repo.
+**Start here** if you are an agent or developer new to this repo — **do not rely on chat history**.
 
 The Syndicate is a social group football acca platform. Production: [www.the-syndicate.uk](https://www.the-syndicate.uk).
+
+---
+
+## Agent quick start
+
+1. Read **[CURRENT_STATE.md](./CURRENT_STATE.md)** — as-built truth (APIs, env vars, file paths, limitations).
+2. Read **[ROADMAP.md](./ROADMAP.md)** → **Next** — what to build now.
+3. Read the matching **spec** in [specs/](./specs/) before implementing.
+4. Run locally: `npm install` → `docker compose up -d` → copy `apps/web/.env.example` to `.env.local` → `npm run db:migrate:deploy` → `npm run dev`.
+5. After shipping: update docs in the **same commit** — see [AGENTS.md](../AGENTS.md).
+
+**Paused:** `apps/mobile/` — web only until validated with real users.
 
 ---
 
@@ -10,22 +22,21 @@ The Syndicate is a social group football acca platform. Production: [www.the-syn
 
 | If you need to… | Read |
 |-----------------|------|
-| Understand **what exists today** (APIs, env vars, file paths) | [CURRENT_STATE.md](./CURRENT_STATE.md) |
-| Understand **product intent & user flows** | [PRODUCT.md](./PRODUCT.md) |
-| Understand **system design** (stack, data model) | [ARCHITECTURE.md](./ARCHITECTURE.md) |
-| See **what to build next** | [ROADMAP.md](./ROADMAP.md) |
+| **What exists today** (start here for code) | [CURRENT_STATE.md](./CURRENT_STATE.md) |
+| **What to build next** | [ROADMAP.md](./ROADMAP.md) |
 | **Implement a planned feature** | Relevant file in [specs/](./specs/) |
+| Product intent & user flows | [PRODUCT.md](./PRODUCT.md) |
+| Stack & data model overview | [ARCHITECTURE.md](./ARCHITECTURE.md) |
 | Deploy or change infra | [DEPLOYMENT.md](./DEPLOYMENT.md), [infra/terraform/README.md](../infra/terraform/README.md) |
-| Run commands & conventions | [AGENTS.md](../AGENTS.md) (repo root) |
+| Commands & conventions | [AGENTS.md](../AGENTS.md) |
 
-### Recommended build order (planned work)
+Specs are **design contracts**. [CURRENT_STATE.md](./CURRENT_STATE.md) is **as-built truth** — update it when you ship.
 
-1. [specs/competitions-and-results.md](./specs/competitions-and-results.md) — Phase A: per-leg competition picker  
-2. [specs/competitions-and-results.md](./specs/competitions-and-results.md) — Phase B: shared `Match` table + results ingest  
-3. [specs/group-stats-and-points.md](./specs/group-stats-and-points.md) — Phase 1: unit-stake points  
-4. [specs/group-stats-and-points.md](./specs/group-stats-and-points.md) — Phases 2–3: group/member stats & charts  
+---
 
-Specs are **design contracts**. [CURRENT_STATE.md](./CURRENT_STATE.md) is the **as-built truth** — update it when you ship.
+## What to build next (July 2026)
+
+See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. Core MVP is shipped.
 
 ---
 
@@ -34,38 +45,23 @@ Specs are **design contracts**. [CURRENT_STATE.md](./CURRENT_STATE.md) is the **
 ```
 docs/
 ├── README.md              ← you are here
-├── CURRENT_STATE.md       ← as-built: production, code map, env, scoring today
+├── CURRENT_STATE.md       ← as-built: production, code map, env, APIs
 ├── PRODUCT.md             ← vision, flows, MVP scope
-├── ARCHITECTURE.md        ← stack, entities, high-level design
+├── ARCHITECTURE.md        ← stack, entities, subsystems
 ├── ROADMAP.md             ← priorities & status
-├── DEPLOYMENT.md          ← GCP, GitHub Actions, Terraform
-└── specs/                 ← feature specs (not yet built unless marked)
-    ├── competitions-and-results.md
-    └── group-stats-and-points.md
+├── DEPLOYMENT.md          ← GCP, GitHub Actions, Terraform, cron
+└── specs/
+    ├── competitions-and-results.md   ← Phase C remaining
+    └── group-stats-and-points.md     ← Phase 4 remaining
 ```
 
 ---
 
-## Wiki or “AI Brain”?
-
-**Use this repo’s docs — don’t add a separate wiki yet.**
-
-| Approach | Verdict |
-|----------|---------|
-| **Notion / GitHub Wiki / Confluence** | Duplicates repo docs; drifts out of sync; agents can’t grep it in-context |
-| **Cursor `AGENTS.md` + `docs/`** | ✅ Version-controlled, lives with code, loaded automatically |
-| **`.cursor/rules/`** | ✅ Short routing rules; point to `docs/README.md` |
-| **Dedicated “AI Brain” SaaS** | Overkill for current team size; same drift risk as wikis |
-
-**When to reconsider:** multiple non-technical stakeholders need a dashboard, or docs exceed ~20 files and need search UX. Until then, keep one source of truth in `docs/` and update [CURRENT_STATE.md](./CURRENT_STATE.md) on each release.
-
----
-
-## Updating docs (agents & humans)
+## Updating docs
 
 **Rule:** doc updates belong in the **same commit** as the code they describe.
 
-See also [AGENTS.md](../AGENTS.md) → Documentation maintenance.
+See [AGENTS.md](../AGENTS.md) → Documentation maintenance.
 
 | Change | Update |
 |--------|--------|

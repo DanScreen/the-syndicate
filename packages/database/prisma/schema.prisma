@@ -63,6 +63,8 @@ model Round {
   profitLossGbp   Float?
   lockedAt        DateTime?
   settledAt       DateTime?
+  lockedNotificationSentAt  DateTime?
+  settledNotificationSentAt DateTime?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   group           Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)

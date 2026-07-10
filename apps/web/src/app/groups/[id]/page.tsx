@@ -234,7 +234,7 @@ export default function GroupPage() {
         <section className="mt-8">
           <h2 className="text-lg font-semibold">Performance</h2>
           <div className="mt-4">
-            <GroupStats groupId={groupId} />
+            <GroupStats groupId={groupId} groupName={data.group.name} />
           </div>
         </section>
 

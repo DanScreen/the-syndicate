@@ -1,14 +1,16 @@
 # The Syndicate — Agent Guide
 
-Social group football acca platform. **Read [docs/README.md](docs/README.md) first.**
+Social group football acca platform. **Read [docs/README.md](docs/README.md) first — do not rely on chat history.**
 
 | Doc | When |
 |-----|------|
-| [docs/CURRENT_STATE.md](docs/CURRENT_STATE.md) | What exists today — **start here for implementation** |
+| [docs/CURRENT_STATE.md](docs/CURRENT_STATE.md) | What exists today — **start here for implementation** (includes agent onboarding + code map) |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | **What to build next** |
 | [docs/specs/](docs/specs/) | Planned features — read the relevant spec before building |
-| [docs/ROADMAP.md](docs/ROADMAP.md) | Build order & status |
 | [docs/PRODUCT.md](docs/PRODUCT.md) | User flows & vision |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Stack & data model |
+
+**Current priorities (July 2026):** Backlog items in [docs/ROADMAP.md](docs/ROADMAP.md) — betslip deeplinks, user profile, mobile catch-up.
 
 After shipping: follow **Documentation maintenance** below.
 

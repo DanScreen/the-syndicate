@@ -2,6 +2,7 @@ import { requireSession } from "@/lib/api-auth";
 import { sortQuotesByBestOdds } from "@/lib/odds/bookmakers";
 import { lockRoundWithAccaPricing } from "@/lib/odds/lock-round";
 import { findSelection } from "@/lib/odds/provider";
+import { notifyRoundLocked } from "@/lib/notifications/round-notifications";
 import { prisma } from "@the-syndicate/database";
 import { getCompetitionById, submitLegSchema } from "@the-syndicate/shared";
 import { NextResponse } from "next/server";
@@ -101,6 +102,8 @@ export async function POST(request: Request) {
       where: { id: round.groupId },
       data: { status: "locked" },
     });
+
+    void notifyRoundLocked(round.id);
   }
 
   return NextResponse.json({

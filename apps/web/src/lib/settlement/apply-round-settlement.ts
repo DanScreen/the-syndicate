@@ -1,4 +1,5 @@
 import { calculateGroupProfitLoss, pointsForOutcome } from "@/lib/settlement";
+import { notifyRoundSettled } from "@/lib/notifications/round-notifications";
 import { prisma } from "@the-syndicate/database";
 import type { LegOutcome } from "@the-syndicate/shared";
 
@@ -72,6 +73,8 @@ export async function applyRoundSettlement(
     where: { id: round.groupId },
     data: { status: "settled" },
   });
+
+  void notifyRoundSettled(roundId);
 
   return { profitLossGbp: profitLoss, status: "settled" };
 }

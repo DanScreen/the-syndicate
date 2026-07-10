@@ -2,9 +2,8 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | Phase 3 done; Phase 4 not built |
-| **Depends on** | `competitionId` on legs for favourites (Phase 3) |
-| **Replaces** | Flat points (+3 / +1 / 0) in `packages/shared/src/constants.ts` |
+| **Status** | Phases 1–4 done |
+| **Depends on** | `competitionId` on legs (shipped) |
 | **As-built reference** | [../CURRENT_STATE.md](../CURRENT_STATE.md) |
 
 Related: [competitions-and-results.md](./competitions-and-results.md)
@@ -19,26 +18,28 @@ Related: [competitions-and-results.md](./competitions-and-results.md)
 
 ---
 
-## Performance points (target scoring)
+## Performance points (implemented)
 
 | Outcome | Points |
 |---------|--------|
 | **Won** | `odds − 1` |
 | **Lost** | `−1` |
-| **Void** | `0` *(confirm at build)* |
+| **Void** | `0` |
 
-Examples: win @ 2.50 → +1.50; loss → −1.00.
+Implementation: `legPointsForOutcome()` in `packages/shared/src/scoring.ts`.
 
 **Charts:** cumulative points after each settled round.
 
-**Group chart (recommended):** sum of all members' leg points per round, accumulated.  
+**Group chart:** sum of all members' leg points per round, accumulated.  
 **Separate stat:** cumulative acca £ P/L from `Round.profitLossGbp` (£10 theoretical stake).
+
+**Important:** stats APIs compute from outcome + odds, not stale `pointsAwarded` (backfilled in migration `20260710000000_backfill_unit_stake_points`).
 
 ---
 
-## Group summary (UI)
+## Group summary (shipped)
 
-New **“Group stats”** section on group page.
+**"Group stats"** section on group page via `group-stats.tsx`.
 
 | Stat | Definition |
 |------|------------|
@@ -46,19 +47,19 @@ New **“Group stats”** section on group page.
 | Total bets | Leg count in settled rounds |
 | Average leg odds | Mean `Leg.odds` |
 | Average acca odds | Mean `Round.combinedOdds` |
-| Net group points | Sum of leg points (new formula) |
+| Net group points | Sum of leg points (unit-stake formula) |
 | Net acca P/L | Sum `profitLossGbp` |
 | Win rate | % legs won |
 
-**Chart:** cumulative group points vs round number/date.
+**Chart:** cumulative group points vs round number/date (Recharts).
 
 ---
 
-## Member stats (within group)
+## Member stats (shipped)
 
 | Stat | Definition |
 |------|------------|
-| Net points | Sum `pointsAwarded` |
+| Net points | Sum leg points (computed) |
 | Legs played | Count in settled rounds |
 | Win rate | Won / (won + lost) |
 | Average odds | Mean `Leg.odds` |
@@ -78,44 +79,48 @@ New **“Group stats”** section on group page.
 
 ---
 
-## API (planned)
+## API (as-built)
 
-| Endpoint | Purpose |
-|----------|---------|
-| `GET /api/groups/[id]/stats` | Group summary + chart series |
-| `GET /api/groups/[id]/members/[userId]/stats` | Member breakdown |
+| Endpoint | Status |
+|----------|--------|
+| `GET /api/groups/[id]/stats` | ✅ Group summary + chart series |
+| `GET /api/groups/[id]/members/[userId]/stats` | ✅ Member breakdown |
 
-Compute on read initially. Schema change: `Leg.pointsAwarded` → `Float`.
+Compute on read. `Leg.pointsAwarded` is `Float`.
+
+Key files: `apps/web/src/lib/stats/` — see [CURRENT_STATE.md](../CURRENT_STATE.md#stats).
 
 ---
 
 ## Implementation checklist
 
-### Phase 1 — Points model
+### Phase 1 — Points model ✅
 
 - [x] `legPointsForOutcome(outcome, odds)` in shared package
 - [x] Settlement + migration for float points
 - [x] Leaderboard display update
 
-### Phase 2 — Group charts
+### Phase 2 — Group charts ✅
 
 - [x] Stats API + group summary UI
-- [x] Cumulative points chart (Recharts or similar)
+- [x] Cumulative points chart (Recharts)
 
-### Phase 3 — Member breakdowns
+### Phase 3 — Member breakdowns ✅
 
 - [x] Multi-member chart
-- [x] Favourites / best-worst (needs `competitionId`)
+- [x] Favourites / best-worst (uses `competitionId`)
 
-### Phase 4 — Polish
+### Phase 4 — Polish ✅
 
-- [ ] Dashboard cross-group summary
-- [ ] Share cards
+- [x] Dashboard cross-group summary (`GET /api/user/stats`, `dashboard-stats.tsx`)
+- [x] Share cards (`share-card.tsx` on dashboard + group page)
 
 ---
 
-## Open questions
+## Decisions (resolved)
 
-1. Void = 0 points? **Yes** (implemented).
-2. Reset vs backfill historical points on deploy? **Backfill** — migration `20260710000000_backfill_unit_stake_points`.
-3. Decimal places on leaderboard?
+| Question | Decision |
+|----------|----------|
+| Void = 0 points? | **Yes** |
+| Reset vs backfill historical points? | **Backfill** — migration `20260710000000_backfill_unit_stake_points` |
+| Decimal places on leaderboard? | Show up to 2 decimal places |

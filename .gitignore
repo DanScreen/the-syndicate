@@ -2,6 +2,7 @@ node_modules/
 .next/
 .turbo/
 dist/
+*.tsbuildinfo
 *.db
 *.db-journal
 .terraform/
