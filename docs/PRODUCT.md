@@ -33,17 +33,17 @@ Owner creates group (name only) → invite code + link. Anyone with the link can
 → [specs/competitions-and-results.md](./specs/competitions-and-results.md)
 
 ### 4. Place & track
-Locked round: **Picks** list first, then combined odds + primary betslip CTA. **Compare bookmakers** is collapsible below. Track until fixtures finish.
+While collecting: leg picker shows **best odds only** per selection. Once locked: **frozen odds** per leg and combined acca odds — no live bookmaker comparison. Per-leg **Won / Lost / Awaiting** badges update as matches finish (acca may still be open). Betslip links shown until the first result; then tracking only. Page auto-refreshes every 60s while locked.
 
 ### 5. Settle & stats
-Match sync cron auto-settles locked rounds when all fixtures finish. Email on settle. **Leaderboard** tab for points; **Performance** tab for group charts and member breakdowns. User-level **Performance** nav for cross-group stats.
+Match sync cron (every 5 min) auto-settles locked rounds when all fixtures finish. Individual leg outcomes persist before the full acca settles. Email on settle. **Leaderboard** tab for points; **Performance** tab for group charts and member breakdowns. User-level **Performance** nav for cross-group stats. **Recent rounds** show locked odds per leg.
 
 **Primary metric:** unit-stake **points** (not £ profit). Users can enter a stake on performance pages to see profit equivalent (points × stake).
 
 → [specs/group-stats-and-points.md](./specs/group-stats-and-points.md)
 
 ### 6. Admin (developers only)
-Platform admins (`ADMIN_EMAILS`) access `/admin` for product metrics and platform-wide leaderboards (syndicate + player rankings). Not visible to regular users yet.
+Platform admins (`ADMIN_EMAILS`) see an **Admin** tab in the header with `/admin` (product metrics) and platform-wide leaderboards. Role refreshes from DB on each session — no re-login needed after adding an email.
 
 → [specs/platform-admin.md](./specs/platform-admin.md)
 
@@ -67,6 +67,9 @@ Platform admins (`ADMIN_EMAILS`) access `/admin` for product metrics and platfor
 - [x] Marketing homepage + about page (Turf Green brand)
 - [x] Platform admin dashboard + leaderboards (admin-only)
 - [x] Points-first stats with stake → profit converter
+- [x] Locked round UX: in-progress leg results, locked odds only
+- [x] Progressive auto-settle (leg outcomes before full acca settles)
+- [x] 5-minute match sync cron
 
 ### Backlog
 - [ ] Public platform leaderboards (admin version exists)

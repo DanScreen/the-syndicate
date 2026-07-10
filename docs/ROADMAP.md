@@ -27,11 +27,12 @@ Core loop and MVP polish are **shipped**:
 - **Group stats** + **member stats** (charts, favourites, best/worst)
 - **Cross-group performance** page (`/performance`) + share cards
 - **Split app layout** — Groups home, Performance nav, group tabs (Round / Leaderboard / Performance)
-- Locked round UX: picks first, collapsible bookmaker comparison
+- Locked round UX: in-progress leg results, locked odds only (no bookmaker comparison after lock)
+- **Auto-settle reliability** — 5-min match sync, cache bypass on cron, progressive leg outcomes before acca settles
 - **Brand & marketing** — Turf Green + Acca stack logo, homepage, `/about`
 - **Platform admin** — overview, leaderboards, `ADMIN_EMAILS`, analytics events
 - **Points-first UX** — stake → profit converter; see [specs/platform-admin.md](./specs/platform-admin.md)
-- Deploy: Cloud Run + Cloud SQL + GitHub Actions; Cloud Scheduler for match sync
+- Deploy: Cloud Run + Cloud SQL + GitHub Actions; Cloud Scheduler match sync (every 5 min UTC)
 
 ---
 

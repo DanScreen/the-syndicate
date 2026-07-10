@@ -105,11 +105,14 @@ Auto-settle reads from the `Match` table. Populate it on a schedule:
 
 ```bash
 gcloud scheduler jobs create http sync-matches \
+  --location=europe-west2 \
   --schedule="*/5 * * * *" \
   --uri="https://www.the-syndicate.uk/api/internal/sync-matches" \
   --http-method=POST \
   --headers="Authorization=Bearer YOUR_CRON_SECRET"
 ```
+
+Production job: `sync-matches` in `europe-west2`, schedule `*/5 * * * *` (UTC).
 
 Requires `FOOTBALL_DATA_API_KEY` on Cloud Run. Response includes `sync` and `autoSettle` results.
 
@@ -130,7 +133,7 @@ Grant developer access to `/admin` (overview + platform leaderboards).
 
 1. Add `ADMIN_EMAILS` GitHub **variable** — comma-separated emails, e.g. `you@example.com,teammate@example.com`.
 2. Deploy — `deploy.yml` passes it to Cloud Run.
-3. Each listed user **signs out and back in** on production to receive `role: admin`.
+3. Each listed user signs in (or refreshes the page) — `User.role` is promoted and reflected in session automatically.
 4. New sign-ups with a listed email are created as admin automatically.
 
 **Local:** set `ADMIN_EMAILS` in `apps/web/.env.local` (see `.env.example`).

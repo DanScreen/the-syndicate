@@ -32,8 +32,7 @@
 
 1. Set `ADMIN_EMAILS` (comma-separated, case-insensitive) in env.
 2. User signs up or signs in with a matching email → `User.role` set to `admin`.
-3. JWT/session refreshed with `role` on each auth cycle.
-4. **Re-login** required if email was added after account creation (or wait for JWT refresh on next request).
+3. JWT/session refreshed with `role` from DB on each auth cycle (`auth.ts` jwt callback) — no re-login required after adding an email.
 
 **Production:** GitHub Actions variable `ADMIN_EMAILS` → Cloud Run env (see [DEPLOYMENT.md](../DEPLOYMENT.md)).
 
@@ -137,6 +136,8 @@ Recording is fire-and-forget (`recordAnalyticsEventAsync`) — failures logged, 
 | Path | Role |
 |------|------|
 | `apps/web/src/lib/admin.ts` | `getAdminEmails`, `resolveUserRole`, `requireAdmin`, `requireAdminPage` |
+| `apps/web/src/lib/auth.config.ts` | Edge-safe Auth.js config (middleware) |
+| `apps/web/src/lib/auth.ts` | Credentials provider, role refresh in JWT callback |
 | `apps/web/src/lib/admin/compute-admin-stats.ts` | Overview aggregates |
 | `apps/web/src/lib/admin/compute-platform-leaderboards.ts` | Leaderboard queries |
 | `apps/web/src/lib/analytics.ts` | `recordAnalyticsEvent` |

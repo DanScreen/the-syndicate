@@ -28,7 +28,7 @@ npm run db:generate
 npm run dev                   # http://localhost:3000
 ```
 
-Omit `ODDS_API_KEY` for mock fixtures. Add `FOOTBALL_DATA_API_KEY` + `CRON_SECRET` to test match sync locally.
+Omit `ODDS_API_KEY` for mock fixtures. Add `FOOTBALL_DATA_API_KEY` + `CRON_SECRET` to test match sync locally. Set `ADMIN_EMAILS` to enable the Admin tab.
 
 ### Deploy
 
@@ -47,6 +47,7 @@ Match sync: Cloud Scheduler → `POST /api/internal/sync-matches` with Bearer `C
 | Settlement | `apps/web/src/lib/settlement/`, `apps/web/src/lib/results/` |
 | Stats | `apps/web/src/lib/stats/` |
 | Notifications | `apps/web/src/lib/notifications/` |
+| Auth | `apps/web/src/lib/auth.ts`, `apps/web/src/lib/auth.config.ts` |
 | Settlement (auto) | `apps/web/src/lib/settlement/auto-settle-round.ts` |
 | Group UI | `apps/web/src/components/group-ui.tsx`, `group-stats.tsx` |
 | App navigation | `apps/web/src/components/app-nav.tsx`, `group-nav.tsx`, `header.tsx` |
@@ -79,7 +80,7 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 | Acca bookmaker rankings (best odds first, stored at lock) | ✅ |
 | Real bookmaker betslip deeplinks (The Odds API) | ✅ |
 | Match table + football-data.org sync cron | ✅ |
-| Hands-off auto-settle (post-sync cron) | ✅ |
+| Hands-off auto-settle (5-min cron, progressive leg outcomes) | ✅ |
 | Email notifications (round locked / settled) | ✅ |
 | Manual settle + auto-settle (owner-triggered) | ✅ |
 | Unit-stake points + leaderboard | ✅ |
@@ -132,7 +133,7 @@ POST /api/legs                        → best retail quote; stores competitionI
 (lock) lockRoundWithAccaPricing()     → re-fetch quotes, rankAccaBookmakers(), store deeplinks on Leg
 ```
 
-At lock, `Leg.betslipUrl` stores the chosen bookmaker's outcome deeplink; `Leg.bookmakerLinks` maps all retail bookmakers → link. UI shows **Open** on ranked bookmakers and per-leg placement links. Falls back to bookmaker football hub if API omits a link.
+At lock, `Leg.betslipUrl` stores the chosen bookmaker's outcome deeplink; `Leg.bookmakerLinks` maps all retail bookmakers → link. **While collecting:** leg picker shows best odds only. **Once locked:** frozen odds per leg + combined acca; betslip **Open** links until first result; no bookmaker comparison panel.
 
 Requires live odds (`ODDS_API_KEY`) — mock fixtures have no deeplinks.
 
@@ -156,7 +157,7 @@ Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_
 | `apps/web/src/lib/odds/lock-round.ts` | Lock + reprice + store deeplinks |
 | `apps/web/src/lib/odds/bookmakers.ts` | Retail filter, sort best odds |
 | `apps/web/src/components/group-ui.tsx` | Leg picker (4-step), locked round picks, settle UI |
-| `apps/web/src/components/app-nav.tsx` | Header nav: Groups / Performance |
+| `apps/web/src/components/app-nav.tsx` | Header nav: Groups / Performance / Admin |
 | `apps/web/src/components/group-nav.tsx` | Group tabs: Round / Leaderboard / Performance |
 | `apps/web/src/components/group-layout-client.tsx` | Shared group shell + `GroupDataProvider` |
 | `apps/web/src/context/group-data.tsx` | Group data context for sub-pages |
@@ -181,7 +182,7 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 | `/groups/[id]/leaderboard` | Points leaderboard |
 | `/groups/[id]/performance` | Group stats (`GroupStats`) — charts, member breakdown |
 
-**Navigation:** `AppNav` in header (Groups ↔ Performance). Inside a group, `GroupNav` tabs share data via `GroupDataProvider` (fetched once in group layout).
+**Navigation:** `AppNav` in header (Groups ↔ Performance ↔ Admin for platform admins). Inside a group, `GroupNav` tabs share data via `GroupDataProvider` (fetched once in group layout; polls every 60s while acca locked).
 
 **Locked round UI:** Picks list with per-leg outcomes as matches finish (Won/Lost/Awaiting badges) → locked combined odds + bookmaker (no comparison panel) → betslip CTA until first result, then tracking only. Polls every 60s while locked. **Recent rounds** show locked odds per leg.
 
@@ -203,10 +204,10 @@ Email notifications (Resend) fire on lock and settle when `RESEND_API_KEY` + `EM
 | Path | Role |
 |------|------|
 | `apps/web/src/lib/settlement/auto-settle-round.ts` | Hands-off + owner auto-settle |
-| `apps/web/src/lib/settlement/resolve-round-outcomes.ts` | Match → leg outcomes |
+| `apps/web/src/lib/settlement/resolve-round-outcomes.ts` | Match → leg outcomes; `persistResolvableLegOutcomes()` |
 | `apps/web/src/lib/notifications/round-notifications.ts` | Locked / settled emails |
 | `apps/web/src/lib/notifications/email.ts` | Resend client (fetch) |
-| `apps/web/src/lib/results/football-data.ts` | football-data.org fetch, team matching |
+| `apps/web/src/lib/results/football-data.ts` | football-data.org fetch, team matching; cache bypass on cron sync |
 | `apps/web/src/lib/results/sync-matches.ts` | Upsert matches for all competitions |
 | `apps/web/src/lib/results/match-store.ts` | DB lookup for auto-settle |
 | `apps/web/src/lib/results/resolve-leg.ts` | Market → outcome logic |
@@ -250,6 +251,8 @@ Admin-only for now; public rollout planned when user base grows.
 
 | Path | Role |
 |------|------|
+| `apps/web/src/lib/auth.config.ts` | Edge-safe Auth.js (middleware) |
+| `apps/web/src/lib/auth.ts` | Credentials sign-in, JWT role refresh |
 | `apps/web/src/lib/admin.ts` | `requireAdmin`, `ADMIN_EMAILS` promotion |
 | `apps/web/src/lib/admin/compute-admin-stats.ts` | Overview aggregates |
 | `apps/web/src/lib/admin/compute-platform-leaderboards.ts` | Leaderboard queries |
@@ -300,6 +303,7 @@ Computed on read from settled rounds. No materialised stats tables.
 | `ODDS_API_KEY` | No | Live odds; omit = mock |
 | `ODDS_API_SPORT` | No | Default `soccer_fifa_world_cup` (fallback only) |
 | `FOOTBALL_DATA_API_KEY` | No | Match sync |
+| `FOOTBALL_DATA_CACHE_TTL_MS` | No | In-memory cache TTL for football-data fetches (default 60s; bypassed on cron sync) |
 | `CRON_SECRET` | No | Bearer token for `/api/internal/sync-matches` |
 | `RESEND_API_KEY` | No | Email notifications via Resend |
 | `EMAIL_FROM` | No | Sender address (required with `RESEND_API_KEY`) |
@@ -359,11 +363,11 @@ Recent migrations include `20260710100000_user_role_analytics` (admin role + ana
 2. **Auto-settle** runs automatically after match sync (every 5 min); individual leg outcomes update as matches finish; round settles when all legs are ready. Owner can still trigger manually.
 3. **Email notifications** require Resend setup (`RESEND_API_KEY`, `EMAIL_FROM`); skipped if unset.
 4. **Auto-settle requires synced `Match` rows** — 5-min cron or manual `POST /api/internal/sync-matches`.
-5. **Cross-competition acca** — often no single bookmaker; UI shows ranked alternatives + per-leg deeplinks.
+5. **Cross-competition acca** — often no single bookmaker; best-per-leg odds locked at submission; per-leg deeplinks at lock only.
 6. **Betslip deeplinks** require live odds API (`includeLinks`); mock mode falls back to bookmaker hub URLs only.
 7. **The Odds API quota** — per-event market calls cost credits; lazy-loaded on fixture select.
 8. **Terraform CI** may fail on GCS state bucket permissions — app deploy unaffected.
-9. **Cloud Run in-memory cache** — cold instances miss cache; not shared across instances.
+9. **Cloud Run in-memory cache** — football-data responses cached per instance (60s default); cron sync bypasses cache. Odds API cache separate.
 10. **Mobile app** — still calls old fixtures API without `?competition=`; paused until web validated.
 11. **Auth JWT** — middleware uses edge-safe `auth.config.ts` (no Prisma); `auth.ts` refreshes `role` from DB on each session update.
 

@@ -22,9 +22,10 @@
 
 - **Leg submit:** best retail odds only — `sortQuotesByBestOdds`, no bookmaker picker.
 - **Acca lock:** `rankAccaBookmakers()` + `findBestAccaBookmaker` in `lib/odds/acca.ts`, `lockRoundWithAccaPricing` in `lib/odds/lock-round.ts`.
-- **UI:** Locked round in `group-ui.tsx` — picks list, primary betslip CTA, collapsible ranked bookmaker comparison.
+- **UI (collecting):** leg picker shows best odds per selection.
+- **UI (locked):** frozen leg + combined odds, per-leg outcome badges, no bookmaker comparison; betslip links until first result.
 
-If no single bookmaker covers all legs → show best-per-leg combined odds; no unified betslip.
+If no single bookmaker covers all legs → best-per-leg combined odds locked at submission; per-leg deeplinks at lock.
 
 ### Competition picker (Phase A)
 
@@ -36,8 +37,10 @@ If no single bookmaker covers all legs → show best-per-leg combined odds; no u
 
 - `Match` model, `Leg.matchId` FK
 - `POST /api/internal/sync-matches` (Bearer `CRON_SECRET`)
-- Auto-settle reads from `Match` table via `match-store.ts`
-- Cloud Scheduler: every 5 min UTC in production
+- Sync **bypasses** football-data in-memory cache (`bypassCache: true`) for fresh results every cron run
+- Auto-settle reads from `Match` table via `match-store.ts` (UTC kickoff day matching)
+- Cloud Scheduler: every 5 min UTC in production (`europe-west2`, job `sync-matches`)
+- **Progressive outcomes:** `persistResolvableLegOutcomes()` updates leg `outcome` as matches finish; round settles when all legs ready
 
 ---
 
@@ -108,9 +111,9 @@ flowchart LR
   Leg --> Resolve
 ```
 
-- Ingest: `GET /v4/competitions/{code}/matches` on schedule.
-- Settle: read `Match` table — no per-group API calls at settle time.
-- Endpoint: `POST /api/internal/sync-matches` (Bearer `CRON_SECRET`).
+- Ingest: `GET /v4/competitions/{code}/matches` on schedule (cache bypassed on cron sync).
+- Settle: read `Match` table — one result per fixture, shared across all groups; no per-group API calls at settle time.
+- Endpoint: `POST /api/internal/sync-matches` (Bearer `CRON_SECRET`). Logs pending settle reasons to Cloud Run stdout.
 
 **Known:** football-data.org free tier — League One/Two return 403; EPL/Championship empty off-season.
 
@@ -147,7 +150,9 @@ flowchart LR
 ### Phase C — Hands-off ✅
 
 - [x] Post-ingest auto-settle — `autoSettleLockedRounds()` runs after sync
+- [x] Progressive leg outcomes before full acca settles
 - [x] Email notifications — round locked / settled via Resend
+- [x] In-progress locked round UI — outcome badges, locked odds only, 60s client poll
 
 ---
 
@@ -156,5 +161,6 @@ flowchart LR
 | Question | Decision |
 |----------|----------|
 | Ship EPL + World Cup first, or all five? | **All five** shipped in Phase A |
-| Ingest frequency | **Hourly UTC** via Cloud Scheduler |
-| Per-leg deeplinks when no single acca bookmaker? | Per-leg **Open** links + ranked bookmaker links via The Odds API `includeLinks`; hub URL fallback |
+| Ingest frequency | **Every 5 min UTC** via Cloud Scheduler (`*/5 * * * *`) |
+| Per-leg deeplinks when no single acca bookmaker? | Per-leg **Open** links at lock via The Odds API `includeLinks`; hidden once results start |
+| Show bookmaker comparison after lock? | **No** — frozen odds only; rankings stored for deeplinks at lock |

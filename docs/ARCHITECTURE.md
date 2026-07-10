@@ -59,7 +59,7 @@ Live ([The Odds API](https://the-odds-api.com/)) or mock. Fixtures fetched **per
 → [CURRENT_STATE.md](./CURRENT_STATE.md#odds--competitions-today)
 
 ### Settlement
-Manual owner settle, owner-triggered auto-settle, or **hands-off** after match sync (every 5 min). Market resolution in `resolve-leg.ts`. Email notifications on lock/settle (Resend, optional).
+Manual owner settle, owner-triggered auto-settle, or **hands-off** after match sync (every 5 min UTC). Sync bypasses football-data cache; leg outcomes update as matches finish; round settles when all legs ready. Market resolution in `resolve-leg.ts`. Email notifications on lock/settle (Resend, optional).
 
 → [CURRENT_STATE.md](./CURRENT_STATE.md#settlement)
 
@@ -74,18 +74,18 @@ Computed on read from settled rounds. Group + member + **cross-group user** APIs
 → `apps/web/src/lib/stats/`
 
 ### Web UI layout
-- **Header:** `AppNav` — Groups (`/dashboard`) ↔ Performance (`/performance`)
-- **Group shell:** `groups/[id]/layout.tsx` + `GroupDataProvider` — shared fetch for sub-pages
+- **Header:** `AppNav` — Groups (`/dashboard`) ↔ Performance (`/performance`) ↔ Admin (`/admin`, admin role only)
+- **Group shell:** `groups/[id]/layout.tsx` + `GroupDataProvider` — shared fetch for sub-pages; polls every 60s while acca locked
 - **Group tabs:** Round (`/groups/[id]`), Leaderboard, Performance
-- **Locked round:** picks list → betslip CTA → collapsible bookmaker comparison
+- **Locked round:** per-leg outcome badges (Won/Lost/Awaiting) → locked combined odds + bookmaker → betslip CTA until first result, then tracking only (no bookmaker comparison)
 
 → [CURRENT_STATE.md](./CURRENT_STATE.md#web-pages)
 
 ### Auth
-Credentials + bcrypt. Session on web (includes `user.role`); Bearer JWT for mobile (`/api/auth/mobile/sign-in`).
+Split config: edge-safe `auth.config.ts` (middleware, no Prisma) + `auth.ts` (credentials, DB). Session includes `user.role`; role refreshed from DB on each JWT update via `getSessionUserRole()`. Bearer JWT for mobile (`/api/auth/mobile/sign-in`).
 
 ### Platform admin
-`ADMIN_EMAILS` env promotes users to `role: admin`. Admin pages at `/admin/*`; APIs at `/api/admin/*`. Lightweight `AnalyticsEvent` logging.
+`ADMIN_EMAILS` env promotes users to `role: admin`. Admin tab in `AppNav`; pages at `/admin/*`; APIs at `/api/admin/*`. Session role refreshed from DB on each request — no re-login after adding an email. Lightweight `AnalyticsEvent` logging.
 
 → [specs/platform-admin.md](./specs/platform-admin.md)
 

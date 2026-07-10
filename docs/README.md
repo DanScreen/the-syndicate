@@ -16,7 +16,7 @@ The Syndicate is a social group football acca platform. Production: [www.the-syn
 ```bash
 npm install
 docker compose up -d
-cp apps/web/.env.example apps/web/.env.local   # DATABASE_URL, AUTH_SECRET, NEXTAUTH_URL
+cp apps/web/.env.example apps/web/.env.local   # DATABASE_URL, AUTH_SECRET, NEXTAUTH_URL; optional: ODDS_API_KEY, FOOTBALL_DATA_API_KEY, ADMIN_EMAILS
 npm run db:migrate:deploy
 npm run db:generate
 npm run dev   # http://localhost:3000

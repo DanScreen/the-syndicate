@@ -28,7 +28,7 @@ Related: [competitions-and-results.md](./competitions-and-results.md)
 
 Implementation: `legPointsForOutcome()` in `packages/shared/src/scoring.ts`.
 
-**Charts:** cumulative points after each settled round.
+**Charts:** cumulative points after each settled round. In-progress leg outcomes on locked accas are visible on the Round tab but do not affect stats until the round settles.
 
 **Group chart:** sum of all members' leg points per round, accumulated.  
 **Separate stat:** cumulative acca £ P/L from `Round.profitLossGbp` (£10 theoretical stake).
