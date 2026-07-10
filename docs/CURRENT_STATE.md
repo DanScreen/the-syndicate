@@ -220,7 +220,7 @@ Email notifications (Resend) fire on lock and settle when `RESEND_API_KEY` + `EM
 
 Platform admins (`User.role = admin`) see an **Admin** tab with **Overview** and **Leaderboards**.
 
-**Granting admin:** set `ADMIN_EMAILS` (comma-separated) in env. Matching users promoted on sign-up or sign-in. Re-login after adding your email.
+**Granting admin:** set `ADMIN_EMAILS` (comma-separated) in env. Matching users promoted on sign-up or sign-in. Session role refreshes from DB on each request (no re-login needed).
 
 ### Overview (`/admin`)
 
@@ -365,7 +365,7 @@ Recent migrations include `20260710100000_user_role_analytics` (admin role + ana
 8. **Terraform CI** may fail on GCS state bucket permissions — app deploy unaffected.
 9. **Cloud Run in-memory cache** — cold instances miss cache; not shared across instances.
 10. **Mobile app** — still calls old fixtures API without `?competition=`; paused until web validated.
-11. **Auth JWT** — role is set at sign-in only; middleware uses `auth.config.ts` (no DB). Re-login after `ADMIN_EMAILS` changes to refresh admin role in session.
+11. **Auth JWT** — middleware uses edge-safe `auth.config.ts` (no Prisma); `auth.ts` refreshes `role` from DB on each session update.
 
 ## Production checklist (operators)
 

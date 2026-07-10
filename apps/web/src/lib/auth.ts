@@ -3,13 +3,31 @@ import bcrypt from "bcryptjs";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { signInSchema } from "@the-syndicate/shared";
-import { resolveUserRole } from "@/lib/admin";
+import { resolveUserRole, getSessionUserRole } from "@/lib/admin";
 import { authConfig } from "@/lib/auth.config";
 import { normalizeEmail } from "@/lib/auth-email";
 import { recordAnalyticsEventAsync } from "@/lib/analytics";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
+  callbacks: {
+    ...authConfig.callbacks,
+    async jwt({ token, user }) {
+      if (user) {
+        token.sub = user.id;
+        token.id = user.id;
+        token.role = user.role ?? "user";
+        return token;
+      }
+
+      const userId = (token.id ?? token.sub) as string | undefined;
+      if (userId) {
+        token.role = await getSessionUserRole(userId);
+      }
+
+      return token;
+    },
+  },
   providers: [
     Credentials({
       credentials: {
