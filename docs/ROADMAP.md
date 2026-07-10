@@ -8,38 +8,42 @@ Production: [www.the-syndicate.uk](https://www.the-syndicate.uk) · **Index:** [
 
 10 users complete: sign up → group → submit leg → acca locks → settle → leaderboard.
 
+**Current focus:** validate with real users before adding more features.
+
 ---
 
 ## Done (July 2026)
 
-Core loop is **shipped**:
+Core loop and MVP polish are **shipped**:
 
 - Auth, groups, invite links, rounds (collecting → locked → settled)
 - Live odds (The Odds API) + mock fallback; extended markets (BTTS, double chance, DNB)
 - Per-leg **competition picker** (EPL, Championship, L1, L2, World Cup)
-- **Acca lock** with best combined bookmaker + **ranked bookmaker list** at lock
-- **Match table** + football-data.org sync cron + auto-settle from DB
-- **Hands-off auto-settle** — cron sync settles locked rounds when all matches finished
-- **Email notifications** — round locked / round settled (Resend; optional)
-- **Unit-stake points** (win: `odds−1`, loss: `−1`, void: `0`)
-- **Group stats** (summary, cumulative chart, multi-member chart)
-- **Member stats** (breakdown, favourites, best/worst picks)
-- **Dashboard cross-group summary** + share cards
+- **Acca lock** with best combined bookmaker + ranked bookmaker list at lock
 - **Real bookmaker betslip deeplinks** (The Odds API `includeLinks`)
-- Leaderboard, round history, landing/SEO
+- **Match table** + football-data.org sync cron + hands-off auto-settle
+- **Email notifications** — round locked / settled (Resend; optional)
+- **Unit-stake points** (win: `odds−1`, loss: `−1`, void: `0`)
+- **Group stats** + **member stats** (charts, favourites, best/worst)
+- **Cross-group performance** page (`/performance`) + share cards
+- **Split app layout** — Groups home, Performance nav, group tabs (Round / Leaderboard / Performance)
+- Locked round UX: picks first, collapsible bookmaker comparison
+- **Brand & marketing** — Turf Green + Acca stack logo, homepage, `/about`
 - Deploy: Cloud Run + Cloud SQL + GitHub Actions; Cloud Scheduler for match sync
 
 ---
 
 ## Next — backlog
 
-| # | Feature | Notes |
-|---|---------|-------|
-| 1 | User profile page | Cross-group stats in dedicated view |
-| 2 | football-data.org tier upgrade | L1/L2 sync returns 403 on free tier |
-| 3 | FA Cup + EFL Cup | Phase 1b in competitions spec |
-| 4 | Mobile app catch-up | `apps/mobile/` needs `?competition=` API |
-| 5 | Terraform CI GCS permissions fix | App deploy unaffected |
+| # | Feature | Type | Notes |
+|---|---------|------|-------|
+| 1 | **Validate with real users** | Product | Run 2–3 friend groups through full loop on prod |
+| 2 | **FA Cup + EFL Cup** | Code | Phase 1b — `packages/shared/src/competitions.ts` |
+| 3 | **GCP cost reduction** | Ops/infra | Cloud SQL ~90% of spend; see [DEPLOYMENT.md](./DEPLOYMENT.md#cost-optimization) |
+| 4 | User profile page | Code | Optional; `/performance` covers cross-group stats today |
+| 5 | football-data.org tier upgrade | Ops | L1/L2 sync returns 403 on free tier |
+| 6 | Mobile app catch-up | Code | Paused — needs `?competition=` API |
+| 7 | Terraform CI GCS permissions fix | Infra | App deploy unaffected |
 
 ---
 
@@ -62,5 +66,7 @@ Push notifications, chat/feed, stake pooling, social sign-in, more sports.
 **Variables (GitHub):** `EMAIL_FROM` (optional, e.g. `The Syndicate <notifications@the-syndicate.uk>`).
 
 **Local odds:** `ODDS_API_KEY` in `apps/web/.env.local` — omit for mock fixtures.
+
+**Infra defaults:** Cloud SQL `db-f1-micro`, zonal, Cloud Run `min_instances = 0` — see [DEPLOYMENT.md](./DEPLOYMENT.md#cost-optimization).
 
 After shipping: update [CURRENT_STATE.md](./CURRENT_STATE.md) and check off spec phases.

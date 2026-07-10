@@ -699,8 +699,7 @@ export function RoundHistory({
     id: string;
     status: string;
     combinedOdds: number | null;
-    profitLossGbp: number | null;
-    legs: { selectionLabel: string; outcome: string }[];
+    legs: { selectionLabel: string; outcome: string; pointsAwarded?: number }[];
   }[];
 }) {
   if (rounds.length === 0) return null;
@@ -709,7 +708,12 @@ export function RoundHistory({
     <section className="mt-8">
       <h2 className="text-lg font-semibold">Recent rounds</h2>
       <ul className="mt-4 space-y-3">
-        {rounds.map((round) => (
+        {rounds.map((round) => {
+          const roundPoints = round.legs.reduce(
+            (sum, leg) => sum + (leg.pointsAwarded ?? 0),
+            0
+          );
+          return (
           <li key={round.id} className="rounded-xl border border-border bg-card p-4 text-sm">
             <div className="flex justify-between">
               <span className="text-muted capitalize">{round.status}</span>
@@ -717,14 +721,15 @@ export function RoundHistory({
                 <span className="text-accent">Combined {round.combinedOdds}</span>
               )}
             </div>
-            {round.profitLossGbp != null && (
-              <p className="mt-1">P/L: £{round.profitLossGbp.toFixed(2)}</p>
-            )}
+            <p className="mt-1 font-semibold text-accent">
+              {formatLegPoints(roundPoints)} pts
+            </p>
             <p className="mt-2 text-xs text-muted">
               {round.legs.map((l) => `${l.selectionLabel} (${l.outcome})`).join(" · ")}
             </p>
           </li>
-        ))}
+          );
+        })}
       </ul>
     </section>
   );

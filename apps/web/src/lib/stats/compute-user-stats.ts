@@ -128,7 +128,7 @@ export function computeUserStats(
 
 export function buildShareText(
   title: string,
-  stats: { netPoints: number; legsPlayed: number; winRate: number | null; netAccaPlGbp?: number }
+  stats: { netPoints: number; legsPlayed: number; winRate: number | null }
 ): string {
   const lines = [
     `${title} on The Syndicate`,
@@ -137,10 +137,6 @@ export function buildShareText(
   ];
   if (stats.winRate != null) {
     lines.push(`Win rate: ${stats.winRate}%`);
-  }
-  if (stats.netAccaPlGbp != null) {
-    const pl = stats.netAccaPlGbp;
-    lines.push(`Acca P/L: ${pl >= 0 ? "+" : ""}£${pl.toFixed(2)}`);
   }
   lines.push("https://www.the-syndicate.uk");
   return lines.join("\n");

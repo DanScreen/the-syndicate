@@ -22,7 +22,7 @@
 
 - **Leg submit:** best retail odds only — `sortQuotesByBestOdds`, no bookmaker picker.
 - **Acca lock:** `rankAccaBookmakers()` + `findBestAccaBookmaker` in `lib/odds/acca.ts`, `lockRoundWithAccaPricing` in `lib/odds/lock-round.ts`.
-- **UI:** `AccaSummary` in `group-ui.tsx` — ranked bookmaker list at lock.
+- **UI:** Locked round in `group-ui.tsx` — picks list, primary betslip CTA, collapsible ranked bookmaker comparison.
 
 If no single bookmaker covers all legs → show best-per-leg combined odds; no unified betslip.
 

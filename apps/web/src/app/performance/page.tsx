@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/header";
+import { PageView } from "@/components/analytics/page-view";
 import { DashboardStats } from "@/components/dashboard-stats";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
@@ -11,6 +12,7 @@ export default async function PerformancePage() {
 
   return (
     <div className="min-h-screen">
+      <PageView path="/performance" />
       <AppHeader userName={userName} />
       <main className="mx-auto max-w-5xl px-4 py-8">
         <h1 className="text-2xl font-bold">Your performance</h1>

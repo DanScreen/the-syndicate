@@ -49,12 +49,16 @@ Match sync: Cloud Scheduler → `POST /api/internal/sync-matches` with Bearer `C
 | Notifications | `apps/web/src/lib/notifications/` |
 | Settlement (auto) | `apps/web/src/lib/settlement/auto-settle-round.ts` |
 | Group UI | `apps/web/src/components/group-ui.tsx`, `group-stats.tsx` |
+| App navigation | `apps/web/src/components/app-nav.tsx`, `group-nav.tsx`, `header.tsx` |
+| Logo & marketing | `apps/web/src/components/logo.tsx`, `components/marketing/`, `lib/marketing-content.ts` |
+| Brand archive | `apps/web/src/lib/brand/archive.ts`, `logo-alternatives.tsx` (unused alternatives) |
+| Group layout | `apps/web/src/app/groups/[id]/layout.tsx`, `group-layout-client.tsx`, `context/group-data.tsx` |
 | Scoring | `packages/shared/src/scoring.ts` |
 | Competitions catalogue | `packages/shared/src/competitions.ts` |
 
 ### What's next (July 2026)
 
-See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. Core MVP is shipped.
+See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate with real users first.
 
 ---
 
@@ -80,6 +84,10 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. Core MVP is shipped.
 | Group stats summary + cumulative points chart | ✅ |
 | Member stats breakdowns + multi-member chart | ✅ |
 | Dashboard cross-group stats + share cards | ✅ |
+| Split app layout (Groups / Performance nav; group tabs) | ✅ |
+| Platform admin dashboard (`/admin`) | ✅ |
+| Product analytics (logins, signups, page views) | ✅ |
+| Locked round UX: picks first, collapsible bookmaker comparison | ✅ |
 | Round history, progress UI, landing/SEO | ✅ |
 
 \*Asian handicap only from exchange bookmakers in current World Cup UK feed — filtered out; handicap UI empty for those fixtures.
@@ -124,7 +132,7 @@ Requires live odds (`ODDS_API_KEY`) — mock fixtures have no deeplinks.
 
 ### Acca bookmaker rankings
 
-At lock, `rankAccaBookmakers()` in `apps/web/src/lib/odds/acca.ts` ranks all retail bookmakers by combined acca odds. Stored as `Round.accaBookmakerRankings` (JSON). Older locked rounds backfill lazily on `GET /api/groups/[id]`. UI: "Where to place (best odds first)" in `AccaSummary`.
+At lock, `rankAccaBookmakers()` in `apps/web/src/lib/odds/acca.ts` ranks all retail bookmakers by combined acca odds. Stored as `Round.accaBookmakerRankings` (JSON). Older locked rounds backfill lazily on `GET /api/groups/[id]`. UI: collapsible **Compare bookmakers** section on locked round.
 
 Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_rankings`.
 
@@ -141,7 +149,35 @@ Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_
 | `apps/web/src/lib/odds/acca.ts` | Acca bookmaker ranking + best combined |
 | `apps/web/src/lib/odds/lock-round.ts` | Lock + reprice + store deeplinks |
 | `apps/web/src/lib/odds/bookmakers.ts` | Retail filter, sort best odds |
-| `apps/web/src/components/group-ui.tsx` | Leg picker (4-step), AccaSummary, settle UI |
+| `apps/web/src/components/group-ui.tsx` | Leg picker (4-step), locked round picks, settle UI |
+| `apps/web/src/components/app-nav.tsx` | Header nav: Groups / Performance |
+| `apps/web/src/components/group-nav.tsx` | Group tabs: Round / Leaderboard / Performance |
+| `apps/web/src/components/group-layout-client.tsx` | Shared group shell + `GroupDataProvider` |
+| `apps/web/src/context/group-data.tsx` | Group data context for sub-pages |
+
+---
+
+## Web pages
+
+Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/groups/*`, `/performance`, `/admin`.
+
+| Path | Purpose |
+|------|---------|
+| `/` | Landing — hero, value props, how it works, FAQ, CTA |
+| `/about` | Product story, what we are/aren’t, responsible gambling |
+| `/sign-in`, `/sign-up` | Auth |
+| `/dashboard` | **Groups home** — list of user's syndicates only |
+| `/performance` | Cross-group stats (`DashboardStats`) + share cards |
+| `/admin` | **Admin** — platform metrics (admin role only) |
+| `/admin/leaderboards` | **Admin** — syndicate & player rankings by points |
+| `/groups/create`, `/groups/join` | Create / join group |
+| `/groups/[id]` | **Round** tab — active round, leg picker, picks, lock, settle |
+| `/groups/[id]/leaderboard` | Points leaderboard |
+| `/groups/[id]/performance` | Group stats (`GroupStats`) — charts, member breakdown |
+
+**Navigation:** `AppNav` in header (Groups ↔ Performance). Inside a group, `GroupNav` tabs share data via `GroupDataProvider` (fetched once in group layout).
+
+**Locked round UI:** Picks list first → combined odds + primary betslip CTA → **Compare bookmakers** collapsible section (ranked acca bookmakers + per-leg **Open** links).
 
 ---
 
@@ -172,6 +208,35 @@ Email notifications (Resend) fire on lock and settle when `RESEND_API_KEY` + `EM
 
 ---
 
+## Admin & analytics
+
+Platform admins (`User.role = admin`) see an **Admin** tab and `/admin` dashboard.
+
+**Granting admin:** set `ADMIN_EMAILS` (comma-separated) in env. Matching users are promoted on sign-up or sign-in. Re-login after adding your email locally.
+
+| Metric | Source |
+|--------|--------|
+| Players, groups, picks | `User`, `Group`, `Leg` counts |
+| Accas formed | Rounds with status `locked` or `settled` |
+| Successful accas | Settled rounds with `profitLossGbp > 0` |
+| Sign-ups (7d/30d) | `User.createdAt` |
+| Logins (7d/30d) | `AnalyticsEvent` type `login` |
+| Page views (7d/30d) | `AnalyticsEvent` type `page_view` |
+
+| Path | Role |
+|------|------|
+| `apps/web/src/lib/admin.ts` | `requireAdmin`, `ADMIN_EMAILS` promotion |
+| `apps/web/src/lib/admin/compute-admin-stats.ts` | Dashboard aggregates |
+| `apps/web/src/lib/analytics.ts` | `recordAnalyticsEvent` |
+| `apps/web/src/components/admin-stats.tsx` | Admin UI |
+| `GET /api/admin/stats` | JSON stats (admin session) |
+
+**Scoring UX:** Points are the primary metric site-wide. `profitFromPoints(points, stake)` in `packages/shared/src/scoring.ts`; `StakeProfit` component lets users enter a £ stake to see profit equivalent.
+
+**Analytics limitations:** page views recorded on server render per route (not client-side SPA navigations within group tabs). For richer analytics later, consider Plausible, PostHog, or GA4.
+
+---
+
 ## Stats
 
 Computed on read from settled rounds. No materialised stats tables.
@@ -180,7 +245,7 @@ Computed on read from settled rounds. No materialised stats tables.
 |-------|---------|
 | `GET /api/groups/[id]/stats` | Group summary + cumulative points chart |
 | `GET /api/groups/[id]/members/[userId]/stats` | Member breakdown, favourites, best/worst |
-| `GET /api/user/stats` | Cross-group dashboard summary + chart |
+| `GET /api/user/stats` | Cross-group performance summary + chart |
 
 | Path | Role |
 |------|------|
@@ -190,7 +255,7 @@ Computed on read from settled rounds. No materialised stats tables.
 | `apps/web/src/lib/stats/compute-member-chart.ts` | Multi-member chart series |
 | `apps/web/src/lib/stats/helpers.ts` | Shared helpers (favourites, best/worst) |
 | `apps/web/src/components/group-stats.tsx` | Group performance UI (Recharts) |
-| `apps/web/src/components/dashboard-stats.tsx` | Dashboard cross-group UI |
+| `apps/web/src/components/dashboard-stats.tsx` | Cross-group performance UI (`/performance`) |
 | `apps/web/src/components/share-card.tsx` | Shareable stats card (copy / Web Share) |
 
 ---
@@ -210,18 +275,21 @@ Computed on read from settled rounds. No materialised stats tables.
 | `CRON_SECRET` | No | Bearer token for `/api/internal/sync-matches` |
 | `RESEND_API_KEY` | No | Email notifications via Resend |
 | `EMAIL_FROM` | No | Sender address (required with `RESEND_API_KEY`) |
+| `ADMIN_EMAILS` | No | Comma-separated emails granted platform admin |
 
 ### Production (GitHub Actions → Cloud Run)
 
 Secrets: `DATABASE_URL`, `AUTH_SECRET`, `ODDS_API_KEY`, `FOOTBALL_DATA_API_KEY`, `CRON_SECRET`, `RESEND_API_KEY` (optional), GCP deploy secrets.
 
-Env vars on Cloud Run: `NEXTAUTH_URL`, `EMAIL_FROM`, `ODDS_API_SPORT`, `ODDS_API_REGIONS=uk`, etc. See `.github/workflows/deploy.yml`.
+Env vars on Cloud Run: `NEXTAUTH_URL`, `EMAIL_FROM`, `ADMIN_EMAILS`, `ODDS_API_SPORT`, `ODDS_API_REGIONS=uk`, etc. See `.github/workflows/deploy.yml`.
 
 ---
 
 ## Database (Prisma)
 
-Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`.
+Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `AnalyticsEvent`.
+
+- `User.role` — platform role: `user` (default) or `admin` (via `ADMIN_EMAILS`).
 
 - One leg per user per round (`@@unique([roundId, userId])`).
 - Leg stores fixture snapshot: teams, kickoff, `competitionId` (slug), `competition` (display name), optional `matchId` FK, market, odds, bookmaker, `betslipUrl`, `bookmakerLinks` JSON, outcome.
@@ -231,7 +299,7 @@ Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`.
 
 Schema: `packages/database/prisma/schema.prisma`
 
-Recent migrations include `20260710030000_leg_betslip_links` (deeplinks on legs).
+Recent migrations include `20260710100000_user_role_analytics` (admin role + analytics events).
 
 ---
 
@@ -250,7 +318,9 @@ Recent migrations include `20260710030000_leg_betslip_links` (deeplinks on legs)
 | `GET /api/groups/[id]` | Member | Group + active round + betslip deeplinks |
 | `GET /api/groups/[id]/stats` | Member | Group summary stats + chart series |
 | `GET /api/groups/[id]/members/[userId]/stats` | Member | Member breakdown + favourites |
-| `GET /api/user/stats` | Session | Cross-group dashboard stats |
+| `GET /api/user/stats` | Session | Cross-group performance stats |
+| `GET /api/admin/stats` | Admin | Platform summary metrics |
+| `GET /api/admin/leaderboards` | Admin | Syndicate + player point rankings |
 | `GET /api/health` | Public | Health check |
 
 ---
@@ -275,4 +345,10 @@ Recent migrations include `20260710030000_leg_betslip_links` (deeplinks on legs)
 - [x] `CRON_SECRET` in GitHub secrets + Cloud Scheduler job (hourly UTC)
 - [x] `NEXTAUTH_URL=https://www.the-syndicate.uk`
 - [x] Cloudflare Worker + www redirect configured
-- [ ] `RESEND_API_KEY` + `EMAIL_FROM` in GitHub (optional, for email notifications)
+- [x] `RESEND_API_KEY` + `EMAIL_FROM` in GitHub (optional, for email notifications)
+
+## GCP cost notes
+
+Cloud SQL is typically **~90%** of GCP forecast. Current Terraform defaults: `db-f1-micro`, zonal, Enterprise edition, PITR enabled in prod. Cloud Run `min_instances = 0`.
+
+Options to reduce spend: verify instance tier in console, disable PITR if acceptable, reduce backup retention, or migrate to Neon/Supabase. See [DEPLOYMENT.md](./DEPLOYMENT.md#cost-optimization).

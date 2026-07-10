@@ -4,6 +4,7 @@ import type { GroupStatsChartPoint, GroupStatsSummary } from "@/lib/stats/comput
 import type { MemberChartPoint, MemberSeries } from "@/lib/stats/compute-member-chart";
 import type { MemberStatsResult } from "@/lib/stats/compute-member-stats";
 import { ShareCard } from "@/components/share-card";
+import { StakeProfit } from "@/components/stake-profit";
 import { formatLegPoints } from "@the-syndicate/shared";
 import { useEffect, useState } from "react";
 import {
@@ -272,8 +273,9 @@ export function GroupStats({ groupId, groupName }: { groupId: string; groupName?
           label="Avg acca odds"
           value={summary.averageAccaOdds != null ? String(summary.averageAccaOdds) : "—"}
         />
-        <StatCard label="Acca P/L" value={`£${summary.netAccaPlGbp.toFixed(2)}`} />
       </div>
+
+      <StakeProfit points={summary.netGroupPoints} />
 
       {chart.length > 0 && (
         <div className="h-56 w-full">
@@ -389,7 +391,6 @@ export function GroupStats({ groupId, groupName }: { groupId: string; groupName?
         netPoints={summary.netGroupPoints}
         legsPlayed={summary.totalBets}
         winRate={summary.winRate}
-        netAccaPlGbp={summary.netAccaPlGbp}
         subtitle={`${summary.totalRounds} settled round${summary.totalRounds === 1 ? "" : "s"}`}
       />
     </div>

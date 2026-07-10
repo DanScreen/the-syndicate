@@ -1,3 +1,5 @@
+import { isAdminEmail } from "@/lib/admin";
+import { recordAnalyticsEventAsync } from "@/lib/analytics";
 import { prisma } from "@the-syndicate/database";
 import bcrypt from "bcryptjs";
 import { signUpSchema } from "@the-syndicate/shared";
@@ -25,14 +27,18 @@ export async function POST(request: Request) {
     }
 
     const passwordHash = await bcrypt.hash(parsed.data.password, 10);
+    const role = isAdminEmail(parsed.data.email) ? "admin" : "user";
     const user = await prisma.user.create({
       data: {
         name: parsed.data.name,
         email: parsed.data.email,
         passwordHash,
+        role,
       },
       select: { id: true, name: true, email: true },
     });
+
+    recordAnalyticsEventAsync({ type: "sign_up", userId: user.id });
 
     return NextResponse.json({ user }, { status: 201 });
   } catch {

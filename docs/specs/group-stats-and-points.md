@@ -112,8 +112,8 @@ Key files: `apps/web/src/lib/stats/` — see [CURRENT_STATE.md](../CURRENT_STATE
 
 ### Phase 4 — Polish ✅
 
-- [x] Dashboard cross-group summary (`GET /api/user/stats`, `dashboard-stats.tsx`)
-- [x] Share cards (`share-card.tsx` on dashboard + group page)
+- [x] Cross-group performance page (`GET /api/user/stats`, `/performance`, `dashboard-stats.tsx`)
+- [x] Share cards (`share-card.tsx` on `/performance` + group Performance tab)
 
 ---
 

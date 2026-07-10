@@ -2,6 +2,8 @@
 
 **Pitch:** Social groups where each member adds one leg to a shared football acca, track performance together, compete on picks.
 
+**Brand & marketing:** [BRAND.md](./BRAND.md) · Public pages: `/`, `/about`
+
 **As-built detail:** [CURRENT_STATE.md](./CURRENT_STATE.md) · **Planned features:** [specs/](./specs/) · **Next work:** [ROADMAP.md](./ROADMAP.md)
 
 ---
@@ -47,16 +49,18 @@ Match sync cron auto-settles locked rounds when all fixtures finish. Email on se
 - [x] Live odds (The Odds API) + extended markets
 - [x] Per-leg competition picker (5 leagues + World Cup)
 - [x] Leg submit, acca lock, acca bookmaker rankings
+- [x] Real bookmaker betslip deeplinks
 - [x] Match table + football-data.org sync
 - [x] Hands-off auto-settle + owner-triggered auto-settle
 - [x] Email notifications (round locked / settled)
 - [x] Unit-stake points + leaderboard
 - [x] Group stats + member stats (charts, favourites)
-- [x] Dashboard cross-group summary + share cards
+- [x] Cross-group Performance page + share cards
+- [x] Split layout: Groups home, group tabs (Round / Leaderboard / Performance)
 
 ### Backlog
-- [x] Real bookmaker betslip deeplinks
-- [ ] Dedicated user profile page
+- [ ] Dedicated user profile page (optional — `/performance` covers stats today)
+- [ ] FA Cup + EFL Cup competitions
 
 Full priority list: [ROADMAP.md](./ROADMAP.md)
 

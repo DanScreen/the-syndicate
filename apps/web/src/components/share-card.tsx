@@ -9,7 +9,6 @@ type ShareCardProps = {
   netPoints: number;
   legsPlayed: number;
   winRate: number | null;
-  netAccaPlGbp?: number;
   subtitle?: string;
 };
 
@@ -18,7 +17,6 @@ export function ShareCard({
   netPoints,
   legsPlayed,
   winRate,
-  netAccaPlGbp,
   subtitle,
 }: ShareCardProps) {
   const [copied, setCopied] = useState(false);
@@ -27,7 +25,6 @@ export function ShareCard({
     netPoints,
     legsPlayed,
     winRate,
-    netAccaPlGbp,
   });
 
   async function handleShare() {
@@ -50,7 +47,7 @@ export function ShareCard({
       <p className="text-xs font-medium uppercase tracking-wide text-accent">Share</p>
       <h4 className="mt-1 text-lg font-semibold">{title}</h4>
       {subtitle && <p className="text-sm text-muted">{subtitle}</p>}
-      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
         <div>
           <p className="text-xs text-muted">Net points</p>
           <p className="text-xl font-bold text-accent">{formatLegPoints(netPoints)}</p>
@@ -63,14 +60,6 @@ export function ShareCard({
           <div>
             <p className="text-xs text-muted">Win rate</p>
             <p className="text-xl font-bold">{winRate}%</p>
-          </div>
-        )}
-        {netAccaPlGbp != null && (
-          <div>
-            <p className="text-xs text-muted">Acca P/L</p>
-            <p className={`text-xl font-bold ${netAccaPlGbp >= 0 ? "text-accent" : "text-red-400"}`}>
-              {netAccaPlGbp >= 0 ? "+" : ""}£{netAccaPlGbp.toFixed(2)}
-            </p>
           </div>
         )}
       </div>

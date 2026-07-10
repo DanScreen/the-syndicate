@@ -12,6 +12,7 @@ model User {
   name         String
   email        String        @unique
   passwordHash String
+  role         String        @default("user")
   totalPoints  Float         @default(0)
   legsWon      Int           @default(0)
   legsLost     Int           @default(0)
@@ -20,6 +21,7 @@ model User {
   ownedGroups  Group[]       @relation("GroupOwner")
   memberships  GroupMember[]
   legs         Leg[]
+  analyticsEvents AnalyticsEvent[]
 }
 
 model Group {
@@ -117,4 +119,16 @@ model Match {
   legs           Leg[]
 
   @@index([competitionId, kickoff])
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  type      String
+  userId    String?
+  path      String?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([type, createdAt])
+  @@index([createdAt])
 }

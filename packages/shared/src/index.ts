@@ -4,3 +4,4 @@ export * from "./types";
 export * from "./competitions";
 export * from "./scoring";
 export * from "./acca";
+export * from "./roles";

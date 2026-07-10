@@ -148,6 +148,7 @@ Omit either variable to skip emails (no-op).
 | `CLOUD_RUN_SERVICE` | `the-syndicate-web` |
 | `NEXTAUTH_URL` | `https://the-syndicate.example.com` |
 | `EMAIL_FROM` | `The Syndicate <notifications@the-syndicate.uk>` (optional) |
+| `ADMIN_EMAILS` | `dev@example.com,other@example.com` (optional) |
 
 ## Deployment flow (on push to `main`)
 
@@ -176,6 +177,38 @@ Mobile is **not** deployed by this pipeline. For production iPhone builds:
 
 1. Set `EXPO_PUBLIC_API_URL` in EAS build profile to the Cloud Run URL (or custom domain)
 2. Build with EAS → TestFlight → App Store
+
+## Cost optimization
+
+GCP billing is typically dominated by **Cloud SQL** (~90% of forecast at current scale). Cloud Run with `min_instances = 0` is low cost.
+
+### Check current spend
+
+```bash
+gcloud billing accounts list
+gcloud billing budgets list --billing-account=BILLING_ACCOUNT_ID
+```
+
+In GCP Console → **Billing → Reports**, filter by service to confirm Cloud SQL share.
+
+### Terraform defaults (`infra/terraform/`)
+
+| Resource | Default | Cost impact |
+|----------|---------|-------------|
+| Cloud SQL | `db-f1-micro`, zonal, Enterprise | Main cost driver |
+| PITR | Enabled in prod (`cloud-sql.tf`) | Adds storage cost |
+| Backups | Enabled | Retention affects storage |
+| Cloud Run | `min_instances = 0` | Scales to zero |
+
+### Options to reduce cost
+
+1. **Verify tier** — ensure prod is not on a larger tier than `db-f1-micro`.
+2. **Disable PITR** — if point-in-time recovery is not needed, set `point_in_time_recovery_enabled = false` in `cloud-sql.tf`.
+3. **Reduce backup retention** — lower `backup_retention_days` if acceptable.
+4. **Migrate database** — Neon, Supabase, or Railway can be cheaper at low traffic; requires `DATABASE_URL` change and connection string updates in deploy.
+5. **Keep Cloud Run at min 0** — only raise `min_instances` if cold starts become a user-facing problem.
+
+App deploy and match sync are unaffected by DB tier changes — only connection string and migration step need updating.
 
 ## Future improvements
 

@@ -68,9 +68,17 @@ Manual owner settle, owner-triggered auto-settle, or **hands-off** after hourly 
 → `packages/shared/src/scoring.ts`
 
 ### Stats
-Computed on read from settled rounds. Group + member + **cross-group user** APIs; Recharts on group page and dashboard. Share cards for copy/Web Share.
+Computed on read from settled rounds. Group + member + **cross-group user** APIs; Recharts on group Performance tab and `/performance` page. Share cards for copy/Web Share.
 
 → `apps/web/src/lib/stats/`
+
+### Web UI layout
+- **Header:** `AppNav` — Groups (`/dashboard`) ↔ Performance (`/performance`)
+- **Group shell:** `groups/[id]/layout.tsx` + `GroupDataProvider` — shared fetch for sub-pages
+- **Group tabs:** Round (`/groups/[id]`), Leaderboard, Performance
+- **Locked round:** picks list → betslip CTA → collapsible bookmaker comparison
+
+→ [CURRENT_STATE.md](./CURRENT_STATE.md#web-pages)
 
 ### Auth
 Credentials + bcrypt. Session on web; Bearer JWT for mobile (`/api/auth/mobile/sign-in`).

@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/header";
+import { PageView } from "@/components/analytics/page-view";
 import { formatLegPoints } from "@the-syndicate/shared";
 import { auth } from "@/lib/auth";
 import { prisma } from "@the-syndicate/database";
@@ -32,6 +33,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen">
+      <PageView path="/dashboard" />
       <AppHeader userName={user?.name ?? "Player"} />
       <main className="mx-auto max-w-5xl px-4 py-8">
         <div className="flex flex-wrap items-end justify-between gap-4">

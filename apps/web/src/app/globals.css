@@ -5,9 +5,11 @@
   --foreground: #f1f5f9;
   --card: #111827;
   --accent: #22c55e;
+  --accent-bright: #4ade80;
   --accent-muted: #14532d;
   --border: #1f2937;
   --muted: #94a3b8;
+  --glow: rgba(34, 197, 94, 0.15);
 }
 
 @theme inline {
@@ -15,14 +17,31 @@
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-accent: var(--accent);
+  --color-accent-bright: var(--accent-bright);
   --color-accent-muted: var(--accent-muted);
   --color-border: var(--border);
   --color-muted: var(--muted);
   --font-sans: var(--font-geist-sans);
+  --font-display: var(--font-outfit);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
+}
+
+.marketing-gradient {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%, var(--glow), transparent),
+    var(--background);
+}
+
+.glass-card {
+  background: color-mix(in srgb, var(--card) 85%, transparent);
+  backdrop-filter: blur(8px);
 }

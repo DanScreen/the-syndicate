@@ -60,8 +60,7 @@ export type GroupData = {
     id: string;
     status: string;
     combinedOdds: number | null;
-    profitLossGbp: number | null;
-    legs: { selectionLabel: string; outcome: string }[];
+    legs: { selectionLabel: string; outcome: string; pointsAwarded: number }[];
   }[];
   betslipLink: string | null;
   betslipLinks: {

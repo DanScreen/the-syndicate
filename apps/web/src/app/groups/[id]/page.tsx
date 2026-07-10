@@ -9,6 +9,7 @@ import {
   SubmitLegForm,
 } from "@/components/group-ui";
 import { useGroupData } from "@/context/group-data";
+import { formatLegPoints } from "@the-syndicate/shared";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 
@@ -102,14 +103,15 @@ export default function GroupRoundPage() {
 
       {activeRound.status === "settled" && (
         <>
-          {activeRound.profitLossGbp != null && (
-            <p className="text-sm">
-              Group P/L:{" "}
-              <span className="font-semibold text-accent">
-                £{activeRound.profitLossGbp.toFixed(2)}
-              </span>
-            </p>
-          )}
+          <p className="text-sm">
+            Round points:{" "}
+            <span className="font-semibold text-accent">
+              {formatLegPoints(
+                activeRound.legs.reduce((sum, leg) => sum + (leg.pointsAwarded ?? 0), 0)
+              )}{" "}
+              pts
+            </span>
+          </p>
           {isOwner && (
             <button
               onClick={startRound}

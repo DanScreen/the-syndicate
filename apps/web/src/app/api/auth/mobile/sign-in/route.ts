@@ -1,4 +1,6 @@
 import { createMobileToken } from "@/lib/mobile-token";
+import { resolveUserRole } from "@/lib/admin";
+import { recordAnalyticsEventAsync } from "@/lib/analytics";
 import { prisma } from "@the-syndicate/database";
 import bcrypt from "bcryptjs";
 import { signInSchema } from "@the-syndicate/shared";
@@ -26,6 +28,9 @@ export async function POST(request: Request) {
     if (!valid) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
+
+    await resolveUserRole(user.id, user.email, user.role);
+    recordAnalyticsEventAsync({ type: "login", userId: user.id });
 
     const token = await createMobileToken({
       id: user.id,

@@ -16,3 +16,13 @@ export function legPointsForOutcome(outcome: LegOutcome, odds: number): number {
 export function formatLegPoints(points: number): string {
   return Number(points.toFixed(2)).toString();
 }
+
+/** Unit-stake points × stake (£) = profit/loss in pounds. */
+export function profitFromPoints(points: number, stakeGbp: number): number {
+  return Number((points * stakeGbp).toFixed(2));
+}
+
+export function formatProfitGbp(amount: number): string {
+  const sign = amount >= 0 ? "+" : "";
+  return `${sign}£${Math.abs(amount).toFixed(2)}`;
+}

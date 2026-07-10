@@ -1,6 +1,6 @@
 # Documentation index
 
-**Start here** if you are an agent or developer new to this repo — **do not rely on chat history**.
+**Start here** if you are an agent or developer new to this repo — **do not rely on chat history.**
 
 The Syndicate is a social group football acca platform. Production: [www.the-syndicate.uk](https://www.the-syndicate.uk).
 
@@ -8,10 +8,20 @@ The Syndicate is a social group football acca platform. Production: [www.the-syn
 
 ## Agent quick start
 
-1. Read **[CURRENT_STATE.md](./CURRENT_STATE.md)** — as-built truth (APIs, env vars, file paths, limitations).
+1. Read **[CURRENT_STATE.md](./CURRENT_STATE.md)** — as-built truth (pages, APIs, env vars, code map, limitations).
 2. Read **[ROADMAP.md](./ROADMAP.md)** → **Next** — what to build now.
-3. Read the matching **spec** in [specs/](./specs/) before implementing.
-4. Run locally: `npm install` → `docker compose up -d` → copy `apps/web/.env.example` to `.env.local` → `npm run db:migrate:deploy` → `npm run dev`.
+3. Read the matching **spec** in [specs/](./specs/) if the task matches one.
+4. Run locally:
+
+```bash
+npm install
+docker compose up -d
+cp apps/web/.env.example apps/web/.env.local   # DATABASE_URL, AUTH_SECRET, NEXTAUTH_URL
+npm run db:migrate:deploy
+npm run db:generate
+npm run dev   # http://localhost:3000
+```
+
 5. After shipping: update docs in the **same commit** — see [AGENTS.md](../AGENTS.md).
 
 **Paused:** `apps/mobile/` — web only until validated with real users.
@@ -26,8 +36,8 @@ The Syndicate is a social group football acca platform. Production: [www.the-syn
 | **What to build next** | [ROADMAP.md](./ROADMAP.md) |
 | **Implement a planned feature** | Relevant file in [specs/](./specs/) |
 | Product intent & user flows | [PRODUCT.md](./PRODUCT.md) |
-| Stack & data model overview | [ARCHITECTURE.md](./ARCHITECTURE.md) |
-| Deploy or change infra | [DEPLOYMENT.md](./DEPLOYMENT.md), [infra/terraform/README.md](../infra/terraform/README.md) |
+| Brand, logo, design directions | [BRAND.md](./BRAND.md) |
+| Deploy, infra, or reduce GCP costs | [DEPLOYMENT.md](./DEPLOYMENT.md), [infra/terraform/README.md](../infra/terraform/README.md) |
 | Commands & conventions | [AGENTS.md](../AGENTS.md) |
 
 Specs are **design contracts**. [CURRENT_STATE.md](./CURRENT_STATE.md) is **as-built truth** — update it when you ship.
@@ -36,7 +46,17 @@ Specs are **design contracts**. [CURRENT_STATE.md](./CURRENT_STATE.md) is **as-b
 
 ## What to build next (July 2026)
 
-See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. Core MVP is shipped.
+**MVP is shipped.** Priority is validating with real users (success metric: 10 users complete the full loop).
+
+| # | Backlog item | Notes |
+|---|--------------|-------|
+| 1 | FA Cup + EFL Cup | Quick win — `competitions.ts` |
+| 2 | GCP cost reduction | Cloud SQL is ~90% of forecast; see [DEPLOYMENT.md](./DEPLOYMENT.md#cost-optimization) |
+| 3 | User profile page | Optional polish; `/performance` already covers stats |
+| 4 | football-data.org tier upgrade | Ops — L1/L2 sync 403 on free tier |
+| 5 | Mobile catch-up | Paused until web validated |
+
+Full list: [ROADMAP.md](./ROADMAP.md).
 
 ---
 
@@ -45,14 +65,14 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. Core MVP is shipped.
 ```
 docs/
 ├── README.md              ← you are here
-├── CURRENT_STATE.md       ← as-built: production, code map, env, APIs
+├── CURRENT_STATE.md       ← as-built: pages, APIs, code map, env, limitations
 ├── PRODUCT.md             ← vision, flows, MVP scope
 ├── ARCHITECTURE.md        ← stack, entities, subsystems
 ├── ROADMAP.md             ← priorities & status
-├── DEPLOYMENT.md          ← GCP, GitHub Actions, Terraform, cron
+├── DEPLOYMENT.md          ← GCP, CI, cron, cost optimization
 └── specs/
-    ├── competitions-and-results.md   ← Phase C remaining
-    └── group-stats-and-points.md     ← Phase 4 remaining
+    ├── competitions-and-results.md   ← Phases A–C done; Phase 1b backlog
+    └── group-stats-and-points.md     ← Phases 1–4 done
 ```
 
 ---

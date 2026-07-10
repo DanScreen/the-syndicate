@@ -6,6 +6,7 @@ import type {
   UserStatsSummary,
 } from "@/lib/stats/compute-user-stats";
 import { ShareCard } from "@/components/share-card";
+import { StakeProfit } from "@/components/stake-profit";
 import { formatLegPoints } from "@the-syndicate/shared";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -95,8 +96,9 @@ export function DashboardStats({ userName }: { userName: string }) {
           value={summary.winRate != null ? `${summary.winRate}%` : "—"}
         />
         <StatCard label="Net points" value={formatLegPoints(summary.netPoints)} />
-        <StatCard label="Acca P/L" value={`£${summary.netAccaPlGbp.toFixed(2)}`} />
       </div>
+
+      <StakeProfit points={summary.netPoints} />
 
       {chart.length > 1 && (
         <div className="rounded-xl border border-border bg-card p-4">
@@ -138,7 +140,6 @@ export function DashboardStats({ userName }: { userName: string }) {
         netPoints={summary.netPoints}
         legsPlayed={summary.legsPlayed}
         winRate={summary.winRate}
-        netAccaPlGbp={summary.netAccaPlGbp}
         subtitle={`Across ${summary.groupCount} group${summary.groupCount === 1 ? "" : "s"}`}
       />
 

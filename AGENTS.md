@@ -4,13 +4,15 @@ Social group football acca platform. **Read [docs/README.md](docs/README.md) fir
 
 | Doc | When |
 |-----|------|
-| [docs/CURRENT_STATE.md](docs/CURRENT_STATE.md) | What exists today — **start here for implementation** (includes agent onboarding + code map) |
+| [docs/CURRENT_STATE.md](docs/CURRENT_STATE.md) | What exists today — **start here for implementation** (pages, APIs, code map, env) |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | **What to build next** |
-| [docs/specs/](docs/specs/) | Planned features — read the relevant spec before building |
+| [docs/specs/](docs/specs/) | Spec checklists for backlog features |
 | [docs/PRODUCT.md](docs/PRODUCT.md) | User flows & vision |
+| [docs/BRAND.md](docs/BRAND.md) | Logo, design directions, marketing copy |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Stack & data model |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | GCP deploy, cron, **cost optimization** |
 
-**Current priorities (July 2026):** User profile page, FA Cup + EFL Cup — see [docs/ROADMAP.md](docs/ROADMAP.md).
+**Current priorities (July 2026):** Validate with real users → FA Cup + EFL Cup → GCP cost reduction. See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 After shipping: follow **Documentation maintenance** below.
 
@@ -33,7 +35,7 @@ After shipping: follow **Documentation maintenance** below.
 | New/changed user flow or product scope | [docs/PRODUCT.md](docs/PRODUCT.md) |
 | New subsystem, entity, or architectural pattern | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — brief; link to spec for detail |
 | Deploy, secrets, infra, or CI | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) and/or [infra/terraform/README.md](infra/terraform/README.md) |
-| New `.env` variable | [apps/web/.env.example](apps/web/.env.example) + `CURRENT_STATE.md` env table |
+| New `.env` variable | [apps/web/.env.example](apps/web/.env.example) + CURRENT_STATE env table |
 
 ### Do not
 
