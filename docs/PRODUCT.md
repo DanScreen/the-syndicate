@@ -38,7 +38,14 @@ Locked round: **Picks** list first, then combined odds + primary betslip CTA. **
 ### 5. Settle & stats
 Match sync cron auto-settles locked rounds when all fixtures finish. Email on settle. **Leaderboard** tab for points; **Performance** tab for group charts and member breakdowns. User-level **Performance** nav for cross-group stats.
 
+**Primary metric:** unit-stake **points** (not £ profit). Users can enter a stake on performance pages to see profit equivalent (points × stake).
+
 → [specs/group-stats-and-points.md](./specs/group-stats-and-points.md)
+
+### 6. Admin (developers only)
+Platform admins (`ADMIN_EMAILS`) access `/admin` for product metrics and platform-wide leaderboards (syndicate + player rankings). Not visible to regular users yet.
+
+→ [specs/platform-admin.md](./specs/platform-admin.md)
 
 ---
 
@@ -57,8 +64,12 @@ Match sync cron auto-settles locked rounds when all fixtures finish. Email on se
 - [x] Group stats + member stats (charts, favourites)
 - [x] Cross-group Performance page + share cards
 - [x] Split layout: Groups home, group tabs (Round / Leaderboard / Performance)
+- [x] Marketing homepage + about page (Turf Green brand)
+- [x] Platform admin dashboard + leaderboards (admin-only)
+- [x] Points-first stats with stake → profit converter
 
 ### Backlog
+- [ ] Public platform leaderboards (admin version exists)
 - [ ] Dedicated user profile page (optional — `/performance` covers stats today)
 - [ ] FA Cup + EFL Cup competitions
 

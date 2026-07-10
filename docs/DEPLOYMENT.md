@@ -124,6 +124,19 @@ Optional. When configured, members receive email on round lock and settle.
 
 Omit either variable to skip emails (no-op).
 
+## Platform admin
+
+Grant developer access to `/admin` (overview + platform leaderboards).
+
+1. Add `ADMIN_EMAILS` GitHub **variable** — comma-separated emails, e.g. `you@example.com,teammate@example.com`.
+2. Deploy — `deploy.yml` passes it to Cloud Run.
+3. Each listed user **signs out and back in** on production to receive `role: admin`.
+4. New sign-ups with a listed email are created as admin automatically.
+
+**Local:** set `ADMIN_EMAILS` in `apps/web/.env.local` (see `.env.example`).
+
+Full behaviour: [specs/platform-admin.md](./specs/platform-admin.md).
+
 ## GitHub repository configuration
 
 ### Secrets (Settings → Secrets and variables → Actions)

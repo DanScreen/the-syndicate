@@ -39,12 +39,13 @@ flowchart TB
 
 | Entity | Purpose |
 |--------|---------|
-| **User** | Account; aggregate points (`Float`) |
+| **User** | Account; `role` (`user` \| `admin`); aggregate `totalPoints` |
 | **Group** | Name, invite code, owner, status |
-| **GroupMember** | Membership, role, group-scoped points |
+| **GroupMember** | Membership, group role (`owner` \| `member`), group-scoped points |
 | **Round** | Acca cycle: collecting → locked → settled; `accaBookmakerRankings` JSON at lock |
 | **Leg** | One pick per member: fixture, `competitionId`, market, odds, outcome |
 | **Match** | Canonical fixture result (football-data.org sync); reused for auto-settle |
+| **AnalyticsEvent** | Product analytics: `sign_up`, `login`, `page_view` |
 
 Schema: `packages/database/prisma/schema.prisma`
 
@@ -63,9 +64,9 @@ Manual owner settle, owner-triggered auto-settle, or **hands-off** after hourly 
 → [CURRENT_STATE.md](./CURRENT_STATE.md#settlement)
 
 ### Scoring
-**Unit-stake points:** win `odds−1`, loss `−1`, void `0`. Stats derive from outcome+odds (not stale `pointsAwarded`). £10 acca P/L on round.
+**Unit-stake points:** win `odds−1`, loss `−1`, void `0`. **Points are the primary user-facing metric.** Profit equivalent: `points × stake` via `profitFromPoints()`. `Round.profitLossGbp` retained for admin/settlement.
 
-→ `packages/shared/src/scoring.ts`
+→ `packages/shared/src/scoring.ts` · [specs/platform-admin.md](./specs/platform-admin.md)
 
 ### Stats
 Computed on read from settled rounds. Group + member + **cross-group user** APIs; Recharts on group Performance tab and `/performance` page. Share cards for copy/Web Share.
@@ -81,7 +82,17 @@ Computed on read from settled rounds. Group + member + **cross-group user** APIs
 → [CURRENT_STATE.md](./CURRENT_STATE.md#web-pages)
 
 ### Auth
-Credentials + bcrypt. Session on web; Bearer JWT for mobile (`/api/auth/mobile/sign-in`).
+Credentials + bcrypt. Session on web (includes `user.role`); Bearer JWT for mobile (`/api/auth/mobile/sign-in`).
+
+### Platform admin
+`ADMIN_EMAILS` env promotes users to `role: admin`. Admin pages at `/admin/*`; APIs at `/api/admin/*`. Lightweight `AnalyticsEvent` logging.
+
+→ [specs/platform-admin.md](./specs/platform-admin.md)
+
+### Marketing (public)
+Homepage (`/`), about (`/about`). Turf Green tokens + Acca stack logo. Content in `lib/marketing-content.ts`.
+
+→ [BRAND.md](./BRAND.md)
 
 ---
 

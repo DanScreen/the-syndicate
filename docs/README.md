@@ -36,7 +36,8 @@ npm run dev   # http://localhost:3000
 | **What to build next** | [ROADMAP.md](./ROADMAP.md) |
 | **Implement a planned feature** | Relevant file in [specs/](./specs/) |
 | Product intent & user flows | [PRODUCT.md](./PRODUCT.md) |
-| Brand, logo, design directions | [BRAND.md](./BRAND.md) |
+| Brand, logo, design | [BRAND.md](./BRAND.md) |
+| Platform admin & analytics | [specs/platform-admin.md](./specs/platform-admin.md) |
 | Deploy, infra, or reduce GCP costs | [DEPLOYMENT.md](./DEPLOYMENT.md), [infra/terraform/README.md](../infra/terraform/README.md) |
 | Commands & conventions | [AGENTS.md](../AGENTS.md) |
 
@@ -72,7 +73,8 @@ docs/
 ├── DEPLOYMENT.md          ← GCP, CI, cron, cost optimization
 └── specs/
     ├── competitions-and-results.md   ← Phases A–C done; Phase 1b backlog
-    └── group-stats-and-points.md     ← Phases 1–4 done
+    ├── group-stats-and-points.md     ← Phases 1–4 done
+    └── platform-admin.md             ← Admin, analytics, points-first UX (shipped)
 ```
 
 ---

@@ -55,6 +55,8 @@ Match sync: Cloud Scheduler → `POST /api/internal/sync-matches` with Bearer `C
 | Group layout | `apps/web/src/app/groups/[id]/layout.tsx`, `group-layout-client.tsx`, `context/group-data.tsx` |
 | Scoring | `packages/shared/src/scoring.ts` |
 | Competitions catalogue | `packages/shared/src/competitions.ts` |
+| Platform admin | `apps/web/src/lib/admin.ts`, `lib/admin/`, `app/admin/`, `components/admin-*` |
+| Analytics | `apps/web/src/lib/analytics.ts`, `components/analytics/page-view.tsx` |
 
 ### What's next (July 2026)
 
@@ -85,8 +87,10 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 | Member stats breakdowns + multi-member chart | ✅ |
 | Dashboard cross-group stats + share cards | ✅ |
 | Split app layout (Groups / Performance nav; group tabs) | ✅ |
-| Platform admin dashboard (`/admin`) | ✅ |
+| Platform admin dashboard + leaderboards (`/admin`) | ✅ |
 | Product analytics (logins, signups, page views) | ✅ |
+| Marketing site (homepage, about, Turf Green + Acca stack logo) | ✅ |
+| Points-first stats UX + stake → profit converter | ✅ |
 | Locked round UX: picks first, collapsible bookmaker comparison | ✅ |
 | Round history, progress UI, landing/SEO | ✅ |
 
@@ -108,7 +112,9 @@ Examples: win @ 2.50 → +1.50; loss → −1.00.
 
 **Stats compute from outcome + odds** via `legPointsForOutcome()` — not stale `pointsAwarded` (backfilled in migration `20260710000000_backfill_unit_stake_points`).
 
-**Group acca P/L:** theoretical **£10** stake on combined acca odds. All legs won → `stake × combinedOdds − stake`; any loss → `−stake`. See `lib/settlement/`.
+**Points-first UX:** Points are the **primary metric** across performance pages, leaderboards, share cards, and round history. Users convert points to money with `profitFromPoints(points, stake)` — profit = points × stake (£). UI: `StakeProfit` component (default stake £10).
+
+**Acca P/L in DB:** `Round.profitLossGbp` still computed at settle (£10 default stake) for admin “successful acca” counts and settlement emails — not shown as the primary user-facing metric.
 
 ---
 
@@ -210,9 +216,13 @@ Email notifications (Resend) fire on lock and settle when `RESEND_API_KEY` + `EM
 
 ## Admin & analytics
 
-Platform admins (`User.role = admin`) see an **Admin** tab and `/admin` dashboard.
+→ Full spec: [specs/platform-admin.md](./specs/platform-admin.md)
 
-**Granting admin:** set `ADMIN_EMAILS` (comma-separated) in env. Matching users are promoted on sign-up or sign-in. Re-login after adding your email locally.
+Platform admins (`User.role = admin`) see an **Admin** tab with **Overview** and **Leaderboards**.
+
+**Granting admin:** set `ADMIN_EMAILS` (comma-separated) in env. Matching users promoted on sign-up or sign-in. Re-login after adding your email.
+
+### Overview (`/admin`)
 
 | Metric | Source |
 |--------|--------|
@@ -223,17 +233,35 @@ Platform admins (`User.role = admin`) see an **Admin** tab and `/admin` dashboar
 | Logins (7d/30d) | `AnalyticsEvent` type `login` |
 | Page views (7d/30d) | `AnalyticsEvent` type `page_view` |
 
+### Leaderboards (`/admin/leaderboards`)
+
+| Leaderboard | Ranked by |
+|-------------|-----------|
+| Syndicates | Sum of `GroupMember.points` per group |
+| Players | `User.totalPoints` (all groups) |
+
+Admin-only for now; public rollout planned when user base grows.
+
+### Analytics events
+
+`AnalyticsEvent` table: `sign_up`, `login`, `page_view`. Recorded on sign-up, sign-in (web + mobile), and server-rendered page loads.
+
+### Key files
+
 | Path | Role |
 |------|------|
 | `apps/web/src/lib/admin.ts` | `requireAdmin`, `ADMIN_EMAILS` promotion |
-| `apps/web/src/lib/admin/compute-admin-stats.ts` | Dashboard aggregates |
+| `apps/web/src/lib/admin/compute-admin-stats.ts` | Overview aggregates |
+| `apps/web/src/lib/admin/compute-platform-leaderboards.ts` | Leaderboard queries |
 | `apps/web/src/lib/analytics.ts` | `recordAnalyticsEvent` |
-| `apps/web/src/components/admin-stats.tsx` | Admin UI |
-| `GET /api/admin/stats` | JSON stats (admin session) |
+| `apps/web/src/components/admin-page-shell.tsx` | Admin layout + nav |
+| `apps/web/src/components/admin-stats.tsx` | Overview UI |
+| `apps/web/src/components/platform-leaderboards.tsx` | Leaderboard tables |
+| `apps/web/src/components/stake-profit.tsx` | Points → profit converter |
+| `GET /api/admin/stats` | JSON overview (admin session) |
+| `GET /api/admin/leaderboards` | JSON leaderboards (admin session) |
 
-**Scoring UX:** Points are the primary metric site-wide. `profitFromPoints(points, stake)` in `packages/shared/src/scoring.ts`; `StakeProfit` component lets users enter a £ stake to see profit equivalent.
-
-**Analytics limitations:** page views recorded on server render per route (not client-side SPA navigations within group tabs). For richer analytics later, consider Plausible, PostHog, or GA4.
+**Analytics limitations:** page views on server render only (not in-group tab switches). See spec for details.
 
 ---
 
@@ -290,7 +318,7 @@ Env vars on Cloud Run: `NEXTAUTH_URL`, `EMAIL_FROM`, `ADMIN_EMAILS`, `ODDS_API_S
 Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `AnalyticsEvent`.
 
 - `User.role` — platform role: `user` (default) or `admin` (via `ADMIN_EMAILS`).
-
+- `AnalyticsEvent` — lightweight product analytics (`type`, `userId?`, `path?`, `createdAt`).
 - One leg per user per round (`@@unique([roundId, userId])`).
 - Leg stores fixture snapshot: teams, kickoff, `competitionId` (slug), `competition` (display name), optional `matchId` FK, market, odds, bookmaker, `betslipUrl`, `bookmakerLinks` JSON, outcome.
 - `Match` — canonical result per fixture (`externalDataId` from football-data.org).
@@ -346,6 +374,7 @@ Recent migrations include `20260710100000_user_role_analytics` (admin role + ana
 - [x] `NEXTAUTH_URL=https://www.the-syndicate.uk`
 - [x] Cloudflare Worker + www redirect configured
 - [x] `RESEND_API_KEY` + `EMAIL_FROM` in GitHub (optional, for email notifications)
+- [ ] `ADMIN_EMAILS` in GitHub variables (developer admin access)
 
 ## GCP cost notes
 

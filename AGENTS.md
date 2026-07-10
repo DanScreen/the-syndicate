@@ -8,7 +8,8 @@ Social group football acca platform. **Read [docs/README.md](docs/README.md) fir
 | [docs/ROADMAP.md](docs/ROADMAP.md) | **What to build next** |
 | [docs/specs/](docs/specs/) | Spec checklists for backlog features |
 | [docs/PRODUCT.md](docs/PRODUCT.md) | User flows & vision |
-| [docs/BRAND.md](docs/BRAND.md) | Logo, design directions, marketing copy |
+| [docs/BRAND.md](docs/BRAND.md) | Logo, design, marketing copy |
+| [docs/specs/platform-admin.md](docs/specs/platform-admin.md) | Admin dashboard, leaderboards, analytics |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Stack & data model |
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | GCP deploy, cron, **cost optimization** |
 
