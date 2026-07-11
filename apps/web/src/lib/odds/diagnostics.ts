@@ -2,15 +2,16 @@ import {
   formatCommenceTimeFrom,
   isOddsApiConfigured,
   ODDS_QUOTA_BLOCK_CACHE_KEY,
+  oddsApiRegions,
   oddsCacheTtlMs,
 } from "@/lib/odds/config";
-import { getCached, getCacheMetadata, getCachedFixtureCount } from "@/lib/odds/cache";
+import { getCached } from "@/lib/odds/cache";
 import { isRetailBookmaker } from "@/lib/odds/bookmakers";
 import { isQuotaExhaustedError, OddsApiError } from "@/lib/odds/errors";
+import { readBulkFixtures } from "@/lib/odds/odds-store";
 import {
   fetchOddsApiEventsRaw,
   mapOddsEventToFixture,
-  oddsApiCacheKey,
 } from "@/lib/odds/the-odds-api";
 import { getOddsApiQuotaSnapshot } from "@/lib/odds/quota-snapshot";
 import { filterUpcomingFixtures, getCompetitionById } from "@the-syndicate/shared";
@@ -100,11 +101,16 @@ export async function runOddsDiagnostics(
     throw new Error("Unknown competition");
   }
 
-  const regions = process.env.ODDS_API_REGIONS ?? "uk";
+  const regions = oddsApiRegions();
   const cacheTtlMs = oddsCacheTtlMs();
-  const cacheKey = oddsApiCacheKey(competition.oddsApiSport, regions);
-  const cacheMeta = getCacheMetadata(cacheKey);
-  const cachedFixtureCount = getCachedFixtureCount(cacheKey);
+  const dbSnapshot = await readBulkFixtures(competitionId, { allowStale: true });
+  const cacheMeta = dbSnapshot
+    ? {
+        hit: !dbSnapshot.meta.stale,
+        remainingMs: Math.max(0, dbSnapshot.meta.expiresAt.getTime() - Date.now()),
+      }
+    : { hit: false, remainingMs: null };
+  const cachedFixtureCount = dbSnapshot?.fixtures.length ?? null;
   const now = Date.now();
   const oddsConfigured = isOddsApiConfigured();
   const quotaBlocked = Boolean(getCached<boolean>(ODDS_QUOTA_BLOCK_CACHE_KEY));
@@ -259,12 +265,14 @@ function buildCacheOnlyInterpretation(result: OddsDiagnosticsResult): string[] {
 
   if (result.cache.hit && (result.cache.cachedFixtureCount ?? 0) > 0) {
     lines.push(
-      `${result.cache.cachedFixtureCount} fixture(s) are cached on this instance and should be served to users until the cache expires.`
+      `${result.cache.cachedFixtureCount} fixture(s) are stored in the odds DB snapshot and should be served to users until it expires.`
     );
   } else if (result.cache.hit) {
-    lines.push("Cache hit but empty — users will see no fixtures until the cache expires or quota returns.");
+    lines.push("DB snapshot exists but is empty — run the warm-odds-cache cron or wait for the next refresh.");
   } else {
-    lines.push("No fixture cache on this instance. Click “Probe API” only when you have quota available.");
+    lines.push(
+      "No odds DB snapshot for this competition. Schedule POST /api/internal/warm-odds-cache or enable live fallback locally."
+    );
   }
 
   lines.push(
@@ -318,14 +326,12 @@ function buildInterpretation(result: OddsDiagnosticsResult, err?: unknown): stri
 
   if (result.counts.afterKickoffFilter > 0) {
     lines.push(
-      `${result.counts.afterKickoffFilter} upcoming fixture(s) should appear in the leg picker. Cached for ${Math.round(result.cacheTtlMs / 60_000)} minutes per Cloud Run instance.`
+      `${result.counts.afterKickoffFilter} upcoming fixture(s) should appear in the leg picker. DB snapshot TTL is ${Math.round(result.cacheTtlMs / 60_000)} minutes.`
     );
   }
 
   if (result.cache.hit && result.cache.cachedFixtureCount === 0) {
-    lines.push(
-      "In-memory cache currently holds an empty fixture list for this sport. Wait for cache TTL or redeploy."
-    );
+    lines.push("Odds DB snapshot currently holds an empty fixture list for this competition.");
   }
 
   return lines;

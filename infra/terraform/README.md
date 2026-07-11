@@ -2,15 +2,18 @@
 
 Provisions GCP infrastructure for **The Syndicate** as reproducible Infrastructure as Code.
 
+**Policy:** All durable GCP infrastructure (Cloud SQL, Cloud Run service shell, Secret Manager, IAM, Workload Identity Federation, **Cloud Scheduler**, and related APIs) must be defined in this directory — not created with one-off `gcloud` commands. Application **releases** (Docker image, migrations, runtime env vars for API keys) stay in [`.github/workflows/deploy.yml`](../../.github/workflows/deploy.yml).
+
 ## What this creates
 
 | Resource | Purpose |
 |----------|---------|
-| Enabled GCP APIs | Cloud Run, Cloud SQL, Artifact Registry, Secret Manager, IAM, WIF |
+| Enabled GCP APIs | Cloud Run, Cloud SQL, Artifact Registry, Secret Manager, Cloud Scheduler, IAM, WIF |
 | Cloud SQL (PostgreSQL 16) | Application database |
 | Artifact Registry | Docker image storage |
-| Secret Manager | `DATABASE_URL` and `AUTH_SECRET` (auto-generated) |
+| Secret Manager | `DATABASE_URL`, `AUTH_SECRET`, `CRON_SECRET` (auto-generated unless supplied) |
 | Cloud Run service | Web + API (placeholder image until app deploy) |
+| Cloud Scheduler | `sync-matches` (every 5 min) and `warm-odds-cache` (every 6 h, optional) |
 | Service accounts | Runtime SA + GitHub deploy SA |
 | Workload Identity Federation | Passwordless GitHub Actions → GCP auth |
 
@@ -83,6 +86,7 @@ Set these as **GitHub repository secrets**:
 | `GCP_WORKLOAD_IDENTITY_PROVIDER` | `terraform output workload_identity_provider` |
 | `CLOUD_SQL_CONNECTION_NAME` | `terraform output cloud_sql_connection_name` |
 | `DATABASE_URL` | `terraform output -json github_actions_secrets` (migration step) |
+| `CRON_SECRET` | (Optional) Existing cron bearer token — pass on first apply so Terraform stores it in Secret Manager without rotating. Omit to auto-generate. |
 
 Set these as **GitHub repository variables**:
 
@@ -122,4 +126,17 @@ terraform destroy -var-file=environments/prod.tfvars
 
 ## Drift note
 
-Cloud Run container **images** are managed by `deploy.yml`. Terraform ignores image changes via `lifecycle.ignore_changes` so infra and app deploys don't fight each other.
+Cloud Run container **images** and app-only env vars (API keys, `ADMIN_EMAILS`, etc.) are managed by `deploy.yml`. Terraform ignores image changes via `lifecycle.ignore_changes` so infra and app deploys don't fight each other.
+
+### Importing an existing Scheduler job
+
+If you previously created `sync-matches` manually, import it before apply so Terraform adopts it instead of failing on name collision:
+
+```bash
+terraform import \
+  -var-file=environments/prod.tfvars \
+  google_cloud_scheduler_job.sync_matches \
+  "projects/YOUR_PROJECT_ID/locations/europe-west2/jobs/sync-matches"
+```
+
+Set `cron_secret` in `prod.tfvars` (or GitHub secret `CRON_SECRET` for CI) to the value already used by the job and Cloud Run.

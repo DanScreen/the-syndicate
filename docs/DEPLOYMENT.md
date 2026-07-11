@@ -43,11 +43,13 @@ flowchart LR
 
 ## Infrastructure as Code (Terraform)
 
-GCP resources are defined in [`infra/terraform/`](../infra/terraform/) and are reproducible across environments.
+**All GCP infrastructure is defined in [`infra/terraform/`](../infra/terraform/).** Do not provision Cloud SQL, Scheduler jobs, service accounts, or other durable resources with ad-hoc `gcloud` commands — add or change Terraform instead, then apply via CI or locally.
+
+GCP resources are reproducible across environments.
 
 | Resource | Managed by |
 |----------|------------|
-| Cloud SQL, Artifact Registry, Secret Manager, IAM, WIF | **Terraform** |
+| Cloud SQL, Artifact Registry, Secret Manager, IAM, WIF, **Cloud Scheduler** | **Terraform** |
 | Docker image build + Cloud Run revision updates | **GitHub Actions** (`deploy.yml`) |
 | Terraform plan/apply on `infra/` changes | **GitHub Actions** (`terraform.yml`) |
 
@@ -65,13 +67,14 @@ See [infra/terraform/README.md](../infra/terraform/README.md) for bootstrap, fir
 
 These are created automatically by `infra/terraform/`:
 
-1. **GCP APIs** — Cloud Run, Cloud SQL, Artifact Registry, Secret Manager, IAM, WIF
+1. **GCP APIs** — Cloud Run, Cloud SQL, Artifact Registry, Secret Manager, Cloud Scheduler, IAM, WIF
 2. **Cloud SQL** — PostgreSQL 16 instance, database `the_syndicate`, app user
 3. **Artifact Registry** — Docker repository (`the-syndicate`)
-4. **Secret Manager** — `DATABASE_URL` and `AUTH_SECRET` (auto-generated)
+4. **Secret Manager** — `DATABASE_URL`, `AUTH_SECRET`, and `CRON_SECRET` (auto-generated unless supplied)
 5. **Cloud Run** — `the-syndicate-web` service (placeholder image until app deploy)
-6. **Service accounts** — Cloud Run runtime SA + GitHub deploy SA
-7. **Workload Identity Federation** — passwordless GitHub Actions auth
+6. **Cloud Scheduler** — `sync-matches` (every 5 min UTC) and `warm-odds-cache` (every 6 h UTC, optional)
+7. **Service accounts** — Cloud Run runtime SA + GitHub deploy SA
+8. **Workload Identity Federation** — passwordless GitHub Actions auth
 
 ### Manual steps no longer required
 
@@ -97,24 +100,32 @@ gcloud run deploy the-syndicate-web \
 
 ## Match results sync (Cloud Scheduler)
 
-Auto-settle reads from the `Match` table. Populate it on a schedule:
+Auto-settle reads from the `Match` table. Populate it on a schedule.
 
-1. Create `CRON_SECRET` in Secret Manager (long random string).
-2. Add `CRON_SECRET` to GitHub secrets and Cloud Run deploy (`deploy.yml`).
-3. Create a Cloud Scheduler job (every 5 minutes):
+**Managed by Terraform** ([`infra/terraform/scheduler.tf`](../infra/terraform/scheduler.tf)):
 
-```bash
-gcloud scheduler jobs create http sync-matches \
-  --location=europe-west2 \
-  --schedule="*/5 * * * *" \
-  --uri="https://www.the-syndicate.uk/api/internal/sync-matches" \
-  --http-method=POST \
-  --headers="Authorization=Bearer YOUR_CRON_SECRET"
-```
+| Job | Schedule (UTC) | Endpoint |
+|-----|----------------|----------|
+| `sync-matches` | `*/5 * * * *` | `POST /api/internal/sync-matches` |
+| `warm-odds-cache` | `0 */6 * * *` | `POST /api/internal/warm-odds-cache` |
 
-Production job: `sync-matches` in `europe-west2`, schedule `*/5 * * * *` (UTC).
+Both jobs send `Authorization: Bearer` with the `CRON_SECRET` value from Secret Manager (created by Terraform). Override schedules or `app_base_url` via Terraform variables; see [infra/terraform/README.md](../infra/terraform/README.md).
 
-Requires `FOOTBALL_DATA_API_KEY` on Cloud Run. Response includes `sync` and `autoSettle` results.
+Requires `FOOTBALL_DATA_API_KEY` on Cloud Run (via `deploy.yml`). Response includes `sync` and `autoSettle` results.
+
+If you previously created `sync-matches` manually, **import** it into Terraform state before apply (see Terraform README).
+
+## Odds cache warm (Cloud Scheduler)
+
+Fixture and extended odds are stored in PostgreSQL (`OddsBulkSnapshot`, `OddsEventSnapshot`) so all Cloud Run instances share the same data. The Odds API is called by cron — not on every user pick when `ODDS_DB_ONLY=true`.
+
+The **`warm-odds-cache`** job is created by Terraform alongside `sync-matches` (see table above). Optional Cloud Run env vars (set in `deploy.yml`): `ODDS_CACHE_TTL_MS` (snapshot TTL, default 30 min), `ODDS_WARM_CORE_WITHIN_HOURS` (default 72), `ODDS_DB_ONLY=true` (block live API on user requests).
+
+Each run refreshes bulk fixtures per **enabled** competition (3 credits each) and **core** extended markets for fixtures kicking off within `ODDS_WARM_CORE_WITHIN_HOURS` (3 credits × fixture).
+
+**Credit budgeting (World Cup only, every 6h):** ~3 bulk + ~(3 × N upcoming fixtures) per run. Tune schedule (`warm_odds_cache_schedule` in Terraform) and `ODDS_WARM_CORE_WITHIN_HOURS` to stay within your Odds API plan.
+
+Until the first cron run (or with `ODDS_DB_ONLY` unset), user traffic can still call the API directly as a fallback.
 
 ## Email notifications (Resend)
 
@@ -152,7 +163,7 @@ Full behaviour: [specs/platform-admin.md](./specs/platform-admin.md).
 | `GCP_SERVICE_ACCOUNT` | Deploy service account email |
 | `CLOUD_SQL_CONNECTION_NAME` | `terraform output cloud_sql_connection_name` |
 | `DATABASE_URL` | `terraform output -json github_actions_secrets` (for migration step) |
-| `CRON_SECRET` | Long random string for `/api/internal/sync-matches` |
+| `CRON_SECRET` | (Optional) Existing cron bearer — pass to Terraform on first apply to avoid rotation; stored in Secret Manager |
 | `RESEND_API_KEY` | (Optional) Resend API key for email notifications |
 | `TF_STATE_BUCKET` | GCS bucket for Terraform remote state |
 

@@ -1,9 +1,14 @@
 import type { Fixture, Market } from "@the-syndicate/shared";
 import { filterUpcomingFixtures, getCompetitionById } from "@the-syndicate/shared";
-import { isOddsApiConfigured, isProductionRuntime } from "./config";
+import { isOddsApiConfigured, isProductionRuntime, oddsDbOnly } from "./config";
 import { getMockFixtures } from "./mock-provider";
-import { fetchExtendedMarkets } from "./event-markets";
-import { fetchOddsApiFixtures } from "./the-odds-api";
+import {
+  readBulkFixtures,
+  readEventMarkets,
+  refreshBulkFixturesFromApi,
+  refreshEventMarketsFromApi,
+} from "./odds-store";
+import { tierForMarketType, type MarketTierId } from "./market-tiers";
 
 export type OddsSource = "live" | "mock";
 
@@ -19,8 +24,19 @@ export async function getFixtures(
 
   if (oddsConfigured) {
     try {
-      const fixtures = await fetchOddsApiFixtures(competition.oddsApiSport, competition.name);
-      return { fixtures, source: "live", oddsConfigured: true };
+      let snapshot = await readBulkFixtures(competitionId);
+      if (!snapshot && !oddsDbOnly()) {
+        const fixtures = await refreshBulkFixturesFromApi(competitionId);
+        return { fixtures, source: "live", oddsConfigured: true };
+      }
+      if (snapshot) {
+        return {
+          fixtures: filterUpcomingFixtures(snapshot.fixtures),
+          source: "live",
+          oddsConfigured: true,
+        };
+      }
+      return { fixtures: [], source: "live", oddsConfigured: true };
     } catch (err) {
       console.error("[odds] live fetch failed:", err);
       return { fixtures: [], source: "live", oddsConfigured: true };
@@ -48,27 +64,45 @@ export async function findFixture(
   return fixtures.find((f) => f.id === fixtureId);
 }
 
-export async function getFixtureMarkets(
+async function loadExtendedMarkets(
   fixtureId: string,
-  competitionId: string
+  competitionId: string,
+  tierId: MarketTierId
 ): Promise<Market[]> {
-  const competition = getCompetitionById(competitionId);
+  if (!isOddsApiConfigured()) return [];
+
+  let snapshot = await readEventMarkets(competitionId, fixtureId, tierId);
+  if (!snapshot && !oddsDbOnly()) {
+    return refreshEventMarketsFromApi(competitionId, fixtureId, tierId);
+  }
+  return snapshot?.markets ?? [];
+}
+
+export async function getExtendedMarketsForTier(
+  fixtureId: string,
+  competitionId: string,
+  tierId: MarketTierId
+): Promise<Market[]> {
   const fixture = await findFixture(fixtureId, competitionId);
   if (!fixture) return [];
 
   const baseTypes = new Set(fixture.markets.map((m) => m.type));
+  const extended = await loadExtendedMarkets(fixtureId, competitionId, tierId);
+  return extended.filter((m) => !baseTypes.has(m.type));
+}
 
-  if (isOddsApiConfigured() && competition) {
-    try {
-      const extended = await fetchExtendedMarkets(fixtureId, competition.oddsApiSport);
-      const extra = extended.filter((m) => !baseTypes.has(m.type));
-      return [...fixture.markets, ...extra];
-    } catch (err) {
-      console.error("[odds] extended markets fetch failed:", err);
-    }
-  }
+export async function getFixtureMarkets(
+  fixtureId: string,
+  competitionId: string,
+  tierId: MarketTierId = "core"
+): Promise<Market[]> {
+  const fixture = await findFixture(fixtureId, competitionId);
+  if (!fixture) return [];
 
-  return fixture.markets;
+  const baseTypes = new Set(fixture.markets.map((m) => m.type));
+  const extended = await loadExtendedMarkets(fixtureId, competitionId, tierId);
+  const extra = extended.filter((m) => !baseTypes.has(m.type));
+  return [...fixture.markets, ...extra];
 }
 
 export async function findSelection(
@@ -77,7 +111,8 @@ export async function findSelection(
   selectionId: string,
   competitionId: string
 ) {
-  const markets = await getFixtureMarkets(fixtureId, competitionId);
+  const tierId = tierForMarketType(marketType);
+  const markets = await getFixtureMarkets(fixtureId, competitionId, tierId);
   const fixture = await findFixture(fixtureId, competitionId);
   if (!fixture) return null;
 

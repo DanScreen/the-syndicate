@@ -29,5 +29,4 @@ export const MARKET_TYPES = [
   "over_under_25",
   "over_under_35",
   "double_chance",
-  "draw_no_bet",
 ] as const;

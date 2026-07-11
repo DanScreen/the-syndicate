@@ -139,3 +139,28 @@ model CompetitionSetting {
   enabled       Boolean  @default(false)
   updatedAt     DateTime @updatedAt
 }
+
+/// Cached bulk fixture list (h2h, totals, spreads) per competition — refreshed by cron.
+model OddsBulkSnapshot {
+  competitionId String   @id
+  sport         String
+  regions       String
+  fixtures      Json
+  fetchedAt     DateTime @default(now())
+  expiresAt     DateTime
+
+  @@index([expiresAt])
+}
+
+/// Cached per-event extended markets per tier — refreshed by cron.
+model OddsEventSnapshot {
+  competitionId String
+  fixtureId     String
+  tierId        String
+  markets       Json
+  fetchedAt     DateTime @default(now())
+  expiresAt     DateTime
+
+  @@id([competitionId, fixtureId, tierId])
+  @@index([expiresAt])
+}

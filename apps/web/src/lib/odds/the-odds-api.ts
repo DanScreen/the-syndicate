@@ -4,7 +4,7 @@ import {
   formatCommenceTimeFrom,
   ODDS_QUOTA_BLOCK_CACHE_KEY,
   ODDS_QUOTA_BLOCK_TTL_MS,
-  oddsCacheTtlMs,
+  oddsApiRegions,
 } from "./config";
 import type { OddsApiBookmaker, OddsApiEvent } from "./api-types";
 import { isRetailBookmaker } from "./bookmakers";
@@ -233,23 +233,16 @@ export function mapOddsEventToFixture(event: OddsApiEvent): Fixture | null {
   };
 }
 
-export async function fetchOddsApiFixtures(
+export async function fetchOddsApiFixturesLive(
   sport: string = process.env.ODDS_API_SPORT ?? DEFAULT_ODDS_SPORT,
   competitionName?: string
 ): Promise<Fixture[]> {
-  const regions = process.env.ODDS_API_REGIONS ?? "uk";
-  const cacheTtlMs = oddsCacheTtlMs();
-  const cacheKey = oddsApiCacheKey(sport, regions);
-
-  const cached = getCached<Fixture[]>(cacheKey);
-  if (cached) return cached;
-
   try {
     const { events } = await fetchOddsApiEventsRaw(sport, {
       commenceTimeFrom: formatCommenceTimeFrom(),
     });
 
-    const fixtures = filterUpcomingFixtures(
+    return filterUpcomingFixtures(
       events
         .map((event) => {
           const fixture = mapOddsEventToFixture(event);
@@ -258,12 +251,18 @@ export async function fetchOddsApiFixtures(
         })
         .filter((f): f is Fixture => f !== null)
     ).sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime());
-
-    return setCached(cacheKey, fixtures, cacheTtlMs);
   } catch (err) {
     markQuotaExhausted(err);
     throw err;
   }
+}
+
+/** @deprecated Use DB snapshots via odds-store; live fetch for cron/admin only. */
+export async function fetchOddsApiFixtures(
+  sport: string = process.env.ODDS_API_SPORT ?? DEFAULT_ODDS_SPORT,
+  competitionName?: string
+): Promise<Fixture[]> {
+  return fetchOddsApiFixturesLive(sport, competitionName);
 }
 
 export function oddsApiCacheKey(sport: string, regions: string): string {
@@ -281,7 +280,7 @@ export async function fetchOddsApiEventsRaw(
     throw new Error("ODDS_API_KEY is not configured");
   }
 
-  const regions = process.env.ODDS_API_REGIONS ?? "uk";
+  const regions = oddsApiRegions();
   const url = new URL(`${API_BASE}/sports/${sport}/odds`);
   url.searchParams.set("apiKey", apiKey);
   url.searchParams.set("regions", regions);
@@ -305,26 +304,22 @@ export async function fetchOddsApiEventsRaw(
   return { events, status: res.status, headers: res.headers };
 }
 
-export async function fetchOddsApiEvent(
+export async function fetchOddsApiEventLive(
   eventId: string,
-  sport: string = process.env.ODDS_API_SPORT ?? DEFAULT_ODDS_SPORT
+  sport: string = process.env.ODDS_API_SPORT ?? DEFAULT_ODDS_SPORT,
+  options: { markets: string; regions: string }
 ): Promise<OddsApiEvent | null> {
   assertQuotaAvailable();
 
   const apiKey = process.env.ODDS_API_KEY;
   if (!apiKey) return null;
 
-  const regions = process.env.ODDS_API_REGIONS ?? "uk";
-  const cacheTtlMs = oddsCacheTtlMs();
-  const cacheKey = `odds-api-event:v3:${sport}:${regions}:${eventId}`;
-
-  const cached = getCached<OddsApiEvent>(cacheKey);
-  if (cached) return cached;
+  const { markets, regions } = options;
 
   const url = new URL(`${API_BASE}/sports/${sport}/events/${eventId}/odds`);
   url.searchParams.set("apiKey", apiKey);
   url.searchParams.set("regions", regions);
-  url.searchParams.set("markets", "btts,double_chance,draw_no_bet");
+  url.searchParams.set("markets", markets);
   url.searchParams.set("oddsFormat", "decimal");
   url.searchParams.set("includeLinks", "true");
 
@@ -339,6 +334,14 @@ export async function fetchOddsApiEvent(
   const raw = (await res.json()) as OddsApiEvent | OddsApiEvent[];
   recordOddsApiQuota(res.headers);
   const event = Array.isArray(raw) ? (raw[0] ?? null) : raw;
-  if (event?.id) setCached(cacheKey, event, cacheTtlMs);
   return event?.id ? event : null;
+}
+
+/** @deprecated Use DB snapshots via odds-store; live fetch for cron/admin only. */
+export async function fetchOddsApiEvent(
+  eventId: string,
+  sport: string = process.env.ODDS_API_SPORT ?? DEFAULT_ODDS_SPORT,
+  options: { markets: string; regions: string }
+): Promise<OddsApiEvent | null> {
+  return fetchOddsApiEventLive(eventId, sport, options);
 }

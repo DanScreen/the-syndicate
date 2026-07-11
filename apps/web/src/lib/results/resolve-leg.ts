@@ -1,8 +1,5 @@
 import type { LegOutcome } from "@the-syndicate/shared";
-import {
-  asianHandicapLineFromType,
-  overUnderLineFromType,
-} from "@/lib/odds/market-groups";
+import { overUnderLineFromType, asianHandicapLineFromType } from "@/lib/odds/market-groups";
 
 export type MatchResult = {
   homeGoals: number;
@@ -95,6 +92,16 @@ function drawNoBetOutcome(
   return won ? "won" : "lost";
 }
 
+function correctScoreOutcome(
+  selectionId: string,
+  homeGoals: number,
+  awayGoals: number
+): LegOutcome {
+  const [home, away] = selectionId.split("_").map(Number);
+  if (!Number.isFinite(home) || !Number.isFinite(away)) return "lost";
+  return home === homeGoals && away === awayGoals ? "won" : "lost";
+}
+
 export function resolveLegOutcome(leg: LegForResolution, result: MatchResult): LegOutcome | null {
   if (VOID_STATUSES.has(result.status)) return "void";
   if (result.status !== "FINISHED") return null;
@@ -107,13 +114,15 @@ export function resolveLegOutcome(leg: LegForResolution, result: MatchResult): L
       return matchWinnerOutcome(leg.selectionId, homeGoals, awayGoals);
     case "both_teams_score":
       return bttsOutcome(leg.selectionId, homeGoals, awayGoals);
+    case "correct_score":
+      return correctScoreOutcome(leg.selectionId, homeGoals, awayGoals);
     case "double_chance":
       return doubleChanceOutcome(leg.selectionId, homeGoals, awayGoals);
     case "draw_no_bet":
       return drawNoBetOutcome(leg.selectionId, homeGoals, awayGoals);
     default: {
       const ouLine = overUnderLineFromType(leg.marketType);
-      if (ouLine !== null) {
+      if (ouLine !== null && leg.marketType.startsWith("over_under_")) {
         return overUnderOutcome(leg.selectionId, totalGoals, ouLine);
       }
 

@@ -67,3 +67,46 @@ variable "cloud_run_max_instances" {
   type        = number
   default     = 3
 }
+
+variable "app_base_url" {
+  description = "Public app URL for Cloud Scheduler HTTP targets (defaults to nextauth_url)"
+  type        = string
+  default     = ""
+}
+
+variable "cron_secret" {
+  description = "Bearer token for POST /api/internal/* cron routes. Leave empty to auto-generate and store in Secret Manager."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "sync_matches_schedule" {
+  description = "Cron schedule for match results sync (UTC)"
+  type        = string
+  default     = "*/5 * * * *"
+}
+
+variable "warm_odds_cache_schedule" {
+  description = "Cron schedule for odds DB warm (UTC)"
+  type        = string
+  default     = "0 */6 * * *"
+}
+
+variable "enable_warm_odds_cache_job" {
+  description = "Create Cloud Scheduler job for POST /api/internal/warm-odds-cache"
+  type        = bool
+  default     = true
+}
+
+variable "sync_matches_job_name" {
+  description = "Cloud Scheduler job name for match sync"
+  type        = string
+  default     = "sync-matches"
+}
+
+variable "warm_odds_cache_job_name" {
+  description = "Cloud Scheduler job name for odds DB warm"
+  type        = string
+  default     = "warm-odds-cache"
+}

@@ -1,6 +1,12 @@
-import { getFixtureMarkets } from "@/lib/odds/provider";
 import { requireSession } from "@/lib/api-auth";
 import { isCompetitionEnabled } from "@/lib/competitions/settings";
+import {
+  estimateTierCredits,
+  getMarketTier,
+  isMarketTierId,
+  MARKET_TIERS,
+} from "@/lib/odds/market-tiers";
+import { findFixture, getExtendedMarketsForTier } from "@/lib/odds/provider";
 import { isValidCompetitionId } from "@the-syndicate/shared";
 import { NextResponse } from "next/server";
 
@@ -10,7 +16,10 @@ export async function GET(request: Request, { params }: Params) {
   const { error } = await requireSession();
   if (error) return error;
 
-  const competition = new URL(request.url).searchParams.get("competition");
+  const url = new URL(request.url);
+  const competition = url.searchParams.get("competition");
+  const tierParam = url.searchParams.get("tier") ?? "core";
+
   if (!competition) {
     return NextResponse.json({ error: "competition query parameter is required" }, { status: 400 });
   }
@@ -23,12 +32,28 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Competition is not available" }, { status: 403 });
   }
 
-  const { fixtureId } = await params;
-  const markets = await getFixtureMarkets(fixtureId, competition);
+  if (!isMarketTierId(tierParam)) {
+    return NextResponse.json({ error: "Invalid tier" }, { status: 400 });
+  }
 
-  if (markets.length === 0) {
+  const { fixtureId } = await params;
+  const fixture = await findFixture(fixtureId, competition);
+  if (!fixture) {
     return NextResponse.json({ error: "Fixture not found" }, { status: 404 });
   }
 
-  return NextResponse.json({ markets });
+  const markets = await getExtendedMarketsForTier(fixtureId, competition, tierParam);
+  const tier = getMarketTier(tierParam);
+
+  return NextResponse.json({
+    markets,
+    tier: tierParam,
+    tierCredits: estimateTierCredits(tier),
+    tiers: MARKET_TIERS.map((t) => ({
+      id: t.id,
+      label: t.label,
+      description: t.description,
+      credits: estimateTierCredits(t),
+    })),
+  });
 }

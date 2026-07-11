@@ -214,28 +214,6 @@ const WORLD_CUP_FIXTURES: Fixture[] = [
             },
           ],
         },
-        {
-          type: "draw_no_bet",
-          label: "Draw No Bet",
-          selections: [
-            {
-              id: "home",
-              label: "Mexico",
-              odds: [
-                { bookmakerId: "bet365", bookmakerName: "Bet365", odds: 1.55 },
-                { bookmakerId: "williamhill", bookmakerName: "William Hill", odds: 1.53 },
-              ],
-            },
-            {
-              id: "away",
-              label: "South Korea",
-              odds: [
-                { bookmakerId: "bet365", bookmakerName: "Bet365", odds: 2.35 },
-                { bookmakerId: "unibet_uk", bookmakerName: "Unibet", odds: 2.3 },
-              ],
-            },
-          ],
-        },
       ],
     },
     {

@@ -70,6 +70,8 @@ npm run db:generate
 
 See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for GCP setup.
 
+**Infrastructure:** All durable GCP resources (including Cloud Scheduler) live in [`infra/terraform/`](infra/terraform/) — not manual `gcloud`. App images and releases use `deploy.yml`.
+
 ## Conventions
 
 - API routes: `apps/web/src/app/api/`

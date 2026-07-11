@@ -10,4 +10,6 @@ github_repository = "your-github-username/the-syndicate"
 # cloud_run_service_name    = "the-syndicate-web"
 # artifact_registry_repo_id = "the-syndicate"
 # nextauth_url              = "https://the-syndicate.example.com"
+# app_base_url              = "https://the-syndicate.example.com"  # Scheduler HTTP targets (defaults to nextauth_url)
+# cron_secret               = "existing-bearer-token"              # omit to auto-generate in Secret Manager
 # cloud_sql_tier            = "db-f1-micro"

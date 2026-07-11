@@ -77,7 +77,7 @@ Push notifications, chat/feed, stake pooling, social sign-in, more sports.
 
 **Variables (GitHub):** `EMAIL_FROM` (optional).
 
-**Secrets (GitHub):** `ODDS_API_KEY`, `FOOTBALL_DATA_API_KEY`, `DATABASE_URL`, `AUTH_SECRET`, `CRON_SECRET`, `RESEND_API_KEY` (optional), `ADMIN_EMAILS` (optional, comma-separated developer emails), GCP deploy secrets.
+**Secrets (GitHub):** `ODDS_API_KEY`, `FOOTBALL_DATA_API_KEY`, `DATABASE_URL`, `AUTH_SECRET`, `CRON_SECRET` (optional — seed Terraform / Secret Manager), `RESEND_API_KEY` (optional), `ADMIN_EMAILS` (optional, comma-separated developer emails), GCP deploy secrets.
 
 **Local odds:** `ODDS_API_KEY` in `apps/web/.env.local` — omit for mock fixtures.
 

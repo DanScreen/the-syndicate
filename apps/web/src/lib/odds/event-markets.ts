@@ -1,151 +1,110 @@
-import type { BookmakerQuote, Market, MarketSelection } from "@the-syndicate/shared";
+import type { Market } from "@the-syndicate/shared";
 import type { OddsApiBookmaker, OddsApiEvent } from "./api-types";
 import { isRetailBookmaker } from "./bookmakers";
-import { fetchOddsApiEvent } from "./the-odds-api";
-import { addQuote, resolveDeeplink } from "./quotes";
+import {
+  buildAlternateSpreadsMarkets,
+  buildAlternateTeamTotalsMarkets,
+  buildAlternateTotalsMarkets,
+  buildCorrectScoreMarket,
+  buildDoubleChanceMarket,
+  buildH2hStyleMarket,
+  buildYesNoMarket,
+} from "./market-builders";
+import { getMarketTier, type MarketTierId } from "./market-tiers";
 
 function retailBookmakers(bookmakers: OddsApiBookmaker[]): OddsApiBookmaker[] {
   return bookmakers.filter((b) => isRetailBookmaker(b.key));
 }
 
-function buildBttsMarket(bookmakers: OddsApiBookmaker[]): Market | null {
-  const quoteMap = new Map<string, BookmakerQuote[]>();
-
-  for (const bookmaker of bookmakers) {
-    const market = bookmaker.markets.find((m) => m.key === "btts");
-    if (!market) continue;
-
-    for (const outcome of market.outcomes) {
-      const id = outcome.name.toLowerCase() === "yes" ? "yes" : "no";
-      const link = resolveDeeplink(outcome, market, bookmaker.link, bookmaker.key);
-      addQuote(quoteMap, id, bookmaker.key, bookmaker.title, outcome.price, link);
-    }
-  }
-
-  if (quoteMap.size === 0) return null;
-
-  const selections: MarketSelection[] = [
-    { id: "yes", label: "Yes", odds: quoteMap.get("yes") ?? [] },
-    { id: "no", label: "No", odds: quoteMap.get("no") ?? [] },
-  ].filter((s) => s.odds.length > 0);
-
-  if (selections.length === 0) return null;
-
-  return { type: "both_teams_score", label: "Both Teams to Score", selections };
-}
-
-function doubleChanceSelectionId(
-  outcomeName: string,
-  homeTeam: string,
-  awayTeam: string
-): string | null {
-  const lower = outcomeName.toLowerCase();
-  const home = homeTeam.toLowerCase();
-  const away = awayTeam.toLowerCase();
-
-  const hasHome = lower.includes(home);
-  const hasAway = lower.includes(away);
-  const hasDraw = lower.includes("draw");
-
-  if (hasHome && hasDraw) return "home_draw";
-  if (hasAway && hasDraw) return "draw_away";
-  if (hasHome && hasAway) return "home_away";
-  return null;
-}
-
-function buildDoubleChanceMarket(
+export function mapEventToExtendedMarkets(
   event: OddsApiEvent,
-  bookmakers: OddsApiBookmaker[]
-): Market | null {
-  const quoteMap = new Map<string, BookmakerQuote[]>();
-
-  for (const bookmaker of bookmakers) {
-    const market = bookmaker.markets.find((m) => m.key === "double_chance");
-    if (!market) continue;
-
-    for (const outcome of market.outcomes) {
-      const selectionId = doubleChanceSelectionId(
-        outcome.name,
-        event.home_team,
-        event.away_team
-      );
-      if (!selectionId) continue;
-      const link = resolveDeeplink(outcome, market, bookmaker.link, bookmaker.key);
-      addQuote(quoteMap, selectionId, bookmaker.key, bookmaker.title, outcome.price, link);
-    }
-  }
-
-  if (quoteMap.size === 0) return null;
-
-  const selections: MarketSelection[] = [
-    {
-      id: "home_draw",
-      label: `${event.home_team} or Draw`,
-      odds: quoteMap.get("home_draw") ?? [],
-    },
-    {
-      id: "draw_away",
-      label: `Draw or ${event.away_team}`,
-      odds: quoteMap.get("draw_away") ?? [],
-    },
-    {
-      id: "home_away",
-      label: `${event.home_team} or ${event.away_team}`,
-      odds: quoteMap.get("home_away") ?? [],
-    },
-  ].filter((s) => s.odds.length > 0);
-
-  if (selections.length === 0) return null;
-
-  return { type: "double_chance", label: "Double Chance", selections };
-}
-
-function buildDrawNoBetMarket(
-  event: OddsApiEvent,
-  bookmakers: OddsApiBookmaker[]
-): Market | null {
-  const quoteMap = new Map<string, BookmakerQuote[]>();
-
-  for (const bookmaker of bookmakers) {
-    const market = bookmaker.markets.find((m) => m.key === "draw_no_bet");
-    if (!market) continue;
-
-    for (const outcome of market.outcomes) {
-      let selectionId: string | null = null;
-      if (outcome.name === event.home_team) selectionId = "home";
-      if (outcome.name === event.away_team) selectionId = "away";
-      if (!selectionId) continue;
-      const link = resolveDeeplink(outcome, market, bookmaker.link, bookmaker.key);
-      addQuote(quoteMap, selectionId, bookmaker.key, bookmaker.title, outcome.price, link);
-    }
-  }
-
-  if (quoteMap.size === 0) return null;
-
-  const selections: MarketSelection[] = [
-    { id: "home", label: event.home_team, odds: quoteMap.get("home") ?? [] },
-    { id: "away", label: event.away_team, odds: quoteMap.get("away") ?? [] },
-  ].filter((s) => s.odds.length > 0);
-
-  if (selections.length === 0) return null;
-
-  return { type: "draw_no_bet", label: "Draw No Bet", selections };
-}
-
-function mapEventToExtendedMarkets(event: OddsApiEvent): Market[] {
+  tierId: MarketTierId
+): Market[] {
+  const tier = getMarketTier(tierId);
+  const keys = new Set(tier.marketKeys);
   const bookmakers = retailBookmakers(event.bookmakers);
-  return [
-    buildBttsMarket(bookmakers),
-    buildDoubleChanceMarket(event, bookmakers),
-    buildDrawNoBetMarket(event, bookmakers),
-  ].filter((m): m is Market => m !== null);
-}
 
-export async function fetchExtendedMarkets(
-  eventId: string,
-  sport: string
-): Promise<Market[]> {
-  const event = await fetchOddsApiEvent(eventId, sport);
-  if (!event) return [];
-  return mapEventToExtendedMarkets(event);
+  const markets: (Market | Market[] | null)[] = [];
+
+  if (keys.has("btts")) {
+    markets.push(
+      buildYesNoMarket(bookmakers, "btts", "both_teams_score", "Both Teams to Score")
+    );
+  }
+  if (keys.has("double_chance")) {
+    markets.push(
+      buildDoubleChanceMarket(event, bookmakers, "double_chance", "double_chance", "Double Chance")
+    );
+  }
+  if (keys.has("correct_score")) {
+    markets.push(
+      buildCorrectScoreMarket(bookmakers, "correct_score", "correct_score", "Correct Score")
+    );
+  }
+  if (keys.has("corners_1x2")) {
+    markets.push(
+      buildH2hStyleMarket(
+        event,
+        bookmakers,
+        "corners_1x2",
+        "corners_1x2",
+        "Corners 1X2",
+        true
+      )
+    );
+  }
+  if (keys.has("to_qualify")) {
+    markets.push(
+      buildH2hStyleMarket(event, bookmakers, "to_qualify", "to_qualify", "To Qualify", false)
+    );
+  }
+  if (keys.has("alternate_spreads_corners")) {
+    markets.push(
+      ...buildAlternateSpreadsMarkets(
+        event,
+        bookmakers,
+        "alternate_spreads_corners",
+        "corners",
+        "Corners Handicap"
+      )
+    );
+  }
+  if (keys.has("alternate_totals_corners")) {
+    markets.push(
+      ...buildAlternateTotalsMarkets(
+        bookmakers,
+        "alternate_totals_corners",
+        "corners",
+        "Total Corners"
+      )
+    );
+  }
+  if (keys.has("alternate_spreads_cards")) {
+    markets.push(
+      ...buildAlternateSpreadsMarkets(
+        event,
+        bookmakers,
+        "alternate_spreads_cards",
+        "cards",
+        "Cards Handicap"
+      )
+    );
+  }
+  if (keys.has("alternate_team_totals_corners")) {
+    markets.push(
+      ...buildAlternateTeamTotalsMarkets(
+        bookmakers,
+        "alternate_team_totals_corners",
+        "team_corners",
+        "Team Corners"
+      )
+    );
+  }
+  if (keys.has("alternate_totals_cards")) {
+    markets.push(
+      ...buildAlternateTotalsMarkets(bookmakers, "alternate_totals_cards", "cards", "Total Cards")
+    );
+  }
+
+  return markets.flatMap((m) => (Array.isArray(m) ? m : m ? [m] : []));
 }

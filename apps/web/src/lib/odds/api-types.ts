@@ -3,6 +3,7 @@ export type OddsApiOutcome = {
   price: number;
   point?: number;
   link?: string | null;
+  description?: string | null;
 };
 
 export type OddsApiMarket = {

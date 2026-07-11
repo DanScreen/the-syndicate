@@ -29,3 +29,18 @@ export function formatCommenceTimeFrom(date: Date = new Date()): string {
 export function isProductionRuntime(): boolean {
   return process.env.NODE_ENV === "production";
 }
+
+/** When true, user-facing routes read odds from DB only; The Odds API is called by cron/admin. */
+export function oddsDbOnly(): boolean {
+  return process.env.ODDS_DB_ONLY === "true";
+}
+
+/** Prefetch core extended markets for fixtures kicking off within this many hours (cron). */
+export function oddsWarmCoreWithinHours(): number {
+  const configured = Number(process.env.ODDS_WARM_CORE_WITHIN_HOURS);
+  return Number.isFinite(configured) && configured > 0 ? configured : 72;
+}
+
+export function oddsApiRegions(): string {
+  return process.env.ODDS_API_REGIONS ?? "uk";
+}

@@ -42,6 +42,8 @@ jobs:
           terraform_version: 1.9.8
 
       - name: Write tfvars
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
           cat > environments/prod.tfvars <<EOF
           project_id        = "${{ secrets.GCP_PROJECT_ID }}"
@@ -49,7 +51,11 @@ jobs:
           environment       = "prod"
           github_repository = "${{ github.repository }}"
           nextauth_url      = "${{ vars.NEXTAUTH_URL }}"
+          app_base_url      = "${{ vars.NEXTAUTH_URL }}"
           EOF
+          if [ -n "$CRON_SECRET" ]; then
+            printf 'cron_secret = "%s"\n' "$CRON_SECRET" >> environments/prod.tfvars
+          fi
 
       - name: Terraform Init
         run: |

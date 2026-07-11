@@ -6,6 +6,20 @@ import { useEffect, useMemo, useState } from "react";
 import { sortQuotesByBestOdds } from "@/lib/odds/bookmakers";
 import { groupMarkets } from "@/lib/odds/market-groups";
 
+type MarketTierInfo = {
+  id: string;
+  label: string;
+  description: string;
+  credits: number;
+};
+
+function mergeMarkets(bulk: Market[], extended: Market[]): Market[] {
+  const byType = new Map<string, Market>();
+  for (const market of bulk) byType.set(market.type, market);
+  for (const market of extended) byType.set(market.type, market);
+  return [...byType.values()];
+}
+
 type Leg = {
   id: string;
   user: { id: string; name: string };
@@ -130,7 +144,10 @@ export function SubmitLegForm({
   const [loadingFixtures, setLoadingFixtures] = useState(false);
   const [fixtureId, setFixtureId] = useState("");
   const [fixtureMarkets, setFixtureMarkets] = useState<Market[]>([]);
+  const [loadedTiers, setLoadedTiers] = useState<string[]>([]);
+  const [availableTiers, setAvailableTiers] = useState<MarketTierInfo[]>([]);
   const [loadingMarkets, setLoadingMarkets] = useState(false);
+  const [loadingTierId, setLoadingTierId] = useState("");
   const [marketType, setMarketType] = useState("");
   const [selectionId, setSelectionId] = useState("");
   const [loading, setLoading] = useState(false);
@@ -174,13 +191,17 @@ export function SubmitLegForm({
   useEffect(() => {
     if (!fixtureId || !competitionId) {
       setFixtureMarkets([]);
+      setLoadedTiers([]);
+      setAvailableTiers([]);
       return;
     }
 
     setLoadingMarkets(true);
     setMarketsError("");
+    setFixtureMarkets([]);
+    setLoadedTiers([]);
     fetch(
-      `/api/fixtures/${fixtureId}/markets?competition=${encodeURIComponent(competitionId)}`
+      `/api/fixtures/${fixtureId}/markets?competition=${encodeURIComponent(competitionId)}&tier=core`
     )
       .then(async (r) => {
         const d = await r.json();
@@ -190,6 +211,8 @@ export function SubmitLegForm({
           return;
         }
         setFixtureMarkets(d.markets ?? []);
+        setLoadedTiers(["core"]);
+        setAvailableTiers(d.tiers ?? []);
       })
       .catch(() => {
         setFixtureMarkets([]);
@@ -198,8 +221,38 @@ export function SubmitLegForm({
       .finally(() => setLoadingMarkets(false));
   }, [fixtureId, competitionId]);
 
+  async function loadMarketTier(tierId: string) {
+    if (!fixtureId || !competitionId || loadedTiers.includes(tierId)) return;
+
+    setLoadingTierId(tierId);
+    setMarketsError("");
+    try {
+      const res = await fetch(
+        `/api/fixtures/${fixtureId}/markets?competition=${encodeURIComponent(competitionId)}&tier=${encodeURIComponent(tierId)}`
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        setMarketsError(data.error ?? "Failed to load markets");
+        return;
+      }
+      setFixtureMarkets((prev) => {
+        const byType = new Map(prev.map((m) => [m.type, m]));
+        for (const market of data.markets ?? []) byType.set(market.type, market);
+        return [...byType.values()];
+      });
+      setLoadedTiers((prev) => [...prev, tierId]);
+    } catch {
+      setMarketsError("Failed to load markets");
+    } finally {
+      setLoadingTierId("");
+    }
+  }
+
   const fixture = fixtures.find((f) => f.id === fixtureId);
-  const allMarkets = fixtureMarkets.length > 0 ? fixtureMarkets : (fixture?.markets ?? []);
+  const allMarkets = useMemo(
+    () => mergeMarkets(fixture?.markets ?? [], fixtureMarkets),
+    [fixture, fixtureMarkets]
+  );
   const marketGroups = useMemo(() => groupMarkets(allMarkets), [allMarkets]);
   const market = allMarkets.find((m) => m.type === marketType);
   const selection = market?.selections.find((s) => s.id === selectionId);
@@ -343,7 +396,7 @@ export function SubmitLegForm({
         <div className="space-y-3">
           <p className="text-xs font-medium uppercase tracking-wide text-muted">3. Pick a market</p>
           {loadingMarkets && (
-            <p className="text-sm text-muted">Loading BTTS, double chance & more...</p>
+            <p className="text-sm text-muted">Loading popular markets…</p>
           )}
           {marketsError && (
             <p className="text-sm text-amber-400">{marketsError}</p>
@@ -372,6 +425,31 @@ export function SubmitLegForm({
               </div>
             </div>
           ))}
+          {!loadingMarkets && availableTiers.some((t) => !loadedTiers.includes(t.id)) && (
+            <div className="space-y-2 border-t border-border pt-3">
+              <p className="text-xs font-medium text-muted">Load more markets</p>
+              <div className="flex flex-wrap gap-2">
+                {availableTiers
+                  .filter((t) => !loadedTiers.includes(t.id))
+                  .map((tier) => (
+                    <button
+                      key={tier.id}
+                      type="button"
+                      disabled={Boolean(loadingTierId)}
+                      onClick={() => void loadMarketTier(tier.id)}
+                      className="rounded-lg border border-dashed border-border px-3 py-2 text-left text-sm hover:border-accent/40 disabled:opacity-50"
+                    >
+                      <p className="font-medium">
+                        {loadingTierId === tier.id ? "Loading…" : tier.label}
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted">
+                        {tier.description} · uses ~{tier.credits} API credits
+                      </p>
+                    </button>
+                  ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

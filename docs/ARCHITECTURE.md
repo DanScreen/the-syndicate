@@ -15,7 +15,7 @@ flowchart TB
   Web --> Odds[lib/odds]
   Web --> Results[lib/results]
   Web --> Stats[lib/stats]
-  Cron[Cloud Scheduler] -->|sync-matches| Web
+  Cron[Cloud Scheduler] -->|sync-matches, warm-odds-cache| Web
   Mobile[apps/mobile] -.-> Web
 ```
 
@@ -98,7 +98,7 @@ Homepage (`/`), about (`/about`). Turf Green tokens + Acca stack logo. Content i
 
 ## Deployment
 
-GCP: Cloud Run + Cloud SQL + Secret Manager. Match sync via Cloud Scheduler → `POST /api/internal/sync-matches`.
+GCP: Cloud Run + Cloud SQL + Secret Manager + **Cloud Scheduler** (all provisioned by Terraform in `infra/terraform/`). Cron jobs call `POST /api/internal/sync-matches` and `POST /api/internal/warm-odds-cache` with Bearer `CRON_SECRET` from Secret Manager.
 
 See [DEPLOYMENT.md](./DEPLOYMENT.md).
 

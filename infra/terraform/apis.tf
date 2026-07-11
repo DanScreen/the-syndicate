@@ -9,6 +9,7 @@ resource "google_project_service" "required" {
     "sts.googleapis.com",
     "compute.googleapis.com",
     "servicenetworking.googleapis.com",
+    "cloudscheduler.googleapis.com",
   ])
 
   project            = var.project_id

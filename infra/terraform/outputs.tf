@@ -58,6 +58,19 @@ output "auth_secret_id" {
   value       = google_secret_manager_secret.auth_secret.secret_id
 }
 
+output "cron_secret_id" {
+  description = "Secret Manager secret ID for CRON_SECRET (internal cron routes)"
+  value       = google_secret_manager_secret.cron_secret.secret_id
+}
+
+output "scheduler_jobs" {
+  description = "Cloud Scheduler job names (UTC)"
+  value = {
+    sync_matches    = google_cloud_scheduler_job.sync_matches.name
+    warm_odds_cache = var.enable_warm_odds_cache_job ? google_cloud_scheduler_job.warm_odds_cache[0].name : null
+  }
+}
+
 output "github_actions_secrets" {
   description = "Values to configure as GitHub Actions secrets after terraform apply"
   sensitive   = true

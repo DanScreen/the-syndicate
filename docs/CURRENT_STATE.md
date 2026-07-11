@@ -34,7 +34,7 @@ Omit `ODDS_API_KEY` for mock fixtures. Add `FOOTBALL_DATA_API_KEY` + `CRON_SECRE
 
 Push to `main` → GitHub Actions (`.github/workflows/deploy.yml`): build → `db:migrate:deploy` → Cloud Run.
 
-Match sync: Cloud Scheduler → `POST /api/internal/sync-matches` with Bearer `CRON_SECRET` (every 5 min UTC). See [DEPLOYMENT.md](./DEPLOYMENT.md).
+Match sync + odds warm: Cloud Scheduler (Terraform) → `POST /api/internal/sync-matches` (every 5 min UTC) and `POST /api/internal/warm-odds-cache` (every 6 h UTC) with Bearer `CRON_SECRET` from Secret Manager. See [DEPLOYMENT.md](./DEPLOYMENT.md).
 
 ### Code map
 
@@ -75,7 +75,7 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 | Always-open rounds (auto-created with group; next opens on settle) | ✅ |
 | Rounds: collecting → locked → settled | ✅ |
 | Live odds ([The Odds API](https://the-odds-api.com/)) + mock fallback | ✅ |
-| Markets: h2h, totals (dynamic lines), spreads*, BTTS, double chance, draw no bet | ✅ |
+| Markets: h2h, totals (dynamic lines), spreads*, BTTS, double chance, correct score, corners/cards† | ✅ |
 | Per-leg competition picker (admin-controlled; World Cup live by default) | ✅ |
 | Leg picker: best odds only per selection | ✅ |
 | Acca lock: best combined bookmaker across all legs | ✅ |
@@ -132,14 +132,14 @@ Fixture list uses The Odds API with `commenceTimeFrom` in `YYYY-MM-DDTHH:MM:SSZ`
 ```
 GET /api/competitions                 → active catalogue (id + name)
 GET /api/fixtures?competition=epl     → bulk markets (h2h, totals, spreads)
-GET /api/fixtures/[id]/markets?competition=epl → lazy: btts, double_chance, draw_no_bet
+GET /api/fixtures/[id]/markets?competition=epl&tier=core → lazy per-event tier (default `core` = 3 credits; optional tiers on demand)
 POST /api/legs                        → best retail quote; stores competitionId slug
 (lock) lockRoundWithAccaPricing()     → re-fetch quotes, rankAccaBookmakers(), store deeplinks on Leg
 ```
 
 At lock, `Leg.betslipUrl` stores the chosen bookmaker's outcome deeplink; `Leg.bookmakerLinks` maps all retail bookmakers → link. **While collecting:** leg picker shows best odds only. **Once locked:** frozen odds per leg + combined acca; betslip **Open** links until first result; no bookmaker comparison panel.
 
-Requires live odds (`ODDS_API_KEY`) — mock fixtures have no deeplinks.
+Requires live odds (`ODDS_API_KEY`) — mock fixtures have no deeplinks. Odds are stored in **PostgreSQL** (`OddsBulkSnapshot`, `OddsEventSnapshot`) and refreshed by cron (`POST /api/internal/warm-odds-cache`). User picks read the DB; set `ODDS_DB_ONLY=true` in production to block live API calls from user traffic.
 
 ### Acca bookmaker rankings
 
@@ -154,8 +154,10 @@ Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_
 | `apps/web/src/lib/odds/provider.ts` | Live vs mock orchestration (per competition) |
 | `packages/shared/src/competitions.ts` | Competition catalogue |
 | `apps/web/src/lib/odds/the-odds-api.ts` | Bulk + per-event API |
-| `apps/web/src/lib/odds/event-markets.ts` | BTTS, double chance, DNB |
-| `apps/web/src/lib/odds/betslip-links.ts` | Deeplink builder + bookmaker hub fallbacks |
+| `apps/web/src/lib/odds/event-markets.ts` | Per-event markets (BTTS, props, corners, etc.) |
+| `apps/web/src/lib/odds/odds-store.ts` | PostgreSQL odds snapshots (bulk + per-event tiers) |
+| `apps/web/src/lib/odds/warm-cache.ts` | Cron odds refresh logic |
+| `apps/web/src/lib/odds/market-builders.ts` | Odds API → app market mappers |
 | `apps/web/src/lib/odds/quotes.ts` | Quote helpers + deeplink resolution |
 | `apps/web/src/lib/odds/acca.ts` | Acca bookmaker ranking + best combined |
 | `apps/web/src/lib/odds/lock-round.ts` | Lock + reprice + store deeplinks |
@@ -201,9 +203,15 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 | Manual | `POST /api/rounds/[id]/settle` | Owner marks won/lost/void per leg |
 | Auto (owner) | `POST /api/rounds/[id]/auto-settle` | Reads synced `Match` rows |
 | Auto (hands-off) | Via `POST /api/internal/sync-matches` | Cron sync → auto-settles all ready locked rounds; resolved legs update before full acca settles |
-| Sync | `POST /api/internal/sync-matches` | Cron: football-data.org → `Match` table |
 
 Email notifications (Resend) fire on lock and settle when `RESEND_API_KEY` + `EMAIL_FROM` are set. Deduped via `Round.lockedNotificationSentAt` / `settledNotificationSentAt`.
+
+### Cron (internal)
+
+| Route | Role |
+|-------|------|
+| `POST /api/internal/sync-matches` | football-data.org → `Match` table |
+| `POST /api/internal/warm-odds-cache` | Refresh odds snapshots in DB |
 
 ### Key files
 
@@ -310,14 +318,17 @@ Computed on read from settled rounds. No materialised stats tables.
 | `ODDS_API_SPORT` | No | Default `soccer_fifa_world_cup` (fallback only) |
 | `FOOTBALL_DATA_API_KEY` | No | Match sync |
 | `FOOTBALL_DATA_CACHE_TTL_MS` | No | In-memory cache TTL for football-data fetches (default 60s; bypassed on cron sync) |
-| `CRON_SECRET` | No | Bearer token for `/api/internal/sync-matches` |
+| `ODDS_API_CACHE_TTL_MS` | No | DB snapshot TTL for odds (default 30 min) |
+| `ODDS_DB_ONLY` | No | When `true`, user routes read odds DB only (cron must refresh) |
+| `ODDS_WARM_CORE_WITHIN_HOURS` | No | Cron prefetches core extended markets within N hours of kickoff (default 72) |
+| `CRON_SECRET` | No | Bearer token for `/api/internal/*` cron routes |
 | `RESEND_API_KEY` | No | Email notifications via Resend |
 | `EMAIL_FROM` | No | Sender address (required with `RESEND_API_KEY`) |
 | `ADMIN_EMAILS` | No | Comma-separated emails granted platform admin |
 
 ### Production (GitHub Actions → Cloud Run)
 
-Secrets: `DATABASE_URL`, `AUTH_SECRET`, `ODDS_API_KEY`, `FOOTBALL_DATA_API_KEY`, `CRON_SECRET`, `RESEND_API_KEY` (optional), GCP deploy secrets.
+Secrets: `DATABASE_URL`, `AUTH_SECRET` (Terraform Secret Manager + `deploy.yml`), `ODDS_API_KEY`, `FOOTBALL_DATA_API_KEY`, `RESEND_API_KEY` (optional), GCP deploy secrets. `CRON_SECRET` is in Secret Manager (Terraform); optional GitHub secret only to seed Terraform without rotating.
 
 Env vars on Cloud Run: `NEXTAUTH_URL`, `EMAIL_FROM`, `ADMIN_EMAILS` (from GitHub secret), `ODDS_API_SPORT`, `ODDS_API_REGIONS=uk`, etc. See `.github/workflows/deploy.yml`.
 
@@ -354,6 +365,7 @@ Recent migrations include `20260711100000_competition_settings` (admin competiti
 | `POST /api/rounds/[id]/settle` | Owner | Manual settle |
 | `POST /api/rounds/[id]/auto-settle` | Owner | Auto settle from `Match` table |
 | `POST /api/internal/sync-matches` | `CRON_SECRET` | Sync football-data.org → `Match` |
+| `POST /api/internal/warm-odds-cache` | `CRON_SECRET` | Refresh odds DB snapshots |
 | `GET /api/groups/[id]` | Member | Group + active round + betslip deeplinks |
 | `GET /api/groups/[id]/stats` | Member | Group summary stats + chart series |
 | `GET /api/groups/[id]/members/[userId]/stats` | Member | Member breakdown + favourites |
@@ -375,9 +387,9 @@ Recent migrations include `20260711100000_competition_settings` (admin competiti
 4. **Auto-settle requires synced `Match` rows** — 5-min cron or manual `POST /api/internal/sync-matches`.
 5. **Cross-competition acca** — often no single bookmaker; best-per-leg odds locked at submission; per-leg deeplinks at lock only.
 6. **Betslip deeplinks** require live odds API (`includeLinks`); mock mode falls back to bookmaker hub URLs only.
-7. **The Odds API quota** — free tier is 500 credits/month. Bulk fixture fetch costs several credits per call; per-fixture BTTS/DC/DNB loads cost extra. Default cache TTL 30 min; quota exhaustion pauses API calls for 15 min internally (users see a generic empty fixture list). **Admin → Odds** shows credits used/remaining; probe sparingly.
+7. **The Odds API quota** — free tier is 500 credits/month. Per-fixture **core** extended markets (BTTS, double chance, correct score) cost **3 credits**; **specials** (corners/cards) cost **7 credits** when loaded. Cached 30 min per tier.
 8. **Terraform CI** may fail on GCS state bucket permissions — app deploy unaffected.
-9. **Cloud Run in-memory cache** — football-data responses cached per instance (60s default); cron sync bypasses cache. Odds API cache separate.
+9. **Odds snapshots in PostgreSQL** — shared across Cloud Run instances; refreshed by `POST /api/internal/warm-odds-cache` (Cloud Scheduler job in Terraform). Set `ODDS_DB_ONLY=true` so users never burn API credits. In-memory cache remains for quota block/snapshot and football-data only.
 10. **Mobile app** — still calls old fixtures API without `?competition=`; paused until web validated.
 11. **Auth JWT** — middleware uses edge-safe `auth.config.ts` (no Prisma); `auth.ts` refreshes `role` from DB on each session update.
 
@@ -385,7 +397,7 @@ Recent migrations include `20260711100000_competition_settings` (admin competiti
 
 - [x] `ODDS_API_KEY` in GitHub secrets
 - [x] `FOOTBALL_DATA_API_KEY` in GitHub secrets
-- [x] `CRON_SECRET` in GitHub secrets + Cloud Scheduler job (every 5 min UTC)
+- [x] `CRON_SECRET` in Secret Manager + Cloud Scheduler jobs (`sync-matches`, `warm-odds-cache`) via Terraform
 - [x] `NEXTAUTH_URL=https://www.the-syndicate.uk`
 - [x] Cloudflare Worker + www redirect configured
 - [x] `RESEND_API_KEY` + `EMAIL_FROM` in GitHub (optional, for email notifications)

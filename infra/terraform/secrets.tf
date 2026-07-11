@@ -28,3 +28,25 @@ resource "google_secret_manager_secret_version" "auth_secret" {
   secret      = google_secret_manager_secret.auth_secret.id
   secret_data = random_password.auth_secret.result
 }
+
+resource "random_password" "cron_secret" {
+  count = var.cron_secret == "" ? 1 : 0
+
+  length  = 64
+  special = false
+}
+
+resource "google_secret_manager_secret" "cron_secret" {
+  depends_on = [google_project_service.required]
+
+  secret_id = "CRON_SECRET"
+
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "cron_secret" {
+  secret      = google_secret_manager_secret.cron_secret.id
+  secret_data = local.cron_secret
+}
