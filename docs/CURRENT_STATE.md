@@ -220,6 +220,10 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 
 Email notifications (Resend) fire on lock and settle when `RESEND_API_KEY` + `EMAIL_FROM` are set. Deduped via `Round.lockedNotificationSentAt` / `settledNotificationSentAt`.
 
+**Exactly-once settlement.** All three methods share `applyRoundSettlement()`, which runs in a `prisma.$transaction` that opens with an atomic claim — `round.updateMany({ where: { status: "locked" }, data: { status: "settled" } })`. Because the manual, owner-auto, and hands-off cron paths can overlap (e.g. the 5-min cron firing while an owner clicks Settle), the claim guards against double-counting points: the loser matches zero rows and throws `RoundNotSettleableError`, which callers treat as a benign no-op (409 on manual settle, `skipped` for auto/cron). Points are incremented exactly once. Manual settle also validates that submitted outcomes cover **exactly** the round's legs (no unknown/duplicate/missing ids) rather than defaulting omitted legs to "lost".
+
+**Lock is likewise atomic.** When two members submit the final legs at once, the leg route claims `collecting → locked` via `updateMany` before repricing, so only one request reprices the acca (Odds API credits) and sends the lock email; repricing failures revert the round to `collecting`.
+
 ### Cron (internal)
 
 | Route | Role |
@@ -239,7 +243,7 @@ Email notifications (Resend) fire on lock and settle when `RESEND_API_KEY` + `EM
 | `apps/web/src/lib/results/sync-matches.ts` | Upsert matches for all competitions |
 | `apps/web/src/lib/results/match-store.ts` | DB lookup for auto-settle |
 | `apps/web/src/lib/results/resolve-leg.ts` | Market → outcome logic |
-| `apps/web/src/lib/settlement/apply-round-settlement.ts` | DB updates, P/L |
+| `apps/web/src/lib/settlement/apply-round-settlement.ts` | Transactional settle: atomic `locked → settled` claim, points/P&L, `RoundNotSettleableError` |
 
 ---
 
@@ -396,7 +400,7 @@ Recent migrations include `20260711100000_competition_settings` (admin competiti
 ## Known limitations
 
 1. **football-data.org free tier:** World Cup syncs; League One/Two return 403; EPL/Championship may be empty off-season.
-2. **Auto-settle** runs automatically after match sync (every 5 min); individual leg outcomes update as matches finish; round settles when all legs are ready. Owner can still trigger manually.
+2. **Auto-settle** runs automatically after match sync (every 5 min); individual leg outcomes update as matches finish; round settles when all legs are ready. Owner can still trigger manually. Overlapping settlements (cron vs owner) are safe — settlement is transactional and awards points exactly once via an atomic `locked → settled` claim (see [Settlement](#settlement)).
 3. **Email notifications** require Resend setup (`RESEND_API_KEY`, `EMAIL_FROM`); skipped if unset.
 4. **Auto-settle requires synced `Match` rows** — 5-min cron or manual `POST /api/internal/sync-matches`.
 5. **Cross-competition acca** — often no single bookmaker; best-per-leg odds locked at submission; per-leg deeplinks at lock only.

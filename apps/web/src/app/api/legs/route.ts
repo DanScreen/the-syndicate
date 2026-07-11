@@ -107,14 +107,34 @@ export async function POST(request: Request) {
     updatedRound.legs.length >= updatedRound.group.members.length;
 
   if (shouldLock) {
-    await lockRoundWithAccaPricing(round.id, updatedRound!.legs);
-
-    await prisma.group.update({
-      where: { id: round.groupId },
+    // Atomically claim the lock so that when two members submit the final legs
+    // at once, only one request reprices the acca (which costs Odds API
+    // credits) and sends the "locked" email. The loser's round is already
+    // being locked by the winner.
+    const claim = await prisma.round.updateMany({
+      where: { id: round.id, status: "collecting" },
       data: { status: "locked" },
     });
 
-    void notifyRoundLocked(round.id);
+    if (claim.count === 1) {
+      try {
+        await lockRoundWithAccaPricing(round.id, updatedRound!.legs);
+      } catch (err) {
+        // Repricing failed — revert so members can retry the final leg.
+        await prisma.round.updateMany({
+          where: { id: round.id, status: "locked" },
+          data: { status: "collecting" },
+        });
+        throw err;
+      }
+
+      await prisma.group.update({
+        where: { id: round.groupId },
+        data: { status: "locked" },
+      });
+
+      void notifyRoundLocked(round.id);
+    }
   }
 
   return NextResponse.json({

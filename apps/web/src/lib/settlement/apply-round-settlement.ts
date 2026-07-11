@@ -4,11 +4,36 @@ import { openCollectingRound } from "@/lib/rounds/open-collecting-round";
 import { prisma } from "@the-syndicate/database";
 import type { LegOutcome } from "@the-syndicate/shared";
 
+/**
+ * Thrown when a round can no longer be settled — typically because a
+ * concurrent settlement (manual, owner auto-settle, or cron) already
+ * claimed it. Callers should treat this as a benign no-op, not a failure.
+ */
+export class RoundNotSettleableError extends Error {
+  constructor(message = "Round is not in a settleable state") {
+    super(message);
+    this.name = "RoundNotSettleableError";
+  }
+}
+
 export async function applyRoundSettlement(
   roundId: string,
   outcomeMap: Map<string, LegOutcome>
 ): Promise<{ profitLossGbp: number; status: "settled" }> {
   const result = await prisma.$transaction(async (tx) => {
+    // Atomically claim the round: flip locked -> settled in a single
+    // conditional write. Under Read Committed this row-locks the round, so a
+    // concurrent settlement blocks here and then matches zero rows (status is
+    // no longer "locked") — guaranteeing points are awarded exactly once.
+    const claim = await tx.round.updateMany({
+      where: { id: roundId, status: "locked" },
+      data: { status: "settled", settledAt: new Date() },
+    });
+
+    if (claim.count === 0) {
+      throw new RoundNotSettleableError();
+    }
+
     const round = await tx.round.findUnique({
       where: { id: roundId },
       include: {
@@ -19,10 +44,6 @@ export async function applyRoundSettlement(
 
     if (!round) {
       throw new Error("Round not found");
-    }
-
-    if (round.status !== "locked") {
-      throw new Error("Round must be locked first");
     }
 
     for (const leg of round.legs) {
@@ -64,11 +85,7 @@ export async function applyRoundSettlement(
 
     await tx.round.update({
       where: { id: roundId },
-      data: {
-        status: "settled",
-        profitLossGbp: profitLoss,
-        settledAt: new Date(),
-      },
+      data: { profitLossGbp: profitLoss },
     });
 
     await openCollectingRound(round.groupId, tx);

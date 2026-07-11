@@ -41,6 +41,7 @@ If no single bookmaker covers all legs → best-per-leg combined odds locked at 
 - Auto-settle reads from `Match` table via `match-store.ts` (UTC kickoff day matching)
 - Cloud Scheduler: every 5 min UTC in production (`europe-west2`, job `sync-matches`)
 - **Progressive outcomes:** `persistResolvableLegOutcomes()` updates leg `outcome` as matches finish; round settles when all legs ready
+- **Exactly-once:** `applyRoundSettlement()` is transactional and claims the round with an atomic `locked → settled` `updateMany`, so an overlapping cron and owner settle never double-count points (loser throws `RoundNotSettleableError`, treated as a no-op)
 
 ---
 

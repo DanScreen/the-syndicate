@@ -1,4 +1,7 @@
-import { applyRoundSettlement } from "@/lib/settlement/apply-round-settlement";
+import {
+  applyRoundSettlement,
+  RoundNotSettleableError,
+} from "@/lib/settlement/apply-round-settlement";
 import {
   persistResolvableLegOutcomes,
   resolveRoundOutcomes,
@@ -36,9 +39,16 @@ export async function tryAutoSettleRound(roundId: string): Promise<AutoSettleRou
     return { status: "pending", roundId, pending: resolved.pending };
   }
 
-  const result = await applyRoundSettlement(roundId, resolved.outcomeMap);
-
-  return { status: "settled", roundId, profitLossGbp: result.profitLossGbp };
+  try {
+    const result = await applyRoundSettlement(roundId, resolved.outcomeMap);
+    return { status: "settled", roundId, profitLossGbp: result.profitLossGbp };
+  } catch (err) {
+    if (err instanceof RoundNotSettleableError) {
+      // A concurrent settlement already claimed this round — treat as a no-op.
+      return { status: "skipped", roundId, reason: "Already settled" };
+    }
+    throw err;
+  }
 }
 
 export type AutoSettleAllResult = {

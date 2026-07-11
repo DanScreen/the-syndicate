@@ -1,5 +1,8 @@
 import { requireSession } from "@/lib/api-auth";
-import { applyRoundSettlement } from "@/lib/settlement/apply-round-settlement";
+import {
+  applyRoundSettlement,
+  RoundNotSettleableError,
+} from "@/lib/settlement/apply-round-settlement";
 import { prisma } from "@the-syndicate/database";
 import { settleRoundSchema } from "@the-syndicate/shared";
 import type { LegOutcome } from "@the-syndicate/shared";
@@ -43,7 +46,42 @@ export async function POST(request: Request, { params }: Params) {
     parsed.data.legOutcomes.map((o) => [o.legId, o.outcome])
   );
 
-  const result = await applyRoundSettlement(roundId, outcomeMap);
+  // The outcomes must cover exactly the round's legs — no unknown ids, no
+  // duplicates, and none missing. Otherwise applyRoundSettlement would silently
+  // default omitted legs to "lost".
+  const roundLegIds = new Set(round.legs.map((l) => l.id));
+  const unknownLegIds = parsed.data.legOutcomes
+    .map((o) => o.legId)
+    .filter((id) => !roundLegIds.has(id));
+  const missingLegIds = round.legs
+    .map((l) => l.id)
+    .filter((id) => !outcomeMap.has(id));
 
-  return NextResponse.json(result);
+  if (
+    unknownLegIds.length > 0 ||
+    missingLegIds.length > 0 ||
+    outcomeMap.size !== parsed.data.legOutcomes.length
+  ) {
+    return NextResponse.json(
+      {
+        error: "Provide exactly one outcome for each leg in the round",
+        unknownLegIds,
+        missingLegIds,
+      },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const result = await applyRoundSettlement(roundId, outcomeMap);
+    return NextResponse.json(result);
+  } catch (err) {
+    if (err instanceof RoundNotSettleableError) {
+      return NextResponse.json(
+        { error: "Round has already been settled" },
+        { status: 409 }
+      );
+    }
+    throw err;
+  }
 }
