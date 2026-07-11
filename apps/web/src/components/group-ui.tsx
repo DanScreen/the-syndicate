@@ -140,7 +140,11 @@ export function SubmitLegForm({
     fetch("/api/competitions")
       .then((r) => r.json())
       .then((d) => {
-        setCompetitions(d.competitions ?? []);
+        const list = d.competitions ?? [];
+        setCompetitions(list);
+        if (list.length === 1) {
+          setCompetitionId(list[0].id);
+        }
       })
       .finally(() => setLoadingCompetitions(false));
   }, []);
@@ -224,6 +228,14 @@ export function SubmitLegForm({
     return (
       <div className="rounded-xl border border-border bg-card p-4 text-sm text-muted">
         Loading competitions...
+      </div>
+    );
+  }
+
+  if (competitions.length === 0) {
+    return (
+      <div className="rounded-xl border border-border bg-card p-4 text-sm text-muted">
+        No competitions are available for picks right now. Check back soon.
       </div>
     );
   }

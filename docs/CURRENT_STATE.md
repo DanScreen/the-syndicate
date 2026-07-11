@@ -57,7 +57,7 @@ Match sync: Cloud Scheduler → `POST /api/internal/sync-matches` with Bearer `C
 | Group layout | `apps/web/src/app/groups/[id]/layout.tsx`, `group-layout-client.tsx`, `context/group-data.tsx` |
 | Scoring | `packages/shared/src/scoring.ts` |
 | Competitions catalogue | `packages/shared/src/competitions.ts` |
-| Platform admin | `apps/web/src/lib/admin.ts`, `lib/admin/`, `app/admin/`, `components/admin-*` |
+| Platform admin | `apps/web/src/lib/admin.ts`, `lib/admin/`, `lib/competitions/settings.ts`, `app/admin/`, `components/admin-*` |
 | Analytics | `apps/web/src/lib/analytics.ts`, `components/analytics/page-view.tsx` |
 
 ### What's next (July 2026)
@@ -76,7 +76,7 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 | Rounds: collecting → locked → settled | ✅ |
 | Live odds ([The Odds API](https://the-odds-api.com/)) + mock fallback | ✅ |
 | Markets: h2h, totals (dynamic lines), spreads*, BTTS, double chance, draw no bet | ✅ |
-| Per-leg competition picker (5 leagues + World Cup) | ✅ |
+| Per-leg competition picker (admin-controlled; World Cup live by default) | ✅ |
 | Leg picker: best odds only per selection | ✅ |
 | Acca lock: best combined bookmaker across all legs | ✅ |
 | Acca bookmaker rankings (best odds first, stored at lock) | ✅ |
@@ -123,7 +123,9 @@ Examples: win @ 2.50 → +1.50; loss → −1.00.
 
 ## Odds & competitions
 
-Five competitions in `packages/shared/src/competitions.ts`: EPL, Championship, League One, League Two, World Cup.
+Five competitions in `packages/shared/src/competitions.ts`: EPL, Championship, League One, League Two, World Cup. **Admin toggles** which are visible in the leg picker (`CompetitionSetting` table; `/admin/competitions`). Default: **World Cup only**. Match sync still runs for all catalogue competitions so settled legs can resolve when leagues are re-enabled.
+
+Fixture list uses The Odds API with `commenceTimeFrom=now` and client-side upcoming filter. When `ODDS_API_KEY` is set, **no mock fallback** — empty list if the bookmaker feed has no upcoming fixtures.
 
 ### Odds flow
 
@@ -179,6 +181,7 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 | `/performance` | Cross-group stats (`DashboardStats`) + share cards |
 | `/admin` | **Admin** — platform metrics (admin role only) |
 | `/admin/leaderboards` | **Admin** — syndicate & player rankings by points |
+| `/admin/competitions` | **Admin** — enable/disable competitions in leg picker |
 | `/groups/create`, `/groups/join` | Create / join group |
 | `/groups/[id]` | **Round** tab — active round, leg picker, picks, lock, settle |
 | `/groups/[id]/leaderboard` | Points leaderboard |
@@ -321,7 +324,7 @@ Env vars on Cloud Run: `NEXTAUTH_URL`, `EMAIL_FROM`, `ADMIN_EMAILS` (from GitHub
 
 ## Database (Prisma)
 
-Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `AnalyticsEvent`.
+Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `AnalyticsEvent`, `CompetitionSetting`.
 
 - `User.role` — platform role: `user` (default) or `admin` (via `ADMIN_EMAILS`).
 - `AnalyticsEvent` — lightweight product analytics (`type`, `userId?`, `path?`, `createdAt`).
@@ -329,12 +332,13 @@ Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `Analytics
 - Leg stores fixture snapshot: teams, kickoff, `competitionId` (slug), `competition` (display name), optional `matchId` FK, market, odds, bookmaker, `betslipUrl`, `bookmakerLinks` JSON, outcome.
 - `Match` — canonical result per fixture (`externalDataId` from football-data.org).
 - `Round.accaBookmakerRankings` — JSON array of ranked bookmakers at lock.
+- `CompetitionSetting` — `competitionId` slug + `enabled` flag for leg-picker visibility (seeded: World Cup on, leagues off).
 - Groups always have a collecting or locked round; a new collecting round opens automatically when the previous round settles. Legacy groups without an active round get one on next load.
 - `Round.lockedNotificationSentAt` / `settledNotificationSentAt` — email dedup.
 
 Schema: `packages/database/prisma/schema.prisma`
 
-Recent migrations include `20260710100000_user_role_analytics` (admin role + analytics events).
+Recent migrations include `20260711100000_competition_settings` (admin competition toggles).
 
 ---
 
@@ -342,7 +346,7 @@ Recent migrations include `20260710100000_user_role_analytics` (admin role + ana
 
 | Route | Auth | Purpose |
 |-------|------|---------|
-| `GET /api/competitions` | Session | Active competition catalogue |
+| `GET /api/competitions` | Session | Enabled competitions for leg picker |
 | `GET /api/fixtures` | Session | List fixtures (`?competition=` required) |
 | `GET /api/fixtures/[id]/markets` | Session | Extended markets (`?competition=` required) |
 | `POST /api/legs` | Session | Submit leg |
@@ -355,6 +359,8 @@ Recent migrations include `20260710100000_user_role_analytics` (admin role + ana
 | `GET /api/user/stats` | Session | Cross-group performance stats |
 | `GET /api/admin/stats` | Admin | Platform summary metrics |
 | `GET /api/admin/leaderboards` | Admin | Syndicate + player point rankings |
+| `GET /api/admin/competitions` | Admin | All competitions + enabled flags |
+| `PATCH /api/admin/competitions` | Admin | Enable/disable competition for users |
 | `GET /api/health` | Public | Health check |
 
 ---

@@ -1,5 +1,6 @@
 import { getFixtures } from "@/lib/odds/provider";
 import { requireSession } from "@/lib/api-auth";
+import { isCompetitionEnabled } from "@/lib/competitions/settings";
 import { isValidCompetitionId } from "@the-syndicate/shared";
 import { NextResponse } from "next/server";
 
@@ -14,6 +15,10 @@ export async function GET(request: Request) {
 
   if (!isValidCompetitionId(competition)) {
     return NextResponse.json({ error: "Unknown competition" }, { status: 400 });
+  }
+
+  if (!(await isCompetitionEnabled(competition))) {
+    return NextResponse.json({ error: "Competition is not available" }, { status: 403 });
   }
 
   const { fixtures, source } = await getFixtures(competition);

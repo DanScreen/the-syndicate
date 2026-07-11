@@ -1,5 +1,5 @@
 import type { Fixture, Market } from "@the-syndicate/shared";
-import { getCompetitionById } from "@the-syndicate/shared";
+import { filterUpcomingFixtures, getCompetitionById } from "@the-syndicate/shared";
 import { getMockFixtures } from "./mock-provider";
 import { fetchExtendedMarkets } from "./event-markets";
 import { fetchOddsApiFixtures } from "./the-odds-api";
@@ -17,18 +17,18 @@ export async function getFixtures(
   if (process.env.ODDS_API_KEY) {
     try {
       const fixtures = await fetchOddsApiFixtures(competition.oddsApiSport, competition.name);
-      if (fixtures.length > 0) {
-        return { fixtures, source: "live" };
-      }
-      console.warn(`[odds] live API returned no fixtures for ${competition.id}`);
+      return { fixtures, source: "live" };
     } catch (err) {
-      console.error("[odds] live fetch failed, falling back to mock:", err);
+      console.error("[odds] live fetch failed:", err);
+      return { fixtures: [], source: "live" };
     }
-  } else {
-    console.warn("[odds] ODDS_API_KEY not set, using mock fixtures");
   }
 
-  return { fixtures: getMockFixtures(competitionId), source: "mock" };
+  console.warn("[odds] ODDS_API_KEY not set, using mock fixtures");
+  return {
+    fixtures: filterUpcomingFixtures(getMockFixtures(competitionId)),
+    source: "mock",
+  };
 }
 
 export async function findFixture(

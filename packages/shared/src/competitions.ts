@@ -40,6 +40,9 @@ export const COMPETITIONS: Competition[] = [
 
 export const DEFAULT_COMPETITION_ID = "world-cup";
 
+/** Competitions enabled for new picks when no DB settings exist yet. */
+export const DEFAULT_ENABLED_COMPETITION_IDS = ["world-cup"] as const;
+
 export function getCompetitionById(id: string): Competition | undefined {
   return COMPETITIONS.find((c) => c.id === id);
 }

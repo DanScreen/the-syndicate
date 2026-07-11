@@ -1,4 +1,5 @@
 import type { BookmakerQuote, Fixture, Market, MarketSelection } from "@the-syndicate/shared";
+import { filterUpcomingFixtures } from "@the-syndicate/shared";
 import type { OddsApiBookmaker, OddsApiEvent } from "./api-types";
 import { isRetailBookmaker } from "./bookmakers";
 import { getCached, setCached } from "./cache";
@@ -228,6 +229,7 @@ export async function fetchOddsApiFixtures(
   url.searchParams.set("markets", BULK_SOCCER_MARKETS);
   url.searchParams.set("oddsFormat", "decimal");
   url.searchParams.set("includeLinks", "true");
+  url.searchParams.set("commenceTimeFrom", new Date().toISOString());
 
   const res = await fetch(url.toString(), { next: { revalidate: 0 } });
   if (!res.ok) {
@@ -236,14 +238,15 @@ export async function fetchOddsApiFixtures(
   }
 
   const events = (await res.json()) as OddsApiEvent[];
-  const fixtures = events
-    .map((event) => {
-      const fixture = mapEventToFixture(event);
-      if (!fixture) return null;
-      return competitionName ? { ...fixture, competition: competitionName } : fixture;
-    })
-    .filter((f): f is Fixture => f !== null)
-    .sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime());
+  const fixtures = filterUpcomingFixtures(
+    events
+      .map((event) => {
+        const fixture = mapEventToFixture(event);
+        if (!fixture) return null;
+        return competitionName ? { ...fixture, competition: competitionName } : fixture;
+      })
+      .filter((f): f is Fixture => f !== null)
+  ).sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime());
 
   return setCached(cacheKey, fixtures, cacheTtlMs);
 }

@@ -132,3 +132,10 @@ model AnalyticsEvent {
   @@index([type, createdAt])
   @@index([createdAt])
 }
+
+model CompetitionSetting {
+  id            String   @id @default(cuid())
+  competitionId String   @unique
+  enabled       Boolean  @default(false)
+  updatedAt     DateTime @updatedAt
+}

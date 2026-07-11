@@ -147,11 +147,14 @@ flowchart LR
 - [x] Sync job + Cloud Scheduler
 - [x] Auto-settle from DB
 
-### Phase C — Hands-off ✅
+### Phase D — Admin competition control ✅
 
-- [x] Post-ingest auto-settle — `autoSettleLockedRounds()` runs after sync
-- [x] Progressive leg outcomes before full acca settles
-- [x] Email notifications — round locked / settled via Resend
+- [x] `CompetitionSetting` model + migration (World Cup enabled by default)
+- [x] `GET /api/competitions` returns enabled competitions only
+- [x] `GET/PATCH /api/admin/competitions` + `/admin/competitions` UI
+- [x] Fixture feed: `commenceTimeFrom=now`, upcoming filter, no mock fallback when `ODDS_API_KEY` set
+
+---
 - [x] In-progress locked round UI — outcome badges, locked odds only, 60s client poll
 
 ---

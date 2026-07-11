@@ -48,6 +48,7 @@ Protected by middleware (`/admin/*` requires login) + `requireAdminPage()` (redi
 |-------|---------|
 | `/admin` | Platform overview — users, groups, picks, accas, activity |
 | `/admin/leaderboards` | Syndicate + player rankings by points |
+| `/admin/competitions` | Enable/disable competitions in the leg picker |
 
 **Nav:** Admin users see **Admin** in `AppNav`. Sub-nav: Overview | Leaderboards (`AdminNav`).
 
@@ -61,6 +62,8 @@ Protected by middleware (`/admin/*` requires login) + `requireAdminPage()` (redi
 |-------|------|----------|
 | `GET /api/admin/stats` | Admin session | Platform aggregates |
 | `GET /api/admin/leaderboards` | Admin session | Syndicate + player rankings |
+| `GET /api/admin/competitions` | Admin session | Catalogue + enabled flags |
+| `PATCH /api/admin/competitions` | Admin session | Toggle `{ competitionId, enabled }` |
 
 Non-admin → `403 Forbidden`. Unauthenticated → `401`.
 

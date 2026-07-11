@@ -3,6 +3,7 @@ import { sortQuotesByBestOdds } from "@/lib/odds/bookmakers";
 import { lockRoundWithAccaPricing } from "@/lib/odds/lock-round";
 import { findSelection } from "@/lib/odds/provider";
 import { notifyRoundLocked } from "@/lib/notifications/round-notifications";
+import { isCompetitionEnabled } from "@/lib/competitions/settings";
 import { prisma } from "@the-syndicate/database";
 import { getCompetitionById, submitLegSchema } from "@the-syndicate/shared";
 import { NextResponse } from "next/server";
@@ -46,6 +47,10 @@ export async function POST(request: Request) {
   const competition = getCompetitionById(parsed.data.competitionId);
   if (!competition) {
     return NextResponse.json({ error: "Unknown competition" }, { status: 400 });
+  }
+
+  if (!(await isCompetitionEnabled(parsed.data.competitionId))) {
+    return NextResponse.json({ error: "Competition is not available" }, { status: 403 });
   }
 
   const selectionData = await findSelection(

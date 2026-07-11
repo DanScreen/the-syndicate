@@ -37,6 +37,11 @@ export const settleRoundSchema = z.object({
   ),
 });
 
+export const updateCompetitionSettingSchema = z.object({
+  competitionId: z.string(),
+  enabled: z.boolean(),
+});
+
 export type SignUpInput = z.infer<typeof signUpSchema>;
 export type SignInInput = z.infer<typeof signInSchema>;
 export type CreateGroupInput = z.infer<typeof createGroupSchema>;
