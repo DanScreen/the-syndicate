@@ -4,6 +4,11 @@ export function isOddsApiConfigured(): boolean {
   return Boolean(key);
 }
 
+/** The Odds API requires YYYY-MM-DDTHH:MM:SSZ (no milliseconds). */
+export function formatCommenceTimeFrom(date: Date = new Date()): string {
+  return date.toISOString().slice(0, 19) + "Z";
+}
+
 export function isProductionRuntime(): boolean {
   return process.env.NODE_ENV === "production";
 }

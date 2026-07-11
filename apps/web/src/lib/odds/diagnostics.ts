@@ -1,4 +1,4 @@
-import { isOddsApiConfigured } from "@/lib/odds/config";
+import { formatCommenceTimeFrom, isOddsApiConfigured } from "@/lib/odds/config";
 import { getCacheMetadata, getCachedFixtureCount } from "@/lib/odds/cache";
 import { isRetailBookmaker } from "@/lib/odds/bookmakers";
 import {
@@ -129,7 +129,7 @@ export async function runOddsDiagnostics(
   }
 
   try {
-    const commenceTimeFrom = options?.fresh !== false ? new Date().toISOString() : null;
+    const commenceTimeFrom = options?.fresh !== false ? formatCommenceTimeFrom() : null;
     const { events, status, headers } = await fetchOddsApiEventsRaw(competition.oddsApiSport, {
       commenceTimeFrom,
     });

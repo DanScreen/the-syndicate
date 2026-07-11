@@ -1,5 +1,6 @@
 import type { BookmakerQuote, Fixture, Market, MarketSelection } from "@the-syndicate/shared";
 import { filterUpcomingFixtures } from "@the-syndicate/shared";
+import { formatCommenceTimeFrom } from "./config";
 import type { OddsApiBookmaker, OddsApiEvent } from "./api-types";
 import { isRetailBookmaker } from "./bookmakers";
 import { getCached, setCached } from "./cache";
@@ -229,7 +230,7 @@ export async function fetchOddsApiFixtures(
   url.searchParams.set("markets", BULK_SOCCER_MARKETS);
   url.searchParams.set("oddsFormat", "decimal");
   url.searchParams.set("includeLinks", "true");
-  url.searchParams.set("commenceTimeFrom", new Date().toISOString());
+  url.searchParams.set("commenceTimeFrom", formatCommenceTimeFrom());
 
   const res = await fetch(url.toString(), { next: { revalidate: 0 } });
   if (!res.ok) {
