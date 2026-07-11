@@ -187,7 +187,7 @@ function buildSpreadsMarkets(event: OddsApiEvent, bookmakers: OddsApiBookmaker[]
   return markets.sort((a, b) => a.label.localeCompare(b.label));
 }
 
-function mapEventToFixture(event: OddsApiEvent): Fixture | null {
+export function mapOddsEventToFixture(event: OddsApiEvent): Fixture | null {
   const bookmakers = retailBookmakers(event.bookmakers);
   const markets = [
     buildH2hMarket(event, bookmakers),
@@ -241,7 +241,7 @@ export async function fetchOddsApiFixtures(
   const fixtures = filterUpcomingFixtures(
     events
       .map((event) => {
-        const fixture = mapEventToFixture(event);
+        const fixture = mapOddsEventToFixture(event);
         if (!fixture) return null;
         return competitionName ? { ...fixture, competition: competitionName } : fixture;
       })
@@ -249,6 +249,43 @@ export async function fetchOddsApiFixtures(
   ).sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime());
 
   return setCached(cacheKey, fixtures, cacheTtlMs);
+}
+
+export function oddsApiCacheKey(sport: string, regions: string): string {
+  return `odds-api:v3:${sport}:${regions}`;
+}
+
+export async function fetchOddsApiEventsRaw(
+  sport: string,
+  options?: { commenceTimeFrom?: string | null }
+): Promise<{ events: OddsApiEvent[]; status: number; headers: Headers }> {
+  const apiKey = process.env.ODDS_API_KEY;
+  if (!apiKey) {
+    throw new Error("ODDS_API_KEY is not configured");
+  }
+
+  const regions = process.env.ODDS_API_REGIONS ?? "uk";
+  const url = new URL(`${API_BASE}/sports/${sport}/odds`);
+  url.searchParams.set("apiKey", apiKey);
+  url.searchParams.set("regions", regions);
+  url.searchParams.set("markets", BULK_SOCCER_MARKETS);
+  url.searchParams.set("oddsFormat", "decimal");
+  url.searchParams.set("includeLinks", "true");
+  if (options?.commenceTimeFrom) {
+    url.searchParams.set("commenceTimeFrom", options.commenceTimeFrom);
+  }
+
+  const res = await fetch(url.toString(), { next: { revalidate: 0 } });
+  if (!res.ok) {
+    const body = await res.text();
+    throw Object.assign(new Error(`The Odds API error ${res.status}: ${body}`), {
+      status: res.status,
+      body,
+    });
+  }
+
+  const events = (await res.json()) as OddsApiEvent[];
+  return { events, status: res.status, headers: res.headers };
 }
 
 export async function fetchOddsApiEvent(

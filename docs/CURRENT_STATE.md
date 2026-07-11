@@ -182,6 +182,7 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 | `/admin` | **Admin** — platform metrics (admin role only) |
 | `/admin/leaderboards` | **Admin** — syndicate & player rankings by points |
 | `/admin/competitions` | **Admin** — enable/disable competitions in leg picker |
+| `/admin/odds` | **Admin** — Odds API diagnostics (fixture pipeline) |
 | `/groups/create`, `/groups/join` | Create / join group |
 | `/groups/[id]` | **Round** tab — active round, leg picker, picks, lock, settle |
 | `/groups/[id]/leaderboard` | Points leaderboard |
@@ -361,7 +362,8 @@ Recent migrations include `20260711100000_competition_settings` (admin competiti
 | `GET /api/admin/leaderboards` | Admin | Syndicate + player point rankings |
 | `GET /api/admin/competitions` | Admin | All competitions + enabled flags |
 | `PATCH /api/admin/competitions` | Admin | Enable/disable competition for users |
-| `GET /api/health` | Public | Health check |
+| `GET /api/admin/odds-diagnostics` | Admin | Probe Odds API pipeline (`?competition=`) |
+| `GET /api/health` | Public | Health check (+ `odds: configured|missing`) |
 
 ---
 
