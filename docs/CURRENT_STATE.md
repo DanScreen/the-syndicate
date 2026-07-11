@@ -94,7 +94,7 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 | Product analytics (logins, signups, page views) | ✅ |
 | Marketing site (homepage, about, Turf Green + Acca stack logo) | ✅ |
 | Points-first stats UX + stake → profit converter | ✅ |
-| Locked round UX: picks first, locked odds only (no bookmaker comparison), in-progress leg results | ✅ |
+| Locked round UX: picks first, locked odds, bookmaker comparison until first result, in-progress leg results | ✅ |
 | Round history, progress UI, landing/SEO | ✅ |
 
 \*Asian handicap only from exchange bookmakers in current World Cup UK feed — filtered out; handicap UI empty for those fixtures.
@@ -137,7 +137,7 @@ POST /api/legs                        → best retail quote; stores competitionI
 (lock) lockRoundWithAccaPricing()     → re-fetch quotes, rankAccaBookmakers(), store deeplinks on Leg
 ```
 
-At lock, `Leg.betslipUrl` stores the chosen bookmaker's outcome deeplink; `Leg.bookmakerLinks` maps all retail bookmakers → link. **While collecting:** leg picker shows best odds only. **Once locked:** frozen odds per leg + combined acca; betslip **Open** links until first result; no bookmaker comparison panel.
+At lock, `Leg.betslipUrl` stores the chosen bookmaker's outcome deeplink; `Leg.bookmakerLinks` maps all retail bookmakers → link. **While collecting:** leg picker shows best odds only. **Once locked:** frozen odds per leg + combined acca; **Compare bookmakers** panel (ranked acca odds) and betslip **Open** links until the first result; then tracking only.
 
 Requires live odds (`ODDS_API_KEY`) — mock fixtures have no deeplinks. Odds are stored in **PostgreSQL** (`OddsBulkSnapshot`, `OddsEventSnapshot`) and refreshed by cron (`POST /api/internal/warm-odds-cache`). User picks read the DB; set `ODDS_DB_ONLY=true` in production to block live API calls from user traffic.
 
@@ -157,7 +157,7 @@ Full budgeting: [DEPLOYMENT.md — The Odds API](./DEPLOYMENT.md#the-odds-api--c
 
 ### Acca bookmaker rankings
 
-At lock, `rankAccaBookmakers()` in `apps/web/src/lib/odds/acca.ts` ranks all retail bookmakers by combined acca odds. Stored as `Round.accaBookmakerRankings` (JSON). Older locked rounds backfill lazily on `GET /api/groups/[id]`. Rankings used for betslip deeplinks at lock; **not shown in UI** once acca is locked (frozen odds only).
+At lock, `rankAccaBookmakers()` in `apps/web/src/lib/odds/acca.ts` ranks all retail bookmakers by combined acca odds. Stored as `Round.accaBookmakerRankings` (JSON). Older locked rounds backfill lazily on `GET /api/groups/[id]`. Rankings power the **Compare bookmakers** panel and betslip deeplinks until the first leg result.
 
 Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_rankings`.
 
@@ -206,7 +206,7 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 
 **Navigation:** `AppNav` in header (Groups ↔ Performance ↔ Admin for platform admins). Inside a group, `GroupNav` tabs share data via `GroupDataProvider` (fetched once in group layout; polls every 60s while acca locked).
 
-**Locked round UI:** Picks list with per-leg outcomes as matches finish (Won/Lost/Awaiting badges) → locked combined odds + bookmaker (no comparison panel) → betslip CTA until first result, then tracking only. Polls every 60s while locked. **Recent rounds** show locked odds per leg.
+**Locked round UI:** Picks list with per-leg outcomes as matches finish (Won/Lost/Awaiting badges) → locked combined odds + **Compare bookmakers** (until first result) → betslip CTA until first result, then tracking only. Polls every 60s while locked. **Recent rounds** show locked odds per leg.
 
 ---
 

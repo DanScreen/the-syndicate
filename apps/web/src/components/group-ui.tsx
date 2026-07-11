@@ -511,6 +511,7 @@ export function AccaSummary({
   bookmakerRankings = [],
   betslipLink,
   inProgress = false,
+  showBookmakerCompare = true,
 }: {
   combinedOdds: number;
   bookmakerName?: string | null;
@@ -518,12 +519,14 @@ export function AccaSummary({
   singleBookmaker: boolean;
   bookmakerRankings?: AccaBookmakerRanking[];
   betslipLink?: string | null;
-  /** Locked acca — show frozen odds only, hide bookmaker comparison. */
+  /** Locked acca — frozen odds copy; outcomes may be in progress. */
   inProgress?: boolean;
+  /** Show ranked bookmaker list (hidden after first result when tracking only). */
+  showBookmakerCompare?: boolean;
 }) {
   const [bookmakersOpen, setBookmakersOpen] = useState(false);
   const topBookmaker = bookmakerRankings[0];
-  const showCompare = !inProgress && bookmakerRankings.length > 0;
+  const showCompare = showBookmakerCompare && bookmakerRankings.length > 0;
 
   return (
     <div className="space-y-4">
