@@ -141,6 +141,20 @@ At lock, `Leg.betslipUrl` stores the chosen bookmaker's outcome deeplink; `Leg.b
 
 Requires live odds (`ODDS_API_KEY`) — mock fixtures have no deeplinks. Odds are stored in **PostgreSQL** (`OddsBulkSnapshot`, `OddsEventSnapshot`) and refreshed by cron (`POST /api/internal/warm-odds-cache`). User picks read the DB; set `ODDS_DB_ONLY=true` in production to block live API calls from user traffic.
 
+### Odds API usage (summary)
+
+Full budgeting: [DEPLOYMENT.md — The Odds API](./DEPLOYMENT.md#the-odds-api--calls-credits--cron).
+
+| Call type | Markets | Credits | When |
+|-----------|---------|---------|------|
+| Bulk fixtures | `h2h`, `spreads`, `totals` | **3** | Cron: once per enabled competition per warm run |
+| Core extended | `btts`, `double_chance`, `correct_score` | **3** per fixture | Cron: each upcoming fixture within 72 h (`ODDS_WARM_CORE_WITHIN_HOURS`); or user on demand if DB miss |
+| Specials | corners/cards (7 keys) | **7** per fixture | User only (“Load more markets”); not cron-warmed |
+
+**Cron:** `warm-odds-cache` every **6 h UTC** → `3 × competitions + 3 × N` credits per run (`N` = fixtures in warm window). `sync-matches` (every 5 min) uses football-data.org, **not** The Odds API.
+
+**Production target:** `ODDS_DB_ONLY=true` so only cron (+ rare admin probes) call the API.
+
 ### Acca bookmaker rankings
 
 At lock, `rankAccaBookmakers()` in `apps/web/src/lib/odds/acca.ts` ranks all retail bookmakers by combined acca odds. Stored as `Round.accaBookmakerRankings` (JSON). Older locked rounds backfill lazily on `GET /api/groups/[id]`. Rankings used for betslip deeplinks at lock; **not shown in UI** once acca is locked (frozen odds only).
@@ -387,7 +401,7 @@ Recent migrations include `20260711100000_competition_settings` (admin competiti
 4. **Auto-settle requires synced `Match` rows** — 5-min cron or manual `POST /api/internal/sync-matches`.
 5. **Cross-competition acca** — often no single bookmaker; best-per-leg odds locked at submission; per-leg deeplinks at lock only.
 6. **Betslip deeplinks** require live odds API (`includeLinks`); mock mode falls back to bookmaker hub URLs only.
-7. **The Odds API quota** — free tier is 500 credits/month. Per-fixture **core** extended markets (BTTS, double chance, correct score) cost **3 credits**; **specials** (corners/cards) cost **7 credits** when loaded. Cached 30 min per tier.
+7. **The Odds API quota** — credits = `markets × regions`. Cron warm: **3** bulk + **3 × N** core per enabled competition every 6 h (`N` = fixtures within `ODDS_WARM_CORE_WITHIN_HOURS`, default 72). User “specials” tier = **7** per fixture on demand only. Set `ODDS_DB_ONLY=true` so users do not call the API. See [DEPLOYMENT.md](./DEPLOYMENT.md#the-odds-api--calls-credits--cron).
 8. **Terraform CI** may fail on GCS state bucket permissions — app deploy unaffected.
 9. **Odds snapshots in PostgreSQL** — shared across Cloud Run instances; refreshed by `POST /api/internal/warm-odds-cache` (Cloud Scheduler job in Terraform). Set `ODDS_DB_ONLY=true` so users never burn API credits. In-memory cache remains for quota block/snapshot and football-data only.
 10. **Mobile app** — still calls old fixtures API without `?competition=`; paused until web validated.

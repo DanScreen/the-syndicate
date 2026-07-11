@@ -119,13 +119,80 @@ If you previously created `sync-matches` manually, **import** it into Terraform 
 
 Fixture and extended odds are stored in PostgreSQL (`OddsBulkSnapshot`, `OddsEventSnapshot`) so all Cloud Run instances share the same data. The Odds API is called by cron — not on every user pick when `ODDS_DB_ONLY=true`.
 
-The **`warm-odds-cache`** job is created by Terraform alongside `sync-matches` (see table above). Optional Cloud Run env vars (set in `deploy.yml`): `ODDS_CACHE_TTL_MS` (snapshot TTL, default 30 min), `ODDS_WARM_CORE_WITHIN_HOURS` (default 72), `ODDS_DB_ONLY=true` (block live API on user requests).
+The **`warm-odds-cache`** job is created by Terraform alongside `sync-matches` (see table above). Optional Cloud Run env vars (set in `deploy.yml`): `ODDS_API_CACHE_TTL_MS` (snapshot TTL, default 30 min), `ODDS_WARM_CORE_WITHIN_HOURS` (default 72), `ODDS_DB_ONLY=true` (block live API on user requests).
 
-Each run refreshes bulk fixtures per **enabled** competition (3 credits each) and **core** extended markets for fixtures kicking off within `ODDS_WARM_CORE_WITHIN_HOURS` (3 credits × fixture).
-
-**Credit budgeting (World Cup only, every 6h):** ~3 bulk + ~(3 × N upcoming fixtures) per run. Tune schedule (`warm_odds_cache_schedule` in Terraform) and `ODDS_WARM_CORE_WITHIN_HOURS` to stay within your Odds API plan.
+See **[The Odds API — calls, credits & cron](#the-odds-api--calls-credits--cron)** below for the full call inventory and monthly budgeting.
 
 Until the first cron run (or with `ODDS_DB_ONLY` unset), user traffic can still call the API directly as a fallback.
+
+## The Odds API — calls, credits & cron
+
+[The Odds API](https://the-odds-api.com/) bills in **credits**: each request costs `markets × regions` (one region = `uk` by default via `ODDS_API_REGIONS`).
+
+**Match sync (`sync-matches`) does not use The Odds API** — it calls football-data.org only.
+
+### Scheduled calls (production)
+
+| Job | Schedule (UTC) | Route | Odds API? |
+|-----|----------------|-------|-----------|
+| `warm-odds-cache` | `0 */6 * * *` (every 6 h) | `POST /api/internal/warm-odds-cache` | **Yes** |
+| `sync-matches` | `*/5 * * * *` (every 5 min) | `POST /api/internal/sync-matches` | No |
+
+Terraform variable `warm_odds_cache_schedule` overrides the warm job schedule.
+
+Each **`warm-odds-cache`** run (`apps/web/src/lib/odds/warm-cache.ts`), per **admin-enabled** competition:
+
+1. **Bulk fixtures** — one `GET /sports/{sport}/odds` with markets `h2h,spreads,totals` → **3 credits** (3 markets × 1 region).
+2. **Core extended markets** — one `GET /sports/{sport}/events/{id}/odds` per upcoming fixture kicking off within `ODDS_WARM_CORE_WITHIN_HOURS` (default **72 h**), markets `btts,double_chance,correct_score` → **3 credits per fixture**.
+
+**Specials** (corners & cards, 7 credits per fixture) are **not** warmed by cron — only fetched when a user clicks “Load more markets” (or on cache miss if `ODDS_DB_ONLY` is unset).
+
+**Credits per warm run:**
+
+```
+3 × (enabled competitions)  +  3 × N
+```
+
+where `N` = upcoming fixtures in the warm window for that competition.
+
+**Example (World Cup only, default schedule):** 4 runs/day. If `N = 8` fixtures in the 72 h window:
+
+| Per run | Per day (×4) | Per month (×30) |
+|---------|--------------|-----------------|
+| 3 + 24 = **27** | **108** | **~3,240** |
+
+With `N = 0` (no fixtures soon): **12 credits/day**, **~360/month**.
+
+Tune `warm_odds_cache_schedule`, `ODDS_WARM_CORE_WITHIN_HOURS`, and enabled competitions in `/admin/competitions` to stay within your plan (free tier: 500 credits/month).
+
+### User-facing calls (avoid in production)
+
+When `ODDS_DB_ONLY=true` (recommended), user routes read PostgreSQL only — **zero** Odds API calls from picks, fixture lists, or lock.
+
+When `ODDS_DB_ONLY` is unset/false, the app may call the API on cache miss:
+
+| Trigger | Endpoint / code path | Credits |
+|---------|----------------------|---------|
+| Fixture list, no bulk snapshot | `refreshBulkFixturesFromApi` | **3** per competition |
+| “Popular extras” tier, no snapshot | `refreshEventMarketsFromApi` tier `core` | **3** per fixture |
+| “Corners & cards” tier | `refreshEventMarketsFromApi` tier `specials` | **7** per fixture |
+
+Round **lock** re-reads quotes from the DB via `findSelection` — it does not call the API if snapshots exist.
+
+### Admin / diagnostics
+
+`GET /api/admin/odds-diagnostics` with “Probe API” performs live bulk fetches for debugging — costs the same as a bulk refresh (**3 credits** per probe). Use sparingly when quota is low.
+
+### Recommended production settings
+
+| Setting | Value | Why |
+|---------|-------|-----|
+| `ODDS_DB_ONLY` | `true` | Users never burn credits |
+| `ODDS_WARM_CORE_WITHIN_HOURS` | `72` (or lower near tournament) | Limits per-fixture core warms |
+| `warm_odds_cache_schedule` | `0 */6 * * *` or less frequent | Balance freshness vs quota |
+| Enabled competitions | Minimum needed | Each adds **3 credits** per warm run |
+
+Quota usage is visible on `/admin/odds` (from API response headers, cached in-memory).
 
 ## Email notifications (Resend)
 
