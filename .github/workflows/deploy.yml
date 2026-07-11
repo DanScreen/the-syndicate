@@ -56,23 +56,31 @@ jobs:
           npm run db:generate
           npm run db:migrate:deploy
 
+      - name: Ensure CRON_SECRET in Secret Manager
+        env:
+          PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "CRON_SECRET GitHub secret is required"
+            exit 1
+          fi
+          if ! gcloud secrets describe CRON_SECRET --project="$PROJECT_ID" &>/dev/null; then
+            printf '%s' "$CRON_SECRET" | gcloud secrets create CRON_SECRET \
+              --project="$PROJECT_ID" \
+              --replication-policy="automatic" \
+              --data-file=-
+          elif ! gcloud secrets versions access latest --secret=CRON_SECRET --project="$PROJECT_ID" &>/dev/null; then
+            printf '%s' "$CRON_SECRET" | gcloud secrets versions add CRON_SECRET \
+              --project="$PROJECT_ID" \
+              --data-file=-
+          fi
+
       - name: Deploy to Cloud Run
         env:
           PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           IMAGE_TAG: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
-          SECRETS="DATABASE_URL=DATABASE_URL:latest,AUTH_SECRET=AUTH_SECRET:latest"
-          ENV_VARS="NEXTAUTH_URL=${{ vars.NEXTAUTH_URL }},AUTH_TRUST_HOST=true,NODE_ENV=production,ODDS_API_SPORT=soccer_fifa_world_cup,ODDS_API_REGIONS=uk,ODDS_API_CACHE_TTL_MS=1800000,ODDS_API_KEY=${{ secrets.ODDS_API_KEY }},FOOTBALL_DATA_API_KEY=${{ secrets.FOOTBALL_DATA_API_KEY }},RESEND_API_KEY=${{ secrets.RESEND_API_KEY }},EMAIL_FROM=${{ vars.EMAIL_FROM }},ADMIN_EMAILS=${{ secrets.ADMIN_EMAILS }}"
-
-          # Use Secret Manager when Terraform has created CRON_SECRET; otherwise GitHub secret (env var).
-          if gcloud secrets describe CRON_SECRET --project="$PROJECT_ID" &>/dev/null; then
-            SECRETS="${SECRETS},CRON_SECRET=CRON_SECRET:latest"
-          else
-            echo "CRON_SECRET not in Secret Manager yet — using GitHub secret as env var"
-            ENV_VARS="CRON_SECRET=${CRON_SECRET},${ENV_VARS}"
-          fi
-
           gcloud run deploy "${{ env.CLOUD_RUN_SERVICE }}" \
             --project "$PROJECT_ID" \
             --region "${{ env.GCP_REGION }}" \
@@ -81,6 +89,6 @@ jobs:
             --allow-unauthenticated \
             --port 8080 \
             --add-cloudsql-instances "${{ secrets.CLOUD_SQL_CONNECTION_NAME }}" \
-            --set-secrets "$SECRETS" \
-            --set-env-vars "$ENV_VARS" \
+            --set-secrets "DATABASE_URL=DATABASE_URL:latest,AUTH_SECRET=AUTH_SECRET:latest,CRON_SECRET=CRON_SECRET:latest" \
+            --set-env-vars "NEXTAUTH_URL=${{ vars.NEXTAUTH_URL }},AUTH_TRUST_HOST=true,NODE_ENV=production,ODDS_API_SPORT=soccer_fifa_world_cup,ODDS_API_REGIONS=uk,ODDS_API_CACHE_TTL_MS=1800000,ODDS_API_KEY=${{ secrets.ODDS_API_KEY }},FOOTBALL_DATA_API_KEY=${{ secrets.FOOTBALL_DATA_API_KEY }},RESEND_API_KEY=${{ secrets.RESEND_API_KEY }},EMAIL_FROM=${{ vars.EMAIL_FROM }},ADMIN_EMAILS=${{ secrets.ADMIN_EMAILS }}" \
             --quiet
