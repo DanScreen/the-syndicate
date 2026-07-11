@@ -5,20 +5,18 @@ import { formatLegPoints, legPointsForOutcome, type AccaBookmakerRanking } from 
 import { useEffect, useMemo, useState } from "react";
 import { sortQuotesByBestOdds } from "@/lib/odds/bookmakers";
 import { groupMarkets } from "@/lib/odds/market-groups";
-import { estimateTierCredits, MARKET_TIERS } from "@/lib/odds/market-tiers";
+import { MARKET_TIERS } from "@/lib/odds/market-tiers";
 
 type MarketTierInfo = {
   id: string;
   label: string;
   description: string;
-  credits: number;
 };
 
 const MARKET_TIER_OPTIONS: MarketTierInfo[] = MARKET_TIERS.map((tier) => ({
   id: tier.id,
   label: tier.label,
   description: tier.description,
-  credits: estimateTierCredits(tier),
 }));
 
 function mergeMarkets(bulk: Market[], extended: Market[]): Market[] {
@@ -450,9 +448,7 @@ export function SubmitLegForm({
                       <p className="font-medium">
                         {loadingTierId === tier.id ? "Loading…" : tier.label}
                       </p>
-                      <p className="mt-0.5 text-xs text-muted">
-                        {tier.description} · uses ~{tier.credits} API credits
-                      </p>
+                      <p className="mt-0.5 text-xs text-muted">{tier.description}</p>
                     </button>
                   ))}
               </div>
