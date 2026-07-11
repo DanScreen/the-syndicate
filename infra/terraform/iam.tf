@@ -38,6 +38,7 @@ resource "google_project_iam_member" "github_deploy_roles" {
     "roles/iam.serviceAccountAdmin",
     "roles/resourcemanager.projectIamAdmin",
     "roles/cloudscheduler.admin",
+    "roles/storage.objectAdmin",
   ])
 
   project = var.project_id

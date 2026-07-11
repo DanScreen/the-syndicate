@@ -107,6 +107,18 @@ Requires the same Workload Identity Federation secrets, plus:
 |--------|-------------|
 | `TF_STATE_BUCKET` | GCS bucket name for Terraform state |
 
+### Terraform CI state bucket access
+
+If `terraform init` fails with `storage.objects.list` denied, the deploy service account needs object access on the state bucket (one-time, until Terraform can manage IAM itself):
+
+```bash
+gcloud storage buckets add-iam-policy-binding "gs://${TF_STATE_BUCKET}" \
+  --member="serviceAccount:YOUR_DEPLOY_SA@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role="roles/storage.objectAdmin"
+```
+
+Re-run the **Terraform** workflow after granting access. `infra/terraform/iam.tf` also grants `roles/storage.objectAdmin` at project level on future applies.
+
 ## Environments
 
 Use separate tfvars files and state prefixes for staging:
