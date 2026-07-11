@@ -1,5 +1,6 @@
 import type { Fixture, Market } from "@the-syndicate/shared";
 import { filterUpcomingFixtures, getCompetitionById } from "@the-syndicate/shared";
+import { isOddsApiConfigured, isProductionRuntime } from "./config";
 import { getMockFixtures } from "./mock-provider";
 import { fetchExtendedMarkets } from "./event-markets";
 import { fetchOddsApiFixtures } from "./the-odds-api";
@@ -8,26 +9,34 @@ export type OddsSource = "live" | "mock";
 
 export async function getFixtures(
   competitionId: string
-): Promise<{ fixtures: Fixture[]; source: OddsSource }> {
+): Promise<{ fixtures: Fixture[]; source: OddsSource; oddsConfigured: boolean }> {
   const competition = getCompetitionById(competitionId);
+  const oddsConfigured = isOddsApiConfigured();
+
   if (!competition) {
-    return { fixtures: [], source: "mock" };
+    return { fixtures: [], source: "live", oddsConfigured };
   }
 
-  if (process.env.ODDS_API_KEY) {
+  if (oddsConfigured) {
     try {
       const fixtures = await fetchOddsApiFixtures(competition.oddsApiSport, competition.name);
-      return { fixtures, source: "live" };
+      return { fixtures, source: "live", oddsConfigured: true };
     } catch (err) {
       console.error("[odds] live fetch failed:", err);
-      return { fixtures: [], source: "live" };
+      return { fixtures: [], source: "live", oddsConfigured: true };
     }
   }
 
-  console.warn("[odds] ODDS_API_KEY not set, using mock fixtures");
+  if (isProductionRuntime()) {
+    console.error("[odds] ODDS_API_KEY is not configured in production");
+    return { fixtures: [], source: "live", oddsConfigured: false };
+  }
+
+  console.warn("[odds] ODDS_API_KEY not set — using local demo fixtures");
   return {
     fixtures: filterUpcomingFixtures(getMockFixtures(competitionId)),
     source: "mock",
+    oddsConfigured: false,
   };
 }
 
@@ -49,7 +58,7 @@ export async function getFixtureMarkets(
 
   const baseTypes = new Set(fixture.markets.map((m) => m.type));
 
-  if (process.env.ODDS_API_KEY && competition) {
+  if (isOddsApiConfigured() && competition) {
     try {
       const extended = await fetchExtendedMarkets(fixtureId, competition.oddsApiSport);
       const extra = extended.filter((m) => !baseTypes.has(m.type));

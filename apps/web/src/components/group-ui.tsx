@@ -125,7 +125,8 @@ export function SubmitLegForm({
   const [loadingCompetitions, setLoadingCompetitions] = useState(true);
   const [competitionId, setCompetitionId] = useState("");
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
-  const [source, setSource] = useState<"live" | "mock">("mock");
+  const [source, setSource] = useState<"live" | "mock">("live");
+  const [oddsConfigured, setOddsConfigured] = useState(true);
   const [loadingFixtures, setLoadingFixtures] = useState(false);
   const [fixtureId, setFixtureId] = useState("");
   const [fixtureMarkets, setFixtureMarkets] = useState<Market[]>([]);
@@ -164,7 +165,8 @@ export function SubmitLegForm({
       .then((r) => r.json())
       .then((d) => {
         setFixtures(d.fixtures ?? []);
-        setSource(d.source ?? "mock");
+        setSource(d.source === "mock" ? "mock" : "live");
+        setOddsConfigured(d.oddsConfigured !== false);
       })
       .finally(() => setLoadingFixtures(false));
   }, [competitionId]);
@@ -244,12 +246,32 @@ export function SubmitLegForm({
     <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-border bg-card p-4">
       <div className="flex items-center justify-between gap-2">
         <h3 className="font-semibold">Submit your leg</h3>
-        {competitionId && (
+        {competitionId && source === "live" && oddsConfigured && fixtures.length > 0 && (
           <span className="rounded-full bg-accent-muted px-2 py-0.5 text-xs text-accent">
-            {source === "live" ? "Live odds" : "Demo odds"}
+            Live odds
+          </span>
+        )}
+        {competitionId && source === "mock" && (
+          <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-xs text-amber-300">
+            Local demo
           </span>
         )}
       </div>
+
+      {source === "mock" && (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+          These are placeholder fixtures for local development only — not real World Cup
+          matches. Add <code className="text-amber-50">ODDS_API_KEY</code> to{" "}
+          <code className="text-amber-50">apps/web/.env.local</code> for live odds.
+        </div>
+      )}
+
+      {source === "live" && !oddsConfigured && (
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+          Live odds are not configured on this server. Real fixtures cannot be loaded until{" "}
+          <code className="text-red-100">ODDS_API_KEY</code> is set in production.
+        </div>
+      )}
 
       <div className="space-y-2">
         <p className="text-xs font-medium uppercase tracking-wide text-muted">1. Pick a competition</p>
@@ -282,7 +304,9 @@ export function SubmitLegForm({
 
       {competitionId && !loadingFixtures && fixtures.length === 0 && (
         <p className="text-sm text-muted">
-          No upcoming fixtures for this competition right now. Try another competition.
+          {source === "mock"
+            ? "No demo fixtures available."
+            : "No upcoming fixtures with bookmaker odds right now. Try again closer to kickoff."}
         </p>
       )}
 

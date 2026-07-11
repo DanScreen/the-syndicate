@@ -125,7 +125,7 @@ Examples: win @ 2.50 → +1.50; loss → −1.00.
 
 Five competitions in `packages/shared/src/competitions.ts`: EPL, Championship, League One, League Two, World Cup. **Admin toggles** which are visible in the leg picker (`CompetitionSetting` table; `/admin/competitions`). Default: **World Cup only**. Match sync still runs for all catalogue competitions so settled legs can resolve when leagues are re-enabled.
 
-Fixture list uses The Odds API with `commenceTimeFrom=now` and client-side upcoming filter. When `ODDS_API_KEY` is set, **no mock fallback** — empty list if the bookmaker feed has no upcoming fixtures.
+Fixture list uses The Odds API with `commenceTimeFrom=now` and client-side upcoming filter. When `ODDS_API_KEY` is set, **no mock fallback** — empty list if the bookmaker feed has no upcoming fixtures. **Production never serves demo fixtures**; mock data is local dev only (`source: "mock"`). Check `GET /api/health` → `odds: "configured" | "missing"`.
 
 ### Odds flow
 

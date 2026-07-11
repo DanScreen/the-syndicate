@@ -21,6 +21,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Competition is not available" }, { status: 403 });
   }
 
-  const { fixtures, source } = await getFixtures(competition);
-  return NextResponse.json({ fixtures, source, competitionId: competition });
+  const { fixtures, source, oddsConfigured } = await getFixtures(competition);
+  return NextResponse.json({ fixtures, source, oddsConfigured, competitionId: competition });
 }
