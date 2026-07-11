@@ -1,10 +1,17 @@
 import type { BookmakerQuote, Fixture, Market, MarketSelection } from "@the-syndicate/shared";
 import { filterUpcomingFixtures } from "@the-syndicate/shared";
-import { formatCommenceTimeFrom } from "./config";
+import {
+  formatCommenceTimeFrom,
+  ODDS_QUOTA_BLOCK_CACHE_KEY,
+  ODDS_QUOTA_BLOCK_TTL_MS,
+  oddsCacheTtlMs,
+} from "./config";
 import type { OddsApiBookmaker, OddsApiEvent } from "./api-types";
 import { isRetailBookmaker } from "./bookmakers";
 import { getCached, setCached } from "./cache";
+import { isQuotaExhaustedError, OddsApiQuotaExhaustedError, toOddsApiError } from "./errors";
 import { addQuote, resolveDeeplink } from "./quotes";
+import { recordOddsApiQuota } from "./quota-snapshot";
 
 const API_BASE = "https://api.the-odds-api.com/v4";
 
@@ -13,6 +20,24 @@ export const DEFAULT_ODDS_SPORT = "soccer_fifa_world_cup";
 
 /** Markets on the bulk /odds endpoint (btts etc. are per-event only). */
 const BULK_SOCCER_MARKETS = "h2h,spreads,totals";
+
+function assertQuotaAvailable() {
+  if (getCached<boolean>(ODDS_QUOTA_BLOCK_CACHE_KEY)) {
+    throw new OddsApiQuotaExhaustedError(
+      401,
+      JSON.stringify({
+        message: "Usage quota has been reached. See usage plans at https://the-odds-api.com",
+        error_code: "OUT_OF_USAGE_CREDITS",
+      })
+    );
+  }
+}
+
+function markQuotaExhausted(err: unknown) {
+  if (isQuotaExhaustedError(err)) {
+    setCached(ODDS_QUOTA_BLOCK_CACHE_KEY, true, ODDS_QUOTA_BLOCK_TTL_MS);
+  }
+}
 
 function collectTotalLines(bookmakers: OddsApiBookmaker[]): number[] {
   const lines = new Set<number>();
@@ -212,44 +237,33 @@ export async function fetchOddsApiFixtures(
   sport: string = process.env.ODDS_API_SPORT ?? DEFAULT_ODDS_SPORT,
   competitionName?: string
 ): Promise<Fixture[]> {
-  const apiKey = process.env.ODDS_API_KEY;
-  if (!apiKey) {
-    throw new Error("ODDS_API_KEY is not configured");
-  }
-
   const regions = process.env.ODDS_API_REGIONS ?? "uk";
-  const cacheTtlMs = Number(process.env.ODDS_API_CACHE_TTL_MS ?? 600_000);
-  const cacheKey = `odds-api:v3:${sport}:${regions}`;
+  const cacheTtlMs = oddsCacheTtlMs();
+  const cacheKey = oddsApiCacheKey(sport, regions);
 
   const cached = getCached<Fixture[]>(cacheKey);
   if (cached) return cached;
 
-  const url = new URL(`${API_BASE}/sports/${sport}/odds`);
-  url.searchParams.set("apiKey", apiKey);
-  url.searchParams.set("regions", regions);
-  url.searchParams.set("markets", BULK_SOCCER_MARKETS);
-  url.searchParams.set("oddsFormat", "decimal");
-  url.searchParams.set("includeLinks", "true");
-  url.searchParams.set("commenceTimeFrom", formatCommenceTimeFrom());
+  try {
+    const { events } = await fetchOddsApiEventsRaw(sport, {
+      commenceTimeFrom: formatCommenceTimeFrom(),
+    });
 
-  const res = await fetch(url.toString(), { next: { revalidate: 0 } });
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`The Odds API error ${res.status}: ${body}`);
+    const fixtures = filterUpcomingFixtures(
+      events
+        .map((event) => {
+          const fixture = mapOddsEventToFixture(event);
+          if (!fixture) return null;
+          return competitionName ? { ...fixture, competition: competitionName } : fixture;
+        })
+        .filter((f): f is Fixture => f !== null)
+    ).sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime());
+
+    return setCached(cacheKey, fixtures, cacheTtlMs);
+  } catch (err) {
+    markQuotaExhausted(err);
+    throw err;
   }
-
-  const events = (await res.json()) as OddsApiEvent[];
-  const fixtures = filterUpcomingFixtures(
-    events
-      .map((event) => {
-        const fixture = mapOddsEventToFixture(event);
-        if (!fixture) return null;
-        return competitionName ? { ...fixture, competition: competitionName } : fixture;
-      })
-      .filter((f): f is Fixture => f !== null)
-  ).sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime());
-
-  return setCached(cacheKey, fixtures, cacheTtlMs);
 }
 
 export function oddsApiCacheKey(sport: string, regions: string): string {
@@ -260,6 +274,8 @@ export async function fetchOddsApiEventsRaw(
   sport: string,
   options?: { commenceTimeFrom?: string | null }
 ): Promise<{ events: OddsApiEvent[]; status: number; headers: Headers }> {
+  assertQuotaAvailable();
+
   const apiKey = process.env.ODDS_API_KEY;
   if (!apiKey) {
     throw new Error("ODDS_API_KEY is not configured");
@@ -279,13 +295,13 @@ export async function fetchOddsApiEventsRaw(
   const res = await fetch(url.toString(), { next: { revalidate: 0 } });
   if (!res.ok) {
     const body = await res.text();
-    throw Object.assign(new Error(`The Odds API error ${res.status}: ${body}`), {
-      status: res.status,
-      body,
-    });
+    const err = toOddsApiError(res.status, body);
+    markQuotaExhausted(err);
+    throw err;
   }
 
   const events = (await res.json()) as OddsApiEvent[];
+  recordOddsApiQuota(res.headers);
   return { events, status: res.status, headers: res.headers };
 }
 
@@ -293,11 +309,13 @@ export async function fetchOddsApiEvent(
   eventId: string,
   sport: string = process.env.ODDS_API_SPORT ?? DEFAULT_ODDS_SPORT
 ): Promise<OddsApiEvent | null> {
+  assertQuotaAvailable();
+
   const apiKey = process.env.ODDS_API_KEY;
   if (!apiKey) return null;
 
   const regions = process.env.ODDS_API_REGIONS ?? "uk";
-  const cacheTtlMs = Number(process.env.ODDS_API_CACHE_TTL_MS ?? 600_000);
+  const cacheTtlMs = oddsCacheTtlMs();
   const cacheKey = `odds-api-event:v3:${sport}:${regions}:${eventId}`;
 
   const cached = getCached<OddsApiEvent>(cacheKey);
@@ -313,10 +331,13 @@ export async function fetchOddsApiEvent(
   const res = await fetch(url.toString(), { next: { revalidate: 0 } });
   if (!res.ok) {
     const body = await res.text();
-    throw new Error(`The Odds API event error ${res.status}: ${body}`);
+    const err = toOddsApiError(res.status, body);
+    markQuotaExhausted(err);
+    throw err;
   }
 
   const raw = (await res.json()) as OddsApiEvent | OddsApiEvent[];
+  recordOddsApiQuota(res.headers);
   const event = Array.isArray(raw) ? (raw[0] ?? null) : raw;
   if (event?.id) setCached(cacheKey, event, cacheTtlMs);
   return event?.id ? event : null;

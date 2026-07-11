@@ -1,11 +1,18 @@
-import { formatCommenceTimeFrom, isOddsApiConfigured } from "@/lib/odds/config";
-import { getCacheMetadata, getCachedFixtureCount } from "@/lib/odds/cache";
+import {
+  formatCommenceTimeFrom,
+  isOddsApiConfigured,
+  ODDS_QUOTA_BLOCK_CACHE_KEY,
+  oddsCacheTtlMs,
+} from "@/lib/odds/config";
+import { getCached, getCacheMetadata, getCachedFixtureCount } from "@/lib/odds/cache";
 import { isRetailBookmaker } from "@/lib/odds/bookmakers";
+import { isQuotaExhaustedError, OddsApiError } from "@/lib/odds/errors";
 import {
   fetchOddsApiEventsRaw,
   mapOddsEventToFixture,
   oddsApiCacheKey,
 } from "@/lib/odds/the-odds-api";
+import { getOddsApiQuotaSnapshot } from "@/lib/odds/quota-snapshot";
 import { filterUpcomingFixtures, getCompetitionById } from "@the-syndicate/shared";
 
 export type OddsEventSample = {
@@ -25,6 +32,14 @@ export type OddsDiagnosticsResult = {
   competitionId: string;
   competitionName: string;
   oddsConfigured: boolean;
+  quotaBlocked: boolean;
+  probed: boolean;
+  quota: {
+    requestsRemaining: string | null;
+    requestsUsed: string | null;
+    lastRecordedAt: string | null;
+    source: "probe" | "snapshot" | "none";
+  };
   sport: string;
   regions: string;
   cacheTtlMs: number;
@@ -72,9 +87,13 @@ function dropReasonForEvent(
   return "Could not build h2h, totals, or spreads from retail quotes";
 }
 
+function isQuotaErrorMessage(message: string | null): boolean {
+  return Boolean(message?.includes("OUT_OF_USAGE_CREDITS"));
+}
+
 export async function runOddsDiagnostics(
   competitionId: string,
-  options?: { fresh?: boolean }
+  options?: { probe?: boolean }
 ): Promise<OddsDiagnosticsResult> {
   const competition = getCompetitionById(competitionId);
   if (!competition) {
@@ -82,18 +101,29 @@ export async function runOddsDiagnostics(
   }
 
   const regions = process.env.ODDS_API_REGIONS ?? "uk";
-  const cacheTtlMs = Number(process.env.ODDS_API_CACHE_TTL_MS ?? 600_000);
+  const cacheTtlMs = oddsCacheTtlMs();
   const cacheKey = oddsApiCacheKey(competition.oddsApiSport, regions);
   const cacheMeta = getCacheMetadata(cacheKey);
   const cachedFixtureCount = getCachedFixtureCount(cacheKey);
   const now = Date.now();
   const oddsConfigured = isOddsApiConfigured();
+  const quotaBlocked = Boolean(getCached<boolean>(ODDS_QUOTA_BLOCK_CACHE_KEY));
+  const probed = options?.probe === true;
+  const snapshot = getOddsApiQuotaSnapshot();
 
   const base: OddsDiagnosticsResult = {
     checkedAt: new Date().toISOString(),
     competitionId,
     competitionName: competition.name,
     oddsConfigured,
+    quotaBlocked,
+    probed,
+    quota: {
+      requestsRemaining: snapshot?.requestsRemaining ?? null,
+      requestsUsed: snapshot?.requestsUsed ?? null,
+      lastRecordedAt: snapshot?.recordedAt ?? null,
+      source: snapshot ? "snapshot" : "none",
+    },
     sport: competition.oddsApiSport,
     regions,
     cacheTtlMs,
@@ -108,13 +138,13 @@ export async function runOddsDiagnostics(
       error: null,
       requestsRemaining: null,
       requestsUsed: null,
-      usedCommenceTimeFrom: true,
+      usedCommenceTimeFrom: false,
     },
     counts: {
       rawEvents: 0,
       withRetailBookmakers: 0,
       mappedToFixtures: 0,
-      afterKickoffFilter: 0,
+      afterKickoffFilter: cachedFixtureCount ?? 0,
     },
     sampleEvents: [],
     sampleFixtures: [],
@@ -128,8 +158,25 @@ export async function runOddsDiagnostics(
     return base;
   }
 
+  if (quotaBlocked) {
+    base.interpretation.push(
+      "The Odds API monthly quota is exhausted. Fixture fetches are paused for 15 minutes to avoid wasting calls. Upgrade or wait for your plan to reset at https://the-odds-api.com"
+    );
+    if (!probed) {
+      base.interpretation.push(
+        "This page loaded from cache metadata only. Use “Probe API” when you have credits again — each probe costs API quota."
+      );
+    }
+    if (!probed) return base;
+  }
+
+  if (!probed) {
+    base.interpretation = buildCacheOnlyInterpretation(base);
+    return base;
+  }
+
   try {
-    const commenceTimeFrom = options?.fresh !== false ? formatCommenceTimeFrom() : null;
+    const commenceTimeFrom = formatCommenceTimeFrom();
     const { events, status, headers } = await fetchOddsApiEventsRaw(competition.oddsApiSport, {
       commenceTimeFrom,
     });
@@ -140,7 +187,13 @@ export async function runOddsDiagnostics(
       error: null,
       requestsRemaining: headers.get("x-requests-remaining"),
       requestsUsed: headers.get("x-requests-used"),
-      usedCommenceTimeFrom: Boolean(commenceTimeFrom),
+      usedCommenceTimeFrom: true,
+    };
+    base.quota = {
+      requestsRemaining: base.api.requestsRemaining,
+      requestsUsed: base.api.requestsUsed,
+      lastRecordedAt: new Date().toISOString(),
+      source: "probe",
     };
 
     const mapped = events.map((event) => {
@@ -185,8 +238,7 @@ export async function runOddsDiagnostics(
     base.interpretation = buildInterpretation(base);
     return base;
   } catch (err) {
-    const status = typeof err === "object" && err && "status" in err ? Number(err.status) : null;
-    const body = typeof err === "object" && err && "body" in err ? String(err.body) : null;
+    const status = err instanceof OddsApiError ? err.status : null;
     base.api = {
       ok: false,
       status,
@@ -195,22 +247,50 @@ export async function runOddsDiagnostics(
       requestsUsed: null,
       usedCommenceTimeFrom: true,
     };
-    if (body) base.api.error = `${base.api.error} — ${body}`;
-    base.interpretation = buildInterpretation(base);
+    base.interpretation = buildInterpretation(base, err);
     return base;
   }
 }
 
-function buildInterpretation(result: OddsDiagnosticsResult): string[] {
+function buildCacheOnlyInterpretation(result: OddsDiagnosticsResult): string[] {
+  const lines: string[] = [
+    "Loaded cache metadata only — no API call made (saves quota).",
+  ];
+
+  if (result.cache.hit && (result.cache.cachedFixtureCount ?? 0) > 0) {
+    lines.push(
+      `${result.cache.cachedFixtureCount} fixture(s) are cached on this instance and should be served to users until the cache expires.`
+    );
+  } else if (result.cache.hit) {
+    lines.push("Cache hit but empty — users will see no fixtures until the cache expires or quota returns.");
+  } else {
+    lines.push("No fixture cache on this instance. Click “Probe API” only when you have quota available.");
+  }
+
+  lines.push(
+    "Each bulk odds fetch uses several API credits (h2h + totals + spreads × UK region). Per-fixture market loads cost extra."
+  );
+
+  return lines;
+}
+
+function buildInterpretation(result: OddsDiagnosticsResult, err?: unknown): string[] {
   const lines: string[] = [];
 
   if (!result.oddsConfigured) return lines;
 
   if (!result.api.ok) {
-    if (result.api.status === 401) {
+    if (isQuotaExhaustedError(err) || isQuotaErrorMessage(result.api.error)) {
+      lines.push(
+        "The Odds API monthly quota is exhausted (OUT_OF_USAGE_CREDITS). Upgrade your plan or wait for the monthly reset at https://the-odds-api.com"
+      );
+      lines.push(
+        "The app will stop calling the API for 15 minutes after this error to avoid burning more credits."
+      );
+    } else if (result.api.status === 401) {
       lines.push("The Odds API rejected the key (401). Check ODDS_API_KEY in GitHub secrets / Cloud Run.");
     } else if (result.api.status === 429) {
-      lines.push("The Odds API quota is exhausted (429). Wait for reset or upgrade the plan.");
+      lines.push("The Odds API rate limit hit (429). Wait and retry.");
     } else {
       lines.push("The Odds API request failed. See the error above.");
     }
@@ -238,13 +318,13 @@ function buildInterpretation(result: OddsDiagnosticsResult): string[] {
 
   if (result.counts.afterKickoffFilter > 0) {
     lines.push(
-      `${result.counts.afterKickoffFilter} upcoming fixture(s) should appear in the leg picker. If users still see an empty list, the app cache may be stale — wait for TTL or redeploy.`
+      `${result.counts.afterKickoffFilter} upcoming fixture(s) should appear in the leg picker. Cached for ${Math.round(result.cacheTtlMs / 60_000)} minutes per Cloud Run instance.`
     );
   }
 
   if (result.cache.hit && result.cache.cachedFixtureCount === 0) {
     lines.push(
-      "In-memory cache currently holds an empty fixture list for this sport. A fresh deploy or waiting for cache TTL can clear it."
+      "In-memory cache currently holds an empty fixture list for this sport. Wait for cache TTL or redeploy."
     );
   }
 

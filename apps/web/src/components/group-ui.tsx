@@ -266,10 +266,10 @@ export function SubmitLegForm({
         </div>
       )}
 
-      {source === "live" && !oddsConfigured && (
+      {source === "live" && !oddsConfigured && process.env.NODE_ENV === "development" && (
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-          Live odds are not configured on this server. Real fixtures cannot be loaded until{" "}
-          <code className="text-red-100">ODDS_API_KEY</code> is set in production.
+          Live odds are not configured locally. Add <code className="text-red-100">ODDS_API_KEY</code> to{" "}
+          <code className="text-red-100">apps/web/.env.local</code>.
         </div>
       )}
 

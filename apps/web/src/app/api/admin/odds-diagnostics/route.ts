@@ -9,12 +9,12 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url);
   const competition = url.searchParams.get("competition") ?? DEFAULT_COMPETITION_ID;
-  const fresh = url.searchParams.get("fresh") !== "false";
+  const probe = url.searchParams.get("probe") === "true";
 
   if (!isValidCompetitionId(competition)) {
     return NextResponse.json({ error: "Unknown competition" }, { status: 400 });
   }
 
-  const diagnostics = await runOddsDiagnostics(competition, { fresh });
+  const diagnostics = await runOddsDiagnostics(competition, { probe });
   return NextResponse.json({ diagnostics });
 }

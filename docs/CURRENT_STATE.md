@@ -375,7 +375,7 @@ Recent migrations include `20260711100000_competition_settings` (admin competiti
 4. **Auto-settle requires synced `Match` rows** — 5-min cron or manual `POST /api/internal/sync-matches`.
 5. **Cross-competition acca** — often no single bookmaker; best-per-leg odds locked at submission; per-leg deeplinks at lock only.
 6. **Betslip deeplinks** require live odds API (`includeLinks`); mock mode falls back to bookmaker hub URLs only.
-7. **The Odds API quota** — per-event market calls cost credits; lazy-loaded on fixture select.
+7. **The Odds API quota** — free tier is 500 credits/month. Bulk fixture fetch costs several credits per call; per-fixture BTTS/DC/DNB loads cost extra. Default cache TTL 30 min; quota exhaustion pauses API calls for 15 min internally (users see a generic empty fixture list). **Admin → Odds** shows credits used/remaining; probe sparingly.
 8. **Terraform CI** may fail on GCS state bucket permissions — app deploy unaffected.
 9. **Cloud Run in-memory cache** — football-data responses cached per instance (60s default); cron sync bypasses cache. Odds API cache separate.
 10. **Mobile app** — still calls old fixtures API without `?competition=`; paused until web validated.

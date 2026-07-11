@@ -7,6 +7,14 @@ type Diagnostics = {
   competitionId: string;
   competitionName: string;
   oddsConfigured: boolean;
+  quotaBlocked: boolean;
+  probed: boolean;
+  quota: {
+    requestsRemaining: string | null;
+    requestsUsed: string | null;
+    lastRecordedAt: string | null;
+    source: "probe" | "snapshot" | "none";
+  };
   sport: string;
   regions: string;
   cacheTtlMs: number;
@@ -75,23 +83,26 @@ export function AdminOddsDiagnosticsPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    const res = await fetch(
-      `/api/admin/odds-diagnostics?competition=${encodeURIComponent(competitionId)}&fresh=true`
-    );
-    setLoading(false);
-    if (!res.ok) {
-      setError("Failed to load diagnostics");
-      return;
-    }
-    const data = await res.json();
-    setDiagnostics(data.diagnostics ?? null);
-  }, [competitionId]);
+  const load = useCallback(
+    async (probe: boolean) => {
+      setLoading(true);
+      setError("");
+      const res = await fetch(
+        `/api/admin/odds-diagnostics?competition=${encodeURIComponent(competitionId)}&probe=${probe}`
+      );
+      setLoading(false);
+      if (!res.ok) {
+        setError("Failed to load diagnostics");
+        return;
+      }
+      const data = await res.json();
+      setDiagnostics(data.diagnostics ?? null);
+    },
+    [competitionId]
+  );
 
   useEffect(() => {
-    void load();
+    void load(false);
   }, [load]);
 
   return (
@@ -113,13 +124,26 @@ export function AdminOddsDiagnosticsPanel() {
         </label>
         <button
           type="button"
-          onClick={() => void load()}
+          onClick={() => void load(false)}
           disabled={loading}
           className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-card disabled:opacity-50"
         >
-          {loading ? "Refreshing…" : "Refresh (bypass cache read)"}
+          {loading ? "Loading…" : "Refresh cache info"}
+        </button>
+        <button
+          type="button"
+          onClick={() => void load(true)}
+          disabled={loading}
+          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-black hover:bg-green-400 disabled:opacity-50"
+        >
+          {loading ? "Probing…" : "Probe API (uses credits)"}
         </button>
       </div>
+
+      <p className="text-xs text-muted">
+        Bulk fixture fetches cost several API credits per call. This page loads cache metadata by
+        default — only probe when you need a live check.
+      </p>
 
       {error && (
         <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
@@ -129,34 +153,98 @@ export function AdminOddsDiagnosticsPanel() {
 
       {diagnostics && (
         <>
+          <section className="rounded-xl border border-border bg-card p-5">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <h2 className="font-semibold">The Odds API usage</h2>
+                <p className="mt-1 text-sm text-muted">
+                  Credits remaining on your current plan. Probe the API after rotating your key to
+                  refresh these numbers.
+                </p>
+              </div>
+              <a
+                href="https://the-odds-api.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-accent hover:underline"
+              >
+                Manage plan →
+              </a>
+            </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <Stat
+                label="Credits remaining"
+                value={diagnostics.quota.requestsRemaining ?? "Unknown"}
+              />
+              <Stat label="Credits used" value={diagnostics.quota.requestsUsed ?? "Unknown"} />
+              <Stat
+                label="Status"
+                value={diagnostics.quotaBlocked ? "Exhausted (paused)" : "OK"}
+              />
+            </div>
+            <p className="mt-3 text-xs text-muted">
+              Last recorded{" "}
+              {diagnostics.quota.lastRecordedAt
+                ? formatKickoff(diagnostics.quota.lastRecordedAt)
+                : "never — run Probe API after updating ODDS_API_KEY"}
+              {diagnostics.quota.source !== "none" && ` · source: ${diagnostics.quota.source}`}
+            </p>
+          </section>
+
           <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <Stat
               label="API key"
               value={diagnostics.oddsConfigured ? "Configured" : "Missing"}
             />
-            <Stat label="API status" value={diagnostics.api.ok ? "OK" : "Error"} />
-            <Stat label="Raw events" value={diagnostics.counts.rawEvents} />
-            <Stat label="User-facing fixtures" value={diagnostics.counts.afterKickoffFilter} />
+            <Stat
+              label="Last probe"
+              value={diagnostics.probed ? (diagnostics.api.ok ? "OK" : "Error") : "Cache only"}
+            />
+            <Stat label="Cached fixtures" value={diagnostics.cache.cachedFixtureCount ?? 0} />
+            <Stat
+              label="User fixtures"
+              value={
+                diagnostics.probed
+                  ? diagnostics.counts.afterKickoffFilter
+                  : diagnostics.cache.cachedFixtureCount ?? 0
+              }
+            />
           </section>
+          {diagnostics.probed && (
+            <section className="grid gap-3 sm:grid-cols-3">
+              <Stat label="Raw events" value={diagnostics.counts.rawEvents} />
+              <Stat label="Mapped" value={diagnostics.counts.mappedToFixtures} />
+              <Stat label="After kickoff filter" value={diagnostics.counts.afterKickoffFilter} />
+            </section>
+          )}
 
           <section className="rounded-xl border border-border bg-card p-5 text-sm">
             <h2 className="font-semibold">Pipeline</h2>
-            <ol className="mt-3 list-decimal space-y-1 pl-5 text-muted">
-              <li>
-                Odds API <code className="text-foreground">{diagnostics.sport}</code> · region{" "}
-                <code className="text-foreground">{diagnostics.regions}</code>
-              </li>
-              <li>{diagnostics.counts.rawEvents} events returned</li>
-              <li>{diagnostics.counts.withRetailBookmakers} with retail bookmakers</li>
-              <li>{diagnostics.counts.mappedToFixtures} mapped to fixtures (h2h/totals/spreads)</li>
-              <li>{diagnostics.counts.afterKickoffFilter} after upcoming kickoff filter</li>
-            </ol>
+            {diagnostics.probed ? (
+              <ol className="mt-3 list-decimal space-y-1 pl-5 text-muted">
+                <li>
+                  Odds API <code className="text-foreground">{diagnostics.sport}</code> · region{" "}
+                  <code className="text-foreground">{diagnostics.regions}</code>
+                </li>
+                <li>{diagnostics.counts.rawEvents} events returned</li>
+                <li>{diagnostics.counts.withRetailBookmakers} with retail bookmakers</li>
+                <li>{diagnostics.counts.mappedToFixtures} mapped to fixtures (h2h/totals/spreads)</li>
+                <li>{diagnostics.counts.afterKickoffFilter} after upcoming kickoff filter</li>
+              </ol>
+            ) : (
+              <p className="mt-3 text-muted">
+                No live API call yet. Cache on this instance:{" "}
+                {diagnostics.cache.hit
+                  ? `${diagnostics.cache.cachedFixtureCount ?? 0} fixtures (${Math.round((diagnostics.cache.remainingMs ?? 0) / 1000)}s TTL left)`
+                  : "empty / expired"}
+                .
+              </p>
+            )}
             <p className="mt-4 text-xs text-muted">
               Checked {formatKickoff(diagnostics.checkedAt)} · cache{" "}
               {diagnostics.cache.hit
                 ? `hit (${diagnostics.cache.cachedFixtureCount ?? 0} fixtures, ${Math.round((diagnostics.cache.remainingMs ?? 0) / 1000)}s left)`
-                : "miss"}{" "}
-              · quota remaining {diagnostics.api.requestsRemaining ?? "—"}
+                : "miss"}
             </p>
             {diagnostics.api.error && (
               <p className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-red-200">
