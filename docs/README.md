@@ -51,11 +51,13 @@ Specs are **design contracts**. [CURRENT_STATE.md](./CURRENT_STATE.md) is **as-b
 
 | # | Backlog item | Notes |
 |---|--------------|-------|
-| 1 | FA Cup + EFL Cup | Quick win — `competitions.ts` |
-| 2 | GCP cost reduction | Cloud SQL is ~90% of forecast; see [DEPLOYMENT.md](./DEPLOYMENT.md#cost-optimization) |
-| 3 | User profile page | Optional polish; `/performance` already covers stats |
-| 4 | football-data.org tier upgrade | Ops — L1/L2 sync 403 on free tier |
-| 5 | Mobile catch-up | Paused until web validated |
+| 1 | Validate with real users | Success metric — full loop on prod |
+| 2 | Affiliate links | Tracked bookmaker deeplinks + disclosure — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md) |
+| 3 | Better betslip deeplinks | Acca-builder URLs, fewer hub fallbacks |
+| 4 | FA Cup + EFL Cup | Quick win — `competitions.ts` |
+| 5 | GCP cost reduction | Cloud SQL is ~90% of forecast; see [DEPLOYMENT.md](./DEPLOYMENT.md#cost-optimization) |
+| 6 | football-data.org tier upgrade | Ops — L1/L2 sync 403 on free tier |
+| 7 | Mobile catch-up | Paused until web validated |
 
 Full list: [ROADMAP.md](./ROADMAP.md).
 
@@ -74,7 +76,8 @@ docs/
 └── specs/
     ├── competitions-and-results.md   ← Phases A–C done; Phase 1b backlog
     ├── group-stats-and-points.md     ← Phases 1–4 done
-    └── platform-admin.md             ← Admin, analytics, points-first UX (shipped)
+    ├── platform-admin.md             ← Admin, analytics, points-first UX (shipped)
+    └── affiliate-and-betslips.md     ← Affiliate tracking + betslip deeplink improvements (backlog)
 ```
 
 ---

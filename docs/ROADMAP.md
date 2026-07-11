@@ -41,13 +41,23 @@ Core loop and MVP polish are **shipped**:
 | # | Feature | Type | Notes |
 |---|---------|------|-------|
 | 1 | **Validate with real users** | Product | Run 2–3 friend groups through full loop on prod |
-| 2 | **FA Cup + EFL Cup** | Code | Phase 1b — `packages/shared/src/competitions.ts` |
-| 3 | **GCP cost reduction** | Ops/infra | Cloud SQL ~90% of spend; see [DEPLOYMENT.md](./DEPLOYMENT.md#cost-optimization) |
-| 4 | **Public platform leaderboards** | Code | Admin version shipped; open to all users when ready |
-| 5 | User profile page | Code | Optional; `/performance` covers cross-group stats today |
-| 6 | football-data.org tier upgrade | Ops | L1/L2 sync returns 403 on free tier |
-| 7 | Mobile app catch-up | Code | Paused — needs `?competition=` API |
-| 8 | Terraform CI GCS permissions fix | Infra | App deploy unaffected |
+| 2 | **Affiliate links** | Code + ops | Bookmaker affiliate programmes, tracked outbound deeplinks, disclosure UI — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md) Phase A |
+| 3 | **Better betslip deeplinks** | Code | Acca-builder URLs, fewer hub fallbacks, per-leg link quality — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md) Phase B |
+| 4 | **FA Cup + EFL Cup** | Code | Phase 1b — `packages/shared/src/competitions.ts` |
+| 5 | **GCP cost reduction** | Ops/infra | Cloud SQL ~90% of spend; see [DEPLOYMENT.md](./DEPLOYMENT.md#cost-optimization) |
+| 6 | **Public platform leaderboards** | Code | Admin version shipped; open to all users when ready |
+| 7 | User profile page | Code | Optional; `/performance` covers cross-group stats today |
+| 8 | football-data.org tier upgrade | Ops | L1/L2 sync returns 403 on free tier |
+| 9 | Mobile app catch-up | Code | Paused — needs `?competition=` API |
+| 10 | Terraform CI GCS permissions fix | Infra | App deploy unaffected |
+
+---
+
+## Deferred (no current plan)
+
+| Item | Notes |
+|------|-------|
+| **Paid subscriptions** | Core syndicate loop stays free; revisit only if a clear paid value prop emerges (e.g. organiser tools with proven demand) |
 
 ---
 
@@ -65,9 +75,9 @@ Push notifications, chat/feed, stake pooling, social sign-in, more sports.
 
 ## Operator notes
 
-**Secrets (GitHub):** `ODDS_API_KEY`, `FOOTBALL_DATA_API_KEY`, `DATABASE_URL`, `AUTH_SECRET`, `CRON_SECRET`, `RESEND_API_KEY` (optional), GCP deploy secrets.
+**Variables (GitHub):** `EMAIL_FROM` (optional).
 
-**Variables (GitHub):** `EMAIL_FROM` (optional), `ADMIN_EMAILS` (optional, comma-separated developer emails).
+**Secrets (GitHub):** `ODDS_API_KEY`, `FOOTBALL_DATA_API_KEY`, `DATABASE_URL`, `AUTH_SECRET`, `CRON_SECRET`, `RESEND_API_KEY` (optional), `ADMIN_EMAILS` (optional, comma-separated developer emails), GCP deploy secrets.
 
 **Local odds:** `ODDS_API_KEY` in `apps/web/.env.local` — omit for mock fixtures.
 

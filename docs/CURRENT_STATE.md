@@ -313,7 +313,7 @@ Computed on read from settled rounds. No materialised stats tables.
 
 Secrets: `DATABASE_URL`, `AUTH_SECRET`, `ODDS_API_KEY`, `FOOTBALL_DATA_API_KEY`, `CRON_SECRET`, `RESEND_API_KEY` (optional), GCP deploy secrets.
 
-Env vars on Cloud Run: `NEXTAUTH_URL`, `EMAIL_FROM`, `ADMIN_EMAILS`, `ODDS_API_SPORT`, `ODDS_API_REGIONS=uk`, etc. See `.github/workflows/deploy.yml`.
+Env vars on Cloud Run: `NEXTAUTH_URL`, `EMAIL_FROM`, `ADMIN_EMAILS` (from GitHub secret), `ODDS_API_SPORT`, `ODDS_API_REGIONS=uk`, etc. See `.github/workflows/deploy.yml`.
 
 ---
 
@@ -379,7 +379,7 @@ Recent migrations include `20260710100000_user_role_analytics` (admin role + ana
 - [x] `NEXTAUTH_URL=https://www.the-syndicate.uk`
 - [x] Cloudflare Worker + www redirect configured
 - [x] `RESEND_API_KEY` + `EMAIL_FROM` in GitHub (optional, for email notifications)
-- [ ] `ADMIN_EMAILS` in GitHub variables (developer admin access)
+- [x] `ADMIN_EMAILS` in GitHub secrets + passed to Cloud Run via `deploy.yml`
 
 ## GCP cost notes
 

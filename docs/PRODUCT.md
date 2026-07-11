@@ -72,9 +72,12 @@ Platform admins (`ADMIN_EMAILS`) see an **Admin** tab in the header with `/admin
 - [x] 5-minute match sync cron
 
 ### Backlog
+- [ ] Affiliate links + improved betslip deeplinks — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md)
 - [ ] Public platform leaderboards (admin version exists)
 - [ ] Dedicated user profile page (optional — `/performance` covers stats today)
 - [ ] FA Cup + EFL Cup competitions
+
+**Deferred:** paid subscriptions — no current plan; core loop stays free.
 
 Full priority list: [ROADMAP.md](./ROADMAP.md)
 

@@ -34,7 +34,7 @@
 2. User signs up or signs in with a matching email → `User.role` set to `admin`.
 3. JWT/session refreshed with `role` from DB on each auth cycle (`auth.ts` jwt callback) — no re-login required after adding an email.
 
-**Production:** GitHub Actions variable `ADMIN_EMAILS` → Cloud Run env (see [DEPLOYMENT.md](../DEPLOYMENT.md)).
+**Production:** GitHub Actions secret `ADMIN_EMAILS` → Cloud Run env (see [DEPLOYMENT.md](../DEPLOYMENT.md)).
 
 **Local:** `apps/web/.env.local` — see `.env.example`.
 

@@ -131,7 +131,8 @@ Omit either variable to skip emails (no-op).
 
 Grant developer access to `/admin` (overview + platform leaderboards).
 
-1. Add `ADMIN_EMAILS` GitHub **variable** — comma-separated emails, e.g. `you@example.com,teammate@example.com`.
+1. Add `ADMIN_EMAILS` as a GitHub **secret** (comma-separated emails), e.g. `you@example.com,teammate@example.com`.  
+   `deploy.yml` reads `secrets.ADMIN_EMAILS` (must match repo config — not `vars`).
 2. Deploy — `deploy.yml` passes it to Cloud Run.
 3. Each listed user signs in (or refreshes the page) — `User.role` is promoted and reflected in session automatically.
 4. New sign-ups with a listed email are created as admin automatically.
@@ -164,7 +165,7 @@ Full behaviour: [specs/platform-admin.md](./specs/platform-admin.md).
 | `CLOUD_RUN_SERVICE` | `the-syndicate-web` |
 | `NEXTAUTH_URL` | `https://the-syndicate.example.com` |
 | `EMAIL_FROM` | `The Syndicate <notifications@the-syndicate.uk>` (optional) |
-| `ADMIN_EMAILS` | `dev@example.com,other@example.com` (optional) |
+| `ADMIN_EMAILS` | Comma-separated emails granted platform admin (GitHub **secret** in `deploy.yml`) |
 
 ## Deployment flow (on push to `main`)
 
