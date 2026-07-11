@@ -41,6 +41,27 @@ export function mapEventToExtendedMarkets(
       buildCorrectScoreMarket(bookmakers, "correct_score", "correct_score", "Correct Score")
     );
   }
+  if (keys.has("alternate_spreads")) {
+    markets.push(
+      ...buildAlternateSpreadsMarkets(
+        event,
+        bookmakers,
+        "alternate_spreads",
+        "asian",
+        "Asian Handicap"
+      )
+    );
+  }
+  if (keys.has("alternate_totals")) {
+    markets.push(
+      ...buildAlternateTotalsMarkets(
+        bookmakers,
+        "alternate_totals",
+        "",
+        "Over/Under Goals"
+      )
+    );
+  }
   if (keys.has("corners_1x2")) {
     markets.push(
       buildH2hStyleMarket(

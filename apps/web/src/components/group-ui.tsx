@@ -5,6 +5,7 @@ import { formatLegPoints, legPointsForOutcome, type AccaBookmakerRanking } from 
 import { useEffect, useMemo, useState } from "react";
 import { sortQuotesByBestOdds } from "@/lib/odds/bookmakers";
 import { groupMarkets } from "@/lib/odds/market-groups";
+import { estimateTierCredits, MARKET_TIERS } from "@/lib/odds/market-tiers";
 
 type MarketTierInfo = {
   id: string;
@@ -12,6 +13,13 @@ type MarketTierInfo = {
   description: string;
   credits: number;
 };
+
+const MARKET_TIER_OPTIONS: MarketTierInfo[] = MARKET_TIERS.map((tier) => ({
+  id: tier.id,
+  label: tier.label,
+  description: tier.description,
+  credits: estimateTierCredits(tier),
+}));
 
 function mergeMarkets(bulk: Market[], extended: Market[]): Market[] {
   const byType = new Map<string, Market>();
@@ -200,6 +208,7 @@ export function SubmitLegForm({
     setMarketsError("");
     setFixtureMarkets([]);
     setLoadedTiers([]);
+    setAvailableTiers(MARKET_TIER_OPTIONS);
     fetch(
       `/api/fixtures/${fixtureId}/markets?competition=${encodeURIComponent(competitionId)}&tier=core`
     )
@@ -212,7 +221,6 @@ export function SubmitLegForm({
         }
         setFixtureMarkets(d.markets ?? []);
         setLoadedTiers(["core"]);
-        setAvailableTiers(d.tiers ?? []);
       })
       .catch(() => {
         setFixtureMarkets([]);

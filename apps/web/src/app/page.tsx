@@ -84,7 +84,7 @@ export default function HomePage() {
             <div className="grid gap-px bg-border md:grid-cols-3">
               {[
                 { who: "Dan", pick: "Arsenal to win", odds: "1.85" },
-                { who: "Mike", pick: "Over 2.5 goals", odds: "1.72" },
+                { who: "Matty", pick: "Over 2.5 goals", odds: "1.72" },
                 { who: "Tom", pick: "BTTS — Yes", odds: "1.65" },
               ].map((leg) => (
                 <div key={leg.who} className="bg-card p-5">

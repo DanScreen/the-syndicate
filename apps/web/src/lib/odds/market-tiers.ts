@@ -21,8 +21,14 @@ export const MARKET_TIERS: MarketTierDef[] = [
   {
     id: "core",
     label: "Popular extras",
-    description: "Both teams to score, double chance, correct score",
-    marketKeys: ["btts", "double_chance", "correct_score"],
+    description: "BTTS, double chance, correct score, extra goal lines & handicaps",
+    marketKeys: [
+      "btts",
+      "double_chance",
+      "correct_score",
+      "alternate_spreads",
+      "alternate_totals",
+    ],
     regions: baseRegions(),
   },
   {

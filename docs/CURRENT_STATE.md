@@ -132,7 +132,7 @@ Fixture list uses The Odds API with `commenceTimeFrom` in `YYYY-MM-DDTHH:MM:SSZ`
 ```
 GET /api/competitions                 → active catalogue (id + name)
 GET /api/fixtures?competition=epl     → bulk markets (h2h, totals, spreads)
-GET /api/fixtures/[id]/markets?competition=epl&tier=core → lazy per-event tier (default `core` = 3 credits; optional tiers on demand)
+GET /api/fixtures/[id]/markets?competition=epl&tier=core → lazy per-event tier (default `core` = 5 credits; `specials` on demand)
 POST /api/legs                        → best retail quote; stores competitionId slug
 (lock) lockRoundWithAccaPricing()     → re-fetch quotes, rankAccaBookmakers(), store deeplinks on Leg
 ```
@@ -148,10 +148,10 @@ Full budgeting: [DEPLOYMENT.md — The Odds API](./DEPLOYMENT.md#the-odds-api--c
 | Call type | Markets | Credits | When |
 |-----------|---------|---------|------|
 | Bulk fixtures | `h2h`, `spreads`, `totals` | **3** | Cron: once per enabled competition per warm run |
-| Core extended | `btts`, `double_chance`, `correct_score` | **3** per fixture | Cron: each upcoming fixture within 72 h (`ODDS_WARM_CORE_WITHIN_HOURS`); or user on demand if DB miss |
+| Core extended | `btts`, `double_chance`, `correct_score`, `alternate_spreads`, `alternate_totals` | **5** per fixture | Cron + auto on fixture pick; extra goal handicaps & O/U lines |
 | Specials | corners/cards (7 keys) | **7** per fixture | User only (“Load more markets”); not cron-warmed |
 
-**Cron:** `warm-odds-cache` every **6 h UTC** → `3 × competitions + 3 × N` credits per run (`N` = fixtures in warm window). `sync-matches` (every 5 min) uses football-data.org, **not** The Odds API.
+**Cron:** `warm-odds-cache` every **6 h UTC** → `3 × competitions + 5 × N` credits per run (`N` = fixtures in warm window). `sync-matches` (every 5 min) uses football-data.org, **not** The Odds API.
 
 **Production target:** `ODDS_DB_ONLY=true` so only cron (+ rare admin probes) call the API.
 
@@ -401,7 +401,7 @@ Recent migrations include `20260711100000_competition_settings` (admin competiti
 4. **Auto-settle requires synced `Match` rows** — 5-min cron or manual `POST /api/internal/sync-matches`.
 5. **Cross-competition acca** — often no single bookmaker; best-per-leg odds locked at submission; per-leg deeplinks at lock only.
 6. **Betslip deeplinks** require live odds API (`includeLinks`); mock mode falls back to bookmaker hub URLs only.
-7. **The Odds API quota** — credits = `markets × regions`. Cron warm: **3** bulk + **3 × N** core per enabled competition every 6 h (`N` = fixtures within `ODDS_WARM_CORE_WITHIN_HOURS`, default 72). User “specials” tier = **7** per fixture on demand only. Set `ODDS_DB_ONLY=true` so users do not call the API. See [DEPLOYMENT.md](./DEPLOYMENT.md#the-odds-api--calls-credits--cron).
+7. **The Odds API quota** — credits = `markets × regions`. Cron warm: **3** bulk + **5 × N** core per enabled competition every 6 h (`N` = fixtures within `ODDS_WARM_CORE_WITHIN_HOURS`, default 72). User “specials” tier = **7** per fixture on demand only. Set `ODDS_DB_ONLY=true` so users do not call the API. See [DEPLOYMENT.md](./DEPLOYMENT.md#the-odds-api--calls-credits--cron).
 8. **Terraform CI** may fail on GCS state bucket permissions — app deploy unaffected.
 9. **Odds snapshots in PostgreSQL** — shared across Cloud Run instances; refreshed by `POST /api/internal/warm-odds-cache` (Cloud Scheduler job in Terraform). Set `ODDS_DB_ONLY=true` so users never burn API credits. In-memory cache remains for quota block/snapshot and football-data only.
 10. **Mobile app** — still calls old fixtures API without `?competition=`; paused until web validated.

@@ -15,7 +15,9 @@ export function lineKey(line: number): string {
 }
 
 export function overUnderMarketType(prefix: string, line: number): string {
-  return `${prefix}_over_under_${lineKey(line)}`;
+  const key = lineKey(line);
+  if (!prefix) return `over_under_${key}`;
+  return `${prefix}_over_under_${key}`;
 }
 
 export function handicapMarketType(prefix: string, homePoint: number): string {

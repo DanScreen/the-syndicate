@@ -143,14 +143,14 @@ Terraform variable `warm_odds_cache_schedule` overrides the warm job schedule.
 Each **`warm-odds-cache`** run (`apps/web/src/lib/odds/warm-cache.ts`), per **admin-enabled** competition:
 
 1. **Bulk fixtures** — one `GET /sports/{sport}/odds` with markets `h2h,spreads,totals` → **3 credits** (3 markets × 1 region).
-2. **Core extended markets** — one `GET /sports/{sport}/events/{id}/odds` per upcoming fixture kicking off within `ODDS_WARM_CORE_WITHIN_HOURS` (default **72 h**), markets `btts,double_chance,correct_score` → **3 credits per fixture**.
+2. **Core extended markets** — one `GET /sports/{sport}/events/{id}/odds` per upcoming fixture kicking off within `ODDS_WARM_CORE_WITHIN_HOURS` (default **72 h**), markets `btts`, `double_chance`, `correct_score`, `alternate_spreads`, `alternate_totals` → **5 credits per fixture**.
 
 **Specials** (corners & cards, 7 credits per fixture) are **not** warmed by cron — only fetched when a user clicks “Load more markets” (or on cache miss if `ODDS_DB_ONLY` is unset).
 
 **Credits per warm run:**
 
 ```
-3 × (enabled competitions)  +  3 × N
+3 × (enabled competitions)  +  5 × N
 ```
 
 where `N` = upcoming fixtures in the warm window for that competition.
@@ -159,7 +159,7 @@ where `N` = upcoming fixtures in the warm window for that competition.
 
 | Per run | Per day (×4) | Per month (×30) |
 |---------|--------------|-----------------|
-| 3 + 24 = **27** | **108** | **~3,240** |
+| 3 + 40 = **43** | **172** | **~5,160** |
 
 With `N = 0` (no fixtures soon): **12 credits/day**, **~360/month**.
 
@@ -174,7 +174,7 @@ When `ODDS_DB_ONLY` is unset/false, the app may call the API on cache miss:
 | Trigger | Endpoint / code path | Credits |
 |---------|----------------------|---------|
 | Fixture list, no bulk snapshot | `refreshBulkFixturesFromApi` | **3** per competition |
-| “Popular extras” tier, no snapshot | `refreshEventMarketsFromApi` tier `core` | **3** per fixture |
+| “Popular extras” tier, no snapshot | `refreshEventMarketsFromApi` tier `core` | **5** per fixture |
 | “Corners & cards” tier | `refreshEventMarketsFromApi` tier `specials` | **7** per fixture |
 
 Round **lock** re-reads quotes from the DB via `findSelection` — it does not call the API if snapshots exist.
