@@ -53,21 +53,6 @@ export default function GroupDetailScreen() {
     }
   }
 
-  async function startRound() {
-    if (!token || !id) return;
-    setError("");
-    try {
-      await api(`/api/groups/${id}/rounds`, {
-        method: "POST",
-        token,
-        body: JSON.stringify({ groupId: id }),
-      });
-      await load();
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to start round");
-    }
-  }
-
   if (loading || !detail) {
     return (
       <Screen>
@@ -98,10 +83,6 @@ export default function GroupDetailScreen() {
         {detail.group.memberCount} members · Code: {detail.group.inviteCode}
       </Subtitle>
 
-      {detail.isOwner && !round && (
-        <Button label="Start new round" onPress={startRound} />
-      )}
-
       {round && (
         <Card>
           <Text style={styles.sectionTitle}>
@@ -128,10 +109,6 @@ export default function GroupDetailScreen() {
 
       {canSubmit && round && token && user && (
         <SubmitLegForm roundId={round.id} token={token} onSubmitted={load} />
-      )}
-
-      {detail.isOwner && round?.status === "settled" && (
-        <Button label="Start next round" onPress={startRound} variant="secondary" />
       )}
 
       {detail.betslipLink && (

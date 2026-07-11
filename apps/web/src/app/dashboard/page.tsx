@@ -1,5 +1,6 @@
 import { AppHeader } from "@/components/header";
 import { PageView } from "@/components/analytics/page-view";
+import { openCollectingRound } from "@/lib/rounds/open-collecting-round";
 import { formatLegPoints } from "@the-syndicate/shared";
 import { auth } from "@/lib/auth";
 import { prisma } from "@the-syndicate/database";
@@ -22,7 +23,11 @@ export default async function DashboardPage() {
         include: {
           owner: { select: { name: true } },
           _count: { select: { members: true } },
-          rounds: { orderBy: { createdAt: "desc" }, take: 1 },
+          rounds: {
+            where: { status: { not: "settled" } },
+            orderBy: { createdAt: "desc" },
+            take: 1,
+          },
         },
       },
     },
@@ -71,7 +76,7 @@ export default async function DashboardPage() {
             </p>
             <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm text-muted">
               <li>Create a group and share the invite link</li>
-              <li>Start a round — each member picks one leg</li>
+              <li>Each member picks one leg in the open round</li>
               <li>When everyone&apos;s in, the acca locks and you get the best combined odds</li>
             </ol>
             <Link
@@ -93,9 +98,15 @@ export default async function DashboardPage() {
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
-              {memberships.map((m) => {
-                const activeRound = m.group.rounds[0];
-                return (
+              {(await Promise.all(
+                memberships.map(async (m) => {
+                  let activeRound = m.group.rounds[0] ?? null;
+                  if (!activeRound) {
+                    activeRound = await openCollectingRound(m.group.id);
+                  }
+                  return { membership: m, activeRound };
+                })
+              )).map(({ membership: m, activeRound }) => (
                   <Link
                     key={m.group.id}
                     href={`/groups/${m.group.id}`}
@@ -104,21 +115,20 @@ export default async function DashboardPage() {
                     <div className="flex items-start justify-between">
                       <h3 className="font-semibold">{m.group.name}</h3>
                       <span className="rounded-full bg-accent-muted px-2 py-0.5 text-xs text-accent capitalize">
-                        {m.group.status}
+                        {activeRound?.status ?? m.group.status}
                       </span>
                     </div>
                     <p className="mt-2 text-sm text-muted">
                       {m.group._count.members} members · Owner: {m.group.owner.name}
                     </p>
                     <p className="mt-1 text-sm">Your points: {formatLegPoints(m.points)}</p>
-                    {activeRound && activeRound.status !== "settled" && (
+                    {activeRound && (
                       <p className="mt-2 text-xs text-accent capitalize">
                         Active round: {activeRound.status}
                       </p>
                     )}
                   </Link>
-                );
-              })}
+              ))}
             </div>
           )}
         </section>

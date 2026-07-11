@@ -1,5 +1,6 @@
 import { requireSession } from "@/lib/api-auth";
 import { generateInviteCode } from "@/lib/invite-code";
+import { openCollectingRound } from "@/lib/rounds/open-collecting-round";
 import { prisma } from "@the-syndicate/database";
 import { createGroupSchema } from "@the-syndicate/shared";
 import { NextResponse } from "next/server";
@@ -16,6 +17,7 @@ export async function GET() {
           owner: { select: { name: true } },
           _count: { select: { members: true, rounds: true } },
           rounds: {
+            where: { status: { not: "settled" } },
             orderBy: { createdAt: "desc" },
             take: 1,
           },
@@ -25,17 +27,26 @@ export async function GET() {
     orderBy: { joinedAt: "desc" },
   });
 
-  const groups = memberships.map((m) => ({
-    id: m.group.id,
-    name: m.group.name,
-    inviteCode: m.group.inviteCode,
-    role: m.role,
-    memberCount: m.group._count.members,
-    status: m.group.status,
-    ownerName: m.group.owner.name,
-    points: m.points,
-    activeRound: m.group.rounds[0] ?? null,
-  }));
+  const groups = await Promise.all(
+    memberships.map(async (m) => {
+      let activeRound = m.group.rounds[0] ?? null;
+      if (!activeRound) {
+        activeRound = await openCollectingRound(m.group.id);
+      }
+
+      return {
+        id: m.group.id,
+        name: m.group.name,
+        inviteCode: m.group.inviteCode,
+        role: m.role,
+        memberCount: m.group._count.members,
+        status: activeRound?.status === "locked" ? "locked" : "collecting",
+        ownerName: m.group.owner.name,
+        points: m.points,
+        activeRound,
+      };
+    })
+  );
 
   return NextResponse.json({ groups });
 }
@@ -63,12 +74,16 @@ export async function POST(request: Request) {
     data: {
       name: parsed.data.name,
       inviteCode,
+      status: "collecting",
       ownerId: session!.user!.id,
       members: {
         create: {
           userId: session!.user!.id,
           role: "owner",
         },
+      },
+      rounds: {
+        create: { status: "collecting" },
       },
     },
     include: {

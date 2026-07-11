@@ -1,6 +1,7 @@
 import { requireSession } from "@/lib/api-auth";
 import { buildRoundBetslipLinks } from "@/lib/odds/betslip-links";
 import { computeAccaRankingsForLegs } from "@/lib/odds/lock-round";
+import { openCollectingRound } from "@/lib/rounds/open-collecting-round";
 import { prisma } from "@the-syndicate/database";
 import type { AccaBookmakerRanking } from "@the-syndicate/shared";
 import { NextResponse } from "next/server";
@@ -51,7 +52,13 @@ export async function GET(_request: Request, { params }: Params) {
     return NextResponse.json({ error: "Group not found" }, { status: 404 });
   }
 
-  const activeRound = group.rounds.find((r) => r.status !== "settled") ?? null;
+  let activeRound = group.rounds.find((r) => r.status !== "settled") ?? null;
+
+  if (!activeRound) {
+    const created = await openCollectingRound(id);
+    activeRound = { ...created, legs: [] };
+    group.status = "collecting";
+  }
 
   let accaBookmakerRankings: AccaBookmakerRanking[] | null = null;
   let betslipLinks = null;

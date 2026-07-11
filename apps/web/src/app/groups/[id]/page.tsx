@@ -9,48 +9,17 @@ import {
   SubmitLegForm,
 } from "@/components/group-ui";
 import { useGroupData } from "@/context/group-data";
-import { formatLegPoints } from "@the-syndicate/shared";
 import { useSession } from "next-auth/react";
-import { useState } from "react";
 
 export default function GroupRoundPage() {
   const { data: session } = useSession();
   const { data, reload } = useGroupData();
-  const [actionLoading, setActionLoading] = useState(false);
 
-  if (!data) return null;
+  if (!data?.activeRound) return null;
 
   const userId = session?.user?.id;
   const { activeRound, group, isOwner, betslipLink, betslipLinks } = data;
-  const hasSubmitted = activeRound?.legs.some((l) => l.user.id === userId);
-
-  async function startRound() {
-    setActionLoading(true);
-    const res = await fetch(`/api/groups/${group.id}/rounds`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ groupId: group.id }),
-    });
-    setActionLoading(false);
-    if (res.ok) reload();
-  }
-
-  if (!activeRound) {
-    return (
-      <div className="rounded-xl border border-dashed border-border p-6">
-        <p className="text-sm text-muted">No active round.</p>
-        {isOwner && (
-          <button
-            onClick={startRound}
-            disabled={actionLoading}
-            className="mt-4 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-black hover:bg-green-400 disabled:opacity-50"
-          >
-            {actionLoading ? "Starting..." : "Start new round"}
-          </button>
-        )}
-      </div>
-    );
-  }
+  const hasSubmitted = activeRound.legs.some((l) => l.user.id === userId);
 
   const isLocked = activeRound.status === "locked";
   const isCollecting = activeRound.status === "collecting";
@@ -112,29 +81,6 @@ export default function GroupRoundPage() {
 
       {isLocked && isOwner && (
         <SettleRoundForm round={activeRound} onSettled={reload} />
-      )}
-
-      {activeRound.status === "settled" && (
-        <>
-          <p className="text-sm">
-            Round points:{" "}
-            <span className="font-semibold text-accent">
-              {formatLegPoints(
-                activeRound.legs.reduce((sum, leg) => sum + (leg.pointsAwarded ?? 0), 0)
-              )}{" "}
-              pts
-            </span>
-          </p>
-          {isOwner && (
-            <button
-              onClick={startRound}
-              disabled={actionLoading}
-              className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-card"
-            >
-              Start next round
-            </button>
-          )}
-        </>
       )}
 
       <RoundHistory rounds={data.recentRounds} />

@@ -24,11 +24,12 @@ Sign up → **Groups** home (`/dashboard`) listing syndicates. Cross-group stats
 Owner creates group (name only) → invite code + link. Anyone with the link can join via code or `/groups/join?code=`.
 
 ### 3. Build the acca
-1. Owner starts a round (group **Round** tab)
+1. Each syndicate has an always-open round on the **Round** tab — no manual start step
 2. Each member picks a **competition**, fixture, market, selection (4-step form)
 3. **Best odds only** shown per selection
 4. All legs in → acca **locks** with best combined bookmaker
 5. Members receive **email notification** when acca locks (if Resend configured)
+6. When a round settles, the next collecting round opens automatically
 
 → [specs/competitions-and-results.md](./specs/competitions-and-results.md)
 

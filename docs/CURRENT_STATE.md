@@ -49,6 +49,7 @@ Match sync: Cloud Scheduler → `POST /api/internal/sync-matches` with Bearer `C
 | Notifications | `apps/web/src/lib/notifications/` |
 | Auth | `apps/web/src/lib/auth.ts`, `apps/web/src/lib/auth.config.ts` |
 | Settlement (auto) | `apps/web/src/lib/settlement/auto-settle-round.ts` |
+| Round lifecycle | `apps/web/src/lib/rounds/open-collecting-round.ts` |
 | Group UI | `apps/web/src/components/group-ui.tsx`, `group-stats.tsx` |
 | App navigation | `apps/web/src/components/app-nav.tsx`, `group-nav.tsx`, `header.tsx` |
 | Logo & marketing | `apps/web/src/components/logo.tsx`, `components/marketing/`, `lib/marketing-content.ts` |
@@ -71,6 +72,7 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 |------|--------|
 | Auth (email/password, Auth.js JWT sessions) | ✅ |
 | Groups, invite codes, join links (`?code=`), no member cap | ✅ |
+| Always-open rounds (auto-created with group; next opens on settle) | ✅ |
 | Rounds: collecting → locked → settled | ✅ |
 | Live odds ([The Odds API](https://the-odds-api.com/)) + mock fallback | ✅ |
 | Markets: h2h, totals (dynamic lines), spreads*, BTTS, double chance, draw no bet | ✅ |
@@ -327,6 +329,7 @@ Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `Analytics
 - Leg stores fixture snapshot: teams, kickoff, `competitionId` (slug), `competition` (display name), optional `matchId` FK, market, odds, bookmaker, `betslipUrl`, `bookmakerLinks` JSON, outcome.
 - `Match` — canonical result per fixture (`externalDataId` from football-data.org).
 - `Round.accaBookmakerRankings` — JSON array of ranked bookmakers at lock.
+- Groups always have a collecting or locked round; a new collecting round opens automatically when the previous round settles. Legacy groups without an active round get one on next load.
 - `Round.lockedNotificationSentAt` / `settledNotificationSentAt` — email dedup.
 
 Schema: `packages/database/prisma/schema.prisma`
@@ -343,7 +346,6 @@ Recent migrations include `20260710100000_user_role_analytics` (admin role + ana
 | `GET /api/fixtures` | Session | List fixtures (`?competition=` required) |
 | `GET /api/fixtures/[id]/markets` | Session | Extended markets (`?competition=` required) |
 | `POST /api/legs` | Session | Submit leg |
-| `POST /api/groups/[id]/rounds` | Owner | Start round |
 | `POST /api/rounds/[id]/settle` | Owner | Manual settle |
 | `POST /api/rounds/[id]/auto-settle` | Owner | Auto settle from `Match` table |
 | `POST /api/internal/sync-matches` | `CRON_SECRET` | Sync football-data.org → `Match` |

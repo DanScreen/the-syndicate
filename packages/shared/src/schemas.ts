@@ -27,10 +27,6 @@ export const submitLegSchema = z.object({
   selectionId: z.string(),
 });
 
-export const startRoundSchema = z.object({
-  groupId: z.string(),
-});
-
 export const settleRoundSchema = z.object({
   roundId: z.string(),
   legOutcomes: z.array(
