@@ -238,10 +238,10 @@ Email notifications (Resend) fire on lock and settle when `RESEND_API_KEY` + `EM
 | `apps/web/src/lib/settlement/resolve-round-outcomes.ts` | Match → leg outcomes; `persistResolvableLegOutcomes()` |
 | `apps/web/src/lib/notifications/round-notifications.ts` | Locked / settled emails |
 | `apps/web/src/lib/notifications/email.ts` | Resend client (fetch) |
-| `apps/web/src/lib/results/football-data.ts` | football-data.org fetch, team matching; cache bypass on cron sync |
+| `apps/web/src/lib/results/football-data.ts` | football-data.org fetch, team matching, **regulation (90 min) scores** for settlement |
 | `apps/web/src/lib/results/sync-matches.ts` | Upsert matches for all competitions |
 | `apps/web/src/lib/results/match-store.ts` | DB lookup for auto-settle; aligns goals to leg home/away when sources disagree |
-| `apps/web/src/lib/results/resolve-leg.ts` | Market → outcome logic |
+| `apps/web/src/lib/results/resolve-leg.ts` | Market → outcome logic (90-minute score) |
 | `apps/web/src/lib/settlement/apply-round-settlement.ts` | Transactional settle: atomic `locked → settled` claim, points/P&L, `RoundNotSettleableError` |
 
 ---

@@ -16,7 +16,9 @@ export type FootballDataMatch = {
   homeTeam: FootballDataTeam;
   awayTeam: FootballDataTeam;
   score: {
+    duration?: string;
     fullTime: { home: number | null; away: number | null };
+    regularTime?: { home: number | null; away: number | null };
   };
 };
 
@@ -90,8 +92,9 @@ export function alignGoalsToLeg(
 const VOID_STATUSES = new Set(["POSTPONED", "CANCELLED", "SUSPENDED", "AWARDED"]);
 
 export function toMatchResult(match: FootballDataMatch): MatchResult | null {
-  const homeGoals = match.score.fullTime.home;
-  const awayGoals = match.score.fullTime.away;
+  const regulation = regulationScore(match);
+  const homeGoals = regulation?.home ?? null;
+  const awayGoals = regulation?.away ?? null;
 
   if (homeGoals === null || awayGoals === null) {
     if (VOID_STATUSES.has(match.status)) {
@@ -105,6 +108,23 @@ export function toMatchResult(match: FootballDataMatch): MatchResult | null {
     awayGoals,
     status: match.status,
   };
+}
+
+/** 90-minute score for settlement; falls back to fullTime when no extra time played. */
+export function regulationScore(
+  match: FootballDataMatch
+): { home: number; away: number } | null {
+  const reg = match.score.regularTime;
+  if (reg?.home !== null && reg?.home !== undefined && reg?.away !== null && reg?.away !== undefined) {
+    return { home: reg.home, away: reg.away };
+  }
+
+  const ft = match.score.fullTime;
+  if (ft.home !== null && ft.home !== undefined && ft.away !== null && ft.away !== undefined) {
+    return { home: ft.home, away: ft.away };
+  }
+
+  return null;
 }
 
 function formatDate(d: Date): string {

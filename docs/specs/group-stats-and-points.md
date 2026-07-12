@@ -65,7 +65,7 @@ Member totals on a winning acca **do not** sum to the group total (e.g. legs 1.6
 | Legs played | Count in settled rounds |
 | Win rate | Won / (won + lost) |
 | Average odds | Mean `Leg.odds` |
-| Best / worst leg | Max / min leg odds (`Leg.odds`) |
+| Best / worst leg | Highest-odds **won** leg / lowest-odds **lost** leg (with fixture + pick) |
 
 **Multi-line chart:** each member's cumulative points over rounds.
 

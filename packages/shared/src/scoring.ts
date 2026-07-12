@@ -1,3 +1,4 @@
+import type { LegHighlight } from "./api-types";
 import type { LegOutcome } from "./types";
 
 /** Per-leg unit stake when the syndicate acca wins (or leg void). */
@@ -78,4 +79,48 @@ export function profitFromPoints(points: number, stakeGbp: number): number {
 export function formatProfitGbp(amount: number): string {
   const sign = amount >= 0 ? "+" : "";
   return `${sign}£${Math.abs(amount).toFixed(2)}`;
+}
+
+type LegForHighlight = {
+  outcome: string;
+  odds: number;
+  homeTeam: string;
+  awayTeam: string;
+  marketLabel: string;
+  selectionLabel: string;
+  competition: string;
+};
+
+export function legToHighlight(leg: LegForHighlight): LegHighlight {
+  return {
+    odds: Number(leg.odds.toFixed(2)),
+    homeTeam: leg.homeTeam,
+    awayTeam: leg.awayTeam,
+    marketLabel: leg.marketLabel,
+    selectionLabel: leg.selectionLabel,
+    competition: leg.competition,
+  };
+}
+
+/** Best = highest-odds won leg; worst = lowest-odds lost leg. */
+export function bestWorstLegHighlights(legs: LegForHighlight[]): {
+  bestLeg: LegHighlight | null;
+  worstLeg: LegHighlight | null;
+} {
+  const won = legs.filter((l) => l.outcome === "won");
+  const lost = legs.filter((l) => l.outcome === "lost");
+
+  const best =
+    won.length > 0 ? won.reduce((a, b) => (a.odds >= b.odds ? a : b)) : null;
+  const worst =
+    lost.length > 0 ? lost.reduce((a, b) => (a.odds <= b.odds ? a : b)) : null;
+
+  return {
+    bestLeg: best ? legToHighlight(best) : null,
+    worstLeg: worst ? legToHighlight(worst) : null,
+  };
+}
+
+export function formatLegHighlight(leg: LegHighlight): string {
+  return `${leg.homeTeam} vs ${leg.awayTeam} · ${leg.marketLabel}: ${leg.selectionLabel}`;
 }

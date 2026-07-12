@@ -1,5 +1,6 @@
 import {
   fetchCompetitionMatches,
+  regulationScore,
   syncDateRange,
   type FootballDataMatch,
 } from "@/lib/results/football-data";
@@ -11,6 +12,9 @@ function matchDataFromFootballData(competitionId: string, match: FootballDataMat
   const awayTeam = match.awayTeam?.name;
   if (!homeTeam || !awayTeam) return null;
 
+  const regulation = regulationScore(match);
+  if (!regulation) return null;
+
   const now = new Date();
   return {
     competitionId,
@@ -18,8 +22,8 @@ function matchDataFromFootballData(competitionId: string, match: FootballDataMat
     homeTeam,
     awayTeam,
     status: match.status,
-    homeGoals: match.score.fullTime.home,
-    awayGoals: match.score.fullTime.away,
+    homeGoals: regulation.home,
+    awayGoals: regulation.away,
     externalDataId: match.id,
     lastSyncedAt: now,
   };

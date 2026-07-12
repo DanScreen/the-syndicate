@@ -38,6 +38,7 @@ If no single bookmaker covers all legs → best-per-leg combined odds locked at 
 - `Match` model, `Leg.matchId` FK
 - `POST /api/internal/sync-matches` (Bearer `CRON_SECRET`)
 - Sync **bypasses** football-data in-memory cache (`bypassCache: true`) for fresh results every cron run
+- Stores **90-minute (regulation)** scores via `score.regularTime` when extra time is played; otherwise `fullTime`
 - Auto-settle reads from `Match` table via `match-store.ts` (UTC kickoff day matching)
 - Cloud Scheduler: every 5 min UTC in production (`europe-west2`, job `sync-matches`)
 - **Progressive outcomes:** `persistResolvableLegOutcomes()` updates leg `outcome` as matches finish; round settles when all legs ready

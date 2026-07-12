@@ -1,4 +1,6 @@
 import type { Leg } from "@prisma/client";
+import { bestWorstLegHighlights } from "@the-syndicate/shared";
+import type { LegHighlight } from "@the-syndicate/shared";
 import {
   favouriteCategory,
   bestWorstCategory,
@@ -16,8 +18,8 @@ export type MemberStatsSummary = {
   legsPlayed: number;
   winRate: number | null;
   averageOdds: number | null;
-  bestLeg: number | null;
-  worstLeg: number | null;
+  bestLeg: LegHighlight | null;
+  worstLeg: LegHighlight | null;
 };
 
 export type MemberStatsChartPoint = {
@@ -70,6 +72,8 @@ export function computeMemberStats(
     };
   });
 
+  const { bestLeg, worstLeg } = bestWorstLegHighlights(legs);
+
   return {
     userId,
     summary: {
@@ -83,14 +87,8 @@ export function computeMemberStats(
         legs.length > 0
           ? Number((legs.reduce((s, l) => s + l.odds, 0) / legs.length).toFixed(2))
           : null,
-      bestLeg:
-        legs.length > 0
-          ? Number(Math.max(...legs.map((l) => l.odds)).toFixed(2))
-          : null,
-      worstLeg:
-        legs.length > 0
-          ? Number(Math.min(...legs.map((l) => l.odds)).toFixed(2))
-          : null,
+      bestLeg,
+      worstLeg,
     },
     chart,
     competition: {

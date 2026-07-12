@@ -1,6 +1,8 @@
 import type { LegOutcome } from "@the-syndicate/shared";
 import { overUnderLineFromType, asianHandicapLineFromType } from "@/lib/odds/market-groups";
 
+/** Standard markets settle on 90-minute (regulation) score, not extra time. */
+
 export type MatchResult = {
   homeGoals: number;
   awayGoals: number;

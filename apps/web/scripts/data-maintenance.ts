@@ -8,6 +8,7 @@
  *   npx tsx apps/web/scripts/data-maintenance.ts resettle-round --round-id <cuid> --execute
  *   npx tsx apps/web/scripts/data-maintenance.ts find-rounds --teams Norway England
  *   npx tsx apps/web/scripts/data-maintenance.ts reconcile-points --execute
+ *   npx tsx apps/web/scripts/data-maintenance.ts resync-matches --execute
  */
 import { prisma } from "@the-syndicate/database";
 import type { Leg, Prisma, Round } from "@prisma/client";
@@ -339,9 +340,23 @@ async function main() {
     case "reconcile-points":
       await reconcilePoints();
       break;
+    case "resync-matches": {
+      if (!execute) {
+        console.log("Dry run only. Pass --execute to refresh Match rows from football-data.org.");
+        break;
+      }
+      const { syncAllCompetitionMatches } = await import("../src/lib/results/sync-matches");
+      const result = await syncAllCompetitionMatches();
+      console.log(
+        `Synced: ${result.totalCreated} created, ${result.totalUpdated} updated, ${result.totalSkipped} skipped`
+      );
+      break;
+    }
     default:
       console.error(`Unknown command: ${command ?? "(none)"}`);
-      console.error("Commands: preview-solo-rounds, remove-solo-rounds, find-rounds, preview-resettle, resettle-round, reconcile-points");
+      console.error(
+        "Commands: preview-solo-rounds, remove-solo-rounds, find-rounds, preview-resettle, resettle-round, reconcile-points, resync-matches"
+      );
       process.exit(1);
   }
 }

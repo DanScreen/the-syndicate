@@ -201,13 +201,22 @@ export type UserStatsResponse = {
   groups: UserStatsGroupBreakdown[];
 };
 
+export type LegHighlight = {
+  odds: number;
+  homeTeam: string;
+  awayTeam: string;
+  marketLabel: string;
+  selectionLabel: string;
+  competition: string;
+};
+
 export type MemberStatsSummary = {
   netPoints: number;
   legsPlayed: number;
   winRate: number | null;
   averageOdds: number | null;
-  bestLeg: number | null;
-  worstLeg: number | null;
+  bestLeg: LegHighlight | null;
+  worstLeg: LegHighlight | null;
 };
 
 export type MemberCategoryStats = {

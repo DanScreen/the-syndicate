@@ -5,7 +5,8 @@ import type { MemberChartPoint, MemberSeries } from "@/lib/stats/compute-member-
 import type { MemberStatsResult } from "@/lib/stats/compute-member-stats";
 import { ShareCard } from "@/components/share-card";
 import { StakeProfit } from "@/components/stake-profit";
-import { formatLegPoints } from "@the-syndicate/shared";
+import { formatLegHighlight, formatLegPoints } from "@the-syndicate/shared";
+import type { LegHighlight } from "@the-syndicate/shared";
 import { useEffect, useState } from "react";
 import {
   CartesianGrid,
@@ -38,13 +39,27 @@ type GroupStatsData = {
 
 type MemberStatsData = MemberStatsResult & { name: string };
 
-function StatCard({ label, value }: { label: string; value: string }) {
+function StatCard({
+  label,
+  value,
+  detail,
+}: {
+  label: string;
+  value: string;
+  detail?: string;
+}) {
   return (
     <div className="rounded-lg border border-border bg-background/50 px-3 py-2">
       <p className="text-xs text-muted">{label}</p>
       <p className="mt-1 text-lg font-semibold">{value}</p>
+      {detail ? <p className="mt-1 text-xs leading-snug text-muted">{detail}</p> : null}
     </div>
   );
+}
+
+function legHighlightStat(leg: LegHighlight | null) {
+  if (!leg) return { value: "—" as const };
+  return { value: String(leg.odds), detail: formatLegHighlight(leg) };
 }
 
 function GroupChartTooltip({
@@ -171,11 +186,11 @@ function MemberBreakdown({
         />
         <StatCard
           label="Best leg"
-          value={data.summary.bestLeg != null ? String(data.summary.bestLeg) : "—"}
+          {...legHighlightStat(data.summary.bestLeg)}
         />
         <StatCard
           label="Worst leg"
-          value={data.summary.worstLeg != null ? String(data.summary.worstLeg) : "—"}
+          {...legHighlightStat(data.summary.worstLeg)}
         />
       </div>
       <div className="grid gap-3 sm:grid-cols-3">

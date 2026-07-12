@@ -11,10 +11,12 @@ import type {
   UserStatsResponse,
 } from "@the-syndicate/shared";
 import {
+  formatLegHighlight,
   formatLegPoints,
   formatProfitGbp,
   profitFromPoints,
 } from "@the-syndicate/shared";
+import type { LegHighlight } from "@the-syndicate/shared";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -26,13 +28,27 @@ import {
   View,
 } from "react-native";
 
-function StatCard({ label, value }: { label: string; value: string }) {
+function StatCard({
+  label,
+  value,
+  detail,
+}: {
+  label: string;
+  value: string;
+  detail?: string;
+}) {
   return (
     <View style={styles.statCard}>
       <Text style={styles.statLabel}>{label}</Text>
       <Text style={styles.statValue}>{value}</Text>
+      {detail ? <Text style={styles.statDetail}>{detail}</Text> : null}
     </View>
   );
+}
+
+function legHighlightStat(leg: LegHighlight | null) {
+  if (!leg) return { value: "—" as const };
+  return { value: String(leg.odds), detail: formatLegHighlight(leg) };
 }
 
 function StakeProfit({ points }: { points: number }) {
@@ -158,11 +174,11 @@ function MemberBreakdown({
         />
         <StatCard
           label="Best leg"
-          value={data.summary.bestLeg != null ? String(data.summary.bestLeg) : "—"}
+          {...legHighlightStat(data.summary.bestLeg)}
         />
         <StatCard
           label="Worst leg"
-          value={data.summary.worstLeg != null ? String(data.summary.worstLeg) : "—"}
+          {...legHighlightStat(data.summary.worstLeg)}
         />
       </View>
       <CategoryRow
@@ -411,6 +427,12 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 18,
     fontWeight: "600",
+    marginTop: 4,
+  },
+  statDetail: {
+    color: colors.muted,
+    fontSize: 11,
+    lineHeight: 15,
     marginTop: 4,
   },
   blockTitle: {
