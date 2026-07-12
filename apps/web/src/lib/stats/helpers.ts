@@ -1,7 +1,8 @@
 import type { Leg, Round } from "@prisma/client";
 import {
-  accaRoundPoints,
   accaSucceeded,
+  groupAccaRoundPoints,
+  memberAccaLegPoints,
   type LegOutcome,
 } from "@the-syndicate/shared";
 
@@ -13,26 +14,29 @@ export function roundOutcomes(round: RoundWithLegs): LegOutcome[] {
 
 export function roundGroupPoints(round: RoundWithLegs): number {
   if (round.status !== "settled") return 0;
-  return accaRoundPoints(
-    roundOutcomes(round),
-    round.combinedOdds ?? 1,
-    round.legs.length
-  ).roundTotal;
+  return groupAccaRoundPoints(roundOutcomes(round), round.combinedOdds ?? 1);
 }
 
 export function memberPointsInRound(round: RoundWithLegs, userId: string): number {
   if (round.status !== "settled") return 0;
-  if (!round.legs.some((l) => l.userId === userId)) return 0;
-  return accaRoundPoints(
+  const leg = round.legs.find((l) => l.userId === userId);
+  if (!leg) return 0;
+  return memberAccaLegPoints(
     roundOutcomes(round),
-    round.combinedOdds ?? 1,
-    round.legs.length
-  ).perMember;
+    leg.outcome as LegOutcome,
+    leg.odds
+  );
 }
 
 export function legPoints(leg: Leg, round?: RoundWithLegs): number {
   if (leg.outcome === "pending") return 0;
-  if (round) return memberPointsInRound(round, leg.userId);
+  if (round) {
+    return memberAccaLegPoints(
+      roundOutcomes(round),
+      leg.outcome as LegOutcome,
+      leg.odds
+    );
+  }
   return leg.pointsAwarded;
 }
 

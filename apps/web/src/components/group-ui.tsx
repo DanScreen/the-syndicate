@@ -1,7 +1,7 @@
 "use client";
 
 import type { Fixture, Market, LegOutcome } from "@the-syndicate/shared";
-import { accaRoundPoints, formatLegPoints, type AccaBookmakerRanking } from "@the-syndicate/shared";
+import { groupAccaRoundPoints, formatLegPoints, type AccaBookmakerRanking } from "@the-syndicate/shared";
 import { useEffect, useMemo, useState } from "react";
 import { sortQuotesByBestOdds } from "@/lib/odds/bookmakers";
 import { groupMarkets } from "@/lib/odds/market-groups";
@@ -869,11 +869,10 @@ export function RoundHistory({
       <ul className="mt-4 space-y-3">
         {rounds.map((round) => {
           const outcomes = round.legs.map((l) => l.outcome as LegOutcome);
-          const roundPoints = accaRoundPoints(
+          const roundPoints = groupAccaRoundPoints(
             outcomes,
-            round.combinedOdds ?? 1,
-            round.legs.length
-          ).roundTotal;
+            round.combinedOdds ?? 1
+          );
           return (
           <li key={round.id} className="rounded-xl border border-border bg-card p-4 text-sm">
             <div className="flex justify-between">

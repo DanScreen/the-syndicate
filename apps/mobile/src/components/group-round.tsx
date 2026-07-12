@@ -18,7 +18,7 @@ import type {
   SubmitLegInput,
 } from "@the-syndicate/shared";
 import {
-  accaRoundPoints,
+  groupAccaRoundPoints,
   formatLegPoints,
   groupMarkets,
   sortQuotesByBestOdds,
@@ -745,11 +745,7 @@ export function RoundHistory({
       <Text style={styles.sectionTitle}>Recent rounds</Text>
       {rounds.map((round) => {
         const outcomes = round.legs.map((l) => l.outcome as LegOutcome);
-        const roundPoints = accaRoundPoints(
-          outcomes,
-          round.combinedOdds ?? 1,
-          round.legs.length
-        ).roundTotal;
+        const roundPoints = groupAccaRoundPoints(outcomes, round.combinedOdds ?? 1);
         return (
           <View key={round.id} style={styles.historyCard}>
             <View style={styles.historyHeader}>

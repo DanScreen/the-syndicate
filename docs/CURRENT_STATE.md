@@ -105,14 +105,14 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 
 **Acca points** in `packages/shared/src/scoring.ts`:
 
-| Outcome | Points |
-|---------|--------|
-| Acca won | Group total `combinedOdds − 1`, split equally per member |
-| Acca lost | `−1` per member |
+| Outcome | Group points | Member points |
+|---------|--------------|---------------|
+| Acca won | `combinedOdds − 1` | `odds − 1` on each won leg (`0` if void) |
+| Acca lost | `−1` | `−1` per member |
 
-Example: acca @ 3.44 with 2 members → **2.44** group pts round total (**1.22** each).
+Example: acca @ 3.44 (legs 1.6 × 2.15) → **2.44** group pts; members **0.6** and **1.15** (not split).
 
-**Stats** use `accaRoundPoints()` from round outcomes + `combinedOdds` (migration `20260712000000_acca_scoring_points` backfills `pointsAwarded` and leaderboards).
+**Stats:** `groupAccaRoundPoints()` for group totals; `memberAccaLegPoints()` for members. Leaderboard `pointsAwarded` backfilled by migration `20260712160000_member_leg_acca_points`.
 
 **Points-first UX:** Points are the **primary metric** across performance pages, leaderboards, share cards, and round history. Users convert points to money with `profitFromPoints(points, stake)` — profit = points × stake (£). UI: `StakeProfit` component (default stake £10).
 

@@ -20,20 +20,22 @@ Related: [competitions-and-results.md](./competitions-and-results.md)
 
 ## Performance points (implemented)
 
-| Outcome | Points |
-|---------|--------|
-| **Acca won** | Group total `combinedOdds − 1`, split equally per member |
-| **Acca lost** | `−1` per member |
-| **Void leg** | Counts toward acca win; combined odds unchanged at lock |
+| Outcome | Group | Member |
+|---------|-------|--------|
+| **Acca won** | `combinedOdds − 1` | `odds − 1` per won leg (`0` if void) |
+| **Acca lost** | `−1` | `−1` per member |
+| **Void leg** | Counts toward acca win; combined odds unchanged at lock | `0` |
 
-Implementation: `accaRoundPoints()` in `packages/shared/src/scoring.ts`.
+Implementation: `groupAccaRoundPoints()` and `memberAccaLegPoints()` in `packages/shared/src/scoring.ts`.
+
+Member totals on a winning acca **do not** sum to the group total (e.g. legs 1.6 + 2.15 → members 0.6 + 1.15, group 2.44).
 
 **Charts:** cumulative points after each settled round. In-progress leg outcomes on locked accas are visible on the Round tab but do not affect stats until the round settles.
 
-**Group chart:** `combinedOdds − 1` per winning acca round (or `−1` × members if lost), accumulated.  
+**Group chart:** `combinedOdds − 1` per winning acca round, `−1` per losing acca round (one unit stake on the group acca).  
 **Separate stat:** cumulative acca £ P/L from `Round.profitLossGbp` (£10 theoretical stake).
 
-**Important:** stats APIs compute from outcome + odds, not stale `pointsAwarded` (backfilled in migration `20260710000000_backfill_unit_stake_points`).
+**Important:** stats APIs compute from outcome + odds, not stale `pointsAwarded` (backfilled in migration `20260712160000_member_leg_acca_points`).
 
 ---
 
@@ -47,7 +49,7 @@ Implementation: `accaRoundPoints()` in `packages/shared/src/scoring.ts`.
 | Total bets | Leg count in settled rounds |
 | Average leg odds | Mean `Leg.odds` |
 | Average acca odds | Mean `Round.combinedOdds` |
-| Net group points | Sum of acca round points (`combinedOdds − 1` on win) |
+| Net group points | Sum of group acca points per round (`combinedOdds − 1` on win, `−1` on loss) |
 | Net acca P/L | Sum `profitLossGbp` |
 | Win rate | % settled accas won |
 
@@ -59,7 +61,7 @@ Implementation: `accaRoundPoints()` in `packages/shared/src/scoring.ts`.
 
 | Stat | Definition |
 |------|------------|
-| Net points | Sum leg points (computed) |
+| Net points | Sum of member leg points (`odds − 1` on won acca legs, `−1` on lost accas) |
 | Legs played | Count in settled rounds |
 | Win rate | Won / (won + lost) |
 | Average odds | Mean `Leg.odds` |
