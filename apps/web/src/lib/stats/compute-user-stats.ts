@@ -1,6 +1,7 @@
 import {
   formatRoundLabel,
-  legPoints,
+  memberPointsInRound,
+  roundAccaWon,
   roundSortKey,
   type RoundWithLegs,
 } from "./helpers";
@@ -88,7 +89,7 @@ export function computeUserStats(
 
   let cumulativePoints = 0;
   const chart: UserStatsChartPoint[] = userRoundEntries.map((entry, index) => {
-    const roundPoints = legPoints(entry.userLeg);
+    const roundPoints = memberPointsInRound(entry.round, userId);
     cumulativePoints += roundPoints;
     return {
       roundNumber: index + 1,
@@ -100,9 +101,8 @@ export function computeUserStats(
   });
 
   const allUserLegs = userRoundEntries.map((e) => e.userLeg);
-  const wonLegs = allUserLegs.filter((l) => l.outcome === "won");
-  const lostLegs = allUserLegs.filter((l) => l.outcome === "lost");
-  const decidedLegs = wonLegs.length + lostLegs.length;
+
+  const accaWins = userRoundEntries.filter((e) => roundAccaWon(e.round)).length;
 
   const netAccaPlGbp = userRoundEntries.reduce(
     (sum, e) => sum + (e.round.profitLossGbp ?? 0),
@@ -114,10 +114,14 @@ export function computeUserStats(
       groupCount: memberships.length,
       settledRounds: userRoundEntries.length,
       legsPlayed: allUserLegs.length,
-      netPoints: Number(allUserLegs.reduce((sum, l) => sum + legPoints(l), 0).toFixed(2)),
+      netPoints: Number(
+        userRoundEntries
+          .reduce((sum, e) => sum + memberPointsInRound(e.round, userId), 0)
+          .toFixed(2)
+      ),
       winRate:
-        decidedLegs > 0
-          ? Number(((wonLegs.length / decidedLegs) * 100).toFixed(1))
+        userRoundEntries.length > 0
+          ? Number(((accaWins / userRoundEntries.length) * 100).toFixed(1))
           : null,
       netAccaPlGbp: Number(netAccaPlGbp.toFixed(2)),
     },

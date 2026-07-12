@@ -48,7 +48,7 @@ Core loop and MVP polish are **shipped**:
 | 6 | **Public platform leaderboards** | Code | Admin version shipped; open to all users when ready |
 | 7 | User profile page | Code | Optional; `/performance` covers cross-group stats today |
 | 8 | football-data.org tier upgrade | Ops | L1/L2 sync returns 403 on free tier |
-| 9 | Mobile app catch-up | Code | Paused — needs `?competition=` API |
+| 9 | **Mobile — friend testing** | Product | You: [DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md); mates: APK / later TestFlight |
 | 10 | Terraform CI GCS permissions fix | Infra | App deploy unaffected |
 
 ---
@@ -67,9 +67,21 @@ Push notifications, chat/feed, stake pooling, social sign-in, more sports.
 
 ---
 
+## Mobile apps
+
+Native **iPhone** and **Android** apps via Expo (`apps/mobile/`), targeting **functional parity** with the member-facing website.
+
+**Status:** Developer native testing (Expo Go / device build). Friend distribution: Android APK; iPhone TestFlight after store fees.
+
+**Next:** You validate on device ([DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md)), then 2–3 friend groups ([FRIEND_TESTING.md](../apps/mobile/FRIEND_TESTING.md)).
+
+**Spec:** [specs/mobile-apps.md](./specs/mobile-apps.md) — includes [distribution strategy](./specs/mobile-apps.md#distribution-strategy).
+
+---
+
 ## Paused
 
-- **Mobile** (`apps/mobile/`) — resume when web validated with real users
+- *(none)*
 
 ---
 
@@ -77,7 +89,7 @@ Push notifications, chat/feed, stake pooling, social sign-in, more sports.
 
 **Variables (GitHub):** `EMAIL_FROM` (optional).
 
-**Secrets (GitHub):** `ODDS_API_KEY`, `FOOTBALL_DATA_API_KEY`, `DATABASE_URL`, `AUTH_SECRET`, `CRON_SECRET` (optional — seed Terraform / Secret Manager), `RESEND_API_KEY` (optional), `ADMIN_EMAILS` (optional, comma-separated developer emails), GCP deploy secrets.
+**Secrets (GitHub):** `ODDS_API_KEY`, `FOOTBALL_DATA_API_KEY`, `DATABASE_URL`, `AUTH_SECRET`, `CRON_SECRET` (optional — seed Terraform / Secret Manager), `RESEND_API_KEY` (optional), `ADMIN_EMAILS` (optional, comma-separated developer emails), `EXPO_TOKEN` (optional — mobile EAS CI), GCP deploy secrets.
 
 **Local odds:** `ODDS_API_KEY` in `apps/web/.env.local` — omit for mock fixtures.
 

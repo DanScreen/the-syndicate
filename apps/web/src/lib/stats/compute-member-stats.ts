@@ -3,7 +3,9 @@ import {
   favouriteCategory,
   bestWorstCategory,
   formatRoundLabel,
-  legPoints,
+  memberPointsInRound,
+  roundAccaWon,
+  roundById,
   sortedSettledRounds,
   teamForLeg,
   type RoundWithLegs,
@@ -44,6 +46,7 @@ export function computeMemberStats(
   rounds: RoundWithLegs[]
 ): MemberStatsResult {
   const settled = sortedSettledRounds(rounds);
+  const roundMap = roundById(settled);
   const legs: Leg[] = [];
 
   for (const round of settled) {
@@ -51,15 +54,13 @@ export function computeMemberStats(
     if (leg) legs.push(leg);
   }
 
-  const won = legs.filter((l) => l.outcome === "won");
-  const lost = legs.filter((l) => l.outcome === "lost");
-  const decided = won.length + lost.length;
-  const pointsPerLeg = legs.map((l) => legPoints(l));
+  const memberRounds = settled.filter((r) => r.legs.some((l) => l.userId === userId));
+  const accaWins = memberRounds.filter((r) => roundAccaWon(r)).length;
+  const pointsPerRound = memberRounds.map((r) => memberPointsInRound(r, userId));
 
   let cumulative = 0;
   const chart: MemberStatsChartPoint[] = settled.map((round, index) => {
-    const leg = round.legs.find((l) => l.userId === userId);
-    const roundPoints = leg ? legPoints(leg) : 0;
+    const roundPoints = memberPointsInRound(round, userId);
     cumulative += roundPoints;
     return {
       roundNumber: index + 1,
@@ -72,29 +73,37 @@ export function computeMemberStats(
   return {
     userId,
     summary: {
-      netPoints: Number(pointsPerLeg.reduce((s, p) => s + p, 0).toFixed(2)),
+      netPoints: Number(pointsPerRound.reduce((s, p) => s + p, 0).toFixed(2)),
       legsPlayed: legs.length,
       winRate:
-        decided > 0 ? Number(((won.length / decided) * 100).toFixed(1)) : null,
+        memberRounds.length > 0
+          ? Number(((accaWins / memberRounds.length) * 100).toFixed(1))
+          : null,
       averageOdds:
         legs.length > 0
           ? Number((legs.reduce((s, l) => s + l.odds, 0) / legs.length).toFixed(2))
           : null,
-      bestLeg: pointsPerLeg.length > 0 ? Math.max(...pointsPerLeg) : null,
-      worstLeg: pointsPerLeg.length > 0 ? Math.min(...pointsPerLeg) : null,
+      bestLeg:
+        legs.length > 0
+          ? Number(Math.max(...legs.map((l) => l.odds)).toFixed(2))
+          : null,
+      worstLeg:
+        legs.length > 0
+          ? Number(Math.min(...legs.map((l) => l.odds)).toFixed(2))
+          : null,
     },
     chart,
     competition: {
-      favourite: favouriteCategory(legs, (l) => l.competition),
-      bestWorst: bestWorstCategory(legs, (l) => l.competition),
+      favourite: favouriteCategory(legs, roundMap, (l) => l.competition),
+      bestWorst: bestWorstCategory(legs, roundMap, (l) => l.competition),
     },
     market: {
-      favourite: favouriteCategory(legs, (l) => l.marketLabel),
-      bestWorst: bestWorstCategory(legs, (l) => l.marketLabel),
+      favourite: favouriteCategory(legs, roundMap, (l) => l.marketLabel),
+      bestWorst: bestWorstCategory(legs, roundMap, (l) => l.marketLabel),
     },
     team: {
-      favourite: favouriteCategory(legs, teamForLeg),
-      bestWorst: bestWorstCategory(legs, teamForLeg),
+      favourite: favouriteCategory(legs, roundMap, teamForLeg),
+      bestWorst: bestWorstCategory(legs, roundMap, teamForLeg),
     },
   };
 }

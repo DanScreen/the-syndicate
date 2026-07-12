@@ -6,20 +6,62 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "the-syndicate",
+    "platforms": ["ios", "android"],
     "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0b1220"
+    },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.thesyndicate.app"
+      "bundleIdentifier": "com.thesyndicate.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "associatedDomains": [
+        "applinks:www.the-syndicate.uk"
+      ]
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#0a0f0a",
+        "backgroundColor": "#0b1220",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "package": "com.thesyndicate.app"
+      "package": "com.thesyndicate.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "www.the-syndicate.uk",
+              "pathPrefix": "/groups"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
-    "plugins": ["expo-router", "expo-secure-store", "expo-status-bar"]
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "origin": "https://www.the-syndicate.uk"
+        }
+      ],
+      "expo-secure-store",
+      "expo-asset",
+      "expo-font"
+    ],
+    "experiments": {
+      "autolinkingModuleResolution": true
+    }
   }
 }

@@ -1,4 +1,8 @@
-import { teamNamesMatch } from "@/lib/results/football-data";
+import {
+  alignGoalsToLeg,
+  isLegOrientationDirect,
+  isLegOrientationReversed,
+} from "@/lib/results/football-data";
 import type { MatchResult } from "@/lib/results/resolve-leg";
 import { prisma } from "@the-syndicate/database";
 import type { Match } from "@prisma/client";
@@ -50,11 +54,31 @@ export async function findDbMatchForLeg(leg: {
   });
 
   return (
-    candidates.find(
-      (match) =>
-        teamNamesMatch(match.homeTeam, leg.homeTeam) &&
-        teamNamesMatch(match.awayTeam, leg.awayTeam)
-    ) ?? null
+    candidates.find((match) =>
+      isLegOrientationDirect(match.homeTeam, match.awayTeam, leg.homeTeam, leg.awayTeam)
+    ) ??
+    candidates.find((match) =>
+      isLegOrientationReversed(match.homeTeam, match.awayTeam, leg.homeTeam, leg.awayTeam)
+    ) ??
+    null
+  );
+}
+
+function alignDbMatchResultToLeg(
+  match: Match,
+  leg: { homeTeam: string; awayTeam: string }
+): MatchResult | null {
+  const base = dbMatchToResult(match);
+  if (!base) return null;
+
+  return alignGoalsToLeg(
+    base.homeGoals,
+    base.awayGoals,
+    base.status,
+    match.homeTeam,
+    match.awayTeam,
+    leg.homeTeam,
+    leg.awayTeam
   );
 }
 
@@ -69,7 +93,7 @@ export async function getMatchResultForLegFromDb(leg: {
   const match = await findDbMatchForLeg(leg);
   if (!match) return null;
 
-  const result = dbMatchToResult(match);
+  const result = alignDbMatchResultToLeg(match, leg);
   if (!result) return null;
 
   if (leg.id && !leg.matchId) {

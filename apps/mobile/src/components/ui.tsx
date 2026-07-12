@@ -91,23 +91,47 @@ export function LinkText({
   );
 }
 
+export function EmptyState({
+  title,
+  message,
+}: {
+  title: string;
+  message?: string;
+}) {
+  return (
+    <View style={styles.emptyState}>
+      <Text style={styles.emptyTitle}>{title}</Text>
+      {message ? <Text style={styles.emptyMessage}>{message}</Text> : null}
+    </View>
+  );
+}
+
 export function OptionRow({
   label,
+  subtitle,
   selected,
   onPress,
+  dashed,
 }: {
   label: string;
+  subtitle?: string;
   selected: boolean;
   onPress: () => void;
+  dashed?: boolean;
 }) {
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.option, selected && styles.optionSelected]}
+      style={[
+        styles.option,
+        dashed && styles.optionDashed,
+        selected && styles.optionSelected,
+      ]}
     >
       <Text style={[styles.optionText, selected && styles.optionTextSelected]}>
         {label}
       </Text>
+      {subtitle ? <Text style={styles.optionSubtitle}>{subtitle}</Text> : null}
     </Pressable>
   );
 }
@@ -189,6 +213,9 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 8,
   },
+  optionDashed: {
+    borderStyle: "dashed",
+  },
   optionSelected: {
     borderColor: colors.accent,
     backgroundColor: colors.accentMuted,
@@ -200,5 +227,31 @@ const styles = StyleSheet.create({
   optionTextSelected: {
     color: colors.accent,
     fontWeight: "600",
+  },
+  optionSubtitle: {
+    color: colors.muted,
+    fontSize: 12,
+    marginTop: 4,
+  },
+  emptyState: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: 20,
+    alignItems: "center",
+  },
+  emptyTitle: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  emptyMessage: {
+    color: colors.muted,
+    fontSize: 14,
+    textAlign: "center",
+    marginTop: 8,
+    lineHeight: 20,
   },
 });

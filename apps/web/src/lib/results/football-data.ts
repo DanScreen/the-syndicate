@@ -47,6 +47,46 @@ export function teamNamesMatch(a: string, b: string): boolean {
   return false;
 }
 
+/** Leg home/away matches stored match home/away (Odds API vs football-data.org). */
+export function isLegOrientationDirect(
+  matchHome: string,
+  matchAway: string,
+  legHome: string,
+  legAway: string
+): boolean {
+  return teamNamesMatch(matchHome, legHome) && teamNamesMatch(matchAway, legAway);
+}
+
+export function isLegOrientationReversed(
+  matchHome: string,
+  matchAway: string,
+  legHome: string,
+  legAway: string
+): boolean {
+  return teamNamesMatch(matchHome, legAway) && teamNamesMatch(matchAway, legHome);
+}
+
+/** Map match score to the leg's home/away perspective; null if teams don't match. */
+export function alignGoalsToLeg(
+  homeGoals: number,
+  awayGoals: number,
+  status: string,
+  matchHome: string,
+  matchAway: string,
+  legHome: string,
+  legAway: string
+): MatchResult | null {
+  if (isLegOrientationDirect(matchHome, matchAway, legHome, legAway)) {
+    return { homeGoals, awayGoals, status };
+  }
+
+  if (isLegOrientationReversed(matchHome, matchAway, legHome, legAway)) {
+    return { homeGoals: awayGoals, awayGoals: homeGoals, status };
+  }
+
+  return null;
+}
+
 const VOID_STATUSES = new Set(["POSTPONED", "CANCELLED", "SUSPENDED", "AWARDED"]);
 
 export function toMatchResult(match: FootballDataMatch): MatchResult | null {
@@ -144,21 +184,28 @@ export async function fetchMatchesInRange(
   return setCached(cacheKey, matches, cacheTtlMs);
 }
 
+function matchOnKickoffDay(match: FootballDataMatch, kickoff: Date): boolean {
+  return formatDate(new Date(match.utcDate)) === formatDate(kickoff);
+}
+
 export function findMatchForLeg(
   matches: FootballDataMatch[],
   homeTeam: string,
   awayTeam: string,
   kickoff: Date
 ): FootballDataMatch | undefined {
-  const kickoffDay = formatDate(kickoff);
+  const direct = matches.find(
+    (match) =>
+      matchOnKickoffDay(match, kickoff) &&
+      isLegOrientationDirect(match.homeTeam.name, match.awayTeam.name, homeTeam, awayTeam)
+  );
+  if (direct) return direct;
 
-  return matches.find((match) => {
-    if (!teamNamesMatch(match.homeTeam.name, homeTeam)) return false;
-    if (!teamNamesMatch(match.awayTeam.name, awayTeam)) return false;
-
-    const matchDay = formatDate(new Date(match.utcDate));
-    return matchDay === kickoffDay;
-  });
+  return matches.find(
+    (match) =>
+      matchOnKickoffDay(match, kickoff) &&
+      isLegOrientationReversed(match.homeTeam.name, match.awayTeam.name, homeTeam, awayTeam)
+  );
 }
 
 export async function getMatchResultForLeg(
@@ -178,7 +225,20 @@ export async function getMatchResultForLeg(
   const match = findMatchForLeg(pool, leg.homeTeam, leg.awayTeam, leg.kickoff);
   if (!match) return null;
 
-  return toMatchResult(match);
+  const raw = toMatchResult(match);
+  if (!raw) return null;
+
+  return (
+    alignGoalsToLeg(
+      raw.homeGoals,
+      raw.awayGoals,
+      raw.status,
+      match.homeTeam.name,
+      match.awayTeam.name,
+      leg.homeTeam,
+      leg.awayTeam
+    ) ?? raw
+  );
 }
 
 export async function fetchMatchesForLegs(

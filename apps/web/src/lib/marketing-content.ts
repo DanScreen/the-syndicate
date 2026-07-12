@@ -69,7 +69,7 @@ export const faqs = [
   },
   {
     q: "How does scoring work?",
-    a: "Each leg earns unit-stake points: wins score odds minus one, losses cost one point, voids score zero. Leaderboards rank members over time.",
+    a: "Each member stakes one unit on the syndicate acca. A winning acca scores combined odds minus one (split across members); a losing acca costs one point each. Leaderboards rank members over time.",
   },
   {
     q: "Can we mix competitions?",

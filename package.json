@@ -14,6 +14,12 @@
     "db:migrate": "npm run migrate --workspace=@the-syndicate/database",
     "db:migrate:deploy": "npm run migrate:deploy --workspace=@the-syndicate/database",
     "db:push": "npm run push --workspace=@the-syndicate/database",
-    "db:seed": "npm run seed --workspace=@the-syndicate/database"
+    "db:seed": "npm run seed --workspace=@the-syndicate/database",
+    "db:maintenance": "npm run db:maintenance --workspace=@the-syndicate/web",
+    "build:mobile:preview": "npm run build:preview:ios --workspace=@the-syndicate/mobile"
+  },
+  "overrides": {
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
   }
 }

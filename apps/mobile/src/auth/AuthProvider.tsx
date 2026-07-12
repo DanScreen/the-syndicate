@@ -8,7 +8,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { api, type AuthUser } from "@/api/client";
+import { api } from "@/api/client";
+import type { AuthUser } from "@the-syndicate/shared";
 
 const TOKEN_KEY = "syndicate_token";
 const USER_KEY = "syndicate_user";

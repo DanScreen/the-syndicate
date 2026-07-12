@@ -43,7 +43,7 @@ Loaded in `apps/web/src/app/layout.tsx`.
 
 ## Colour — Turf Green
 
-Tokens in `apps/web/src/app/globals.css`:
+Tokens in `apps/web/src/app/globals.css` and `packages/shared/src/brand.ts` (mobile imports `BRAND_COLORS`):
 
 | Token | Value | Usage |
 |-------|-------|-------|
@@ -66,6 +66,35 @@ Tokens in `apps/web/src/app/globals.css`:
 Shared shell: `MarketingShell` + `MarketingHeader` in `apps/web/src/components/marketing/`.
 
 Content: `apps/web/src/lib/marketing-content.ts`.
+
+---
+
+## Cross-platform brand
+
+The same identity applies to **website**, **in-app mobile**, and **App Store / Play Store** listings.
+
+| Surface | Logo | Tagline / copy | Colours |
+|---------|------|----------------|---------|
+| Website | SVG `apps/web/src/components/logo.tsx` | `apps/web/src/lib/marketing-content.ts` | `apps/web/src/app/globals.css` |
+| Mobile app | PNG assets `apps/mobile/assets/` | Shared module (`packages/shared/src/brand.ts` for colours) | `apps/mobile/src/config.ts` imports `BRAND_COLORS` |
+| Store listings | Icon + screenshots | [apps/mobile/STORE_LISTING.md](../apps/mobile/STORE_LISTING.md) | N/A |
+
+### Logo export (mobile / stores)
+
+1. Source of truth: **Acca stack** SVG in `logo.tsx`.
+2. Export PNGs at required sizes for:
+   - `apps/mobile/assets/icon.png` (1024×1024)
+   - `apps/mobile/assets/splash-icon.png`
+   - Android adaptive icons (`android-icon-foreground.png`, etc.) — see `apps/mobile/app.json`
+3. Update store screenshots when marketing hero changes.
+
+### Avoiding divergence
+
+- **Centralize** tagline, headline, and colour hex values in one shared module before heavy mobile UI work.
+- **Do not** hardcode marketing copy only in mobile screens.
+- Rebrand on web first, then export icons and sync mobile tokens.
+
+Mobile strategy: [specs/mobile-apps.md](./specs/mobile-apps.md).
 
 ---
 

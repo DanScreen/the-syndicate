@@ -10,6 +10,7 @@ Social group football acca platform. **Read [docs/README.md](docs/README.md) fir
 | [docs/PRODUCT.md](docs/PRODUCT.md) | User flows & vision |
 | [docs/BRAND.md](docs/BRAND.md) | Logo, design, marketing copy |
 | [docs/specs/platform-admin.md](docs/specs/platform-admin.md) | Admin dashboard, leaderboards, analytics |
+| [docs/specs/mobile-apps.md](docs/specs/mobile-apps.md) | iOS + Android strategy, parity plan, anti-divergence |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Stack & data model |
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | GCP deploy, cron, **cost optimization** |
 
@@ -53,7 +54,7 @@ If you only write or revise a spec, update the spec file and [docs/ROADMAP.md](d
 | Path | Purpose |
 |------|---------|
 | `apps/web` | Next.js 15 App Router, API routes, Tailwind UI |
-| `apps/mobile` | Expo React Native (**paused**) |
+| `apps/mobile` | Expo React Native — [README.md](../apps/mobile/README.md), EAS store release |
 | `packages/shared` | Zod schemas, types, constants |
 | `packages/database` | Prisma schema (PostgreSQL) |
 
@@ -87,6 +88,6 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for GCP setup.
 - Skip auth on protected routes
 - Duplicate spec content — link to `docs/specs/`
 
-## Mobile (paused)
+## Mobile (developer testing → friends → stores)
 
-`POST /api/auth/mobile/sign-in` → Bearer JWT. Resume when web is stable.
+`apps/mobile/` — [DEVELOPER_TESTING.md](apps/mobile/DEVELOPER_TESTING.md) for native testing on your iPhone (Expo Go / device build, £0). [FRIEND_TESTING.md](apps/mobile/FRIEND_TESTING.md) for mates. Store fees deferred until validation.

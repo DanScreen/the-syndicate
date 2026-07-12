@@ -171,15 +171,11 @@ function MemberBreakdown({
         />
         <StatCard
           label="Best leg"
-          value={
-            data.summary.bestLeg != null ? formatLegPoints(data.summary.bestLeg) : "—"
-          }
+          value={data.summary.bestLeg != null ? String(data.summary.bestLeg) : "—"}
         />
         <StatCard
           label="Worst leg"
-          value={
-            data.summary.worstLeg != null ? formatLegPoints(data.summary.worstLeg) : "—"
-          }
+          value={data.summary.worstLeg != null ? String(data.summary.worstLeg) : "—"}
         />
       </div>
       <div className="grid gap-3 sm:grid-cols-3">

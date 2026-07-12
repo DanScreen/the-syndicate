@@ -1,16 +1,15 @@
-const { getDefaultConfig } = require("expo/metro-config");
 const path = require("path");
+const { getDefaultConfig } = require("expo/metro-config");
 
 const projectRoot = __dirname;
-const monorepoRoot = path.resolve(projectRoot, "../..");
 
+/** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(projectRoot);
 
-config.watchFolders = [monorepoRoot];
-config.resolver.nodeModulesPaths = [
-  path.resolve(projectRoot, "node_modules"),
-  path.resolve(monorepoRoot, "node_modules"),
-];
-config.resolver.disableHierarchicalLookup = true;
+// npm workspaces can install duplicate React copies — Metro must use one instance.
+config.resolver.extraNodeModules = {
+  react: path.resolve(projectRoot, "node_modules/react"),
+  "react-native": path.resolve(projectRoot, "node_modules/react-native"),
+};
 
 module.exports = config;

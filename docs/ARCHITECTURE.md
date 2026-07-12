@@ -108,4 +108,10 @@ Production URL: **https://www.the-syndicate.uk** (Cloudflare → Cloud Run, `eur
 
 ## Mobile
 
-Expo app in `apps/mobile/` — **paused**. Needs competition picker API changes before resume.
+Expo app in `apps/mobile/` — **implementation paused**; Expo scaffold exists (auth, basic groups).
+
+**Target:** functional parity with the website for member-facing flows. **Strategy:** [specs/mobile-apps.md](./specs/mobile-apps.md) — API-first, shared `packages/shared` contracts, EAS release for iOS + Android.
+
+**Auth:** `POST /api/auth/mobile/sign-in` → Bearer JWT; `requireSession()` accepts Bearer or Auth.js cookie.
+
+**Resume when:** web validated with real users (foundation / shared-contract work can start in parallel). See [ROADMAP.md](./ROADMAP.md).

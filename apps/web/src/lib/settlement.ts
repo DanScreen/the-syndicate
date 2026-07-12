@@ -1,10 +1,14 @@
-import { legPointsForOutcome } from "@the-syndicate/shared";
+import { accaRoundPoints } from "@the-syndicate/shared";
 import type { LegOutcome } from "@the-syndicate/shared";
 import { DEFAULT_STAKE_GBP } from "@the-syndicate/shared";
 import { calculateCombinedOdds } from "./odds/betslip-links";
 
-export function pointsForOutcome(outcome: LegOutcome, odds: number): number {
-  return legPointsForOutcome(outcome, odds);
+export function pointsForAccaRound(
+  legOutcomes: LegOutcome[],
+  combinedOdds: number,
+  memberCount: number
+): number {
+  return accaRoundPoints(legOutcomes, combinedOdds, memberCount).perMember;
 }
 
 export function calculateGroupProfitLoss(

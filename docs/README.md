@@ -24,7 +24,7 @@ npm run dev   # http://localhost:3000
 
 5. After shipping: update docs in the **same commit** — see [AGENTS.md](../AGENTS.md).
 
-**Paused:** `apps/mobile/` — web only until validated with real users.
+**Mobile:** [specs/mobile-apps.md](./specs/mobile-apps.md) — dev: [DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md); friends: [FRIEND_TESTING.md](../apps/mobile/FRIEND_TESTING.md).
 
 ---
 
@@ -35,6 +35,7 @@ npm run dev   # http://localhost:3000
 | **What exists today** (start here for code) | [CURRENT_STATE.md](./CURRENT_STATE.md) |
 | **What to build next** | [ROADMAP.md](./ROADMAP.md) |
 | **Implement a planned feature** | Relevant file in [specs/](./specs/) |
+| **Mobile apps (iOS + Android)** | [specs/mobile-apps.md](./specs/mobile-apps.md) |
 | Product intent & user flows | [PRODUCT.md](./PRODUCT.md) |
 | Brand, logo, design | [BRAND.md](./BRAND.md) |
 | Platform admin & analytics | [specs/platform-admin.md](./specs/platform-admin.md) |
@@ -57,7 +58,7 @@ Specs are **design contracts**. [CURRENT_STATE.md](./CURRENT_STATE.md) is **as-b
 | 4 | FA Cup + EFL Cup | Quick win — `competitions.ts` |
 | 5 | GCP cost reduction | Cloud SQL is ~90% of forecast; see [DEPLOYMENT.md](./DEPLOYMENT.md#cost-optimization) |
 | 6 | football-data.org tier upgrade | Ops — L1/L2 sync 403 on free tier |
-| 7 | Mobile catch-up | Paused until web validated |
+| 7 | Mobile apps (iOS + Android) | Parity with web — [specs/mobile-apps.md](./specs/mobile-apps.md) |
 
 Full list: [ROADMAP.md](./ROADMAP.md).
 
@@ -77,7 +78,8 @@ docs/
     ├── competitions-and-results.md   ← Phases A–C done; Phase 1b backlog
     ├── group-stats-and-points.md     ← Phases 1–4 done
     ├── platform-admin.md             ← Admin, analytics, points-first UX (shipped)
-    └── affiliate-and-betslips.md     ← Affiliate tracking + betslip deeplink improvements (backlog)
+    ├── affiliate-and-betslips.md     ← Affiliate tracking + betslip deeplink improvements (backlog)
+    └── mobile-apps.md                ← iOS + Android strategy, parity plan, anti-divergence (spec)
 ```
 
 ---

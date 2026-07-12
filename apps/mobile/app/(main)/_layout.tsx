@@ -17,9 +17,10 @@ export default function MainLayout() {
       }}
     >
       <Stack.Screen name="index" options={{ title: "Your groups" }} />
+      <Stack.Screen name="performance" options={{ title: "Performance" }} />
       <Stack.Screen name="create-group" options={{ title: "Create group" }} />
       <Stack.Screen name="join-group" options={{ title: "Join group" }} />
-      <Stack.Screen name="groups/[id]" options={{ title: "Group" }} />
+      <Stack.Screen name="groups/[id]" options={{ headerShown: false }} />
     </Stack>
   );
 }

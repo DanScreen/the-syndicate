@@ -1,5 +1,6 @@
 import { useAuth } from "@/auth/AuthProvider";
 import { colors } from "@/config";
+import { peekPendingInviteCode } from "@/lib/pending-invite";
 import { Redirect } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
 
@@ -21,6 +22,15 @@ export default function Index() {
     );
   }
 
-  if (user) return <Redirect href="/(main)" />;
+  if (user) {
+    const pending = peekPendingInviteCode();
+    if (pending) {
+      return (
+        <Redirect href={`/(main)/join-group?code=${encodeURIComponent(pending)}`} />
+      );
+    }
+    return <Redirect href="/(main)" />;
+  }
+
   return <Redirect href="/sign-in" />;
 }

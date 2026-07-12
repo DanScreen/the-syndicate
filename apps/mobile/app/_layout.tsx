@@ -2,12 +2,14 @@ import { AuthProvider } from "@/auth/AuthProvider";
 import { colors } from "@/config";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <StatusBar style="light" />
-      <Stack
+    <SafeAreaProvider>
+      <AuthProvider>
+        <StatusBar style="light" />
+        <Stack
         screenOptions={{
           headerStyle: { backgroundColor: colors.bg },
           headerTintColor: colors.text,
@@ -19,7 +21,10 @@ export default function RootLayout() {
         <Stack.Screen name="sign-in" options={{ title: "Sign in" }} />
         <Stack.Screen name="sign-up" options={{ title: "Sign up" }} />
         <Stack.Screen name="(main)" options={{ headerShown: false }} />
-      </Stack>
-    </AuthProvider>
+        <Stack.Screen name="groups/join" options={{ headerShown: false }} />
+        <Stack.Screen name="groups/[id]" options={{ headerShown: false }} />
+        </Stack>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }

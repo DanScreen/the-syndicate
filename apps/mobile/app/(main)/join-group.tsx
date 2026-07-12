@@ -1,14 +1,21 @@
 import { ApiError, api } from "@/api/client";
 import { useAuth } from "@/auth/AuthProvider";
+import { GambleResponsiblyFooter } from "@/components/compliance";
 import { Button, ErrorText, Field, Screen, Subtitle, Title } from "@/components/ui";
-import { router } from "expo-router";
-import { useState } from "react";
+import { copy } from "@/lib/copy";
+import { router, useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
 
 export default function JoinGroupScreen() {
   const { token } = useAuth();
+  const { code } = useLocalSearchParams<{ code?: string }>();
   const [inviteCode, setInviteCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (code) setInviteCode(code.toUpperCase());
+  }, [code]);
 
   async function handleSubmit() {
     setLoading(true);
@@ -29,16 +36,17 @@ export default function JoinGroupScreen() {
 
   return (
     <Screen>
-      <Title>Join group</Title>
-      <Subtitle>Enter the invite code from your squad</Subtitle>
+      <Title>{copy.join.title}</Title>
+      <Subtitle>{copy.join.subtitle}</Subtitle>
       <Field
-        placeholder="Invite code"
+        placeholder={copy.join.placeholder}
         autoCapitalize="characters"
         value={inviteCode}
-        onChangeText={setInviteCode}
+        onChangeText={(text) => setInviteCode(text.toUpperCase())}
       />
       <ErrorText message={error} />
-      <Button label="Join" onPress={handleSubmit} loading={loading} />
+      <Button label="Join group" onPress={handleSubmit} loading={loading} />
+      <GambleResponsiblyFooter />
     </Screen>
   );
 }

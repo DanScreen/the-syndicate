@@ -22,15 +22,15 @@ Related: [competitions-and-results.md](./competitions-and-results.md)
 
 | Outcome | Points |
 |---------|--------|
-| **Won** | `odds − 1` |
-| **Lost** | `−1` |
-| **Void** | `0` |
+| **Acca won** | Group total `combinedOdds − 1`, split equally per member |
+| **Acca lost** | `−1` per member |
+| **Void leg** | Counts toward acca win; combined odds unchanged at lock |
 
-Implementation: `legPointsForOutcome()` in `packages/shared/src/scoring.ts`.
+Implementation: `accaRoundPoints()` in `packages/shared/src/scoring.ts`.
 
 **Charts:** cumulative points after each settled round. In-progress leg outcomes on locked accas are visible on the Round tab but do not affect stats until the round settles.
 
-**Group chart:** sum of all members' leg points per round, accumulated.  
+**Group chart:** `combinedOdds − 1` per winning acca round (or `−1` × members if lost), accumulated.  
 **Separate stat:** cumulative acca £ P/L from `Round.profitLossGbp` (£10 theoretical stake).
 
 **Important:** stats APIs compute from outcome + odds, not stale `pointsAwarded` (backfilled in migration `20260710000000_backfill_unit_stake_points`).
@@ -47,9 +47,9 @@ Implementation: `legPointsForOutcome()` in `packages/shared/src/scoring.ts`.
 | Total bets | Leg count in settled rounds |
 | Average leg odds | Mean `Leg.odds` |
 | Average acca odds | Mean `Round.combinedOdds` |
-| Net group points | Sum of leg points (unit-stake formula) |
+| Net group points | Sum of acca round points (`combinedOdds − 1` on win) |
 | Net acca P/L | Sum `profitLossGbp` |
-| Win rate | % legs won |
+| Win rate | % settled accas won |
 
 **Chart:** cumulative group points vs round number/date (Recharts).
 
@@ -63,7 +63,7 @@ Implementation: `legPointsForOutcome()` in `packages/shared/src/scoring.ts`.
 | Legs played | Count in settled rounds |
 | Win rate | Won / (won + lost) |
 | Average odds | Mean `Leg.odds` |
-| Best / worst leg | Max / min single-leg points |
+| Best / worst leg | Max / min leg odds (`Leg.odds`) |
 
 **Multi-line chart:** each member's cumulative points over rounds.
 

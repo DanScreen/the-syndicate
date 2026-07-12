@@ -1,6 +1,8 @@
 import {
   formatRoundLabel,
-  legPoints,
+  memberPointsInRound,
+  roundAccaWon,
+  roundGroupPoints,
   sortedSettledRounds,
   type RoundWithLegs,
 } from "./helpers";
@@ -41,9 +43,9 @@ export function computeGroupStats(
 ): GroupStatsResult {
   const settled = sortedSettledRounds(rounds);
   const allLegs = settled.flatMap((r) => r.legs);
-  const wonLegs = allLegs.filter((l) => l.outcome === "won");
-  const lostLegs = allLegs.filter((l) => l.outcome === "lost");
-  const decidedLegs = wonLegs.length + lostLegs.length;
+  const accaWins = settled.filter((r) => roundAccaWon(r)).length;
+  const accaLosses = settled.length - accaWins;
+  const decidedAccas = accaWins + accaLosses;
 
   const accaOdds = settled
     .map((r) => r.combinedOdds)
@@ -51,7 +53,7 @@ export function computeGroupStats(
 
   let cumulativePoints = 0;
   const chart: GroupStatsChartPoint[] = settled.map((round, index) => {
-    const roundPoints = round.legs.reduce((sum, leg) => sum + legPoints(leg), 0);
+    const roundPoints = roundGroupPoints(round);
     cumulativePoints += roundPoints;
     return {
       roundNumber: index + 1,
@@ -82,11 +84,13 @@ export function computeGroupStats(
         accaOdds.length > 0
           ? Number((accaOdds.reduce((sum, o) => sum + o, 0) / accaOdds.length).toFixed(2))
           : null,
-      netGroupPoints: Number(allLegs.reduce((sum, l) => sum + legPoints(l), 0).toFixed(2)),
+      netGroupPoints: Number(
+        settled.reduce((sum, r) => sum + roundGroupPoints(r), 0).toFixed(2)
+      ),
       netAccaPlGbp: Number(netAccaPlGbp.toFixed(2)),
       winRate:
-        decidedLegs > 0
-          ? Number(((wonLegs.length / decidedLegs) * 100).toFixed(1))
+        decidedAccas > 0
+          ? Number(((accaWins / decidedAccas) * 100).toFixed(1))
           : null,
     },
     chart,

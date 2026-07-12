@@ -266,12 +266,106 @@ npm run db:migrate:deploy     # or db:migrate for new migrations
 npm run dev
 ```
 
-## Mobile app (production)
+## Mobile apps (iOS and Android)
 
-Mobile is **not** deployed by this pipeline. For production iPhone builds:
+Mobile is **not** deployed by the web `deploy.yml` pipeline. Native apps are built separately with **Expo** and **[EAS Build](https://docs.expo.dev/build/introduction/)**.
 
-1. Set `EXPO_PUBLIC_API_URL` in EAS build profile to the Cloud Run URL (or custom domain)
-2. Build with EAS → TestFlight → App Store
+**Strategy and parity plan:** [specs/mobile-apps.md](./specs/mobile-apps.md)
+
+### Friend testing (without store fees)
+
+**Decision (July 2026):** Defer Apple Developer (~£99/yr) and Google Play Console (~£25) until friend groups validate the full acca loop on production.
+
+| Who | Channel | Cost |
+|-----|---------|------|
+| **Developer (you)** | Expo Go, Simulator, or `expo run:ios --device` on your iPhone | £0 |
+| **Android mates** | Preview APK — `eas build --profile preview --platform android` | £0 store fee |
+| **iPhone mates** | TestFlight after Apple Developer; web fallback only if needed | Deferred |
+| **After validation** | `eas submit` to App Store / Play | Paid accounts |
+
+Guides: [apps/mobile/DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md) · [apps/mobile/FRIEND_TESTING.md](../apps/mobile/FRIEND_TESTING.md)
+
+### Architecture
+
+- `apps/mobile` → `EXPO_PUBLIC_API_URL` → same Cloud Run API as web (`https://www.the-syndicate.uk`)
+- Auth: `POST /api/auth/mobile/sign-in` → Bearer JWT on all API calls
+- No direct database access from the app
+
+### Local development
+
+```bash
+cd apps/mobile
+cp .env.example .env   # EXPO_PUBLIC_API_URL=http://localhost:3000 for local API
+npm run ios            # or npm run android
+```
+
+### Production builds (EAS)
+
+`eas.json` is configured in `apps/mobile/`. Full guide: [apps/mobile/README.md](../apps/mobile/README.md).
+
+1. Install EAS CLI: `npm install -g eas-cli` and `eas login`
+2. First time only: `cd apps/mobile && eas init` (writes `projectId` to `app.json`)
+3. Build (after friend validation, or Android APK anytime):
+
+   ```bash
+   cd apps/mobile
+   eas build --profile preview --platform android   # friend APK — no store fee
+   eas build --profile preview --platform ios       # needs Apple Developer
+   eas build --profile production --platform all    # store binaries
+   ```
+
+4. Submit (**after** paid store accounts):
+
+   ```bash
+   eas submit --platform ios --profile production --latest
+   eas submit --platform android --profile production --latest
+   ```
+
+| Setting | Value |
+|---------|-------|
+| iOS bundle ID | `com.thesyndicate.app` |
+| Android package | `com.thesyndicate.app` |
+| URL scheme | `the-syndicate` |
+| Production API | `EXPO_PUBLIC_API_URL=https://www.the-syndicate.uk` (in `eas.json` profiles) |
+
+Store listing copy: [apps/mobile/STORE_LISTING.md](../apps/mobile/STORE_LISTING.md).  
+Icons/splash: `apps/mobile/assets/` — export checklist in [BRAND.md](./BRAND.md#cross-platform-brand).
+
+### CI
+
+[`.github/workflows/eas.yml`](../.github/workflows/eas.yml) — manual **workflow_dispatch** or push tag `mobile-v*` (e.g. `mobile-v1.0.0`).
+
+**GitHub secret:** `EXPO_TOKEN` (expo.dev → Access tokens).
+
+### Universal links (optional)
+
+`app.json` declares `associatedDomains` (iOS) and Android App Links for `https://www.the-syndicate.uk/groups/*`. For taps from Safari/Chrome to open the native app, host:
+
+- `https://www.the-syndicate.uk/.well-known/apple-app-site-association`
+- `https://www.the-syndicate.uk/.well-known/assetlinks.json`
+
+Until those are live, use custom scheme links: `the-syndicate://groups/join?code=`.
+
+### Deep links
+
+Custom scheme: `the-syndicate` (`app.json`).
+
+| URL | Route |
+|-----|-------|
+| `the-syndicate://groups/join?code=INVITE` | Join group (stores code if signed out; pre-fills after sign-in) |
+| `the-syndicate://groups/{groupId}` | Open group round tab |
+
+Test on simulator:
+
+```bash
+xcrun simctl openurl booted "the-syndicate://groups/join?code=YOURCODE"
+```
+
+Universal links (`https://www.the-syndicate.uk/groups/join?code=`) open the website until associated domains are configured in Phase 5.
+
+### CORS
+
+Mobile uses Bearer tokens, not browser cookies. If API CORS is tightened, ensure mobile origins are not blocked for any Expo web preview; native apps are not subject to browser CORS.
 
 ## Cost optimization
 
@@ -304,6 +398,40 @@ In GCP Console → **Billing → Reports**, filter by service to confirm Cloud S
 5. **Keep Cloud Run at min 0** — only raise `min_instances` if cold starts become a user-facing problem.
 
 App deploy and match sync are unaffected by DB tier changes — only connection string and migration step need updating.
+
+## Data maintenance (prod corrections)
+
+One-off fixes (solo test rounds, re-settle after a bug) use `apps/web/scripts/data-maintenance.ts`. **Always preview first** (default dry-run); add `--execute` to apply.
+
+### Connect to Cloud SQL locally
+
+1. Install [Cloud SQL Auth Proxy](https://cloud.google.com/sql/docs/postgres/sql-proxy).
+2. Start the proxy (instance name from Terraform output):
+   ```bash
+   cloud-sql-proxy PROJECT:REGION:INSTANCE
+   ```
+3. Fetch prod `DATABASE_URL` from Secret Manager and point `localhost` at the proxy port (usually `5432`):
+   ```bash
+   export DATABASE_URL="$(gcloud secrets versions access latest --secret=DATABASE_URL)"
+   # Edit host in the URL to localhost if the secret uses the Cloud SQL socket form
+   ```
+
+### Common tasks
+
+| Goal | Commands |
+|------|----------|
+| List your solo test accas | `npm run db:maintenance -- preview-solo-rounds --email you@example.com` |
+| Delete solo test accas + reverse points | `npm run db:maintenance -- remove-solo-rounds --email you@example.com --execute` |
+| Find a round by fixture | `npm run db:maintenance -- find-rounds Norway England` |
+| Preview outcome fix (e.g. draw mis-resolved) | Deploy orientation fix first, then `npm run db:maintenance -- preview-resettle --round-id <id>` |
+| Re-settle a settled round | `npm run db:maintenance -- resettle-round --round-id <id> --execute` |
+| Verify `User.totalPoints` / `GroupMember.points` | `npm run db:maintenance -- reconcile-points` then `--execute` if needed |
+
+**Solo round** = every leg in the round belongs to that email (typical single-player test accas).
+
+**Re-settle** reverses the old settlement, re-resolves legs from synced `Match` rows (with correct home/away alignment), then runs the normal settlement path again. Deploy the orientation fix before re-settling Norway vs England.
+
+---
 
 ## Future improvements
 

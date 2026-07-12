@@ -1,6 +1,7 @@
 import { ApiError } from "@/api/client";
 import { useAuth } from "@/auth/AuthProvider";
 import { Button, ErrorText, Field, LinkText, Screen, Subtitle, Title } from "@/components/ui";
+import { redirectAfterAuth } from "@/lib/auth-redirect";
 import { router } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform } from "react-native";
@@ -18,7 +19,7 @@ export default function SignUpScreen() {
     setError("");
     try {
       await signUp(name.trim(), email.trim(), password);
-      router.replace("/(main)");
+      redirectAfterAuth();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Sign up failed");
     } finally {

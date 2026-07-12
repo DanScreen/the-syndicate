@@ -6,3 +6,7 @@ export * from "./competitions";
 export * from "./scoring";
 export * from "./acca";
 export * from "./roles";
+export * from "./api-types";
+export * from "./brand";
+export * from "./bookmakers";
+export * from "./market-groups";

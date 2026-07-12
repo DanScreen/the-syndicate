@@ -4,7 +4,7 @@ Last updated July 2026. **This file is the source of truth for agents — update
 
 Production: **https://www.the-syndicate.uk** (apex → 301 to www via Cloudflare).
 
-Mobile (`apps/mobile/`) is **paused** — web only.
+Mobile (`apps/mobile/`) — v1 parity shipped. **Developer testing:** Expo Go / device build ([DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md)); friend APK/TestFlight deferred.
 
 ---
 
@@ -103,17 +103,16 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 
 ## Scoring
 
-**Unit-stake leg points** in `packages/shared/src/scoring.ts`:
+**Acca points** in `packages/shared/src/scoring.ts`:
 
 | Outcome | Points |
 |---------|--------|
-| Won | `odds − 1` |
-| Void | `0` |
-| Lost | `−1` |
+| Acca won | Group total `combinedOdds − 1`, split equally per member |
+| Acca lost | `−1` per member |
 
-Examples: win @ 2.50 → +1.50; loss → −1.00.
+Example: acca @ 3.44 with 2 members → **2.44** group pts round total (**1.22** each).
 
-**Stats compute from outcome + odds** via `legPointsForOutcome()` — not stale `pointsAwarded` (backfilled in migration `20260710000000_backfill_unit_stake_points`).
+**Stats** use `accaRoundPoints()` from round outcomes + `combinedOdds` (migration `20260712000000_acca_scoring_points` backfills `pointsAwarded` and leaderboards).
 
 **Points-first UX:** Points are the **primary metric** across performance pages, leaderboards, share cards, and round history. Users convert points to money with `profitFromPoints(points, stake)` — profit = points × stake (£). UI: `StakeProfit` component (default stake £10).
 
@@ -241,7 +240,7 @@ Email notifications (Resend) fire on lock and settle when `RESEND_API_KEY` + `EM
 | `apps/web/src/lib/notifications/email.ts` | Resend client (fetch) |
 | `apps/web/src/lib/results/football-data.ts` | football-data.org fetch, team matching; cache bypass on cron sync |
 | `apps/web/src/lib/results/sync-matches.ts` | Upsert matches for all competitions |
-| `apps/web/src/lib/results/match-store.ts` | DB lookup for auto-settle |
+| `apps/web/src/lib/results/match-store.ts` | DB lookup for auto-settle; aligns goals to leg home/away when sources disagree |
 | `apps/web/src/lib/results/resolve-leg.ts` | Market → outcome logic |
 | `apps/web/src/lib/settlement/apply-round-settlement.ts` | Transactional settle: atomic `locked → settled` claim, points/P&L, `RoundNotSettleableError` |
 
@@ -303,6 +302,8 @@ Admin-only for now; public rollout planned when user base grows.
 ## Stats
 
 Computed on read from settled rounds. No materialised stats tables.
+
+Member summary **best / worst leg** = highest / lowest decimal odds across the member's legs (not round points).
 
 | Route | Purpose |
 |-------|---------|
@@ -408,7 +409,7 @@ Recent migrations include `20260711100000_competition_settings` (admin competiti
 7. **The Odds API quota** — credits = `markets × regions`. Cron warm: **3** bulk + **5 × N** core per enabled competition every 6 h (`N` = fixtures within `ODDS_WARM_CORE_WITHIN_HOURS`, default 72). User “specials” tier = **7** per fixture on demand only. Set `ODDS_DB_ONLY=true` so users do not call the API. See [DEPLOYMENT.md](./DEPLOYMENT.md#the-odds-api--calls-credits--cron).
 8. **Terraform CI** needs `storage.objectAdmin` on the deploy SA for the GCS state bucket. If CI fails with `storage.objects.list` denied, grant bucket access once (see [infra/terraform/README.md](../infra/terraform/README.md#terraform-ci-state-bucket-access)), then re-run the workflow. `deploy.yml` bootstraps `CRON_SECRET` in Secret Manager from the GitHub secret when missing.
 9. **Odds snapshots in PostgreSQL** — shared across Cloud Run instances; refreshed by `POST /api/internal/warm-odds-cache` (Cloud Scheduler job in Terraform). Set `ODDS_DB_ONLY=true` so users never burn API credits. In-memory cache remains for quota block/snapshot and football-data only.
-10. **Mobile app** — still calls old fixtures API without `?competition=`; paused until web validated.
+10. **Mobile app** — Native app code complete. **You:** test via Expo Go or `expo run:ios --device` ([DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md)). **Mates:** Android APK; iPhone TestFlight after store fees. [FRIEND_TESTING.md](../apps/mobile/FRIEND_TESTING.md).
 11. **Auth JWT** — middleware uses edge-safe `auth.config.ts` (no Prisma); `auth.ts` refreshes `role` from DB on each session update.
 
 ## Production checklist (operators)

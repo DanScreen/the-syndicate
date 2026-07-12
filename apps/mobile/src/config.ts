@@ -1,13 +1,17 @@
+import { BRAND_COLORS } from "@the-syndicate/shared";
+
 export const API_URL =
   process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
 
+/** Turf Green — sourced from @the-syndicate/shared (matches web globals.css) */
 export const colors = {
-  bg: "#0a0f0a",
-  card: "#141a14",
-  border: "#243024",
-  text: "#f0f4f0",
-  muted: "#8a9a8a",
-  accent: "#22c55e",
-  accentMuted: "#14532d",
-  danger: "#f87171",
+  bg: BRAND_COLORS.background,
+  card: BRAND_COLORS.card,
+  border: BRAND_COLORS.border,
+  text: BRAND_COLORS.foreground,
+  muted: BRAND_COLORS.muted,
+  accent: BRAND_COLORS.accent,
+  accentBright: BRAND_COLORS.accentBright,
+  accentMuted: BRAND_COLORS.accentMuted,
+  danger: BRAND_COLORS.danger,
 };

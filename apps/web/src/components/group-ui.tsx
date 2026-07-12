@@ -1,7 +1,7 @@
 "use client";
 
-import type { Fixture, Market } from "@the-syndicate/shared";
-import { formatLegPoints, legPointsForOutcome, type AccaBookmakerRanking } from "@the-syndicate/shared";
+import type { Fixture, Market, LegOutcome } from "@the-syndicate/shared";
+import { accaRoundPoints, formatLegPoints, type AccaBookmakerRanking } from "@the-syndicate/shared";
 import { useEffect, useMemo, useState } from "react";
 import { sortQuotesByBestOdds } from "@/lib/odds/bookmakers";
 import { groupMarkets } from "@/lib/odds/market-groups";
@@ -750,10 +750,6 @@ export function LegsList({
       {legs.map((leg) => {
         const openUrl = showOpenLinks ? linkByLegId.get(leg.id) : undefined;
         const showOutcome = inProgress || leg.outcome !== "pending";
-        const legPoints =
-          leg.outcome !== "pending"
-            ? legPointsForOutcome(leg.outcome as "won" | "lost" | "void", leg.odds)
-            : null;
 
         return (
           <li
@@ -776,11 +772,6 @@ export function LegsList({
                         }`}
                       >
                         {legOutcomeLabel(leg.outcome)}
-                        {legPoints !== null && (
-                          <span className="ml-1 opacity-80">
-                            {formatLegPoints(legPoints)} pts
-                          </span>
-                        )}
                       </span>
                     )}
                     <span className="text-accent">{leg.odds}</span>
@@ -794,12 +785,6 @@ export function LegsList({
                   {leg.competition}
                   {inProgress && (
                     <span> · Locked at {leg.bookmakerName}</span>
-                  )}
-                  {!inProgress && leg.outcome !== "pending" && legPoints !== null && (
-                    <>
-                      {" "}
-                      · {leg.outcome} ({formatLegPoints(legPoints)} pts)
-                    </>
                   )}
                 </p>
               </div>
@@ -883,18 +868,12 @@ export function RoundHistory({
       <h2 className="text-lg font-semibold">Recent rounds</h2>
       <ul className="mt-4 space-y-3">
         {rounds.map((round) => {
-          const roundPoints = round.legs.reduce(
-            (sum, leg) =>
-              sum +
-              (leg.pointsAwarded ??
-                (leg.outcome !== "pending"
-                  ? legPointsForOutcome(
-                      leg.outcome as "won" | "lost" | "void",
-                      leg.odds ?? 1
-                    )
-                  : 0)),
-            0
-          );
+          const outcomes = round.legs.map((l) => l.outcome as LegOutcome);
+          const roundPoints = accaRoundPoints(
+            outcomes,
+            round.combinedOdds ?? 1,
+            round.legs.length
+          ).roundTotal;
           return (
           <li key={round.id} className="rounded-xl border border-border bg-card p-4 text-sm">
             <div className="flex justify-between">

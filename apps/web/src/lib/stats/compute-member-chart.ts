@@ -1,4 +1,4 @@
-import { formatRoundLabel, legPoints, sortedSettledRounds, type RoundWithLegs } from "./helpers";
+import { formatRoundLabel, memberPointsInRound, sortedSettledRounds, type RoundWithLegs } from "./helpers";
 
 export type MemberSeries = {
   userId: string;
@@ -29,7 +29,7 @@ export function computeMemberChart(
 
     for (const member of members) {
       const leg = round.legs.find((l) => l.userId === member.userId);
-      const roundPoints = leg ? legPoints(leg) : 0;
+      const roundPoints = leg ? memberPointsInRound(round, member.userId) : 0;
       const total = (cumulative.get(member.userId) ?? 0) + roundPoints;
       cumulative.set(member.userId, total);
       point[member.userId] = Number(total.toFixed(2));
