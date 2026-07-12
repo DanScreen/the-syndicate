@@ -57,8 +57,7 @@ Specs are **design contracts**. [CURRENT_STATE.md](./CURRENT_STATE.md) is **as-b
 | 3 | Better betslip deeplinks | Acca-builder URLs, fewer hub fallbacks |
 | 4 | FA Cup + EFL Cup | Quick win — `competitions.ts` |
 | 5 | GCP cost reduction | Cloud SQL is ~90% of forecast; see [DEPLOYMENT.md](./DEPLOYMENT.md#cost-optimization) |
-| 6 | football-data.org tier upgrade | Ops — L1/L2 sync 403 on free tier |
-| 7 | Mobile apps (iOS + Android) | Parity with web — [specs/mobile-apps.md](./specs/mobile-apps.md) |
+| 6 | Mobile apps (iOS + Android) | Parity with web — [specs/mobile-apps.md](./specs/mobile-apps.md) |
 
 Full list: [ROADMAP.md](./ROADMAP.md).
 

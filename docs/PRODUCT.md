@@ -55,7 +55,7 @@ Platform admins (`ADMIN_EMAILS`) see an **Admin** tab in the header with `/admin
 ### Shipped
 - [x] Auth, groups, invite flow
 - [x] Live odds (The Odds API) + extended markets
-- [x] Per-leg competition picker (5 leagues + World Cup)
+- [x] Per-leg competition picker (EPL, Championship, top European leagues, World Cup)
 - [x] Leg submit, acca lock, acca bookmaker rankings
 - [x] Real bookmaker betslip deeplinks
 - [x] Match table + football-data.org sync

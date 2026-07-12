@@ -10,7 +10,7 @@
 
 ## Goals
 
-1. **Curated competitions** — English football leagues + FIFA World Cup (expand later).
+1. **Curated competitions** — English leagues, top European divisions, and FIFA World Cup (expand later).
 2. **Per-leg competition picker** — each member chooses their own competition before fixtures (cross-competition accas are intentional).
 3. **Shared match results** — one canonical result per fixture, polled once per competition, reused by all groups.
 
@@ -52,8 +52,10 @@ If no single bookmaker covers all legs → best-per-leg combined odds locked at 
 |------|--------------|--------------------------|----------------------|
 | `epl` | Premier League | `soccer_epl` | `PL` |
 | `championship` | Championship | `soccer_efl_champ` | `ELC` |
-| `league-one` | League One | `soccer_england_league1` | `EL1` |
-| `league-two` | League Two | `soccer_england_league2` | `EL2` |
+| `la-liga` | La Liga | `soccer_spain_la_liga` | `PD` |
+| `ligue-1` | Ligue 1 | `soccer_france_ligue_one` | `FL1` |
+| `serie-a` | Serie A | `soccer_italy_serie_a` | `SA` |
+| `bundesliga` | Bundesliga | `soccer_germany_bundesliga` | `BL1` |
 | `world-cup` | FIFA World Cup | `soccer_fifa_world_cup` | `WC` |
 
 **Phase 1b (backlog):** FA Cup (`soccer_fa_cup` / `FAC`), EFL Cup.
@@ -117,7 +119,7 @@ flowchart LR
 - Settle: read `Match` table — one result per fixture, shared across all groups; no per-group API calls at settle time.
 - Endpoint: `POST /api/internal/sync-matches` (Bearer `CRON_SECRET`). Logs pending settle reasons to Cloud Run stdout.
 
-**Known:** football-data.org free tier — League One/Two return 403; EPL/Championship empty off-season.
+**Known:** football-data.org free tier covers all catalogue leagues; EPL/Championship may be empty off-season.
 
 ---
 

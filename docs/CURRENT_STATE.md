@@ -122,7 +122,7 @@ Example: acca @ 3.44 (legs 1.6 × 2.15) → **2.44** group pts; members **0.6** 
 
 ## Odds & competitions
 
-Five competitions in `packages/shared/src/competitions.ts`: EPL, Championship, League One, League Two, World Cup. **Admin toggles** which are visible in the leg picker (`CompetitionSetting` table; `/admin/competitions`). Default: **World Cup only**. Match sync still runs for all catalogue competitions so settled legs can resolve when leagues are re-enabled.
+Seven competitions in `packages/shared/src/competitions.ts`: EPL, Championship, La Liga, Ligue 1, Serie A, Bundesliga, World Cup. **Admin toggles** which are visible in the leg picker (`CompetitionSetting` table; `/admin/competitions`). Default: **World Cup only**. Match sync still runs for all catalogue competitions so settled legs can resolve when leagues are re-enabled.
 
 Fixture list uses The Odds API with `commenceTimeFrom` in `YYYY-MM-DDTHH:MM:SSZ` format (no milliseconds) and client-side upcoming filter. When `ODDS_API_KEY` is set, **no mock fallback** — empty list if the bookmaker feed has no upcoming fixtures. **Production never serves demo fixtures**; mock data is local dev only (`source: "mock"`). Check `GET /api/health` → `odds: "configured" | "missing"`.
 
@@ -400,7 +400,7 @@ Recent migrations include `20260711100000_competition_settings` (admin competiti
 
 ## Known limitations
 
-1. **football-data.org free tier:** World Cup syncs; League One/Two return 403; EPL/Championship may be empty off-season.
+1. **football-data.org free tier:** All catalogue leagues sync on the free tier (incl. La Liga, Ligue 1, Serie A, Bundesliga); EPL/Championship may be empty off-season.
 2. **Auto-settle** runs automatically after match sync (every 5 min); individual leg outcomes update as matches finish; round settles when all legs are ready. Owner can still trigger manually. Overlapping settlements (cron vs owner) are safe — settlement is transactional and awards points exactly once via an atomic `locked → settled` claim (see [Settlement](#settlement)).
 3. **Email notifications** require Resend setup (`RESEND_API_KEY`, `EMAIL_FROM`); skipped if unset.
 4. **Auto-settle requires synced `Match` rows** — 5-min cron or manual `POST /api/internal/sync-matches`.

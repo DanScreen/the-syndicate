@@ -1,5 +1,6 @@
 "use client";
 
+import { COMPETITIONS } from "@the-syndicate/shared";
 import { useCallback, useEffect, useState } from "react";
 
 type Diagnostics = {
@@ -115,11 +116,11 @@ export function AdminOddsDiagnosticsPanel() {
             onChange={(e) => setCompetitionId(e.target.value)}
             className="rounded-lg border border-border bg-background px-3 py-2"
           >
-            <option value="world-cup">FIFA World Cup</option>
-            <option value="epl">Premier League</option>
-            <option value="championship">Championship</option>
-            <option value="league-one">League One</option>
-            <option value="league-two">League Two</option>
+            {COMPETITIONS.map((competition) => (
+              <option key={competition.id} value={competition.id}>
+                {competition.name}
+              </option>
+            ))}
           </select>
         </label>
         <button

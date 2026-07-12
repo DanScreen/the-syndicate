@@ -18,7 +18,7 @@ Core loop and MVP polish are **shipped**:
 
 - Auth, groups, invite links, rounds (collecting → locked → settled)
 - Live odds (The Odds API) + mock fallback; extended markets (BTTS, double chance, DNB)
-- Per-leg **competition picker** (EPL, Championship, L1, L2, World Cup)
+- Per-leg **competition picker** (EPL, Championship, La Liga, Ligue 1, Serie A, Bundesliga, World Cup)
 - **Acca lock** with best combined bookmaker + ranked bookmaker list at lock
 - **Real bookmaker betslip deeplinks** (The Odds API `includeLinks`)
 - **Match table** + football-data.org sync cron + hands-off auto-settle
@@ -47,9 +47,8 @@ Core loop and MVP polish are **shipped**:
 | 5 | **GCP cost reduction** | Ops/infra | Cloud SQL ~90% of spend; see [DEPLOYMENT.md](./DEPLOYMENT.md#cost-optimization) |
 | 6 | **Public platform leaderboards** | Code | Admin version shipped; open to all users when ready |
 | 7 | User profile page | Code | Optional; `/performance` covers cross-group stats today |
-| 8 | football-data.org tier upgrade | Ops | L1/L2 sync returns 403 on free tier |
-| 9 | **Mobile — friend testing** | Product | You: [DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md); mates: APK / later TestFlight |
-| 10 | Terraform CI GCS permissions fix | Infra | App deploy unaffected |
+| 8 | **Mobile — friend testing** | Product | You: [DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md); mates: APK / later TestFlight |
+| 9 | Terraform CI GCS permissions fix | Infra | App deploy unaffected |
 
 ---
 

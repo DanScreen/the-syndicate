@@ -324,11 +324,17 @@ const MOCK_FIXTURES_BY_COMPETITION: Record<string, Fixture[]> = {
   championship: [
     simpleMatchWinner("fx-lee-she", "Leeds", "Sheffield Utd", "Championship", 2, 15),
   ],
-  "league-one": [
-    simpleMatchWinner("fx-bol-wig", "Bolton", "Wigan", "League One", 2, 15),
+  "la-liga": [
+    simpleMatchWinner("fx-rma-bar", "Real Madrid", "Barcelona", "La Liga", 2, 15),
   ],
-  "league-two": [
-    simpleMatchWinner("fx-wre-not", "Wrexham", "Notts County", "League Two", 2, 15),
+  "ligue-1": [
+    simpleMatchWinner("fx-psg-olm", "PSG", "Marseille", "Ligue 1", 2, 15),
+  ],
+  "serie-a": [
+    simpleMatchWinner("fx-int-mil", "Inter", "Milan", "Serie A", 2, 15),
+  ],
+  bundesliga: [
+    simpleMatchWinner("fx-bay-dor", "Bayern Munich", "Dortmund", "Bundesliga", 2, 15),
   ],
 };
 
