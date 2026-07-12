@@ -7,7 +7,7 @@ export function MarketingHeader() {
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
         <div className="flex items-center gap-2.5">
           <Logo href="/" size="md" />
-          <span className="hidden text-sm text-muted md:inline">
+          <span className="relative -top-0.5 hidden text-sm text-muted md:inline">
             Social Group Betting
           </span>
         </div>
