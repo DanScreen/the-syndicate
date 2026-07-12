@@ -38,6 +38,7 @@ npm run dev   # http://localhost:3000
 | **Mobile apps (iOS + Android)** | [specs/mobile-apps.md](./specs/mobile-apps.md) |
 | Product intent & user flows | [PRODUCT.md](./PRODUCT.md) |
 | Brand, logo, design | [BRAND.md](./BRAND.md) |
+| Positioning, taglines, marketing copy | [MARKETING_BRIEF.md](./MARKETING_BRIEF.md) |
 | Platform admin & analytics | [specs/platform-admin.md](./specs/platform-admin.md) |
 | Deploy, infra, or reduce GCP costs | [DEPLOYMENT.md](./DEPLOYMENT.md), [infra/terraform/README.md](../infra/terraform/README.md) |
 | Commands & conventions | [AGENTS.md](../AGENTS.md) |
@@ -73,6 +74,7 @@ docs/
 ├── ARCHITECTURE.md        ← stack, entities, subsystems
 ├── ROADMAP.md             ← priorities & status
 ├── DEPLOYMENT.md          ← GCP, CI, cron, cost optimization
+├── MARKETING_BRIEF.md     ← positioning, taglines, homepage/about copy (draft)
 └── specs/
     ├── competitions-and-results.md   ← Phases A–C done; Phase 1b backlog
     ├── group-stats-and-points.md     ← Phases 1–4 done

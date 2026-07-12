@@ -4,6 +4,8 @@ Visual identity for The Syndicate.
 
 **Locked (July 2026):** Turf Green palette + Acca stack logo.
 
+**Messaging & copy direction:** [MARKETING_BRIEF.md](./MARKETING_BRIEF.md) — positioning territories, tagline options, homepage/about page structure (draft, tagline decision open).
+
 ---
 
 ## Positioning
