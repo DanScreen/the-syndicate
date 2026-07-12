@@ -87,10 +87,14 @@ export default function GroupsScreen() {
                 <Text style={styles.meta}>
                   {g.memberCount} members · Owner: {g.ownerName}
                 </Text>
-                <Text style={styles.groupPoints}>
-                  Group points: {formatLegPoints(g.groupPoints)}
-                </Text>
-                <Text style={styles.meta}>Your points: {formatLegPoints(g.points)}</Text>
+                <View style={styles.pointsRow}>
+                  <Text style={styles.points}>
+                    Group points: {formatLegPoints(g.groupPoints)}
+                  </Text>
+                  <Text style={styles.points}>
+                    Your points: {formatLegPoints(g.points)}
+                  </Text>
+                </View>
               </Card>
             </Pressable>
           ))
@@ -170,10 +174,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 2,
   },
-  groupPoints: {
+  pointsRow: {
+    flexDirection: "row",
+    gap: 24,
+    marginTop: 8,
+  },
+  points: {
     color: colors.text,
     fontSize: 14,
     fontWeight: "600",
-    marginTop: 6,
   },
 });
