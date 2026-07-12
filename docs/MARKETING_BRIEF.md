@@ -51,7 +51,7 @@ Warm, cultural, pub-flavoured. Broadest reach, least differentiated — any foot
 
 ### Tagline decision (resolved — July 2026)
 
-**Decision:** the headline keeps "Every leg counts." as its emotional close — it remains the brand's emotional line. The hero eyebrow (logo + tagline block) was **removed** as a duplicate of the top bar; instead, the marketing header shows the category descriptor **"— Social Group Betting"** to the right of the wordmark (muted, hidden below `md` so it never crowds mobile nav). "Social group accas" remains the SEO/meta descriptor (`layout.tsx` metadata) and the `tagline` export in `marketing-content.ts`.
+**Decision:** the headline keeps "Every leg counts." as its emotional close — it remains the brand's emotional line. The hero eyebrow (logo + tagline block) was **removed** as a duplicate of the top bar; instead, the marketing header shows the category descriptor **"Social Group Betting"** to the right of the wordmark (muted, no separator, hidden below `md` so it never crowds mobile nav). "Social group accas" remains the SEO/meta descriptor (`layout.tsx` metadata) and the `tagline` export in `marketing-content.ts`.
 
 ---
 
