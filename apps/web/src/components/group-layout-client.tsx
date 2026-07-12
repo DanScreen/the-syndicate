@@ -4,6 +4,7 @@ import { CopyInviteButton } from "@/components/site-footer";
 import { GroupNav } from "@/components/group-nav";
 import { AppHeader } from "@/components/header";
 import { GroupDataProvider, useGroupData } from "@/context/group-data";
+import { formatRoundStatusBadge } from "@the-syndicate/shared";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
@@ -42,7 +43,9 @@ function GroupShell({ groupId, children }: { groupId: string; children: React.Re
             <h1 className="text-2xl font-bold">{data.group.name}</h1>
             <p className="mt-1 text-sm text-muted">
               {data.group.memberCount} members ·{" "}
-              <span className="capitalize text-accent">{data.group.status}</span>
+              <span className="text-accent">
+                {formatRoundStatusBadge(data.activeRound?.status ?? data.group.status)}
+              </span>
             </p>
           </div>
           <div className="w-full max-w-xs rounded-xl border border-border bg-card px-4 py-3 text-sm">

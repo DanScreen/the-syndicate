@@ -1,7 +1,7 @@
 import { GroupNav } from "@/components/group-nav";
 import { ErrorText } from "@/components/ui";
 import { colors } from "@/config";
-import { copy } from "@/lib/copy";
+import { formatRoundStatusBadge } from "@the-syndicate/shared";
 import { GroupDataProvider, useGroupData } from "@/context/group-data";
 import { router, Slot, useLocalSearchParams } from "expo-router";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
@@ -45,7 +45,9 @@ function GroupLayoutInner() {
         <Text style={styles.title}>{data.group.name}</Text>
         <Text style={styles.subtitle}>
           {data.group.memberCount} members ·{" "}
-          <Text style={styles.status}>{data.group.status}</Text>
+          <Text style={styles.status}>
+            {formatRoundStatusBadge(data.activeRound?.status ?? data.group.status)}
+          </Text>
         </Text>
         <View style={styles.inviteCard}>
           <Text style={styles.inviteLabel}>Invite code</Text>
@@ -111,7 +113,6 @@ const styles = StyleSheet.create({
   },
   status: {
     color: colors.accent,
-    textTransform: "capitalize",
   },
   inviteCard: {
     marginTop: 12,

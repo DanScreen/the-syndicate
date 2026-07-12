@@ -14,7 +14,7 @@ import { prisma } from "@the-syndicate/database";
 import type { Leg, Prisma, Round } from "@prisma/client";
 import { applyRoundSettlement } from "../src/lib/settlement/apply-round-settlement";
 import { resolveRoundOutcomes } from "../src/lib/settlement/resolve-round-outcomes";
-import { openCollectingRound } from "../src/lib/rounds/open-collecting-round";
+import { openRound } from "../src/lib/rounds/open-round";
 
 type RoundWithLegs = Round & {
   legs: (Leg & { user: { email: string; name: string } })[];
@@ -129,7 +129,7 @@ async function removeSoloRounds(email: string) {
   }
 
   for (const groupId of groupIds) {
-    await openCollectingRound(groupId);
+    await openRound(groupId);
   }
 
   await reconcilePoints(true);

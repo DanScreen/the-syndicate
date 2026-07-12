@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Round not found" }, { status: 404 });
   }
 
-  if (round.status !== "collecting") {
+  if (round.status !== "open") {
     return NextResponse.json({ error: "Round is not accepting legs" }, { status: 400 });
   }
 
@@ -112,7 +112,7 @@ export async function POST(request: Request) {
     // credits) and sends the "locked" email. The loser's round is already
     // being locked by the winner.
     const claim = await prisma.round.updateMany({
-      where: { id: round.id, status: "collecting" },
+      where: { id: round.id, status: "open" },
       data: { status: "locked" },
     });
 
@@ -123,7 +123,7 @@ export async function POST(request: Request) {
         // Repricing failed — revert so members can retry the final leg.
         await prisma.round.updateMany({
           where: { id: round.id, status: "locked" },
-          data: { status: "collecting" },
+          data: { status: "open" },
         });
         throw err;
       }

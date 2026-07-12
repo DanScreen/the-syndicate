@@ -10,3 +10,4 @@ export * from "./api-types";
 export * from "./brand";
 export * from "./bookmakers";
 export * from "./market-groups";
+export * from "./round-status";

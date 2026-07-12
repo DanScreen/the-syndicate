@@ -16,7 +16,7 @@ Production: [www.the-syndicate.uk](https://www.the-syndicate.uk) · **Index:** [
 
 Core loop and MVP polish are **shipped**:
 
-- Auth, groups, invite links, rounds (collecting → locked → settled)
+- Auth, groups, invite links, rounds (open → locked → settled)
 - Live odds (The Odds API) + mock fallback; extended markets (BTTS, double chance, DNB)
 - Per-leg **competition picker** (EPL, Championship, La Liga, Ligue 1, Serie A, Bundesliga, World Cup)
 - **Acca lock** with best combined bookmaker + ranked bookmaker list at lock

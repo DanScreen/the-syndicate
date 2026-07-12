@@ -17,6 +17,12 @@ export function roundGroupPoints(round: RoundWithLegs): number {
   return groupAccaRoundPoints(roundOutcomes(round), round.combinedOdds ?? 1);
 }
 
+/** Cumulative acca points earned by the syndicate across settled rounds. */
+export function groupNetPoints(rounds: RoundWithLegs[]): number {
+  const total = sortedSettledRounds(rounds).reduce((sum, round) => sum + roundGroupPoints(round), 0);
+  return Number(total.toFixed(2));
+}
+
 export function memberPointsInRound(round: RoundWithLegs, userId: string): number {
   if (round.status !== "settled") return 0;
   const leg = round.legs.find((l) => l.userId === userId);

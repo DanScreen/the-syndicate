@@ -42,7 +42,7 @@ flowchart TB
 | **User** | Account; `role` (`user` \| `admin`); aggregate `totalPoints` |
 | **Group** | Name, invite code, owner, status |
 | **GroupMember** | Membership, group role (`owner` \| `member`), group-scoped points |
-| **Round** | Acca cycle: collecting → locked → settled; `accaBookmakerRankings` JSON at lock |
+| **Round** | Acca cycle: open → locked → settled; `accaBookmakerRankings` JSON at lock |
 | **Leg** | One pick per member: fixture, `competitionId`, market, odds, outcome |
 | **Match** | Canonical fixture result (football-data.org sync); reused for auto-settle |
 | **AnalyticsEvent** | Product analytics: `sign_up`, `login`, `page_view` |
@@ -59,7 +59,7 @@ Live ([The Odds API](https://the-odds-api.com/)) or mock. Fixtures fetched **per
 → [CURRENT_STATE.md](./CURRENT_STATE.md#odds--competitions-today)
 
 ### Settlement
-Manual owner settle, owner-triggered auto-settle, or **hands-off** after match sync (every 5 min UTC). Sync bypasses football-data cache; leg outcomes update as matches finish; round settles when all legs ready. Market resolution in `resolve-leg.ts`. Email notifications on lock/settle (Resend, optional). All paths funnel through a transactional `applyRoundSettlement()` whose first step is an atomic `locked → settled` claim (`updateMany`), so overlapping settlements award points **exactly once** — the loser throws `RoundNotSettleableError` and no-ops. The leg-lock transition (`collecting → locked`) uses the same claim pattern so only one final-leg submission reprices the acca.
+Manual owner settle, owner-triggered auto-settle, or **hands-off** after match sync (every 5 min UTC). Sync bypasses football-data cache; leg outcomes update as matches finish; round settles when all legs ready. Market resolution in `resolve-leg.ts`. Email notifications on lock/settle (Resend, optional). All paths funnel through a transactional `applyRoundSettlement()` whose first step is an atomic `locked → settled` claim (`updateMany`), so overlapping settlements award points **exactly once** — the loser throws `RoundNotSettleableError` and no-ops. The leg-lock transition (`open → locked`) uses the same claim pattern so only one final-leg submission reprices the acca.
 
 → [CURRENT_STATE.md](./CURRENT_STATE.md#settlement)
 

@@ -8,7 +8,7 @@ alwaysApply: false
 
 - Prisma models: User, Group, GroupMember, Round, Leg
 - One leg per user per round (`@@unique([roundId, userId])`)
-- Groups always have an open collecting round (created with the group; next round opens when the previous settles)
+- Groups always have an open round (created with the group; next round opens when the previous settles)
 - Round auto-locks when `legs.length >= group.members.length`
 - Settlement updates GroupMember points, User totals, and round P/L
 - Use transactions for multi-table settlement updates when extending

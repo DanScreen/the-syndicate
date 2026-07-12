@@ -57,7 +57,7 @@ model GroupMember {
 model Round {
   id              String   @id @default(cuid())
   groupId         String
-  status          String   @default("collecting")
+  status          String   @default("open")
   combinedOdds    Float?
   bestBookmakerId String?
   accaBookmakerRankings Json?

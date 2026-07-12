@@ -20,6 +20,7 @@ import type {
 import {
   groupAccaRoundPoints,
   formatLegPoints,
+  formatRoundStatusBadge,
   groupMarkets,
   sortQuotesByBestOdds,
   type LegOutcome,
@@ -93,7 +94,7 @@ export function RoundProgress({
   const pending = members.filter((m) => !submittedIds.has(m.id));
 
   let banner = "";
-  if (status === "collecting") {
+  if (status === "open") {
     banner =
       pending.length === 0
         ? "Everyone has submitted — locking acca..."
@@ -749,7 +750,7 @@ export function RoundHistory({
         return (
           <View key={round.id} style={styles.historyCard}>
             <View style={styles.historyHeader}>
-              <Text style={styles.meta}>{round.status}</Text>
+              <Text style={styles.meta}>{formatRoundStatusBadge(round.status)}</Text>
               {round.combinedOdds ? (
                 <Text style={styles.odds}>Locked {round.combinedOdds}</Text>
               ) : null}

@@ -49,7 +49,7 @@ Match sync + odds warm: Cloud Scheduler (Terraform) → `POST /api/internal/sync
 | Notifications | `apps/web/src/lib/notifications/` |
 | Auth | `apps/web/src/lib/auth.ts`, `apps/web/src/lib/auth.config.ts` |
 | Settlement (auto) | `apps/web/src/lib/settlement/auto-settle-round.ts` |
-| Round lifecycle | `apps/web/src/lib/rounds/open-collecting-round.ts` |
+| Round lifecycle | `apps/web/src/lib/rounds/open-round.ts` |
 | Group UI | `apps/web/src/components/group-ui.tsx`, `group-stats.tsx` |
 | App navigation | `apps/web/src/components/app-nav.tsx`, `group-nav.tsx`, `header.tsx` |
 | Logo & marketing | `apps/web/src/components/logo.tsx`, `components/marketing/`, `lib/marketing-content.ts` |
@@ -73,7 +73,7 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 | Auth (email/password, Auth.js JWT sessions) | ✅ |
 | Groups, invite codes, join links (`?code=`), no member cap | ✅ |
 | Always-open rounds (auto-created with group; next opens on settle) | ✅ |
-| Rounds: collecting → locked → settled | ✅ |
+| Rounds: open → locked → settled (badges: **Bet Open**, **Bet Locked**, **Bet Settled**) | ✅ |
 | Live odds ([The Odds API](https://the-odds-api.com/)) + mock fallback | ✅ |
 | Markets: h2h, totals (dynamic lines), spreads*, BTTS, double chance, correct score, corners/cards† | ✅ |
 | Per-leg competition picker (admin-controlled; World Cup live by default) | ✅ |
@@ -136,7 +136,7 @@ POST /api/legs                        → best retail quote; stores competitionI
 (lock) lockRoundWithAccaPricing()     → re-fetch quotes, rankAccaBookmakers(), store deeplinks on Leg
 ```
 
-At lock, `Leg.betslipUrl` stores the chosen bookmaker's outcome deeplink; `Leg.bookmakerLinks` maps all retail bookmakers → link. **While collecting:** leg picker shows best odds only. **Once locked:** frozen odds per leg + combined acca; **Compare bookmakers** panel (ranked acca odds) and betslip **Open** links until the first result; then tracking only.
+At lock, `Leg.betslipUrl` stores the chosen bookmaker's outcome deeplink; `Leg.bookmakerLinks` maps all retail bookmakers → link. **While bet is open:** leg picker shows best odds only. **Once locked:** frozen odds per leg + combined acca; **Compare bookmakers** panel (ranked acca odds) and betslip **Open** links until the first result; then tracking only.
 
 Requires live odds (`ODDS_API_KEY`) — mock fixtures have no deeplinks. Odds are stored in **PostgreSQL** (`OddsBulkSnapshot`, `OddsEventSnapshot`) and refreshed by cron (`POST /api/internal/warm-odds-cache`). User picks read the DB; set `ODDS_DB_ONLY=true` in production to block live API calls from user traffic.
 
@@ -192,7 +192,7 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 | `/` | Landing — hero, value props, how it works, FAQ, CTA |
 | `/about` | Product story, what we are/aren’t, responsible gambling |
 | `/sign-in`, `/sign-up` | Auth |
-| `/dashboard` | **Groups home** — list of user's syndicates only |
+| `/dashboard` | **Groups home** — list of user's syndicates; **group points** + **your points** per card |
 | `/performance` | Cross-group stats (`DashboardStats`) + share cards |
 | `/admin` | **Admin** — platform metrics (admin role only) |
 | `/admin/leaderboards` | **Admin** — syndicate & player rankings by points |
@@ -221,7 +221,7 @@ Email notifications (Resend) fire on lock and settle when `RESEND_API_KEY` + `EM
 
 **Exactly-once settlement.** All three methods share `applyRoundSettlement()`, which runs in a `prisma.$transaction` that opens with an atomic claim — `round.updateMany({ where: { status: "locked" }, data: { status: "settled" } })`. Because the manual, owner-auto, and hands-off cron paths can overlap (e.g. the 5-min cron firing while an owner clicks Settle), the claim guards against double-counting points: the loser matches zero rows and throws `RoundNotSettleableError`, which callers treat as a benign no-op (409 on manual settle, `skipped` for auto/cron). Points are incremented exactly once. Manual settle also validates that submitted outcomes cover **exactly** the round's legs (no unknown/duplicate/missing ids) rather than defaulting omitted legs to "lost".
 
-**Lock is likewise atomic.** When two members submit the final legs at once, the leg route claims `collecting → locked` via `updateMany` before repricing, so only one request reprices the acca (Odds API credits) and sends the lock email; repricing failures revert the round to `collecting`.
+**Lock is likewise atomic.** When two members submit the final legs at once, the leg route claims `open → locked` via `updateMany` before repricing, so only one request reprices the acca (Odds API credits) and sends the lock email; repricing failures revert the round to `open`.
 
 ### Cron (internal)
 
@@ -364,7 +364,7 @@ Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `Analytics
 - `Match` — canonical result per fixture (`externalDataId` from football-data.org).
 - `Round.accaBookmakerRankings` — JSON array of ranked bookmakers at lock.
 - `CompetitionSetting` — `competitionId` slug + `enabled` flag for leg-picker visibility (seeded: World Cup on, leagues off).
-- Groups always have a collecting or locked round; a new collecting round opens automatically when the previous round settles. Legacy groups without an active round get one on next load.
+- Groups always have an open or locked round; a new open round starts automatically when the previous round settles. Legacy groups without an active round get one on next load.
 - `Round.lockedNotificationSentAt` / `settledNotificationSentAt` — email dedup.
 
 Schema: `packages/database/prisma/schema.prisma`

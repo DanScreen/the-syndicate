@@ -36,9 +36,9 @@ export default function GroupRoundScreen() {
   const round = data.activeRound;
   const members = data.group.members ?? [];
   const myLeg = round?.legs.find((l) => l.user.id === user?.id);
-  const canSubmit = round?.status === "collecting" && !myLeg && user?.id;
+  const canSubmit = round?.status === "open" && !myLeg && user?.id;
   const isLocked = round?.status === "locked";
-  const isCollecting = round?.status === "collecting";
+  const isOpen = round?.status === "open";
   const resolvedLegs = round?.legs.filter((l) => l.outcome !== "pending").length ?? 0;
   const lockedBookmakerName =
     round?.accaBookmakerRankings?.find((r) => r.bookmakerId === round.bestBookmakerId)
@@ -70,7 +70,7 @@ export default function GroupRoundScreen() {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
       }
     >
-      {isCollecting && round && members.length > 0 ? (
+      {isOpen && round && members.length > 0 ? (
         <View style={styles.section}>
           <RoundProgress members={members} legs={round.legs} status={round.status} />
         </View>

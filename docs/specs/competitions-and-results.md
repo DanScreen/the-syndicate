@@ -22,7 +22,7 @@
 
 - **Leg submit:** best retail odds only — `sortQuotesByBestOdds`, no bookmaker picker.
 - **Acca lock:** `rankAccaBookmakers()` + `findBestAccaBookmaker` in `lib/odds/acca.ts`, `lockRoundWithAccaPricing` in `lib/odds/lock-round.ts`.
-- **UI (collecting):** leg picker shows best odds per selection.
+- **UI (bet open):** leg picker shows best odds per selection.
 - **UI (locked):** frozen leg + combined odds, per-leg outcome badges, no bookmaker comparison; betslip links until first result.
 
 If no single bookmaker covers all legs → best-per-leg combined odds locked at submission; per-leg deeplinks at lock.

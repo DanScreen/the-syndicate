@@ -22,7 +22,7 @@ export default function GroupRoundPage() {
   const hasSubmitted = activeRound.legs.some((l) => l.user.id === userId);
 
   const isLocked = activeRound.status === "locked";
-  const isCollecting = activeRound.status === "collecting";
+  const isOpen = activeRound.status === "open";
   const resolvedLegs = activeRound.legs.filter((l) => l.outcome !== "pending").length;
   const lockedBookmakerName =
     activeRound.accaBookmakerRankings?.find(
@@ -38,7 +38,7 @@ export default function GroupRoundPage() {
 
   return (
     <div className="space-y-6">
-      {isCollecting && (
+      {isOpen && (
         <RoundProgress
           members={group.members}
           legs={activeRound.legs}
@@ -77,7 +77,7 @@ export default function GroupRoundPage() {
         />
       )}
 
-      {isCollecting && userId && !hasSubmitted && (
+      {isOpen && userId && !hasSubmitted && (
         <SubmitLegForm roundId={activeRound.id} onSubmitted={reload} />
       )}
 

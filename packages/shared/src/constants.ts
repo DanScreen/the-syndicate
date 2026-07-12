@@ -9,9 +9,9 @@ export const POINTS = {
 
 export const DEFAULT_STAKE_GBP = 10;
 
-export const GROUP_STATUSES = ["open", "collecting", "locked", "settled"] as const;
+export const GROUP_STATUSES = ["open", "locked", "settled"] as const;
 
-export const ROUND_STATUSES = ["collecting", "locked", "settled"] as const;
+export const ROUND_STATUSES = ["open", "locked", "settled"] as const;
 
 export const LEG_OUTCOMES = ["pending", "won", "lost", "void"] as const;
 

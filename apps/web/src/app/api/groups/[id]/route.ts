@@ -1,7 +1,7 @@
 import { requireSession } from "@/lib/api-auth";
 import { buildRoundBetslipLinks } from "@/lib/odds/betslip-links";
 import { computeAccaRankingsForLegs } from "@/lib/odds/lock-round";
-import { openCollectingRound } from "@/lib/rounds/open-collecting-round";
+import { openRound } from "@/lib/rounds/open-round";
 import { prisma } from "@the-syndicate/database";
 import type { AccaBookmakerRanking } from "@the-syndicate/shared";
 import { NextResponse } from "next/server";
@@ -55,9 +55,9 @@ export async function GET(_request: Request, { params }: Params) {
   let activeRound = group.rounds.find((r) => r.status !== "settled") ?? null;
 
   if (!activeRound) {
-    const created = await openCollectingRound(id);
+    const created = await openRound(id);
     activeRound = { ...created, legs: [] };
-    group.status = "collecting";
+    group.status = "open";
   }
 
   let accaBookmakerRankings: AccaBookmakerRanking[] | null = null;
@@ -102,7 +102,7 @@ export async function GET(_request: Request, { params }: Params) {
       id: group.id,
       name: group.name,
       inviteCode: group.inviteCode,
-      status: group.status,
+      status: activeRound?.status ?? group.status,
       owner: group.owner,
       memberCount: group.members.length,
       members: group.members.map((m) => ({

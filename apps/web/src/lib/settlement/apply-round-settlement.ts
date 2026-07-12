@@ -1,6 +1,6 @@
 import { calculateGroupProfitLoss, pointsForMemberLeg } from "@/lib/settlement";
 import { notifyRoundSettled } from "@/lib/notifications/round-notifications";
-import { openCollectingRound } from "@/lib/rounds/open-collecting-round";
+import { openRound } from "@/lib/rounds/open-round";
 import { prisma } from "@the-syndicate/database";
 import type { LegOutcome } from "@the-syndicate/shared";
 
@@ -89,7 +89,7 @@ export async function applyRoundSettlement(
       data: { profitLossGbp: profitLoss },
     });
 
-    await openCollectingRound(round.groupId, tx);
+    await openRound(round.groupId, tx);
 
     return { profitLossGbp: profitLoss, status: "settled" as const };
   });

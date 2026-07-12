@@ -29,12 +29,12 @@ Owner creates group (name only) → invite code + link. Anyone with the link can
 3. **Best odds only** shown per selection
 4. All legs in → acca **locks** with best combined bookmaker
 5. Members receive **email notification** when acca locks (if Resend configured)
-6. When a round settles, the next collecting round opens automatically
+6. When a round settles, the next open round starts automatically
 
 → [specs/competitions-and-results.md](./specs/competitions-and-results.md)
 
 ### 4. Place & track
-While collecting: leg picker shows **best odds only** per selection. Once locked: **frozen odds** per leg and combined acca odds — no live bookmaker comparison. Per-leg **Won / Lost / Awaiting** badges update as matches finish (acca may still be open). Betslip links shown until the first result; then tracking only. Page auto-refreshes every 60s while locked.
+While the bet is open: leg picker shows **best odds only** per selection. Once locked: **frozen odds** per leg and combined acca odds — no live bookmaker comparison. Per-leg **Won / Lost / Awaiting** badges update as matches finish (acca may still be open). Betslip links shown until the first result; then tracking only. Page auto-refreshes every 60s while locked.
 
 ### 5. Settle & stats
 Match sync cron (every 5 min) auto-settles locked rounds when all fixtures finish. Individual leg outcomes persist before the full acca settles. Email on settle. **Leaderboard** tab for points; **Performance** tab for group charts and member breakdowns. User-level **Performance** nav for cross-group stats. **Recent rounds** show locked odds per leg.

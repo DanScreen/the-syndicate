@@ -1,5 +1,6 @@
 import { api } from "@/api/client";
 import type { GroupSummary, GroupsListResponse } from "@the-syndicate/shared";
+import { formatLegPoints, formatRoundStatusBadge } from "@the-syndicate/shared";
 import { useAuth } from "@/auth/AuthProvider";
 import { Button, Card, EmptyState, Screen, Subtitle, Title } from "@/components/ui";
 import { colors } from "@/config";
@@ -81,12 +82,15 @@ export default function GroupsScreen() {
               <Card>
                 <View style={styles.row}>
                   <Text style={styles.groupName}>{g.name}</Text>
-                  <Text style={styles.badge}>{g.status}</Text>
+                  <Text style={styles.badge}>{formatRoundStatusBadge(g.status)}</Text>
                 </View>
                 <Text style={styles.meta}>
                   {g.memberCount} members · Owner: {g.ownerName}
                 </Text>
-                <Text style={styles.meta}>Your points: {g.points}</Text>
+                <Text style={styles.groupPoints}>
+                  Group points: {formatLegPoints(g.groupPoints)}
+                </Text>
+                <Text style={styles.meta}>Your points: {formatLegPoints(g.points)}</Text>
               </Card>
             </Pressable>
           ))
@@ -165,5 +169,11 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 14,
     marginTop: 2,
+  },
+  groupPoints: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: "600",
+    marginTop: 6,
   },
 });

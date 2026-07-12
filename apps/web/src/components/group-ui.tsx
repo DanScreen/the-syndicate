@@ -1,7 +1,7 @@
 "use client";
 
 import type { Fixture, Market, LegOutcome } from "@the-syndicate/shared";
-import { groupAccaRoundPoints, formatLegPoints, type AccaBookmakerRanking } from "@the-syndicate/shared";
+import { groupAccaRoundPoints, formatLegPoints, formatRoundStatusBadge, type AccaBookmakerRanking } from "@the-syndicate/shared";
 import { useEffect, useMemo, useState } from "react";
 import { sortQuotesByBestOdds } from "@/lib/odds/bookmakers";
 import { groupMarkets } from "@/lib/odds/market-groups";
@@ -88,7 +88,7 @@ export function RoundProgress({
   const pending = members.filter((m) => !submittedIds.has(m.id));
 
   let banner = "";
-  if (status === "collecting") {
+  if (status === "open") {
     banner =
       pending.length === 0
         ? "Everyone has submitted — locking acca..."
@@ -876,7 +876,7 @@ export function RoundHistory({
           return (
           <li key={round.id} className="rounded-xl border border-border bg-card p-4 text-sm">
             <div className="flex justify-between">
-              <span className="text-muted capitalize">{round.status}</span>
+              <span className="text-muted">{formatRoundStatusBadge(round.status)}</span>
               {round.combinedOdds && (
                 <span className="text-accent">Locked {round.combinedOdds}</span>
               )}
