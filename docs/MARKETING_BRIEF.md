@@ -49,9 +49,9 @@ Warm, cultural, pub-flavoured. Broadest reach, least differentiated — any foot
 - **Taglines:** "Football's better together." · "The Saturday ritual, upgraded."
 - **Use:** background flavour in the About page and art direction, not the headline.
 
-### Tagline decision (open)
+### Tagline decision (resolved — July 2026)
 
-Replace the current descriptor tagline **"Social group accas"** with **"Every leg counts."** as the public-facing tagline. Demote "Social group accas" to the SEO/meta-description role, where it works harder. A tagline should carry feeling; the category descriptor belongs in the subhead.
+**Decision:** the headline keeps "Every leg counts." as its emotional close — it remains the brand's emotional line. The hero eyebrow (logo + tagline block) was **removed** as a duplicate of the top bar; instead, the marketing header shows the category descriptor **"— Social Group Betting"** to the right of the wordmark (muted, hidden below `md` so it never crowds mobile nav). "Social group accas" remains the SEO/meta descriptor (`layout.tsx` metadata) and the `tagline` export in `marketing-content.ts`.
 
 ---
 
@@ -59,13 +59,17 @@ Replace the current descriptor tagline **"Social group accas"** with **"Every le
 
 ### Hero — two options
 
-**Option 1 — evolve current (recommended for the homepage):**
+**Option 1 — evolve current (shipped July 2026):**
 
+> *(top bar: logo + "The Syndicate — Social Group Betting"; no eyebrow above the headline)*
+>
 > **Your mates. One acca. Every leg counts.**
 >
-> Everyone picks one leg. The Syndicate locks in the best odds from UK bookmakers, tracks every result live, and keeps score of who consistently delivers, and who lets the acca down. Free for your whole group.
+> Each member picks one leg and The Syndicate handles the rest — locking in the best odds from UK bookmakers, tracking every result, and keeping score of who consistently delivers, and who lets the acca down. It's free for your whole group.
 >
 > **[Start a syndicate — free]** *(existing CTA — unchanged)*
+>
+> *Subhead is deliberately one flowing paragraph — a counterweight to the three staccato beats of the headline.*
 
 **Option 2 — sharper, riskier (recommended as ad/social copy):**
 
@@ -160,7 +164,7 @@ Then GambleAware/GamStop links and 18+.
 
 ## 7. Next steps
 
-1. [ ] Decide the tagline swap ("Social group accas" → "Every leg counts."). **Note:** the tagline renders as the hero eyebrow directly above the headline, which already ends in "Every leg counts." — swapping as-is would read twice in a row. Options: keep the eyebrow as the category descriptor (current), or swap and drop the eyebrow.
+1. [x] Tagline decision resolved (see §2): hero eyebrow removed; "— Social Group Betting" descriptor added to the marketing top bar next to the wordmark; headline carries "Every leg counts."; subhead rewritten as one flowing paragraph to contrast the staccato headline.
 2. [x] Copy shipped (July 2026): hero subhead, value prop reorder + "Best odds, done for you" retitle, how-it-works step 3, fifth FAQ, closing CTA line + trust line on `/`, "Why this exists" rewrite on `/about`, store listing aligned (`apps/mobile/STORE_LISTING.md`).
 3. [ ] Produce OG image + favicon from the locked-acca card / Acca stack mark.
 4. [ ] Add "The moment" section to `/` (needs a live-tracking product screenshot).

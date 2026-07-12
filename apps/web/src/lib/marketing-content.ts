@@ -3,7 +3,7 @@ export const tagline = "Social group accas";
 export const hero = {
   headline: "Your mates. One acca. Every leg counts.",
   subhead:
-    "Everyone picks one leg. The Syndicate locks in the best odds from UK bookmakers, tracks every result live, and keeps score of who consistently delivers, and who lets the acca down. Free for your whole group.",
+    "Each member picks one leg and The Syndicate handles the rest — locking in the best odds from UK bookmakers, tracking every result, and keeping score of who consistently delivers, and who lets the acca down. It's free for your whole group.",
 };
 
 export const valueProps = [

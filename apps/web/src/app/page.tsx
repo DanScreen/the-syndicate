@@ -1,12 +1,10 @@
 import Link from "next/link";
 import { MarketingShell } from "@/components/marketing/marketing-shell";
-import { LogoMark } from "@/components/logo";
 import {
   audiences,
   faqs,
   hero,
   howItWorks,
-  tagline,
   valueProps,
 } from "@/lib/marketing-content";
 
@@ -45,12 +43,6 @@ export default function HomePage() {
       <section className="marketing-gradient border-b border-border/60">
         <div className="mx-auto max-w-6xl px-4 pb-20 pt-16 md:pb-28 md:pt-24">
           <div className="max-w-3xl">
-            <div className="mb-6 flex items-center gap-3">
-              <LogoMark size={44} />
-              <p className="text-sm font-medium uppercase tracking-[0.2em] text-accent">
-                {tagline}
-              </p>
-            </div>
             <h1 className="font-display text-4xl font-bold leading-[1.1] tracking-tight md:text-6xl">
               {hero.headline}
             </h1>

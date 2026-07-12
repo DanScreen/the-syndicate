@@ -15,7 +15,8 @@ Visual identity for The Syndicate.
 | **What** | Social group football acca platform |
 | **Who** | Friend groups, pub syndicates, office leagues |
 | **Tone** | Confident, social, data-forward — mates first, not a tipster |
-| **Tagline** | Social group accas |
+| **Tagline** | Social group accas (SEO/meta descriptor) |
+| **Header descriptor** | — Social Group Betting (marketing top bar, right of wordmark) |
 | **Headline** | Your mates. One acca. Every leg counts. |
 
 We are **not** a bookmaker. Copy and UI must always make clear users place bets with licensed operators.

@@ -5,7 +5,12 @@ export function MarketingHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-border/80 bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
-        <Logo href="/" size="md" />
+        <div className="flex items-baseline gap-2.5">
+          <Logo href="/" size="md" />
+          <span className="hidden text-sm text-muted md:inline">
+            — Social Group Betting
+          </span>
+        </div>
         <nav className="flex items-center gap-1 sm:gap-2">
           <Link
             href="/about"
