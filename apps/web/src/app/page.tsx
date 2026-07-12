@@ -185,7 +185,7 @@ export default function HomePage() {
             Ready for the next matchday?
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-muted">
-            Create your syndicate in under a minute. Invite your mates and let everyone pick a leg.
+            One leg each. Best odds locked. Bragging rights forever.
           </p>
           <Link
             href="/sign-up"
@@ -193,6 +193,9 @@ export default function HomePage() {
           >
             Get started free
           </Link>
+          <p className="mx-auto mt-6 max-w-xl text-xs text-muted">
+            We&apos;re not a bookmaker — you bet with licensed UK bookmakers, we keep the score. 18+
+          </p>
         </div>
       </section>
     </MarketingShell>

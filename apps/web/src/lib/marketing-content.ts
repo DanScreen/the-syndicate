@@ -3,7 +3,7 @@ export const tagline = "Social group accas";
 export const hero = {
   headline: "Your mates. One acca. Every leg counts.",
   subhead:
-    "The Syndicate is where football groups build shared accumulators together — each member picks one leg, you lock in the best combined odds, and compete on who lands the most winners.",
+    "Everyone picks one leg. The Syndicate locks in the best odds from UK bookmakers, tracks every result live, and keeps score of who consistently delivers, and who lets the acca down. Free for your whole group.",
 };
 
 export const valueProps = [
@@ -13,14 +13,14 @@ export const valueProps = [
     icon: "users",
   },
   {
-    title: "Best odds, compared",
-    body: "We pull live prices from UK bookmakers, show the best odds per leg, and rank who offers the strongest combined acca when you lock.",
-    icon: "chart",
-  },
-  {
     title: "Track who’s actually good",
     body: "Leaderboards, performance charts, and leg-by-leg stats — see who consistently finds winners and how your syndicate performs over time.",
     icon: "trophy",
+  },
+  {
+    title: "Best odds, done for you",
+    body: "We pull live prices from UK bookmakers, pick out the best odds per leg, and rank who offers the strongest combined acca when you lock.",
+    icon: "chart",
   },
   {
     title: "You place the bets",
@@ -43,7 +43,7 @@ export const howItWorks = [
   {
     step: "03",
     title: "Lock and compete",
-    body: "When all legs are in, the acca locks. Track results, earn points, and climb the leaderboard.",
+    body: "When all legs are in, the acca locks at the best combined odds. Then everyone sweats together.",
   },
 ] as const;
 
@@ -78,5 +78,9 @@ export const faqs = [
   {
     q: "Is it free?",
     a: "Yes. Create groups, submit legs, and track performance at no cost.",
+  },
+  {
+    q: "Do we have to bet real money?",
+    a: "No. Plenty of syndicates play for points and pride alone — the leaderboard works exactly the same whether or not anyone places a bet.",
   },
 ] as const;

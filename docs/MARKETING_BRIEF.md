@@ -90,7 +90,7 @@ Option 2 is a stronger *ad*; Option 1 is a stronger *homepage*. Ship 1; test 2 i
 | 5 | **Who it's for** | Current three audience cards are good. *"Stop arguing about whose pick lost the acca — the stats settle it"* is the best line on the site; promote that energy upward. |
 | 6 | **Trust strip** | One plain sentence, always visible before the CTA: *"We're not a bookmaker. We never touch your money — you bet with licensed UK bookmakers, we keep the score. 18+. GambleAware."* |
 | 7 | **FAQ** | Keep current four; add a fifth: **"Do we have to bet real money?"** — *"No. Plenty of syndicates play for points and pride alone."* True, widens the funnel, strengthens the RG posture. |
-| 8 | **Closing CTA** | *"Your group chat already argues about this. Give it a scoreboard."* **[Get started free]** *(existing CTA — unchanged)* |
+| 8 | **Closing CTA** | *"One leg each. Best odds locked. Bragging rights forever."* **[Get started free]** *(existing CTA — unchanged)* — inclusive of newcomers; avoids "your group already does this" framing. |
 
 ---
 
@@ -160,7 +160,7 @@ Then GambleAware/GamStop links and 18+.
 
 ## 7. Next steps
 
-1. [ ] Decide the tagline swap ("Social group accas" → "Every leg counts.").
-2. [ ] Update `apps/web/src/lib/marketing-content.ts` + [BRAND.md](./BRAND.md) with the chosen direction.
+1. [ ] Decide the tagline swap ("Social group accas" → "Every leg counts."). **Note:** the tagline renders as the hero eyebrow directly above the headline, which already ends in "Every leg counts." — swapping as-is would read twice in a row. Options: keep the eyebrow as the category descriptor (current), or swap and drop the eyebrow.
+2. [x] Copy shipped (July 2026): hero subhead, value prop reorder + "Best odds, done for you" retitle, how-it-works step 3, fifth FAQ, closing CTA line + trust line on `/`, "Why this exists" rewrite on `/about`, store listing aligned (`apps/mobile/STORE_LISTING.md`).
 3. [ ] Produce OG image + favicon from the locked-acca card / Acca stack mark.
-4. [ ] Add "The moment" section and trust strip to `/`; restructure `/about` per §4.
+4. [ ] Add "The moment" section to `/` (needs a live-tracking product screenshot).

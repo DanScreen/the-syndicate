@@ -22,13 +22,13 @@ Pick legs with your mates, lock the acca, compare bookmakers, track performance.
 
 Your mates. One acca. Every leg counts.
 
-The Syndicate is where football groups build shared accumulators together. Each member picks one leg, you lock in combined odds, open bookmaker betslips, and compete on leaderboards and stats.
+The Syndicate is where football groups build shared accumulators together. Everyone picks one leg, you lock in the best odds, open bookmaker betslips, and keep score of who consistently delivers, and who lets the acca down.
 
 **Built for friend groups** — Create a private syndicate, share an invite code, and everyone contributes one selection per round.
 
-**Best odds, compared** — Live UK bookmaker prices per leg; ranked combined accas when your group locks.
+**Track who's actually good** — Group and cross-group stats, leaderboards, and round history.
 
-**Track performance** — Group and cross-group stats, leaderboards, and round history.
+**Best odds, done for you** — Live UK bookmaker prices per leg; ranked combined accas when your group locks.
 
 **You place the bets** — We coordinate picks and link you to licensed bookmaker betslips. We never take money or place bets on your behalf.
 

@@ -29,12 +29,14 @@ export default function AboutPage() {
 
       <article className="mx-auto max-w-3xl px-4 py-16">
         <section className="prose prose-invert max-w-none">
-          <h2 className="font-display text-2xl font-bold">The problem we solve</h2>
+          <h2 className="font-display text-2xl font-bold">Why this exists</h2>
           <p className="mt-4 leading-relaxed text-muted">
-            Most group accas live in WhatsApp — screenshots of betslips, arguments about whose
-            pick let everyone down, and no real record of who&apos;s actually good at finding
-            winners. The Syndicate gives your group a proper home: structured rounds, live odds,
-            automatic settlement, and leaderboards that settle the banter with data.
+            If your group already builds a Saturday acca, you know the drill: a betslip
+            screenshot in the chat, a spreadsheet nobody updates, and a debate about whose pick
+            let everyone down. We built The Syndicate to give that a proper home — structured
+            rounds, live odds, automatic settlement, and leaderboards that keep the score. And if
+            you&apos;ve never built one together, there&apos;s no better way to start: one leg
+            each, live odds, and the score kept for you.
           </p>
 
           <h2 className="mt-12 font-display text-2xl font-bold">What we are — and what we&apos;re not</h2>
