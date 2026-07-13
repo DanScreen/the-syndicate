@@ -1,5 +1,6 @@
 import { requireSession } from "@/lib/api-auth";
 import { generateInviteCode } from "@/lib/invite-code";
+import { yourLegInRound } from "@/lib/groups/your-leg-summary";
 import { openRound } from "@/lib/rounds/open-round";
 import { groupNetPoints } from "@/lib/stats/helpers";
 import { prisma } from "@the-syndicate/database";
@@ -10,8 +11,10 @@ export async function GET() {
   const { session, error } = await requireSession();
   if (error) return error;
 
+  const userId = session!.user!.id;
+
   const memberships = await prisma.groupMember.findMany({
-    where: { userId: session!.user!.id },
+    where: { userId },
     include: {
       group: {
         include: {
@@ -30,11 +33,13 @@ export async function GET() {
   const groups = await Promise.all(
     memberships.map(async (m) => {
       const allRounds = m.group.rounds;
+      const activeRoundRow =
+        allRounds.find((r) => r.status !== "settled") ?? null;
       let activeRound: {
         id: string;
         status: string;
         combinedOdds: number | null;
-      } | null = allRounds.find((r) => r.status !== "settled") ?? null;
+      } | null = activeRoundRow;
       if (!activeRound) {
         activeRound = await openRound(m.group.id);
       }
@@ -50,6 +55,7 @@ export async function GET() {
         groupPoints: groupNetPoints(allRounds),
         points: m.points,
         activeRound,
+        yourLeg: yourLegInRound(activeRoundRow?.legs ?? [], userId),
       };
     })
   );

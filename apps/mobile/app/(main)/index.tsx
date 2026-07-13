@@ -1,6 +1,12 @@
 import { api } from "@/api/client";
 import type { GroupSummary, GroupsListResponse } from "@the-syndicate/shared";
-import { formatLegPoints, formatRoundStatusBadge } from "@the-syndicate/shared";
+import {
+  formatLegPoints,
+  formatRoundStatusBadge,
+  formatYourLegSummary,
+  pointsTone,
+  yourLegStatusMessage,
+} from "@the-syndicate/shared";
 import { useAuth } from "@/auth/AuthProvider";
 import { Button, Card, EmptyState, Screen, Subtitle, Title } from "@/components/ui";
 import { colors } from "@/config";
@@ -88,13 +94,28 @@ export default function GroupsScreen() {
                   {g.memberCount} members · Owner: {g.ownerName}
                 </Text>
                 <View style={styles.pointsRow}>
-                  <Text style={styles.points}>
+                  <Text style={[styles.points, pointsStyle(g.groupPoints)]}>
                     Group points: {formatLegPoints(g.groupPoints)}
                   </Text>
-                  <Text style={styles.points}>
+                  <Text style={[styles.points, pointsStyle(g.points)]}>
                     Your points: {formatLegPoints(g.points)}
                   </Text>
                 </View>
+                {g.yourLeg ? (
+                  <Text style={styles.yourLeg}>
+                    <Text style={styles.yourLegLabel}>Your leg · </Text>
+                    {formatYourLegSummary(g.yourLeg)}
+                  </Text>
+                ) : yourLegStatusMessage(g.status, g.yourLeg) ? (
+                  <Text
+                    style={[
+                      styles.waiting,
+                      g.status === "open" ? styles.waitingOpen : styles.waitingMuted,
+                    ]}
+                  >
+                    {yourLegStatusMessage(g.status, g.yourLeg)}
+                  </Text>
+                ) : null}
               </Card>
             </Pressable>
           ))
@@ -121,6 +142,13 @@ export default function GroupsScreen() {
       </ScrollView>
     </Screen>
   );
+}
+
+function pointsStyle(value: number) {
+  const tone = pointsTone(value);
+  if (tone === "positive") return { color: colors.accent };
+  if (tone === "negative") return { color: colors.danger };
+  return { color: colors.muted };
 }
 
 const styles = StyleSheet.create({
@@ -185,8 +213,34 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   points: {
-    color: colors.text,
     fontSize: 14,
     fontWeight: "600",
+  },
+  yourLeg: {
+    color: colors.text,
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.bg,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  yourLegLabel: {
+    color: colors.accent,
+    fontWeight: "600",
+  },
+  waiting: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 10,
+  },
+  waitingOpen: {
+    color: "#fbbf24",
+  },
+  waitingMuted: {
+    color: colors.muted,
   },
 });

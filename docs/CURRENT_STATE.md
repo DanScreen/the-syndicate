@@ -194,7 +194,7 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 | `/` | Landing — hero, value props, how it works, FAQ, CTA |
 | `/about` | Product story, what we are/aren’t, responsible gambling |
 | `/sign-in`, `/sign-up` | Auth |
-| `/dashboard` | **Groups home** — list of user's syndicates; **group points** + **your points** per card |
+| `/dashboard` | **Groups home** — list of user's syndicates; **group/your points** (green/red); **your leg** or waiting status per card |
 | `/performance` | Cross-group stats (`DashboardStats`) + share cards |
 | `/admin` | **Admin** — platform metrics (admin role only) |
 | `/admin/settlement` | **Admin** — settlement queue: locked rounds, overdue legs (2h+ after KO), manual settle |

@@ -71,6 +71,14 @@ export function formatLegPoints(points: number): string {
   return Number(points.toFixed(2)).toString();
 }
 
+export type PointsTone = "positive" | "negative" | "neutral";
+
+export function pointsTone(points: number): PointsTone {
+  if (points > 0) return "positive";
+  if (points < 0) return "negative";
+  return "neutral";
+}
+
 /** Unit-stake points × stake (£) = profit/loss in pounds. */
 export function profitFromPoints(points: number, stakeGbp: number): number {
   return Number((points * stakeGbp).toFixed(2));

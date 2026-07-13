@@ -48,7 +48,8 @@ Core loop and MVP polish are **shipped**:
 | 6 | **Public platform leaderboards** | Code | Admin version shipped; open to all users when ready |
 | 7 | User profile page | Code | Optional; `/performance` covers cross-group stats today |
 | 8 | **Mobile — friend testing** | Product | You: [DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md); mates: APK / later TestFlight |
-| 9 | Terraform CI GCS permissions fix | Infra | App deploy unaffected |
+| 9 | **Expo push setup** | Mobile ops | See checklist below — required for mobile push notifications |
+| 10 | Terraform CI GCS permissions fix | Infra | App deploy unaffected |
 
 ---
 
@@ -74,6 +75,14 @@ Native **iPhone** and **Android** apps via Expo (`apps/mobile/`), targeting **fu
 **Status:** Developer native testing (Expo Go / device build). Friend distribution: Android APK; iPhone TestFlight after store fees.
 
 **Next:** You validate on device ([DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md)), then 2–3 friend groups ([FRIEND_TESTING.md](../apps/mobile/FRIEND_TESTING.md)).
+
+**Expo push — operator checklist:**
+
+- [ ] `eas login` + `eas init` in `apps/mobile`
+- [ ] Set `EAS_PROJECT_ID` in `apps/mobile/.env` (from `eas init` output)
+- [ ] Enable push on a **physical device** via Notifications screen in the app
+- [ ] EAS production build with APNs (iOS) + FCM (Android) credentials for reliable prod push
+- [ ] Test pick reminder + lock/settle push on device
 
 **Spec:** [specs/mobile-apps.md](./specs/mobile-apps.md) — includes [distribution strategy](./specs/mobile-apps.md#distribution-strategy).
 

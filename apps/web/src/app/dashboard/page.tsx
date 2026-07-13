@@ -1,5 +1,8 @@
 import { AppHeader } from "@/components/header";
 import { PageView } from "@/components/analytics/page-view";
+import { PointsText } from "@/components/points-text";
+import { yourLegStatusMessage, formatYourLegSummary } from "@the-syndicate/shared";
+import { yourLegInRound } from "@/lib/groups/your-leg-summary";
 import { openRound } from "@/lib/rounds/open-round";
 import { groupNetPoints } from "@/lib/stats/helpers";
 import { formatLegPoints, formatRoundStatusBadge } from "@the-syndicate/shared";
@@ -101,18 +104,31 @@ export default async function DashboardPage() {
               {(await Promise.all(
                 memberships.map(async (m) => {
                   const allRounds = m.group.rounds;
+                  const activeRoundRow =
+                    allRounds.find((r) => r.status !== "settled") ?? null;
                   let activeRound: {
                     id: string;
                     status: string;
                     combinedOdds: number | null;
-                  } | null = allRounds.find((r) => r.status !== "settled") ?? null;
+                  } | null = activeRoundRow;
                   if (!activeRound) {
                     activeRound = await openRound(m.group.id);
                   }
                   const syndicatePoints = groupNetPoints(allRounds);
-                  return { membership: m, activeRound, syndicatePoints };
+                  const yourLeg = yourLegInRound(
+                    activeRoundRow?.legs ?? [],
+                    session.user.id
+                  );
+                  const roundStatus = activeRound?.status ?? "open";
+                  return {
+                    membership: m,
+                    activeRound,
+                    syndicatePoints,
+                    yourLeg,
+                    roundStatus,
+                  };
                 })
-              )).map(({ membership: m, activeRound, syndicatePoints }) => (
+              )).map(({ membership: m, activeRound, syndicatePoints, yourLeg, roundStatus }) => (
                   <Link
                     key={m.group.id}
                     href={`/groups/${m.group.id}`}
@@ -127,10 +143,26 @@ export default async function DashboardPage() {
                     <p className="mt-2 text-sm text-muted">
                       {m.group._count.members} members · Owner: {m.group.owner.name}
                     </p>
-                    <div className="mt-3 flex gap-6 text-sm font-medium">
-                      <p>Group points: {formatLegPoints(syndicatePoints)}</p>
-                      <p>Your points: {formatLegPoints(m.points)}</p>
+                    <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+                      <PointsText points={syndicatePoints} label="Group points" />
+                      <PointsText points={m.points} label="Your points" />
                     </div>
+                    {yourLeg ? (
+                      <p className="mt-3 rounded-lg border border-border bg-background/50 px-3 py-2 text-sm text-foreground">
+                        <span className="font-medium text-accent">Your leg · </span>
+                        {formatYourLegSummary(yourLeg)}
+                      </p>
+                    ) : (
+                      <p
+                        className={`mt-3 text-sm ${
+                          roundStatus === "open"
+                            ? "text-amber-400"
+                            : "text-muted"
+                        }`}
+                      >
+                        {yourLegStatusMessage(roundStatus, yourLeg)}
+                      </p>
+                    )}
                   </Link>
               ))}
             </div>

@@ -12,6 +12,15 @@ export type MobileSignInResponse = {
   user: AuthUser;
 };
 
+export type GroupSummaryYourLeg = {
+  selectionLabel: string;
+  marketLabel: string;
+  homeTeam: string;
+  awayTeam: string;
+  odds: number;
+  outcome: string;
+};
+
 export type GroupSummary = {
   id: string;
   name: string;
@@ -29,6 +38,8 @@ export type GroupSummary = {
     status: RoundStatus;
     combinedOdds: number | null;
   } | null;
+  /** Member's leg in the active round, if submitted. */
+  yourLeg: GroupSummaryYourLeg | null;
 };
 
 export type GroupsListResponse = {
