@@ -22,6 +22,10 @@ export const metadata: Metadata = {
   },
   description:
     "Create social betting groups, contribute legs to shared football accumulators, and compete on the leaderboard.",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-icon",
+  },
   openGraph: {
     title: "The Syndicate — Social Group Accas",
     description:

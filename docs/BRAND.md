@@ -115,5 +115,5 @@ Rejected logo and palette options are kept for reference (not linked in the app)
 
 ## Open decisions
 
-- [ ] Favicon / OG image from Acca stack mark
+- [x] Favicon / OG image from Acca stack mark (`app/favicon.ico`, `app/icon.tsx`, `app/apple-icon.tsx`)
 - [ ] Apply `font-display` to authenticated app page titles
