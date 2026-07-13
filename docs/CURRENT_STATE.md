@@ -196,7 +196,7 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 | `/about` | Product story, what we are/aren’t, responsible gambling |
 | `/sign-in`, `/sign-up` | Auth |
 | `/dashboard` | **Groups home** — list of user's syndicates; **group/your points** (green/red); **your leg** or waiting status per card |
-| `/performance` | Cross-group stats (`DashboardStats`) + share cards |
+| `/performance` | Cross-group stats (`DashboardStats`) — syndicate filter dropdown, charts, share cards |
 | `/admin` | **Admin** — platform metrics (admin role only) |
 | `/admin/settlement` | **Admin** — settlement queue: locked rounds, overdue legs (2h+ after KO), manual settle |
 | `/admin/leaderboards` | **Admin** — syndicate & player rankings by points |

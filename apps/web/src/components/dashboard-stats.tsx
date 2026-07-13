@@ -1,15 +1,16 @@
 "use client";
 
-import type {
-  UserStatsChartPoint,
-  UserStatsGroupBreakdown,
-  UserStatsSummary,
+import {
+  filterUserStatsByGroup,
+  type UserStatsChartPoint,
+  type UserStatsGroupBreakdown,
+  type UserStatsSummary,
 } from "@/lib/stats/compute-user-stats";
 import { ShareCard } from "@/components/share-card";
 import { StakeProfit } from "@/components/stake-profit";
 import { formatLegPoints } from "@the-syndicate/shared";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   CartesianGrid,
   Line,
@@ -64,6 +65,7 @@ function ChartTooltip({
 export function DashboardStats({ userName }: { userName: string }) {
   const [data, setData] = useState<UserStatsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedGroupId, setSelectedGroupId] = useState("all");
 
   useEffect(() => {
     fetch("/api/user/stats")
@@ -73,6 +75,19 @@ export function DashboardStats({ userName }: { userName: string }) {
       .finally(() => setLoading(false));
   }, []);
 
+  const filtered = useMemo(() => {
+    if (!data) return null;
+    return filterUserStatsByGroup(
+      data,
+      selectedGroupId === "all" ? null : selectedGroupId
+    );
+  }, [data, selectedGroupId]);
+
+  const selectedGroup = useMemo(() => {
+    if (!data || selectedGroupId === "all") return null;
+    return data.groups.find((group) => group.groupId === selectedGroupId) ?? null;
+  }, [data, selectedGroupId]);
+
   if (loading) {
     return (
       <section className="mt-8 rounded-xl border border-border bg-card p-4 text-sm text-muted">
@@ -81,7 +96,7 @@ export function DashboardStats({ userName }: { userName: string }) {
     );
   }
 
-  if (!data || data.summary.legsPlayed === 0) {
+  if (!data || !filtered || data.summary.legsPlayed === 0) {
     return (
       <section className="mt-8 rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted">
         <p>No settled legs yet.</p>
@@ -90,10 +105,38 @@ export function DashboardStats({ userName }: { userName: string }) {
     );
   }
 
-  const { summary, chart, groups } = data;
+  const { summary, chart, groups } = filtered;
+  const viewingAll = selectedGroupId === "all";
+  const shareTitle = selectedGroup
+    ? `${selectedGroup.groupName} stats`
+    : `${userName}'s syndicate stats`;
+  const shareSubtitle = selectedGroup
+    ? `${summary.settledRounds} settled round${summary.settledRounds === 1 ? "" : "s"}`
+    : `Across ${summary.groupCount} group${summary.groupCount === 1 ? "" : "s"}`;
 
   return (
     <section className="space-y-6">
+      {groups.length > 1 ? (
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <label htmlFor="syndicate-filter" className="text-sm text-muted">
+            Syndicate
+          </label>
+          <select
+            id="syndicate-filter"
+            value={selectedGroupId}
+            onChange={(event) => setSelectedGroupId(event.target.value)}
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm sm:max-w-xs"
+          >
+            <option value="all">All syndicates</option>
+            {groups.map((group) => (
+              <option key={group.groupId} value={group.groupId}>
+                {group.groupName}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : null}
+
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <StatCard label="Groups" value={String(summary.groupCount)} />
         <StatCard label="Rounds" value={String(summary.settledRounds)} />
@@ -107,10 +150,10 @@ export function DashboardStats({ userName }: { userName: string }) {
 
       <StakeProfit points={summary.netPoints} />
 
-      {chart.length > 1 && (
+      {chart.length > 1 ? (
         <div className="rounded-xl border border-border bg-card p-4">
           <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">
-            Cumulative points (all groups)
+            {viewingAll ? "Cumulative points (all syndicates)" : "Cumulative points"}
           </p>
           <div className="h-48 w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -140,18 +183,18 @@ export function DashboardStats({ userName }: { userName: string }) {
             </ResponsiveContainer>
           </div>
         </div>
-      )}
+      ) : null}
 
       <ShareCard
-        title={`${userName}'s syndicate stats`}
+        title={shareTitle}
         netPoints={summary.netPoints}
         legsPlayed={summary.legsPlayed}
         winRate={summary.winRate}
-        subtitle={`Across ${summary.groupCount} group${summary.groupCount === 1 ? "" : "s"}`}
+        subtitle={shareSubtitle}
         chart={chart}
       />
 
-      {groups.length > 1 && (
+      {viewingAll && groups.length > 1 ? (
         <div className="rounded-xl border border-border bg-card p-4">
           <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted">
             By group
@@ -171,7 +214,7 @@ export function DashboardStats({ userName }: { userName: string }) {
             ))}
           </div>
         </div>
-      )}
+      ) : null}
     </section>
   );
 }

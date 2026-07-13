@@ -29,7 +29,10 @@ export type UserStatsChartPoint = {
   label: string;
   roundPoints: number;
   cumulativePoints: number;
+  groupId: string;
   groupName: string;
+  accaWon: boolean;
+  roundPlGbp: number;
 };
 
 export type UserStatsResult = {
@@ -40,6 +43,7 @@ export type UserStatsResult = {
 
 type UserRoundEntry = {
   round: RoundWithLegs;
+  groupId: string;
   groupName: string;
   userLeg: RoundWithLegs["legs"][number];
 };
@@ -77,6 +81,7 @@ export function computeUserStats(
       if (userLeg) {
         userRoundEntries.push({
           round,
+          groupId: membership.groupId,
           groupName: membership.groupName,
           userLeg,
         });
@@ -97,7 +102,10 @@ export function computeUserStats(
       label: formatRoundLabel(entry.round, index + 1),
       roundPoints: Number(roundPoints.toFixed(2)),
       cumulativePoints: Number(cumulativePoints.toFixed(2)),
+      groupId: entry.groupId,
       groupName: entry.groupName,
+      accaWon: roundAccaWon(entry.round),
+      roundPlGbp: entry.round.profitLossGbp ?? 0,
     };
   });
   const chart: UserStatsChartPoint[] =
@@ -109,7 +117,10 @@ export function computeUserStats(
             label: CHART_ORIGIN_LABEL,
             roundPoints: 0,
             cumulativePoints: 0,
+            groupId: "",
             groupName: "",
+            accaWon: false,
+            roundPlGbp: 0,
           },
           ...chartPoints,
         ];
@@ -141,6 +152,66 @@ export function computeUserStats(
     },
     chart,
     groups: groups.sort((a, b) => b.netPoints - a.netPoints),
+  };
+}
+
+export function filterUserStatsByGroup(
+  stats: UserStatsResult,
+  groupId: string | null
+): UserStatsResult {
+  if (!groupId) return stats;
+
+  const group = stats.groups.find((g) => g.groupId === groupId);
+  if (!group) return stats;
+
+  const roundPoints = stats.chart.filter(
+    (point) => point.roundNumber > 0 && point.groupId === groupId
+  );
+
+  let cumulativePoints = 0;
+  const chartPoints: UserStatsChartPoint[] = roundPoints.map((point, index) => {
+    cumulativePoints += point.roundPoints;
+    return {
+      ...point,
+      roundNumber: index + 1,
+      cumulativePoints: Number(cumulativePoints.toFixed(2)),
+    };
+  });
+
+  const chart: UserStatsChartPoint[] =
+    chartPoints.length === 0
+      ? []
+      : [
+          {
+            roundNumber: 0,
+            label: CHART_ORIGIN_LABEL,
+            roundPoints: 0,
+            cumulativePoints: 0,
+            groupId: "",
+            groupName: "",
+            accaWon: false,
+            roundPlGbp: 0,
+          },
+          ...chartPoints,
+        ];
+
+  const accaWins = roundPoints.filter((point) => point.accaWon).length;
+  const netAccaPlGbp = roundPoints.reduce((sum, point) => sum + point.roundPlGbp, 0);
+
+  return {
+    summary: {
+      groupCount: 1,
+      settledRounds: group.settledRounds,
+      legsPlayed: group.legsPlayed,
+      netPoints: group.netPoints,
+      winRate:
+        roundPoints.length > 0
+          ? Number(((accaWins / roundPoints.length) * 100).toFixed(1))
+          : null,
+      netAccaPlGbp: Number(netAccaPlGbp.toFixed(2)),
+    },
+    chart,
+    groups: stats.groups,
   };
 }
 
