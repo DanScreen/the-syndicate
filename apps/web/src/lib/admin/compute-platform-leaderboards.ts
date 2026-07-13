@@ -4,6 +4,7 @@ export type SyndicateLeaderboardEntry = {
   rank: number;
   groupId: string;
   name: string;
+  ownerName: string;
   memberCount: number;
   totalPoints: number;
   legsWon: number;
@@ -31,6 +32,7 @@ export async function computePlatformLeaderboards(): Promise<PlatformLeaderboard
       select: {
         id: true,
         name: true,
+        owner: { select: { name: true } },
         members: {
           select: { points: true, legsWon: true, legsLost: true },
         },
@@ -53,6 +55,7 @@ export async function computePlatformLeaderboards(): Promise<PlatformLeaderboard
     .map((g) => ({
       groupId: g.id,
       name: g.name,
+      ownerName: g.owner.name,
       memberCount: g.members.length,
       totalPoints: g.members.reduce((sum, m) => sum + m.points, 0),
       legsWon: g.members.reduce((sum, m) => sum + m.legsWon, 0),

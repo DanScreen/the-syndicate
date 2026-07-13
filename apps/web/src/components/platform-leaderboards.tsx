@@ -53,11 +53,12 @@ export function PlatformLeaderboards({ data }: { data: PlatformLeaderboards }) {
         <LeaderboardTable
           title="Syndicate leaderboard"
           description="Ranked by combined member points in each group."
-          headers={["#", "Syndicate", "Members", "Points", "Record"]}
+          headers={["#", "Syndicate", "Owner", "Members", "Points", "Record"]}
           rows={data.syndicates.map((row) => (
             <tr key={row.groupId} className="border-b border-border/60 last:border-0">
               <td className="px-5 py-3 text-muted">#{row.rank}</td>
               <td className="px-5 py-3 font-medium">{row.name}</td>
+              <td className="px-5 py-3 text-muted">{row.ownerName}</td>
               <td className="px-5 py-3 text-muted">{row.memberCount}</td>
               <td className="px-5 py-3 font-semibold text-accent tabular-nums">
                 {formatLegPoints(row.totalPoints)} pts

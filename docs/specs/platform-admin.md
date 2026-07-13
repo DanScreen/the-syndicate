@@ -106,7 +106,7 @@ Non-admin → `403 Forbidden`. Unauthenticated → `401`.
 
 | Leaderboard | Sort key | Notes |
 |-------------|----------|-------|
-| **Syndicates** | Sum of `GroupMember.points` per group | Member count + W/L shown |
+| **Syndicates** | Sum of `GroupMember.points` per group | Owner name, member count + W/L shown |
 | **Players** | `User.totalPoints` | Group count + W/L shown |
 
 **Future:** Roll out public `/leaderboards` when user base grows — reuse `computePlatformLeaderboards()` and `PlatformLeaderboards` component.
