@@ -1,14 +1,26 @@
 import { isAdminEmail } from "@/lib/admin";
 import { normalizeEmail } from "@/lib/auth-email";
 import { recordAnalyticsEventAsync } from "@/lib/analytics";
+import { clientIpFrom, isRateLimited, retryAfterSeconds } from "@/lib/rate-limit";
 import { prisma } from "@the-syndicate/database";
 import bcrypt from "bcryptjs";
 import { signUpSchema } from "@the-syndicate/shared";
 import { NextResponse } from "next/server";
 
+const SIGN_UP_LIMIT = 5;
+const SIGN_UP_WINDOW_MS = 60 * 60 * 1000;
+
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const key = `sign-up:${clientIpFrom(request.headers)}`;
+    if (isRateLimited(key, SIGN_UP_LIMIT, SIGN_UP_WINDOW_MS)) {
+      return NextResponse.json(
+        { error: "Too many sign-up attempts — try again later" },
+        { status: 429, headers: { "Retry-After": String(retryAfterSeconds(key)) } }
+      );
+    }
+
+    const body = await request.json().catch(() => null);
     const parsed = signUpSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(

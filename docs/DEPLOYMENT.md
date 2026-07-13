@@ -232,6 +232,7 @@ Full behaviour: [specs/platform-admin.md](./specs/platform-admin.md).
 | `DATABASE_URL` | `terraform output -json github_actions_secrets` (for migration step) |
 | `CRON_SECRET` | (Optional) Existing cron bearer — pass to Terraform on first apply to avoid rotation; stored in Secret Manager |
 | `RESEND_API_KEY` | (Optional) Resend API key for email notifications |
+| `ORIGIN_AUTH_SECRET` | (Optional) Cloudflare origin-auth shared secret — see [DDoS & abuse protection](#ddos--abuse-protection) |
 | `TF_STATE_BUCKET` | GCS bucket for Terraform remote state |
 
 ### Variables
@@ -433,6 +434,40 @@ One-off fixes (solo test rounds, re-settle after a bug) use `apps/web/scripts/da
 **Re-settle** reverses the old settlement, re-resolves legs from synced `Match` rows (with correct home/away alignment), then runs the normal settlement path again. Deploy the orientation fix before re-settling Norway vs England.
 
 ---
+
+## DDoS & abuse protection
+
+Cloudflare proxies `www.the-syndicate.uk` and absorbs volumetric (L3/L4) attacks on every plan. Two additional layers close the remaining gaps:
+
+### 1. Origin bypass protection (`ORIGIN_AUTH_SECRET`)
+
+The Cloud Run service is publicly invokable (`INGRESS_TRAFFIC_ALL` + `allUsers`), so the default `*.run.app` URL would otherwise let attackers skip Cloudflare entirely. When `ORIGIN_AUTH_SECRET` is set, the app middleware serves only requests carrying a matching `x-origin-auth` header, which Cloudflare adds to proxied traffic.
+
+**Setup (one-time):**
+
+1. Generate a secret: `openssl rand -hex 32`.
+2. Cloudflare dashboard → your zone → **Rules → Transform Rules → Modify Request Header** → create rule "Origin auth": *All incoming requests* → **Set static** header `x-origin-auth` = the secret. Deploy.
+3. Add the same value as GitHub secret `ORIGIN_AUTH_SECRET` and push (or redeploy) — `deploy.yml` passes it to Cloud Run.
+
+**Order matters:** create the Cloudflare rule *before* setting the GitHub secret, or real traffic 403s between the two steps. Unset secret = check disabled (local dev needs nothing).
+
+**Exempt paths** (reachable without the header): `/api/health` (uptime checks) and `/api/internal/*` — Cloud Scheduler calls the `run.app` URL directly; those routes have their own `CRON_SECRET` bearer auth.
+
+**Rotation:** update the Transform Rule value first, then the GitHub secret, then redeploy.
+
+### 2. Auth rate limiting
+
+App-level fixed-window limits (per instance, in-memory — `apps/web/src/lib/rate-limit.ts`; with `max_instances = 3` effective limits are up to 3×):
+
+| Endpoint | Limit |
+|----------|-------|
+| Web sign-in (credentials `authorize`, before bcrypt) | 10 / 5 min / IP |
+| `POST /api/auth/mobile/sign-in` | 10 / 5 min / IP (429 + `Retry-After`) |
+| `POST /api/auth/sign-up` | 5 / hour / IP (429 + `Retry-After`) |
+
+**Recommended Cloudflare rule (first line of defence):** zone → **Security → WAF → Rate limiting rules** (1 rule free): URI path starts with `/api/auth/` → 10 requests / 1 min per IP → Block for 1 min. This stops floods before they consume Cloud Run CPU at all.
+
+**Residual risk (accepted at current scale):** a distributed L7 flood through Cloudflare can still saturate `max_instances = 3` and `db-f1-micro` — availability only, bounded cost. Revisit (Cloud Armor / bigger tiers) when real traffic justifies it.
 
 ## Future improvements
 

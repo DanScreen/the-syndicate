@@ -2,14 +2,26 @@ import { createMobileToken } from "@/lib/mobile-token";
 import { resolveUserRole } from "@/lib/admin";
 import { normalizeEmail } from "@/lib/auth-email";
 import { recordAnalyticsEventAsync } from "@/lib/analytics";
+import { clientIpFrom, isRateLimited, retryAfterSeconds } from "@/lib/rate-limit";
 import { prisma } from "@the-syndicate/database";
 import bcrypt from "bcryptjs";
 import { signInSchema } from "@the-syndicate/shared";
 import { NextResponse } from "next/server";
 
+const SIGN_IN_LIMIT = 10;
+const SIGN_IN_WINDOW_MS = 5 * 60 * 1000;
+
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const key = `mobile-sign-in:${clientIpFrom(request.headers)}`;
+    if (isRateLimited(key, SIGN_IN_LIMIT, SIGN_IN_WINDOW_MS)) {
+      return NextResponse.json(
+        { error: "Too many sign-in attempts — try again shortly" },
+        { status: 429, headers: { "Retry-After": String(retryAfterSeconds(key)) } }
+      );
+    }
+
+    const body = await request.json().catch(() => null);
     const parsed = signInSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(

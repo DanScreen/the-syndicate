@@ -7,6 +7,11 @@ import { resolveUserRole, getSessionUserRole } from "@/lib/admin";
 import { authConfig } from "@/lib/auth.config";
 import { normalizeEmail } from "@/lib/auth-email";
 import { recordAnalyticsEventAsync } from "@/lib/analytics";
+import { clientIpFrom, isRateLimited } from "@/lib/rate-limit";
+
+/** Sign-in attempts per IP per window — checked before any bcrypt work. */
+const SIGN_IN_LIMIT = 10;
+const SIGN_IN_WINDOW_MS = 5 * 60 * 1000;
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -34,8 +39,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         try {
+          // Throttle before schema/DB/bcrypt — bcrypt at cost 10 is the
+          // expensive step a flood would exploit.
+          const ip = clientIpFrom(request.headers);
+          if (isRateLimited(`sign-in:${ip}`, SIGN_IN_LIMIT, SIGN_IN_WINDOW_MS)) {
+            return null;
+          }
+
           const parsed = signInSchema.safeParse(credentials);
           if (!parsed.success) return null;
 

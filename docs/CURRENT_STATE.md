@@ -187,7 +187,7 @@ Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_
 
 ## Web pages
 
-Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/groups/*`, `/performance`, `/admin`. Middleware uses edge-safe `auth.config.ts` only (no Prisma); credentials + DB live in `auth.ts`.
+Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/groups/*`, `/performance`, `/admin`. Middleware uses edge-safe `auth.config.ts` only (no Prisma); credentials + DB live in `auth.ts`. Middleware also runs on all non-static routes for the **origin-auth check** (`ORIGIN_AUTH_SECRET` + Cloudflare `x-origin-auth` header — blocks direct `*.run.app` traffic; `/api/health` and `/api/internal/*` exempt). Auth endpoints are **rate-limited** per IP (`lib/rate-limit.ts`): sign-in 10/5min, sign-up 5/hour. See [DEPLOYMENT.md](./DEPLOYMENT.md#ddos--abuse-protection).
 
 | Path | Purpose |
 |------|---------|
@@ -361,6 +361,7 @@ Member summary **best / worst leg** = highest / lowest decimal odds across the m
 | `RESEND_API_KEY` | No | Email notifications via Resend |
 | `EMAIL_FROM` | No | Sender address (required with `RESEND_API_KEY`) |
 | `ADMIN_EMAILS` | No | Comma-separated emails granted platform admin |
+| `ORIGIN_AUTH_SECRET` | No | Blocks direct-to-Cloud-Run traffic; must match Cloudflare Transform Rule header — [DEPLOYMENT.md](./DEPLOYMENT.md#ddos--abuse-protection) |
 
 ### Production (GitHub Actions → Cloud Run)
 
@@ -436,6 +437,8 @@ Recent migrations include `20260711100000_competition_settings` (admin competiti
 - [x] `CRON_SECRET` in Secret Manager + Cloud Scheduler jobs (`sync-matches`, `warm-odds-cache`) via Terraform
 - [x] `NEXTAUTH_URL=https://www.the-syndicate.uk`
 - [x] Cloudflare Worker + www redirect configured
+- [ ] `ORIGIN_AUTH_SECRET`: Cloudflare Transform Rule (`x-origin-auth`) + GitHub secret — [DEPLOYMENT.md](./DEPLOYMENT.md#ddos--abuse-protection)
+- [ ] Cloudflare rate-limiting rule on `/api/auth/*` (free tier: 1 rule)
 - [x] `RESEND_API_KEY` + `EMAIL_FROM` in GitHub (optional, for email notifications)
 - [x] `ADMIN_EMAILS` in GitHub secrets + passed to Cloud Run via `deploy.yml`
 
