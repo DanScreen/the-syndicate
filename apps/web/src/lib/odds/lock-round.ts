@@ -69,8 +69,11 @@ export async function lockRoundWithAccaPricing(roundId: string, legs: Leg[]) {
     hasAllLegLinks: r.hasAllLegLinks,
   }));
 
-  await prisma.round.update({
-    where: { id: roundId },
+  // Conditional write: only price a round that is still locked (or being
+  // locked). Guards against a concurrent settlement flipping the round to
+  // "settled" mid-reprice — we must never resurrect a settled round.
+  const updated = await prisma.round.updateMany({
+    where: { id: roundId, status: "locked" },
     data: {
       status: "locked",
       combinedOdds: acca.combinedOdds,
@@ -79,6 +82,10 @@ export async function lockRoundWithAccaPricing(roundId: string, legs: Leg[]) {
       lockedAt: new Date(),
     },
   });
+
+  if (updated.count === 0) {
+    throw new Error("Round is no longer locked — acca pricing not applied");
+  }
 }
 
 export async function computeAccaRankingsForLegs(legs: Leg[]) {

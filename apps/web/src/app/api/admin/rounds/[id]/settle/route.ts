@@ -20,7 +20,7 @@ export async function POST(request: Request, { params }: Params) {
   if (error) return error;
 
   const { id: roundId } = await params;
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const parsed = adminSettleRoundSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });

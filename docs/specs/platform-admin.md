@@ -63,7 +63,7 @@ Settlement is system-only (owners cannot settle), so this page is the **escape h
 - Admin picks won/lost/void for each pending leg (system-resolved outcomes are pre-filled and shown as badges) and settles the round via `POST /api/admin/rounds/[id]/settle`.
 - The route validates outcomes cover exactly the round's legs and reuses `applyRoundSettlement()` — the same exactly-once `locked → settled` claim as the cron; a lost race returns 409.
 
-**Nav:** Admin users see **Admin** in `AppNav`. Sub-nav: Overview | Leaderboards (`AdminNav`).
+**Nav:** Admin users see **Admin** in `AppNav`. Sub-nav: Overview | Settlement | Leaderboards | Competitions | Odds (`AdminNav`).
 
 **SEO:** `robots: noindex` on admin pages.
 

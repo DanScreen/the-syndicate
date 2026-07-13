@@ -12,7 +12,7 @@ export async function POST(request: Request) {
   const { session, error } = await requireSession();
   if (error) return error;
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const parsed = submitLegSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });

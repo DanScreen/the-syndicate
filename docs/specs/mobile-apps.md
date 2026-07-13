@@ -176,7 +176,7 @@ Checklist for implementation. Web route → API → mobile screen.
 - [x] Market tiers: auto-load core; “Load more markets” for specials (no API credit copy in UI)
 - [x] Locked round: picks, outcome badges, frozen odds (`LegsList`, `RoundProgress`)
 - [x] `AccaSummary`: combined odds, compare bookmakers until first result, betslip CTA
-- [x] Owner settle / auto-settle (`SettleRoundForm`); non-owners read-only
+- [x] ~~Owner settle / auto-settle~~ — removed July 2026: settlement is system-only; members edit their own pick until first kickoff instead (`SubmitLegForm` edit mode)
 
 ### Phase 3 — Stats and navigation
 

@@ -20,7 +20,7 @@ export async function PATCH(request: Request, { params }: Params) {
   if (error) return error;
 
   const { id: legId } = await params;
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const parsed = editLegSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
@@ -132,7 +132,15 @@ export async function PATCH(request: Request, { params }: Params) {
   });
 
   // A locked acca changes shape when a leg changes — reprice the whole thing.
-  if (round.status === "locked") {
+  // Re-read the status: the round may have locked (final member submitted)
+  // between our earlier check and the leg update.
+  const currentRound = await prisma.round.findUnique({
+    where: { id: round.id },
+    select: { status: true },
+  });
+  const repriced = currentRound?.status === "locked";
+
+  if (repriced) {
     try {
       const legs = await prisma.leg.findMany({ where: { roundId: round.id } });
       await lockRoundWithAccaPricing(round.id, legs);
@@ -147,5 +155,5 @@ export async function PATCH(request: Request, { params }: Params) {
     }
   }
 
-  return NextResponse.json({ leg: updatedLeg, repriced: round.status === "locked" });
+  return NextResponse.json({ leg: updatedLeg, repriced });
 }
