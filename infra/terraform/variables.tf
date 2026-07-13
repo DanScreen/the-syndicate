@@ -110,3 +110,21 @@ variable "warm_odds_cache_job_name" {
   type        = string
   default     = "warm-odds-cache"
 }
+
+variable "round_reminders_schedule" {
+  description = "Cron schedule for pick reminder notifications (UTC)"
+  type        = string
+  default     = "*/15 * * * *"
+}
+
+variable "round_reminders_job_name" {
+  description = "Cloud Scheduler job name for pick reminders"
+  type        = string
+  default     = "round-reminders"
+}
+
+variable "enable_round_reminders_job" {
+  description = "Create Cloud Scheduler job for POST /api/internal/round-reminders"
+  type        = bool
+  default     = true
+}

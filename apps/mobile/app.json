@@ -58,7 +58,14 @@
       ],
       "expo-secure-store",
       "expo-asset",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/android-icon-monochrome.png",
+          "color": "#22c55e"
+        }
+      ]
     ],
     "experiments": {
       "autolinkingModuleResolution": true

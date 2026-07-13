@@ -47,6 +47,24 @@ export const adminSettleRoundSchema = z.object({
     .min(1),
 });
 
+export const pushTokenSchema = z.object({
+  token: z.string().min(10),
+  platform: z.enum(["ios", "android"]),
+});
+
+export const deletePushTokenSchema = z.object({
+  token: z.string().min(10).optional(),
+});
+
+export const notificationPreferencesSchema = z.object({
+  emailPickReminder: z.boolean().optional(),
+  emailRoundLocked: z.boolean().optional(),
+  emailRoundSettled: z.boolean().optional(),
+  pushPickReminder: z.boolean().optional(),
+  pushRoundLocked: z.boolean().optional(),
+  pushRoundSettled: z.boolean().optional(),
+});
+
 export type SignUpInput = z.infer<typeof signUpSchema>;
 export type SignInInput = z.infer<typeof signInSchema>;
 export type CreateGroupInput = z.infer<typeof createGroupSchema>;

@@ -47,3 +47,29 @@ resource "google_cloud_scheduler_job" "warm_odds_cache" {
     retry_count = 1
   }
 }
+
+resource "google_cloud_scheduler_job" "round_reminders" {
+  count = var.enable_round_reminders_job ? 1 : 0
+
+  depends_on = [google_project_service.required]
+
+  project     = var.project_id
+  region      = var.region
+  name        = var.round_reminders_job_name
+  description = "Email/push pick reminders before acca kickoff deadline"
+  schedule    = var.round_reminders_schedule
+  time_zone   = "UTC"
+
+  http_target {
+    http_method = "POST"
+    uri         = "${local.app_base_url}/api/internal/round-reminders"
+
+    headers = {
+      Authorization = "Bearer ${local.cron_secret}"
+    }
+  }
+
+  retry_config {
+    retry_count = 1
+  }
+}

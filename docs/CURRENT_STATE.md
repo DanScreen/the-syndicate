@@ -83,7 +83,7 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 | Real bookmaker betslip deeplinks (The Odds API) | ✅ |
 | Match table + football-data.org sync cron | ✅ |
 | Hands-off auto-settle (5-min cron, progressive leg outcomes) | ✅ |
-| Email notifications (round locked / settled) | ✅ |
+| Email + push notifications (lock, settle, pick reminders) | ✅ |
 | System-only settlement (owner settle removed July 2026) | ✅ |
 | Editable picks until first kickoff (open + locked; locked edits reprice acca; web + mobile) | ✅ |
 | Admin settlement queue (`/admin/settlement`, overdue-leg flags, manual settle) | ✅ |
@@ -221,7 +221,7 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 | Auto (hands-off) | Via `POST /api/internal/sync-matches` | Cron sync → auto-settles all ready locked rounds; resolved legs update before full acca settles |
 | Admin (escape hatch) | `POST /api/admin/rounds/[id]/settle` | Platform admin settles rounds the system can't resolve — see `/admin/settlement` |
 
-Email notifications (Resend) fire on lock and settle when `RESEND_API_KEY` + `EMAIL_FROM` are set. Deduped via `Round.lockedNotificationSentAt` / `settledNotificationSentAt`.
+Email and push notifications fire on **round locked**, **round settled**, and **pick reminders** (T−2h before first kickoff). Resend for email (`RESEND_API_KEY`, `EMAIL_FROM`); Expo Push API for mobile (`PushDevice` tokens). Per-user preferences at `/settings/notifications` (web) and `(main)/notifications` (mobile). Deduped via `NotificationLog` + round-level `lockedNotificationSentAt` / `settledNotificationSentAt`. Pick reminders cron: `POST /api/internal/round-reminders` every 15 min (Terraform). See [specs/notifications.md](./specs/notifications.md).
 
 **Exactly-once settlement.** `applyRoundSettlement()` runs in a `prisma.$transaction` that opens with an atomic claim — `round.updateMany({ where: { status: "locked" }, data: { status: "settled" } })`. Overlapping settle attempts (e.g. two cron runs) can't double-count points: the loser matches zero rows and throws `RoundNotSettleableError`, treated as a benign `skipped` no-op.
 
@@ -243,6 +243,7 @@ Members can change **their own leg** via `PATCH /api/legs/[id]` while the round 
 | Route | Role |
 |-------|------|
 | `POST /api/internal/sync-matches` | football-data.org → `Match` table; locks open rounds at first kickoff; auto-settles locked rounds |
+| `POST /api/internal/round-reminders` | Pick reminder emails/push (T−2h before kickoff) |
 | `POST /api/internal/warm-odds-cache` | Refresh odds snapshots in DB |
 
 ### Key files
@@ -255,8 +256,15 @@ Members can change **their own leg** via `PATCH /api/legs/[id]` while the round 
 | `apps/web/src/components/admin-settlement.tsx` | Settlement queue UI + manual settle form |
 | `apps/web/src/app/api/admin/rounds/[id]/settle/route.ts` | Admin manual settle (exact leg coverage) |
 | `apps/web/src/lib/settlement/resolve-round-outcomes.ts` | Match → leg outcomes; `persistResolvableLegOutcomes()` |
-| `apps/web/src/lib/notifications/round-notifications.ts` | Locked / settled emails |
+| `apps/web/src/lib/notifications/dispatch.ts` | Central notification dispatcher |
+| `apps/web/src/lib/notifications/send-pick-reminders.ts` | Pick reminder cron logic |
+| `apps/web/src/lib/notifications/round-notifications.ts` | Lock / settle / reminder payloads |
+| `apps/web/src/lib/notifications/channels/` | Email + Expo push adapters |
 | `apps/web/src/lib/notifications/email.ts` | Resend client (fetch) |
+| `apps/web/src/components/notification-settings.tsx` | Web preferences UI |
+| `apps/mobile/src/notifications/register.ts` | Push permission + token registration |
+| `GET/PATCH /api/user/notification-preferences` | User notification toggles |
+| `POST/DELETE /api/user/push-token` | Mobile Expo push token |
 | `apps/web/src/lib/results/football-data.ts` | football-data.org fetch, team matching, **regulation (90 min) scores** for settlement |
 | `apps/web/src/lib/results/sync-matches.ts` | Upsert matches for all competitions |
 | `apps/web/src/lib/results/match-store.ts` | DB lookup for auto-settle; aligns goals to leg home/away when sources disagree |
@@ -361,6 +369,7 @@ Member summary **best / worst leg** = highest / lowest decimal odds across the m
 | `ODDS_WARM_CORE_WITHIN_HOURS` | No | Cron prefetches core extended markets within N hours of kickoff (default 72) |
 | `CRON_SECRET` | No | Bearer token for `/api/internal/*` cron routes |
 | `RESEND_API_KEY` | No | Email notifications via Resend |
+| `EXPO_ACCESS_TOKEN` | No | Optional Expo Push API auth (higher rate limits) |
 | `EMAIL_FROM` | No | Sender address (required with `RESEND_API_KEY`) |
 | `ADMIN_EMAILS` | No | Comma-separated emails granted platform admin |
 | `ORIGIN_AUTH_SECRET` | No | Blocks direct-to-Cloud-Run traffic; must match Cloudflare Transform Rule header — [DEPLOYMENT.md](./DEPLOYMENT.md#ddos--abuse-protection) |
@@ -408,6 +417,9 @@ Recent migrations include `20260711100000_competition_settings` (admin competiti
 | `GET /api/groups/[id]/stats` | Member | Group summary stats + chart series |
 | `GET /api/groups/[id]/members/[userId]/stats` | Member | Member breakdown + favourites |
 | `GET /api/user/stats` | Session | Cross-group performance stats |
+| `GET/PATCH /api/user/notification-preferences` | Session | Notification toggles |
+| `POST/DELETE /api/user/push-token` | Session / mobile JWT | Expo push token |
+| `POST /api/internal/round-reminders` | Cron | Pick reminder dispatch |
 | `GET /api/admin/stats` | Admin | Platform summary metrics |
 | `GET /api/admin/leaderboards` | Admin | Syndicate + player point rankings |
 | `GET /api/admin/competitions` | Admin | All competitions + enabled flags |

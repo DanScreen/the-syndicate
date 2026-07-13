@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { api } from "@/api/client";
+import { unregisterPushNotifications } from "@/notifications/register";
 import type { AuthUser } from "@the-syndicate/shared";
 
 const TOKEN_KEY = "syndicate_token";
@@ -82,13 +83,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signOut = useCallback(async () => {
+    await unregisterPushNotifications(token);
     await Promise.all([
       SecureStore.deleteItemAsync(TOKEN_KEY),
       SecureStore.deleteItemAsync(USER_KEY),
     ]);
     setToken(null);
     setUser(null);
-  }, []);
+  }, [token]);
 
   const value = useMemo(
     () => ({ user, token, loading, signIn, signUp, signOut }),

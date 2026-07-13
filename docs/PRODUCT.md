@@ -78,7 +78,6 @@ Platform admins (`ADMIN_EMAILS`) see an **Admin** tab in the header with `/admin
 
 ### Backlog
 - [ ] Affiliate links + improved betslip deeplinks — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md)
-- [ ] Pick reminders before kickoff deadline — [specs/round-deadline-lock.md](./specs/round-deadline-lock.md) Phase 2
 - [ ] Public platform leaderboards (admin version exists)
 - [ ] Dedicated user profile page (optional — `/performance` covers stats today)
 - [ ] FA Cup + EFL Cup competitions

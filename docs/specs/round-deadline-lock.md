@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | Phase 1 shipped (July 2026); Phase 2 (reminders) deferred |
+| **Status** | Phase 1 shipped; Phase 2 pick reminders shipped — [notifications.md](./notifications.md) |
 | **Depends on** | Open rounds, leg kickoff snapshots, match sync cron |
 | **As-built reference** | [../CURRENT_STATE.md](../CURRENT_STATE.md) |
 
@@ -51,28 +51,26 @@ An acca **locks when the earliest submitted leg kicks off**, even if not every m
 
 ---
 
-## Phase 2 — Pick reminders (deferred)
+## Phase 2 — Pick reminders (shipped)
 
 **Goal:** reduce missed accas by nudging members who haven't submitted before the group's first kickoff.
+
+Implemented in [notifications.md](./notifications.md) — `sendPickReminders()` + `POST /api/internal/round-reminders` (15 min cron).
 
 ### Proposed behaviour
 
 | Event | Action |
 |-------|--------|
-| **T−24h** (optional) | Email to members without a leg in an open round that has ≥1 submitted leg |
-| **T−2h** | Email to members still pending when `firstKickoff` is within 2 hours |
-| **T−30m** (optional) | Final reminder |
+| **T−24h** (optional) | Not shipped |
+| **T−2h** | ✅ Email + push to members still pending when `firstKickoff` is within 2 hours |
+| **T−30m** (optional) | Not shipped |
 
-**Recipients:** only group members who have **not** submitted a leg for the active open round.
+**Requires (done):**
 
-**Content:** group name, deadline time, who has / hasn't submitted (or count), deep link to group round tab.
-
-**Requires:**
-
-- [ ] Cron job (e.g. extend `sync-matches` or new `POST /api/internal/round-reminders`) — at least hourly
-- [ ] `Round.pickReminderSentAt` or per-member reminder log (avoid duplicate emails)
-- [ ] Resend templates
-- [ ] Optional: push notifications when mobile push ships ([ROADMAP.md](../ROADMAP.md) post-MVP)
+- [x] Cron job `POST /api/internal/round-reminders` — every 15 min UTC (Terraform)
+- [x] `NotificationLog` dedup (`pick_reminder_2h` per user per round per channel)
+- [x] Resend templates in `lib/notifications/templates.ts`
+- [x] Push via Expo Push API when `PushDevice` registered
 
 **Open questions:**
 

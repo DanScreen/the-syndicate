@@ -112,6 +112,11 @@ export default function GroupsScreen() {
             variant="secondary"
             onPress={() => router.push("/(main)/performance")}
           />
+          <Button
+            label="Notifications"
+            variant="secondary"
+            onPress={() => router.push("/(main)/notifications")}
+          />
         </View>
       </ScrollView>
     </Screen>

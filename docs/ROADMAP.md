@@ -22,7 +22,7 @@ Core loop and MVP polish are **shipped**:
 - **Acca lock** with best combined bookmaker + ranked bookmaker list at lock
 - **Real bookmaker betslip deeplinks** (The Odds API `includeLinks`)
 - **Match table** + football-data.org sync cron + hands-off auto-settle
-- **Email notifications** — round locked / settled (Resend; optional)
+- **Email + push notifications** — lock, settle, pick reminders (T−2h); preferences UI — [specs/notifications.md](./specs/notifications.md)
 - **Unit-stake points** (win: `odds−1`, loss: `−1`, void: `0`)
 - **Group stats** + **member stats** (charts, favourites, best/worst)
 - **Cross-group performance** page (`/performance`) + share cards
@@ -41,15 +41,14 @@ Core loop and MVP polish are **shipped**:
 | # | Feature | Type | Notes |
 |---|---------|------|-------|
 | 1 | **Validate with real users** | Product | Run 2–3 friend groups through full loop on prod |
-| 2 | **Pick reminders** | Code + ops | Email members without a leg before kickoff deadline — [specs/round-deadline-lock.md](./specs/round-deadline-lock.md) Phase 2 |
-| 3 | **Affiliate links** | Code + ops | Bookmaker affiliate programmes, tracked outbound deeplinks, disclosure UI — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md) Phase A |
-| 4 | **Better betslip deeplinks** | Code | Acca-builder URLs, fewer hub fallbacks, per-leg link quality — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md) Phase B |
-| 5 | **FA Cup + EFL Cup** | Code | Phase 1b — `packages/shared/src/competitions.ts` |
-| 6 | **GCP cost reduction** | Ops/infra | Cloud SQL ~90% of spend; see [DEPLOYMENT.md](./DEPLOYMENT.md#cost-optimization) |
-| 7 | **Public platform leaderboards** | Code | Admin version shipped; open to all users when ready |
-| 8 | User profile page | Code | Optional; `/performance` covers cross-group stats today |
-| 9 | **Mobile — friend testing** | Product | You: [DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md); mates: APK / later TestFlight |
-| 10 | Terraform CI GCS permissions fix | Infra | App deploy unaffected |
+| 2 | **Affiliate links** | Code + ops | Bookmaker affiliate programmes — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md) Phase A |
+| 3 | **Better betslip deeplinks** | Code | Acca-builder URLs, fewer hub fallbacks — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md) Phase B |
+| 4 | **FA Cup + EFL Cup** | Code | Phase 1b — `packages/shared/src/competitions.ts` |
+| 5 | **GCP cost reduction** | Ops/infra | Cloud SQL ~90% of spend; see [DEPLOYMENT.md](./DEPLOYMENT.md#cost-optimization) |
+| 6 | **Public platform leaderboards** | Code | Admin version shipped; open to all users when ready |
+| 7 | User profile page | Code | Optional; `/performance` covers cross-group stats today |
+| 8 | **Mobile — friend testing** | Product | You: [DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md); mates: APK / later TestFlight |
+| 9 | Terraform CI GCS permissions fix | Infra | App deploy unaffected |
 
 ---
 
@@ -64,7 +63,7 @@ Core loop and MVP polish are **shipped**:
 
 ## Post-MVP
 
-Push notifications, chat/feed, stake pooling, social sign-in, more sports. Multi-leg accas (owner: 1–3 legs per player, symmetric) — see [specs/multi-leg-accas.md](./specs/multi-leg-accas.md).
+Chat/feed, stake pooling, social sign-in, more sports. Multi-leg accas — [specs/multi-leg-accas.md](./specs/multi-leg-accas.md). Notification Phase 3 (per-leg results, quiet hours) — [specs/notifications.md](./specs/notifications.md).
 
 ---
 

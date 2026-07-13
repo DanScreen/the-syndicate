@@ -11,3 +11,4 @@ export * from "./brand";
 export * from "./bookmakers";
 export * from "./market-groups";
 export * from "./round-status";
+export * from "./notification-types";

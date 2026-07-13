@@ -108,6 +108,7 @@ Auto-settle reads from the `Match` table. Populate it on a schedule.
 |-----|----------------|----------|
 | `sync-matches` | `*/5 * * * *` | `POST /api/internal/sync-matches` |
 | `warm-odds-cache` | `0 */6 * * *` | `POST /api/internal/warm-odds-cache` |
+| `round-reminders` | `*/15 * * * *` | `POST /api/internal/round-reminders` |
 
 Both jobs send `Authorization: Bearer` with the `CRON_SECRET` value from Secret Manager (created by Terraform). Override schedules or `app_base_url` via Terraform variables; see [infra/terraform/README.md](../infra/terraform/README.md).
 
@@ -196,14 +197,18 @@ Quota usage is visible on `/admin/odds` (from API response headers, cached in-me
 
 ## Email notifications (Resend)
 
-Optional. When configured, members receive email on round lock and settle.
+Optional. When configured, members receive **email** on round lock, settle, and pick reminders; **push** when the mobile app has registered an Expo token.
 
 1. Create account at [resend.com](https://resend.com) and verify sending domain.
 2. Add `RESEND_API_KEY` to GitHub secrets.
 3. Add `EMAIL_FROM` GitHub variable (e.g. `The Syndicate <notifications@the-syndicate.uk>`).
 4. Deploy — `deploy.yml` passes both to Cloud Run.
 
-Omit either variable to skip emails (no-op).
+Optional: `EXPO_ACCESS_TOKEN` for Expo Push API rate limits (mobile push).
+
+User preferences: `/settings/notifications` (web), mobile Notifications screen. Full spec: [specs/notifications.md](./specs/notifications.md).
+
+Omit either email variable to skip emails (no-op).
 
 ## Platform admin
 

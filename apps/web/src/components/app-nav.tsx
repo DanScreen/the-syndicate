@@ -51,6 +51,16 @@ export function AppNav() {
           Admin
         </Link>
       )}
+      <Link
+        href="/settings/notifications"
+        className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
+          pathname.startsWith("/settings")
+            ? "bg-accent-muted/40 text-accent"
+            : "text-muted hover:text-foreground"
+        }`}
+      >
+        Notifications
+      </Link>
     </nav>
   );
 }
