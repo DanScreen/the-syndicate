@@ -11,6 +11,7 @@ import type {
   Fixture,
   FixtureMarketsResponse,
   FixturesResponse,
+  EditLegInput,
   GroupLeg,
   GroupMember,
   Market,
@@ -303,10 +304,15 @@ export function SubmitLegForm({
   roundId,
   token,
   onSubmitted,
+  editLegId,
+  onCancel,
 }: {
   roundId: string;
   token: string;
   onSubmitted: () => void;
+  /** When set, the form edits this existing leg (PATCH) instead of submitting a new one. */
+  editLegId?: string;
+  onCancel?: () => void;
 }) {
   const [competitions, setCompetitions] = useState<CompetitionOption[]>([]);
   const [loadingCompetitions, setLoadingCompetitions] = useState(true);
@@ -421,21 +427,36 @@ export function SubmitLegForm({
     setLoading(true);
     setError("");
     try {
-      const body: SubmitLegInput = {
-        roundId,
-        competitionId,
-        fixtureId,
-        marketType,
-        selectionId,
-      };
-      await api("/api/legs", {
-        method: "POST",
-        token,
-        body: JSON.stringify(body),
-      });
+      if (editLegId) {
+        const body: EditLegInput = { competitionId, fixtureId, marketType, selectionId };
+        await api(`/api/legs/${editLegId}`, {
+          method: "PATCH",
+          token,
+          body: JSON.stringify(body),
+        });
+      } else {
+        const body: SubmitLegInput = {
+          roundId,
+          competitionId,
+          fixtureId,
+          marketType,
+          selectionId,
+        };
+        await api("/api/legs", {
+          method: "POST",
+          token,
+          body: JSON.stringify(body),
+        });
+      }
       onSubmitted();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to submit leg");
+      setError(
+        e instanceof ApiError
+          ? e.message
+          : editLegId
+            ? "Failed to update leg"
+            : "Failed to submit leg"
+      );
     } finally {
       setLoading(false);
     }
@@ -462,7 +483,7 @@ export function SubmitLegForm({
 
   return (
     <Card>
-      <Text style={styles.sectionTitle}>Submit your leg</Text>
+      <Text style={styles.sectionTitle}>{editLegId ? "Change your leg" : "Submit your leg"}</Text>
 
       <Text style={styles.stepLabel}>1. Competition</Text>
       {competitions.map((c) => (
@@ -564,13 +585,16 @@ export function SubmitLegForm({
 
       <ErrorText message={error} />
       <Button
-        label="Submit leg"
+        label={editLegId ? "Update leg" : "Submit leg"}
         onPress={() => {
           if (ready) void handleSubmit();
         }}
         loading={loading}
         variant={ready ? "primary" : "secondary"}
       />
+      {onCancel ? (
+        <Button label="Cancel — keep my current pick" onPress={onCancel} variant="secondary" />
+      ) : null}
     </Card>
   );
 }

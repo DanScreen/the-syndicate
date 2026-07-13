@@ -47,6 +47,7 @@ export type GroupLeg = {
   homeTeam: string;
   awayTeam: string;
   competition?: string;
+  kickoff: string;
   selectionLabel: string;
   marketLabel: string;
   odds: number;

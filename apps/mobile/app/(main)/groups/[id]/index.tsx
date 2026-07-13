@@ -4,10 +4,9 @@ import {
   LegsList,
   RoundHistory,
   RoundProgress,
-  SettleRoundForm,
   SubmitLegForm,
 } from "@/components/group-round";
-import { ErrorText } from "@/components/ui";
+import { Button, Card, ErrorText } from "@/components/ui";
 import { colors } from "@/config";
 import { useGroupData } from "@/context/group-data";
 import { useState } from "react";
@@ -20,10 +19,21 @@ import {
   View,
 } from "react-native";
 
+function formatCutoff(date: Date) {
+  return date.toLocaleString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export default function GroupRoundScreen() {
   const { token, user } = useAuth();
   const { data, error, reload } = useGroupData();
   const [refreshing, setRefreshing] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   if (!data) {
     return (
@@ -39,6 +49,14 @@ export default function GroupRoundScreen() {
   const canSubmit = round?.status === "open" && !myLeg && user?.id;
   const isLocked = round?.status === "locked";
   const isOpen = round?.status === "open";
+
+  // Picks can be edited until the first match in the acca kicks off.
+  const firstKickoff =
+    round && round.legs.length > 0
+      ? new Date(Math.min(...round.legs.map((l) => new Date(l.kickoff).getTime())))
+      : null;
+  const editWindowOpen =
+    (isOpen || isLocked) && (!firstKickoff || Date.now() < firstKickoff.getTime());
   const resolvedLegs = round?.legs.filter((l) => l.outcome !== "pending").length ?? 0;
   const lockedBookmakerName =
     round?.accaBookmakerRankings?.find((r) => r.bookmakerId === round.bestBookmakerId)
@@ -109,8 +127,31 @@ export default function GroupRoundScreen() {
         <SubmitLegForm roundId={round.id} token={token} onSubmitted={reload} />
       ) : null}
 
-      {isLocked && data.isOwner && round && token ? (
-        <SettleRoundForm round={round} token={token} onSettled={reload} />
+      {myLeg && editWindowOpen && !editing ? (
+        <Card>
+          <Text style={styles.editTitle}>
+            Your pick: {myLeg.selectionLabel} ({myLeg.odds})
+          </Text>
+          <Text style={styles.editMeta}>
+            You can change it until the first kickoff
+            {firstKickoff ? ` — ${formatCutoff(firstKickoff)}` : ""}.
+            {isLocked ? " Changing a pick reprices the whole acca at current odds." : ""}
+          </Text>
+          <Button label="Change my pick" onPress={() => setEditing(true)} variant="secondary" />
+        </Card>
+      ) : null}
+
+      {myLeg && editWindowOpen && editing && round && token ? (
+        <SubmitLegForm
+          roundId={round.id}
+          token={token}
+          editLegId={myLeg.id}
+          onSubmitted={() => {
+            setEditing(false);
+            void reload();
+          }}
+          onCancel={() => setEditing(false)}
+        />
       ) : null}
 
       {data.recentRounds && data.recentRounds.length > 0 ? (
@@ -157,5 +198,16 @@ const styles = StyleSheet.create({
   lockedBannerText: {
     color: colors.accent,
     fontSize: 14,
+  },
+  editTitle: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  editMeta: {
+    color: colors.muted,
+    fontSize: 13,
+    marginTop: 4,
+    marginBottom: 8,
   },
 });

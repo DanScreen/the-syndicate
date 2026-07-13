@@ -35,6 +35,18 @@ export const updateCompetitionSettingSchema = z.object({
   enabled: z.boolean(),
 });
 
+/** Platform-admin manual settlement — outcomes must cover every leg in the round. */
+export const adminSettleRoundSchema = z.object({
+  legOutcomes: z
+    .array(
+      z.object({
+        legId: z.string(),
+        outcome: z.enum(["won", "lost", "void"]),
+      })
+    )
+    .min(1),
+});
+
 export type SignUpInput = z.infer<typeof signUpSchema>;
 export type SignInInput = z.infer<typeof signInSchema>;
 export type CreateGroupInput = z.infer<typeof createGroupSchema>;

@@ -47,9 +47,21 @@ Protected by middleware (`/admin/*` requires login) + `requireAdminPage()` (redi
 | Route | Purpose |
 |-------|---------|
 | `/admin` | Platform overview — users, groups, picks, accas, activity |
+| `/admin/settlement` | Settlement queue — locked rounds, overdue-leg flags, manual settle |
 | `/admin/leaderboards` | Syndicate + player rankings by points |
 | `/admin/competitions` | Enable/disable competitions in the leg picker |
 | `/admin/odds` | Odds API diagnostics — raw events, filter pipeline, quota |
+
+Admin pages are **web-only** — no admin surface in the mobile app (by design).
+
+### Settlement queue (`/admin/settlement`)
+
+Settlement is system-only (owners cannot settle), so this page is the **escape hatch** for rounds the cron cannot resolve:
+
+- Lists all `locked` rounds (rounds needing attention first, then oldest lock).
+- A pending leg is flagged **overdue** when unresolved **2+ hours after its scheduled kickoff** (`OVERDUE_AFTER_HOURS` in `compute-settlement-queue.ts`) — highlights matches that likely finished but couldn't be auto-resolved (unrecognised market, missing match data).
+- Admin picks won/lost/void for each pending leg (system-resolved outcomes are pre-filled and shown as badges) and settles the round via `POST /api/admin/rounds/[id]/settle`.
+- The route validates outcomes cover exactly the round's legs and reuses `applyRoundSettlement()` — the same exactly-once `locked → settled` claim as the cron; a lost race returns 409.
 
 **Nav:** Admin users see **Admin** in `AppNav`. Sub-nav: Overview | Leaderboards (`AdminNav`).
 
@@ -66,6 +78,7 @@ Protected by middleware (`/admin/*` requires login) + `requireAdminPage()` (redi
 | `GET /api/admin/competitions` | Admin session | Catalogue + enabled flags |
 | `PATCH /api/admin/competitions` | Admin session | Toggle `{ competitionId, enabled }` |
 | `GET /api/admin/odds-diagnostics` | Admin session | Odds API probe (`?competition=world-cup`) |
+| `POST /api/admin/rounds/[id]/settle` | Admin session | Manual settle — outcomes for every leg (escape hatch) |
 
 Non-admin → `403 Forbidden`. Unauthenticated → `401`.
 

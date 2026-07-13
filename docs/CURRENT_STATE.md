@@ -85,7 +85,8 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 | Hands-off auto-settle (5-min cron, progressive leg outcomes) | ✅ |
 | Email notifications (round locked / settled) | ✅ |
 | System-only settlement (owner settle removed July 2026) | ✅ |
-| Editable picks until first kickoff (open + locked; locked edits reprice acca) | ✅ |
+| Editable picks until first kickoff (open + locked; locked edits reprice acca; web + mobile) | ✅ |
+| Admin settlement queue (`/admin/settlement`, overdue-leg flags, manual settle) | ✅ |
 | Unit-stake points + leaderboard | ✅ |
 | Group stats summary + cumulative points chart | ✅ |
 | Member stats breakdowns + multi-member chart | ✅ |
@@ -196,6 +197,7 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 | `/dashboard` | **Groups home** — list of user's syndicates; **group points** + **your points** per card |
 | `/performance` | Cross-group stats (`DashboardStats`) + share cards |
 | `/admin` | **Admin** — platform metrics (admin role only) |
+| `/admin/settlement` | **Admin** — settlement queue: locked rounds, overdue legs (2h+ after KO), manual settle |
 | `/admin/leaderboards` | **Admin** — syndicate & player rankings by points |
 | `/admin/competitions` | **Admin** — enable/disable competitions in leg picker |
 | `/admin/odds` | **Admin** — Odds API diagnostics (fixture pipeline) |
@@ -217,6 +219,7 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 | Method | Route | Notes |
 |--------|-------|-------|
 | Auto (hands-off) | Via `POST /api/internal/sync-matches` | Cron sync → auto-settles all ready locked rounds; resolved legs update before full acca settles |
+| Admin (escape hatch) | `POST /api/admin/rounds/[id]/settle` | Platform admin settles rounds the system can't resolve — see `/admin/settlement` |
 
 Email notifications (Resend) fire on lock and settle when `RESEND_API_KEY` + `EMAIL_FROM` are set. Deduped via `Round.lockedNotificationSentAt` / `settledNotificationSentAt`.
 
@@ -246,6 +249,9 @@ Members can change **their own leg** via `PATCH /api/legs/[id]` while the round 
 |------|------|
 | `apps/web/src/lib/settlement/auto-settle-round.ts` | Hands-off auto-settle (cron) |
 | `apps/web/src/app/api/legs/[id]/route.ts` | Leg editing (PATCH) — cutoff, revalidation, locked-round reprice |
+| `apps/web/src/lib/admin/compute-settlement-queue.ts` | Locked-round queue + 2h overdue-leg flags |
+| `apps/web/src/components/admin-settlement.tsx` | Settlement queue UI + manual settle form |
+| `apps/web/src/app/api/admin/rounds/[id]/settle/route.ts` | Admin manual settle (exact leg coverage) |
 | `apps/web/src/lib/settlement/resolve-round-outcomes.ts` | Match → leg outcomes; `persistResolvableLegOutcomes()` |
 | `apps/web/src/lib/notifications/round-notifications.ts` | Locked / settled emails |
 | `apps/web/src/lib/notifications/email.ts` | Resend client (fetch) |
@@ -403,6 +409,7 @@ Recent migrations include `20260711100000_competition_settings` (admin competiti
 | `GET /api/admin/leaderboards` | Admin | Syndicate + player point rankings |
 | `GET /api/admin/competitions` | Admin | All competitions + enabled flags |
 | `PATCH /api/admin/competitions` | Admin | Enable/disable competition for users |
+| `POST /api/admin/rounds/[id]/settle` | Admin | Manual settle (escape hatch for stuck rounds) |
 | `GET /api/admin/odds-diagnostics` | Admin | Probe Odds API pipeline (`?competition=`) |
 | `GET /api/health` | Public | Health check (+ `odds: configured|missing`) |
 
@@ -411,7 +418,7 @@ Recent migrations include `20260711100000_competition_settings` (admin competiti
 ## Known limitations
 
 1. **football-data.org free tier:** All catalogue leagues sync on the free tier (incl. La Liga, Ligue 1, Serie A, Bundesliga); EPL/Championship may be empty off-season.
-2. **Settlement is system-only** — auto-settle runs after match sync (every 5 min); leg outcomes update as matches finish; round settles when all legs are ready. Owners cannot settle (routes removed July 2026). Overlapping settle attempts are safe — transactional, exactly-once via an atomic `locked → settled` claim (see [Settlement](#settlement)). **Caveat:** a round the system cannot resolve (e.g. a market `resolve-leg.ts` doesn't recognise, or missing match data) stays locked with no owner fallback — needs admin/DB intervention; consider an admin-only settle tool if this bites.
+2. **Settlement is system-only** — auto-settle runs after match sync (every 5 min); leg outcomes update as matches finish; round settles when all legs are ready. Owners cannot settle (routes removed July 2026). Overlapping settle attempts are safe — transactional, exactly-once via an atomic `locked → settled` claim (see [Settlement](#settlement)). Rounds the system cannot resolve are handled by admins via the **settlement queue** (`/admin/settlement`) — legs still pending 2h+ after kickoff are flagged for intervention.
 3. **Email notifications** require Resend setup (`RESEND_API_KEY`, `EMAIL_FROM`); skipped if unset.
 4. **Auto-settle requires synced `Match` rows** — 5-min cron or manual `POST /api/internal/sync-matches`.
 5. **Cross-competition acca** — often no single bookmaker; best-per-leg odds locked at submission; per-leg deeplinks at lock only.
@@ -419,7 +426,7 @@ Recent migrations include `20260711100000_competition_settings` (admin competiti
 7. **The Odds API quota** — credits = `markets × regions`. Cron warm: **3** bulk + **5 × N** core per enabled competition every 6 h (`N` = fixtures within `ODDS_WARM_CORE_WITHIN_HOURS`, default 72). User “specials” tier = **7** per fixture on demand only. Set `ODDS_DB_ONLY=true` so users do not call the API. See [DEPLOYMENT.md](./DEPLOYMENT.md#the-odds-api--calls-credits--cron).
 8. **Terraform CI** needs `storage.objectAdmin` on the deploy SA for the GCS state bucket. If CI fails with `storage.objects.list` denied, grant bucket access once (see [infra/terraform/README.md](../infra/terraform/README.md#terraform-ci-state-bucket-access)), then re-run the workflow. `deploy.yml` bootstraps `CRON_SECRET` in Secret Manager from the GitHub secret when missing.
 9. **Odds snapshots in PostgreSQL** — shared across Cloud Run instances; refreshed by `POST /api/internal/warm-odds-cache` (Cloud Scheduler job in Terraform). Set `ODDS_DB_ONLY=true` so users never burn API credits. In-memory cache remains for quota block/snapshot and football-data only.
-10. **Mobile app** — Native app code complete. **You:** test via Expo Go or `expo run:ios --device` ([DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md)). **Mates:** Android APK; iPhone TestFlight after store fees. [FRIEND_TESTING.md](../apps/mobile/FRIEND_TESTING.md). **Parity gaps:** no leg-edit UI yet (`PATCH /api/legs/[id]` exists server-side); owner settle UI removed (dead code — settlement is system-only).
+10. **Mobile app** — Native app code complete. **You:** test via Expo Go or `expo run:ios --device` ([DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md)). **Mates:** Android APK; iPhone TestFlight after store fees. [FRIEND_TESTING.md](../apps/mobile/FRIEND_TESTING.md). Leg-edit parity shipped (same "Change my pick" flow as web). Admin pages are web-only by design.
 11. **Auth JWT** — middleware uses edge-safe `auth.config.ts` (no Prisma); `auth.ts` refreshes `role` from DB on each session update.
 
 ## Production checklist (operators)

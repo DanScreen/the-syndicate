@@ -39,7 +39,7 @@ While the bet is open: leg picker shows **best odds only** per selection. Once l
 **Editing picks:** members can change their own leg — in open rounds and in locked rounds — until the **first kickoff** among the acca's legs. Editing a locked round reprices the whole acca at current odds. Once the first match starts, picks are final.
 
 ### 5. Settle & stats
-**Settlement is system-only** — the match sync cron (every 5 min) auto-settles locked rounds when all fixtures finish; group owners cannot mark outcomes themselves (integrity: no self-graded bets). Individual leg outcomes persist before the full acca settles. Email on settle. **Leaderboard** tab for points; **Performance** tab for group charts and member breakdowns. User-level **Performance** nav for cross-group stats. **Recent rounds** show locked odds per leg.
+**Settlement is system-only** — the match sync cron (every 5 min) auto-settles locked rounds when all fixtures finish; group owners cannot mark outcomes themselves (integrity: no self-graded bets). Platform admins have a web-only **settlement queue** (`/admin/settlement`) that flags legs still unresolved 2+ hours after kickoff and lets them settle stuck rounds manually. Individual leg outcomes persist before the full acca settles. Email on settle. **Leaderboard** tab for points; **Performance** tab for group charts and member breakdowns. User-level **Performance** nav for cross-group stats. **Recent rounds** show locked odds per leg.
 
 **Primary metric:** unit-stake **points** (not £ profit). Users can enter a stake on performance pages to see profit equivalent (points × stake).
 
@@ -62,7 +62,8 @@ Platform admins (`ADMIN_EMAILS`) see an **Admin** tab in the header with `/admin
 - [x] Real bookmaker betslip deeplinks
 - [x] Match table + football-data.org sync
 - [x] Hands-off auto-settle (system-only; owner settlement removed July 2026)
-- [x] Editable picks until first kickoff (open + locked rounds; locked edits reprice the acca)
+- [x] Editable picks until first kickoff (open + locked rounds; locked edits reprice the acca; web + mobile)
+- [x] Admin settlement queue with overdue-leg flags (web-only)
 - [x] Email notifications (round locked / settled)
 - [x] Unit-stake points + leaderboard
 - [x] Group stats + member stats (charts, favourites)
