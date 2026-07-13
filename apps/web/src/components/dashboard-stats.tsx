@@ -148,6 +148,7 @@ export function DashboardStats({ userName }: { userName: string }) {
         legsPlayed={summary.legsPlayed}
         winRate={summary.winRate}
         subtitle={`Across ${summary.groupCount} group${summary.groupCount === 1 ? "" : "s"}`}
+        chart={chart}
       />
 
       {groups.length > 1 && (

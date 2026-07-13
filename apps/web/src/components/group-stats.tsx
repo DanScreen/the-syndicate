@@ -408,6 +408,7 @@ export function GroupStats({ groupId, groupName }: { groupId: string; groupName?
         legsPlayed={summary.totalBets}
         winRate={summary.winRate}
         subtitle={`${summary.totalRounds} settled round${summary.totalRounds === 1 ? "" : "s"}`}
+        chart={chart}
       />
     </div>
   );

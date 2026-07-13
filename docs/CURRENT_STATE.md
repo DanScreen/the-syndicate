@@ -348,7 +348,8 @@ Member summary **best / worst leg** = highest / lowest decimal odds across the m
 | `apps/web/src/lib/stats/helpers.ts` | Shared helpers (favourites, best/worst); `CHART_ORIGIN_LABEL` (`Start`) prepended to chart series at 0 pts |
 | `apps/web/src/components/group-stats.tsx` | Group performance UI (Recharts) |
 | `apps/web/src/components/dashboard-stats.tsx` | Cross-group performance UI (`/performance`) |
-| `apps/web/src/components/share-card.tsx` | Shareable stats card (copy / Web Share) |
+| `apps/web/src/components/share-card.tsx` | Shareable performance image (PNG) + copy text fallback |
+| `apps/web/src/lib/share/render-performance-image.ts` | Canvas renderer for branded share cards |
 
 ---
 
