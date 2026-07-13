@@ -71,11 +71,16 @@ function GroupChartTooltip({
 }) {
   if (!active || !payload?.length) return null;
   const point = payload[0].payload;
+  const isOrigin = point.roundNumber === 0;
   return (
     <div className="rounded-lg border border-border bg-card px-3 py-2 text-sm shadow-lg">
       <p className="font-medium">{point.label}</p>
-      <p className="mt-1 text-muted">Round: {formatLegPoints(point.roundPoints)} pts</p>
-      <p className="text-accent">Total: {formatLegPoints(point.cumulativePoints)} pts</p>
+      {!isOrigin ? (
+        <p className="mt-1 text-muted">Round: {formatLegPoints(point.roundPoints)} pts</p>
+      ) : null}
+      <p className={isOrigin ? "mt-1 text-muted" : "text-accent"}>
+        Total: {formatLegPoints(point.cumulativePoints)} pts
+      </p>
     </div>
   );
 }

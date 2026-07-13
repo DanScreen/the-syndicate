@@ -53,7 +53,7 @@ Member totals on a winning acca **do not** sum to the group total (e.g. legs 1.6
 | Net acca P/L | Sum `profitLossGbp` |
 | Win rate | % settled accas won |
 
-**Chart:** cumulative group points vs round number/date (Recharts).
+**Chart:** cumulative group points vs round number/date (Recharts). Series prepend a **Start** point at 0 so the first settled round draws a line from zero.
 
 ---
 
@@ -67,7 +67,7 @@ Member totals on a winning acca **do not** sum to the group total (e.g. legs 1.6
 | Average odds | Mean `Leg.odds` |
 | Best / worst leg | Highest-odds **won** leg / lowest-odds **lost** leg (with fixture + pick) |
 
-**Multi-line chart:** each member's cumulative points over rounds.
+**Multi-line chart:** each member's cumulative points over rounds (anchored at 0 on the **Start** axis label).
 
 ### Favourites & best/worst
 

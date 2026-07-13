@@ -3,6 +3,7 @@ import {
   memberPointsInRound,
   roundAccaWon,
   roundSortKey,
+  CHART_ORIGIN_LABEL,
   type RoundWithLegs,
 } from "./helpers";
 
@@ -88,7 +89,7 @@ export function computeUserStats(
   );
 
   let cumulativePoints = 0;
-  const chart: UserStatsChartPoint[] = userRoundEntries.map((entry, index) => {
+  const chartPoints: UserStatsChartPoint[] = userRoundEntries.map((entry, index) => {
     const roundPoints = memberPointsInRound(entry.round, userId);
     cumulativePoints += roundPoints;
     return {
@@ -99,6 +100,19 @@ export function computeUserStats(
       groupName: entry.groupName,
     };
   });
+  const chart: UserStatsChartPoint[] =
+    chartPoints.length === 0
+      ? []
+      : [
+          {
+            roundNumber: 0,
+            label: CHART_ORIGIN_LABEL,
+            roundPoints: 0,
+            cumulativePoints: 0,
+            groupName: "",
+          },
+          ...chartPoints,
+        ];
 
   const allUserLegs = userRoundEntries.map((e) => e.userLeg);
 

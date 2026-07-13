@@ -65,6 +65,9 @@ export function sortedSettledRounds(rounds: RoundWithLegs[]): RoundWithLegs[] {
     .sort((a, b) => roundSortKey(a) - roundSortKey(b));
 }
 
+/** X-axis label for the zero baseline prepended to performance chart series. */
+export const CHART_ORIGIN_LABEL = "Start";
+
 export function formatRoundLabel(round: Round, roundNumber: number): string {
   if (round.settledAt) {
     return new Date(round.settledAt).toLocaleDateString("en-GB", {

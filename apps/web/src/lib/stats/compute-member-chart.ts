@@ -1,4 +1,4 @@
-import { formatRoundLabel, memberPointsInRound, sortedSettledRounds, type RoundWithLegs } from "./helpers";
+import { formatRoundLabel, memberPointsInRound, sortedSettledRounds, CHART_ORIGIN_LABEL, type RoundWithLegs } from "./helpers";
 
 export type MemberSeries = {
   userId: string;
@@ -21,7 +21,7 @@ export function computeMemberChart(
     cumulative.set(member.userId, 0);
   }
 
-  return settled.map((round, index) => {
+  const points = settled.map((round, index) => {
     const point: MemberChartPoint = {
       roundNumber: index + 1,
       label: formatRoundLabel(round, index + 1),
@@ -37,4 +37,16 @@ export function computeMemberChart(
 
     return point;
   });
+
+  if (points.length === 0) return [];
+
+  const origin: MemberChartPoint = {
+    roundNumber: 0,
+    label: CHART_ORIGIN_LABEL,
+  };
+  for (const member of members) {
+    origin[member.userId] = 0;
+  }
+
+  return [origin, ...points];
 }

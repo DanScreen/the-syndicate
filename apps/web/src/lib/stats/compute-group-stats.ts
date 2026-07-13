@@ -4,6 +4,7 @@ import {
   roundAccaWon,
   roundGroupPoints,
   sortedSettledRounds,
+  CHART_ORIGIN_LABEL,
   type RoundWithLegs,
 } from "./helpers";
 import {
@@ -52,7 +53,7 @@ export function computeGroupStats(
     .filter((o): o is number => o !== null);
 
   let cumulativePoints = 0;
-  const chart: GroupStatsChartPoint[] = settled.map((round, index) => {
+  const chartPoints: GroupStatsChartPoint[] = settled.map((round, index) => {
     const roundPoints = roundGroupPoints(round);
     cumulativePoints += roundPoints;
     return {
@@ -63,6 +64,19 @@ export function computeGroupStats(
       cumulativePoints: Number(cumulativePoints.toFixed(2)),
     };
   });
+  const chart: GroupStatsChartPoint[] =
+    chartPoints.length === 0
+      ? []
+      : [
+          {
+            roundNumber: 0,
+            roundId: "",
+            label: CHART_ORIGIN_LABEL,
+            roundPoints: 0,
+            cumulativePoints: 0,
+          },
+          ...chartPoints,
+        ];
 
   const netAccaPlGbp = settled.reduce((sum, r) => sum + (r.profitLossGbp ?? 0), 0);
 

@@ -9,6 +9,7 @@ import {
   roundAccaWon,
   roundById,
   sortedSettledRounds,
+  CHART_ORIGIN_LABEL,
   teamForLeg,
   type RoundWithLegs,
 } from "./helpers";
@@ -61,7 +62,7 @@ export function computeMemberStats(
   const pointsPerRound = memberRounds.map((r) => memberPointsInRound(r, userId));
 
   let cumulative = 0;
-  const chart: MemberStatsChartPoint[] = settled.map((round, index) => {
+  const chartPoints: MemberStatsChartPoint[] = settled.map((round, index) => {
     const roundPoints = memberPointsInRound(round, userId);
     cumulative += roundPoints;
     return {
@@ -71,6 +72,18 @@ export function computeMemberStats(
       cumulativePoints: Number(cumulative.toFixed(2)),
     };
   });
+  const chart: MemberStatsChartPoint[] =
+    chartPoints.length === 0
+      ? []
+      : [
+          {
+            roundNumber: 0,
+            label: CHART_ORIGIN_LABEL,
+            roundPoints: 0,
+            cumulativePoints: 0,
+          },
+          ...chartPoints,
+        ];
 
   const { bestLeg, worstLeg } = bestWorstLegHighlights(legs);
 

@@ -109,6 +109,7 @@ Rejected logo and palette options are kept for reference (not linked in the app)
 |------|----------|
 | `apps/web/src/lib/brand/archive.ts` | Archived design concepts + logo variant metadata |
 | `apps/web/src/lib/brand/logo-alternatives.tsx` | SVG components: crest, pitch, monogram, nodes |
+| `docs/brand/logo-review/LOGO_REVIEW.md` | **July 2026** — AI-generated betslip concepts (2 won + 1 pending legs); not shipped |
 
 ---
 
