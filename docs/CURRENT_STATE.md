@@ -221,7 +221,7 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 | Auto (hands-off) | Via `POST /api/internal/sync-matches` | Cron sync → auto-settles all ready locked rounds; resolved legs update before full acca settles |
 | Admin (escape hatch) | `POST /api/admin/rounds/[id]/settle` | Platform admin settles rounds the system can't resolve — see `/admin/settlement` |
 
-Email and push notifications fire on **round locked**, **round settled**, and **pick reminders** (T−2h before first kickoff). Resend for email (`RESEND_API_KEY`, `EMAIL_FROM`); Expo Push API for mobile (`PushDevice` tokens). Per-user preferences at `/settings/notifications` (web) and `(main)/notifications` (mobile). Deduped via `NotificationLog` + round-level `lockedNotificationSentAt` / `settledNotificationSentAt`. Pick reminders cron: `POST /api/internal/round-reminders` every 15 min (Terraform). See [specs/notifications.md](./specs/notifications.md).
+Email and push notifications fire on **round locked**, **round settled**, and **pick reminders** (within 2h before first kickoff). Resend for email (`RESEND_API_KEY`, `EMAIL_FROM`); Expo Push API for mobile (`PushDevice` tokens). Per-user preferences at `/settings/notifications` (web) and `(main)/notifications` (mobile). Deduped via `NotificationLog`; round-level `lockedNotificationSentAt` / `settledNotificationSentAt` set only when all members are satisfied (delivered or opted out). Failed lock/settle deliveries retried on `sync-matches` (5 min). Pick reminders cron: `POST /api/internal/round-reminders` every 15 min (Terraform). Notification times formatted in `Europe/London`. See [specs/notifications.md](./specs/notifications.md).
 
 **Exactly-once settlement.** `applyRoundSettlement()` runs in a `prisma.$transaction` that opens with an atomic claim — `round.updateMany({ where: { status: "locked" }, data: { status: "settled" } })`. Overlapping settle attempts (e.g. two cron runs) can't double-count points: the loser matches zero rows and throws `RoundNotSettleableError`, treated as a benign `skipped` no-op.
 
@@ -242,7 +242,7 @@ Members can change **their own leg** via `PATCH /api/legs/[id]` while the round 
 
 | Route | Role |
 |-------|------|
-| `POST /api/internal/sync-matches` | football-data.org → `Match` table; locks open rounds at first kickoff; auto-settles locked rounds |
+| `POST /api/internal/sync-matches` | football-data.org → `Match` table; locks open rounds at first kickoff; auto-settles locked rounds; retries pending lock/settle notifications |
 | `POST /api/internal/round-reminders` | Pick reminder emails/push (T−2h before kickoff) |
 | `POST /api/internal/warm-odds-cache` | Refresh odds snapshots in DB |
 
@@ -258,6 +258,7 @@ Members can change **their own leg** via `PATCH /api/legs/[id]` while the round 
 | `apps/web/src/lib/settlement/resolve-round-outcomes.ts` | Match → leg outcomes; `persistResolvableLegOutcomes()` |
 | `apps/web/src/lib/notifications/dispatch.ts` | Central notification dispatcher |
 | `apps/web/src/lib/notifications/send-pick-reminders.ts` | Pick reminder cron logic |
+| `apps/web/src/lib/notifications/retry-pending-round-notifications.ts` | Retry failed lock/settle notifications |
 | `apps/web/src/lib/notifications/round-notifications.ts` | Lock / settle / reminder payloads |
 | `apps/web/src/lib/notifications/channels/` | Email + Expo push adapters |
 | `apps/web/src/lib/notifications/email.ts` | Resend client (fetch) |

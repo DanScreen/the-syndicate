@@ -5,6 +5,7 @@ import {
 } from "@/lib/notifications/channels/email-channel";
 import { sendPushToUser } from "@/lib/notifications/channels/push-channel";
 import { getNotificationPreferences } from "@/lib/notifications/preferences";
+import { prisma } from "@the-syndicate/database";
 import {
   emailPrefKey,
   pushPrefKey,
@@ -31,6 +32,8 @@ export type DispatchResult = {
   email: boolean;
   push: boolean;
 };
+
+export type MemberDispatchResult = DispatchResult & { userId: string };
 
 export async function dispatchNotification(
   input: DispatchNotificationInput
@@ -100,11 +103,11 @@ export async function dispatchToGroupMembers(params: {
     email?: { subject: string; html: string };
     push?: { title: string; body: string; data?: Record<string, string> };
   };
-}): Promise<void> {
-  await Promise.all(
+}): Promise<MemberDispatchResult[]> {
+  return Promise.all(
     params.memberUserIds.map(async (userId) => {
       const content = params.buildForUser(userId);
-      await dispatchNotification({
+      const result = await dispatchNotification({
         userId,
         type: params.type,
         dedupeType: params.dedupeType,
@@ -112,6 +115,57 @@ export async function dispatchToGroupMembers(params: {
         roundId: params.roundId,
         ...content,
       });
+      return { userId, ...result };
     })
   );
+}
+
+/** True when every member got a delivery or has no applicable channel left to try. */
+export async function isRoundNotificationComplete(params: {
+  memberResults: MemberDispatchResult[];
+  type: NotificationType;
+  dedupeType: string;
+  roundId: string;
+}): Promise<boolean> {
+  for (const member of params.memberResults) {
+    if (member.email || member.push) continue;
+
+    const prefs = await getNotificationPreferences(member.userId);
+    const [user, pushCount] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: member.userId },
+        select: { email: true },
+      }),
+      prisma.pushDevice.count({ where: { userId: member.userId } }),
+    ]);
+
+    const wantsEmail =
+      prefs[emailPrefKey(params.type)] && Boolean(user?.email);
+    const wantsPush =
+      prefs[pushPrefKey(params.type)] && pushCount > 0;
+
+    if (!wantsEmail && !wantsPush) continue;
+
+    if (wantsEmail) {
+      const sent = await hasNotificationBeenSent({
+        userId: member.userId,
+        type: params.dedupeType,
+        roundId: params.roundId,
+        channel: "email",
+      });
+      if (!sent) return false;
+    }
+
+    if (wantsPush) {
+      const sent = await hasNotificationBeenSent({
+        userId: member.userId,
+        type: params.dedupeType,
+        roundId: params.roundId,
+        channel: "push",
+      });
+      if (!sent) return false;
+    }
+  }
+
+  return true;
 }

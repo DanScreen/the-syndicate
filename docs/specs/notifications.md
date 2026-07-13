@@ -232,10 +232,9 @@ for each open round with legs.length >= 1:
   deadline = firstKickoff(legs)
   if deadline is null or deadline <= now: continue
   if deadline > now + 2h: continue
-  if deadline < now + 1h45m: continue   // 15-min cron window
   pendingMembers = members without a leg
   for each pending member:
-    dispatch pick_reminder (email + push per prefs)
+    dispatch pick_reminder (email + push per prefs)  // NotificationLog dedupes repeats
 ```
 
 Skip rounds with zero legs (no deadline anchor) — matches [round-deadline-lock.md](./round-deadline-lock.md) open question.

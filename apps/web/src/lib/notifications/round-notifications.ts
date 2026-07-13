@@ -1,5 +1,10 @@
 import { appBaseUrl } from "@/lib/notifications/email";
-import { dispatchNotification, dispatchToGroupMembers } from "@/lib/notifications/dispatch";
+import {
+  dispatchNotification,
+  dispatchToGroupMembers,
+  isRoundNotificationComplete,
+  type DispatchResult,
+} from "@/lib/notifications/dispatch";
 import {
   pickReminderEmail,
   pickReminderPush,
@@ -34,7 +39,7 @@ export async function notifyPickReminder(params: {
   roundId: string;
   deadline: Date;
   pendingCount: number;
-}): Promise<void> {
+}): Promise<DispatchResult> {
   const groupUrl = groupDeepLink(params.groupId);
   const email = pickReminderEmail({
     groupName: params.groupName,
@@ -47,7 +52,7 @@ export async function notifyPickReminder(params: {
     deadline: params.deadline,
   });
 
-  await dispatchNotification({
+  return dispatchNotification({
     userId: params.userId,
     type: "pick_reminder",
     dedupeType: DEDUPE_PICK_REMINDER_2H,
@@ -101,7 +106,7 @@ export async function notifyRoundLocked(roundId: string): Promise<void> {
   });
   const pushContent = roundLockedPush(round.group.name);
 
-  await dispatchToGroupMembers({
+  const memberResults = await dispatchToGroupMembers({
     groupId: round.group.id,
     memberUserIds: round.group.members.map((m) => m.userId),
     type: "round_locked",
@@ -113,10 +118,19 @@ export async function notifyRoundLocked(roundId: string): Promise<void> {
     }),
   });
 
-  await prisma.round.update({
-    where: { id: roundId },
-    data: { lockedNotificationSentAt: new Date() },
+  const complete = await isRoundNotificationComplete({
+    memberResults,
+    type: "round_locked",
+    dedupeType: DEDUPE_ROUND_LOCKED,
+    roundId: round.id,
   });
+
+  if (complete) {
+    await prisma.round.update({
+      where: { id: roundId },
+      data: { lockedNotificationSentAt: new Date() },
+    });
+  }
 }
 
 export async function notifyRoundSettled(roundId: string): Promise<void> {
@@ -166,7 +180,7 @@ export async function notifyRoundSettled(roundId: string): Promise<void> {
     lostCount,
   });
 
-  await dispatchToGroupMembers({
+  const memberResults = await dispatchToGroupMembers({
     groupId: round.group.id,
     memberUserIds: round.group.members.map((m) => m.userId),
     type: "round_settled",
@@ -178,8 +192,17 @@ export async function notifyRoundSettled(roundId: string): Promise<void> {
     }),
   });
 
-  await prisma.round.update({
-    where: { id: roundId },
-    data: { settledNotificationSentAt: new Date() },
+  const complete = await isRoundNotificationComplete({
+    memberResults,
+    type: "round_settled",
+    dedupeType: DEDUPE_ROUND_SETTLED,
+    roundId: round.id,
   });
+
+  if (complete) {
+    await prisma.round.update({
+      where: { id: roundId },
+      data: { settledNotificationSentAt: new Date() },
+    });
+  }
 }

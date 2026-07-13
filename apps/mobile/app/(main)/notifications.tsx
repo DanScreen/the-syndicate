@@ -114,8 +114,14 @@ export default function NotificationsScreen() {
   async function enablePush() {
     if (!token) return;
     setPushStatus(null);
-    const result = await registerForPushNotifications(token);
-    setPushStatus(result ? "Push enabled on this device." : "Permission denied or unavailable.");
+    try {
+      const result = await registerForPushNotifications(token);
+      setPushStatus(result ? "Push enabled on this device." : "Permission denied or unavailable.");
+    } catch (e) {
+      setPushStatus(
+        e instanceof Error ? e.message : "Could not enable push on this device."
+      );
+    }
   }
 
   if (loading) {

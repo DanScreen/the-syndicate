@@ -1,6 +1,6 @@
 import { sendEmail } from "@/lib/notifications/email";
 import type { NotificationChannel } from "@the-syndicate/shared";
-import { prisma } from "@the-syndicate/database";
+import { Prisma, prisma } from "@the-syndicate/database";
 
 export async function sendEmailToUser(
   userId: string,
@@ -39,13 +39,23 @@ export async function recordNotificationSent(params: {
   groupId?: string;
   channel: NotificationChannel;
 }): Promise<void> {
-  await prisma.notificationLog.create({
-    data: {
-      userId: params.userId,
-      type: params.type,
-      roundId: params.roundId,
-      groupId: params.groupId,
-      channel: params.channel,
-    },
-  });
+  try {
+    await prisma.notificationLog.create({
+      data: {
+        userId: params.userId,
+        type: params.type,
+        roundId: params.roundId,
+        groupId: params.groupId,
+        channel: params.channel,
+      },
+    });
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      return;
+    }
+    throw err;
+  }
 }

@@ -310,7 +310,7 @@ npm run ios            # or npm run android
 `eas.json` is configured in `apps/mobile/`. Full guide: [apps/mobile/README.md](../apps/mobile/README.md).
 
 1. Install EAS CLI: `npm install -g eas-cli` and `eas login`
-2. First time only: `cd apps/mobile && eas init` (writes `projectId` to `app.json`)
+2. First time only: `cd apps/mobile && eas init` — copy the project UUID into `EAS_PROJECT_ID` in `.env` (or `apps/mobile/app.config.ts` reads it at build time)
 3. Build (after friend validation, or Android APK anytime):
 
    ```bash

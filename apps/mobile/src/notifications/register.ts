@@ -21,6 +21,13 @@ function expoProjectId(): string | undefined {
   );
 }
 
+export class PushRegistrationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PushRegistrationError";
+  }
+}
+
 export async function registerForPushNotifications(
   authToken: string
 ): Promise<string | null> {
@@ -46,9 +53,13 @@ export async function registerForPushNotifications(
   }
 
   const projectId = expoProjectId();
-  const tokenResponse = await Notifications.getExpoPushTokenAsync(
-    projectId ? { projectId } : undefined
-  );
+  if (!projectId) {
+    throw new PushRegistrationError(
+      "EAS project ID missing — set EAS_PROJECT_ID in .env or run eas init"
+    );
+  }
+
+  const tokenResponse = await Notifications.getExpoPushTokenAsync({ projectId });
   const token = tokenResponse.data;
 
   await api("/api/user/push-token", {

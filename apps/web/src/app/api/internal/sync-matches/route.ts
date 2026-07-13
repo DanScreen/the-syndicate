@@ -1,4 +1,5 @@
 import { requireCronSecret } from "@/lib/internal-auth";
+import { retryPendingRoundNotifications } from "@/lib/notifications/retry-pending-round-notifications";
 import { lockOpenRoundsAtKickoff } from "@/lib/rounds/lock-open-rounds-at-kickoff";
 import { autoSettleLockedRounds } from "@/lib/settlement/auto-settle-round";
 import { syncAllCompetitionMatches } from "@/lib/results/sync-matches";
@@ -18,6 +19,7 @@ export async function POST(request: Request) {
   const sync = await syncAllCompetitionMatches();
   const kickoffLock = await lockOpenRoundsAtKickoff();
   const autoSettle = await autoSettleLockedRounds();
+  const notificationRetry = await retryPendingRoundNotifications();
 
   if (kickoffLock.locked.length > 0) {
     console.info(
@@ -33,5 +35,5 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json({ sync, kickoffLock, autoSettle });
+  return NextResponse.json({ sync, kickoffLock, autoSettle, notificationRetry });
 }
