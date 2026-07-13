@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   description:
     "Create social betting groups, contribute legs to shared football accumulators, and compete on the leaderboard.",
   icons: {
-    icon: "/favicon.ico",
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }, { url: "/favicon.ico", sizes: "48x48" }],
     apple: "/apple-icon",
   },
   openGraph: {
