@@ -42,7 +42,8 @@ If no single bookmaker covers all legs → best-per-leg combined odds locked at 
 - Auto-settle reads from `Match` table via `match-store.ts` (UTC kickoff day matching)
 - Cloud Scheduler: every 5 min UTC in production (`europe-west2`, job `sync-matches`)
 - **Progressive outcomes:** `persistResolvableLegOutcomes()` updates leg `outcome` as matches finish; round settles when all legs ready
-- **Exactly-once:** `applyRoundSettlement()` is transactional and claims the round with an atomic `locked → settled` `updateMany`, so an overlapping cron and owner settle never double-count points (loser throws `RoundNotSettleableError`, treated as a no-op)
+- **Exactly-once:** `applyRoundSettlement()` is transactional and claims the round with an atomic `locked → settled` `updateMany`, so overlapping settle attempts never double-count points (loser throws `RoundNotSettleableError`, treated as a no-op)
+- **System-only:** owner settle routes removed (July 2026) — the cron is the sole settlement path; picks are editable until the first kickoff via `PATCH /api/legs/[id]`
 
 ---
 
@@ -131,7 +132,7 @@ flowchart LR
 | `GET /api/fixtures?competition=` | ✅ Filter by sport key |
 | `POST /api/legs` | ✅ Validates `competitionId` |
 | `POST /api/internal/sync-matches` | ✅ Cron sync |
-| `POST /api/rounds/[id]/auto-settle` | ✅ Reads from `Match` (owner-triggered) |
+| `PATCH /api/legs/[id]` | ✅ Edit own leg until first kickoff (locked rounds reprice) |
 
 ---
 

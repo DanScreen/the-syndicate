@@ -84,7 +84,8 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 | Match table + football-data.org sync cron | ✅ |
 | Hands-off auto-settle (5-min cron, progressive leg outcomes) | ✅ |
 | Email notifications (round locked / settled) | ✅ |
-| Manual settle + auto-settle (owner-triggered) | ✅ |
+| System-only settlement (owner settle removed July 2026) | ✅ |
+| Editable picks until first kickoff (open + locked; locked edits reprice acca) | ✅ |
 | Unit-stake points + leaderboard | ✅ |
 | Group stats summary + cumulative points chart | ✅ |
 | Member stats breakdowns + multi-member chart | ✅ |
@@ -211,17 +212,26 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 
 ## Settlement
 
+**System-only** (July 2026): group owners can no longer settle rounds — the owner manual-settle and owner auto-settle routes (`POST /api/rounds/[id]/settle`, `POST /api/rounds/[id]/auto-settle`) were removed. Settlement happens exclusively via the match-sync cron:
+
 | Method | Route | Notes |
 |--------|-------|-------|
-| Manual | `POST /api/rounds/[id]/settle` | Owner marks won/lost/void per leg |
-| Auto (owner) | `POST /api/rounds/[id]/auto-settle` | Reads synced `Match` rows |
 | Auto (hands-off) | Via `POST /api/internal/sync-matches` | Cron sync → auto-settles all ready locked rounds; resolved legs update before full acca settles |
 
 Email notifications (Resend) fire on lock and settle when `RESEND_API_KEY` + `EMAIL_FROM` are set. Deduped via `Round.lockedNotificationSentAt` / `settledNotificationSentAt`.
 
-**Exactly-once settlement.** All three methods share `applyRoundSettlement()`, which runs in a `prisma.$transaction` that opens with an atomic claim — `round.updateMany({ where: { status: "locked" }, data: { status: "settled" } })`. Because the manual, owner-auto, and hands-off cron paths can overlap (e.g. the 5-min cron firing while an owner clicks Settle), the claim guards against double-counting points: the loser matches zero rows and throws `RoundNotSettleableError`, which callers treat as a benign no-op (409 on manual settle, `skipped` for auto/cron). Points are incremented exactly once. Manual settle also validates that submitted outcomes cover **exactly** the round's legs (no unknown/duplicate/missing ids) rather than defaulting omitted legs to "lost".
+**Exactly-once settlement.** `applyRoundSettlement()` runs in a `prisma.$transaction` that opens with an atomic claim — `round.updateMany({ where: { status: "locked" }, data: { status: "settled" } })`. Overlapping settle attempts (e.g. two cron runs) can't double-count points: the loser matches zero rows and throws `RoundNotSettleableError`, treated as a benign `skipped` no-op.
 
 **Lock is likewise atomic.** When two members submit the final legs at once, the leg route claims `open → locked` via `updateMany` before repricing, so only one request reprices the acca (Odds API credits) and sends the lock email; repricing failures revert the round to `open`.
+
+### Editing picks (until first kickoff)
+
+Members can change **their own leg** via `PATCH /api/legs/[id]` while the round is `open` **or** `locked`, up to the earliest kickoff among the round's legs. After the first match starts, edits return 403. Rules enforced server-side:
+
+- Only the leg's owner may edit; pick is re-validated against live/mock odds like a fresh submit (competition enabled, selection exists, fixture not kicked off).
+- Edited legs reset `matchId` and keep `outcome: "pending"`.
+- **Locked rounds reprice**: after an edit, `lockRoundWithAccaPricing()` re-runs — combined odds, bookmaker rankings, and betslip links refresh at current prices for **all** legs. If repricing fails, the edit is rolled back (previous pick restored).
+- UI: "Change my pick" on the Round tab (`groups/[id]/page.tsx`), reusing `SubmitLegForm` in edit mode with the cutoff time shown.
 
 ### Cron (internal)
 
@@ -234,7 +244,8 @@ Email notifications (Resend) fire on lock and settle when `RESEND_API_KEY` + `EM
 
 | Path | Role |
 |------|------|
-| `apps/web/src/lib/settlement/auto-settle-round.ts` | Hands-off + owner auto-settle |
+| `apps/web/src/lib/settlement/auto-settle-round.ts` | Hands-off auto-settle (cron) |
+| `apps/web/src/app/api/legs/[id]/route.ts` | Leg editing (PATCH) — cutoff, revalidation, locked-round reprice |
 | `apps/web/src/lib/settlement/resolve-round-outcomes.ts` | Match → leg outcomes; `persistResolvableLegOutcomes()` |
 | `apps/web/src/lib/notifications/round-notifications.ts` | Locked / settled emails |
 | `apps/web/src/lib/notifications/email.ts` | Resend client (fetch) |
@@ -381,8 +392,7 @@ Recent migrations include `20260711100000_competition_settings` (admin competiti
 | `GET /api/fixtures` | Session | List fixtures (`?competition=` required) |
 | `GET /api/fixtures/[id]/markets` | Session | Extended markets (`?competition=` required) |
 | `POST /api/legs` | Session | Submit leg |
-| `POST /api/rounds/[id]/settle` | Owner | Manual settle |
-| `POST /api/rounds/[id]/auto-settle` | Owner | Auto settle from `Match` table |
+| `PATCH /api/legs/[id]` | Leg owner | Edit own pick until first kickoff (locked rounds reprice) |
 | `POST /api/internal/sync-matches` | `CRON_SECRET` | Sync football-data.org → `Match` |
 | `POST /api/internal/warm-odds-cache` | `CRON_SECRET` | Refresh odds DB snapshots |
 | `GET /api/groups/[id]` | Member | Group + active round + betslip deeplinks |
@@ -401,7 +411,7 @@ Recent migrations include `20260711100000_competition_settings` (admin competiti
 ## Known limitations
 
 1. **football-data.org free tier:** All catalogue leagues sync on the free tier (incl. La Liga, Ligue 1, Serie A, Bundesliga); EPL/Championship may be empty off-season.
-2. **Auto-settle** runs automatically after match sync (every 5 min); individual leg outcomes update as matches finish; round settles when all legs are ready. Owner can still trigger manually. Overlapping settlements (cron vs owner) are safe — settlement is transactional and awards points exactly once via an atomic `locked → settled` claim (see [Settlement](#settlement)).
+2. **Settlement is system-only** — auto-settle runs after match sync (every 5 min); leg outcomes update as matches finish; round settles when all legs are ready. Owners cannot settle (routes removed July 2026). Overlapping settle attempts are safe — transactional, exactly-once via an atomic `locked → settled` claim (see [Settlement](#settlement)). **Caveat:** a round the system cannot resolve (e.g. a market `resolve-leg.ts` doesn't recognise, or missing match data) stays locked with no owner fallback — needs admin/DB intervention; consider an admin-only settle tool if this bites.
 3. **Email notifications** require Resend setup (`RESEND_API_KEY`, `EMAIL_FROM`); skipped if unset.
 4. **Auto-settle requires synced `Match` rows** — 5-min cron or manual `POST /api/internal/sync-matches`.
 5. **Cross-competition acca** — often no single bookmaker; best-per-leg odds locked at submission; per-leg deeplinks at lock only.
@@ -409,7 +419,7 @@ Recent migrations include `20260711100000_competition_settings` (admin competiti
 7. **The Odds API quota** — credits = `markets × regions`. Cron warm: **3** bulk + **5 × N** core per enabled competition every 6 h (`N` = fixtures within `ODDS_WARM_CORE_WITHIN_HOURS`, default 72). User “specials” tier = **7** per fixture on demand only. Set `ODDS_DB_ONLY=true` so users do not call the API. See [DEPLOYMENT.md](./DEPLOYMENT.md#the-odds-api--calls-credits--cron).
 8. **Terraform CI** needs `storage.objectAdmin` on the deploy SA for the GCS state bucket. If CI fails with `storage.objects.list` denied, grant bucket access once (see [infra/terraform/README.md](../infra/terraform/README.md#terraform-ci-state-bucket-access)), then re-run the workflow. `deploy.yml` bootstraps `CRON_SECRET` in Secret Manager from the GitHub secret when missing.
 9. **Odds snapshots in PostgreSQL** — shared across Cloud Run instances; refreshed by `POST /api/internal/warm-odds-cache` (Cloud Scheduler job in Terraform). Set `ODDS_DB_ONLY=true` so users never burn API credits. In-memory cache remains for quota block/snapshot and football-data only.
-10. **Mobile app** — Native app code complete. **You:** test via Expo Go or `expo run:ios --device` ([DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md)). **Mates:** Android APK; iPhone TestFlight after store fees. [FRIEND_TESTING.md](../apps/mobile/FRIEND_TESTING.md).
+10. **Mobile app** — Native app code complete. **You:** test via Expo Go or `expo run:ios --device` ([DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md)). **Mates:** Android APK; iPhone TestFlight after store fees. [FRIEND_TESTING.md](../apps/mobile/FRIEND_TESTING.md). **Parity gaps:** no leg-edit UI yet (`PATCH /api/legs/[id]` exists server-side); owner settle UI removed (dead code — settlement is system-only).
 11. **Auth JWT** — middleware uses edge-safe `auth.config.ts` (no Prisma); `auth.ts` refreshes `role` from DB on each session update.
 
 ## Production checklist (operators)

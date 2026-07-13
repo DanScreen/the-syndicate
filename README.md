@@ -77,7 +77,7 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) and [infra/terraform/README.md](inf
 3. Owner starts a round
 4. Members submit one leg each (live odds when configured)
 5. Acca auto-locks → best combined bookmaker
-6. Owner settles round (manual or auto)
+6. System auto-settles from synced results (no owner settlement)
 7. Leaderboard + round history
 
 See [docs/README.md](docs/README.md), [docs/PRODUCT.md](docs/PRODUCT.md), [docs/CURRENT_STATE.md](docs/CURRENT_STATE.md).

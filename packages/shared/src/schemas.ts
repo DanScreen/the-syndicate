@@ -27,15 +27,8 @@ export const submitLegSchema = z.object({
   selectionId: z.string(),
 });
 
-export const settleRoundSchema = z.object({
-  roundId: z.string(),
-  legOutcomes: z.array(
-    z.object({
-      legId: z.string(),
-      outcome: z.enum(["won", "lost", "void"]),
-    })
-  ),
-});
+/** Editing an existing leg — same pick shape as submit; the leg id comes from the URL. */
+export const editLegSchema = submitLegSchema.omit({ roundId: true });
 
 export const updateCompetitionSettingSchema = z.object({
   competitionId: z.string(),
@@ -47,3 +40,4 @@ export type SignInInput = z.infer<typeof signInSchema>;
 export type CreateGroupInput = z.infer<typeof createGroupSchema>;
 export type JoinGroupInput = z.infer<typeof joinGroupSchema>;
 export type SubmitLegInput = z.infer<typeof submitLegSchema>;
+export type EditLegInput = z.infer<typeof editLegSchema>;

@@ -32,6 +32,7 @@ type Leg = {
   homeTeam: string;
   awayTeam: string;
   competition: string;
+  kickoff: string;
   selectionLabel: string;
   marketLabel: string;
   odds: number;
@@ -137,9 +138,14 @@ type Competition = { id: string; name: string };
 export function SubmitLegForm({
   roundId,
   onSubmitted,
+  editLegId,
+  onCancel,
 }: {
   roundId: string;
   onSubmitted: () => void;
+  /** When set, the form edits this existing leg (PATCH) instead of submitting a new one. */
+  editLegId?: string;
+  onCancel?: () => void;
 }) {
   const [competitions, setCompetitions] = useState<Competition[]>([]);
   const [loadingCompetitions, setLoadingCompetitions] = useState(true);
@@ -268,17 +274,29 @@ export function SubmitLegForm({
     setLoading(true);
     setError("");
 
-    const res = await fetch("/api/legs", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ roundId, competitionId, fixtureId, marketType, selectionId }),
-    });
+    const res = editLegId
+      ? await fetch(`/api/legs/${editLegId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ competitionId, fixtureId, marketType, selectionId }),
+        })
+      : await fetch("/api/legs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ roundId, competitionId, fixtureId, marketType, selectionId }),
+        });
 
     const data = await res.json();
     setLoading(false);
 
     if (!res.ok) {
-      setError(data.error ?? "Failed to submit leg");
+      setError(
+        typeof data.error === "string"
+          ? data.error
+          : editLegId
+            ? "Failed to update leg"
+            : "Failed to submit leg"
+      );
       return;
     }
 
@@ -304,7 +322,7 @@ export function SubmitLegForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-border bg-card p-4">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="font-semibold">Submit your leg</h3>
+        <h3 className="font-semibold">{editLegId ? "Change your leg" : "Submit your leg"}</h3>
         {competitionId && source === "live" && oddsConfigured && fixtures.length > 0 && (
           <span className="rounded-full bg-accent-muted px-2 py-0.5 text-xs text-accent">
             Live odds
@@ -497,8 +515,23 @@ export function SubmitLegForm({
         disabled={loading || !selectionId}
         className="w-full rounded-lg bg-accent py-2.5 text-sm font-medium text-black hover:bg-green-400 disabled:opacity-50"
       >
-        {loading ? "Submitting..." : "Submit leg"}
+        {loading
+          ? editLegId
+            ? "Updating..."
+            : "Submitting..."
+          : editLegId
+            ? "Update leg"
+            : "Submit leg"}
       </button>
+      {onCancel && (
+        <button
+          type="button"
+          onClick={onCancel}
+          className="w-full rounded-lg border border-border py-2 text-sm text-muted hover:bg-background"
+        >
+          Cancel — keep my current pick
+        </button>
+      )}
     </form>
   );
 }
@@ -616,112 +649,6 @@ export function AccaSummary({
         </p>
       )}
     </div>
-  );
-}
-
-export function SettleRoundForm({
-  round,
-  onSettled,
-}: {
-  round: ActiveRound;
-  onSettled: () => void;
-}) {
-  const [outcomes, setOutcomes] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(false);
-  const [autoLoading, setAutoLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [autoMessage, setAutoMessage] = useState("");
-
-  async function handleAutoSettle() {
-    setAutoLoading(true);
-    setError("");
-    setAutoMessage("");
-
-    const res = await fetch(`/api/rounds/${round.id}/auto-settle`, { method: "POST" });
-    const data = await res.json();
-    setAutoLoading(false);
-
-    if (!res.ok) {
-      if (res.status === 409 && data.resolved) {
-        setOutcomes((prev) => ({ ...prev, ...data.resolved }));
-        setAutoMessage("Some legs are not ready yet — partial results applied below.");
-      }
-      setError(data.error ?? "Auto-settle failed");
-      return;
-    }
-
-    onSettled();
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    const res = await fetch(`/api/rounds/${round.id}/settle`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        legOutcomes: round.legs.map((l) => ({
-          legId: l.id,
-          outcome: outcomes[l.id] ?? "lost",
-        })),
-      }),
-    });
-
-    const data = await res.json();
-    setLoading(false);
-
-    if (!res.ok) {
-      setError(data.error ?? "Failed to settle");
-      return;
-    }
-
-    onSettled();
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-3 rounded-xl border border-border bg-card p-4">
-      <h3 className="font-semibold">Settle round (owner)</h3>
-      <p className="text-sm text-muted">
-        Auto-settle uses synced match results. If legs are pending, run match sync or wait for the next cron run.
-      </p>
-      <button
-        type="button"
-        onClick={handleAutoSettle}
-        disabled={autoLoading || loading}
-        className="w-full rounded-lg bg-accent py-2 text-sm font-medium text-black hover:bg-green-400 disabled:opacity-50"
-      >
-        {autoLoading ? "Fetching results..." : "Auto-settle from results"}
-      </button>
-      {autoMessage && <p className="text-sm text-muted">{autoMessage}</p>}
-      {round.legs.map((leg) => (
-        <div key={leg.id} className="flex items-center justify-between gap-2 text-sm">
-          <span>
-            {leg.user.name}: {leg.selectionLabel} ({leg.odds})
-          </span>
-          <select
-            value={outcomes[leg.id] ?? "lost"}
-            onChange={(e) =>
-              setOutcomes((prev) => ({ ...prev, [leg.id]: e.target.value }))
-            }
-            className="rounded border border-border bg-background px-2 py-1"
-          >
-            <option value="won">Won</option>
-            <option value="lost">Lost</option>
-            <option value="void">Void</option>
-          </select>
-        </div>
-      ))}
-      {error && <p className="text-sm text-red-400">{error}</p>}
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full rounded-lg border border-accent py-2 text-sm font-medium text-accent hover:bg-accent-muted"
-      >
-        {loading ? "Settling..." : "Settle round & award points"}
-      </button>
-    </form>
   );
 }
 
