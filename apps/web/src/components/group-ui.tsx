@@ -80,20 +80,26 @@ export function RoundProgress({
   members,
   legs,
   status,
+  firstKickoff,
 }: {
   members: Member[];
   legs: Leg[];
   status: string;
+  /** Earliest kickoff among submitted legs — acca locks when this match starts. */
+  firstKickoff?: Date | null;
 }) {
   const submittedIds = new Set(legs.map((l) => l.user.id));
   const pending = members.filter((m) => !submittedIds.has(m.id));
 
   let banner = "";
   if (status === "open") {
-    banner =
-      pending.length === 0
-        ? "Everyone has submitted — locking acca..."
-        : `Waiting on ${pending.length} leg${pending.length === 1 ? "" : "s"}`;
+    if (pending.length === 0) {
+      banner = "Everyone has submitted — locking acca...";
+    } else if (firstKickoff) {
+      banner = `Waiting on ${pending.length} leg${pending.length === 1 ? "" : "s"} — acca locks at first kickoff`;
+    } else {
+      banner = `Waiting on ${pending.length} leg${pending.length === 1 ? "" : "s"}`;
+    }
   } else if (status === "locked") {
     banner = "Acca locked — place your bet at the bookmaker";
   } else if (status === "settled") {
@@ -104,7 +110,13 @@ export function RoundProgress({
     <div className="space-y-3">
       {banner && (
         <div className="rounded-lg border border-accent/30 bg-accent-muted/40 px-4 py-3 text-sm text-accent">
-          {banner}
+          <p>{banner}</p>
+          {status === "open" && firstKickoff && pending.length > 0 ? (
+            <p className="mt-1 text-xs text-accent/80">
+              Locks {formatKickoff(firstKickoff.toISOString())} — members who
+              haven&apos;t picked will miss this acca
+            </p>
+          ) : null}
         </div>
       )}
       <ul className="space-y-2">

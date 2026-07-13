@@ -90,7 +90,12 @@ export default function GroupRoundScreen() {
     >
       {isOpen && round && members.length > 0 ? (
         <View style={styles.section}>
-          <RoundProgress members={members} legs={round.legs} status={round.status} />
+          <RoundProgress
+            members={members}
+            legs={round.legs}
+            status={round.status}
+            firstKickoff={firstKickoff}
+          />
         </View>
       ) : null}
 

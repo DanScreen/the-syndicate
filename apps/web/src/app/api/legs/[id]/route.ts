@@ -3,17 +3,12 @@ import { sortQuotesByBestOdds } from "@/lib/odds/bookmakers";
 import { lockRoundWithAccaPricing } from "@/lib/odds/lock-round";
 import { findSelection } from "@/lib/odds/provider";
 import { isCompetitionEnabled } from "@/lib/competitions/settings";
+import { firstKickoff } from "@/lib/rounds/first-kickoff";
 import { prisma } from "@the-syndicate/database";
 import { getCompetitionById, editLegSchema } from "@the-syndicate/shared";
 import { NextResponse } from "next/server";
 
 type Params = { params: Promise<{ id: string }> };
-
-/** Earliest kickoff across the round's legs — editing closes when the first match starts. */
-function firstKickoff(legs: { kickoff: Date }[]): Date | null {
-  if (legs.length === 0) return null;
-  return legs.reduce((min, l) => (l.kickoff < min ? l.kickoff : min), legs[0]!.kickoff);
-}
 
 export async function PATCH(request: Request, { params }: Params) {
   const { session, error } = await requireSession();

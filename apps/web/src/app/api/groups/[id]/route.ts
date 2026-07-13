@@ -1,6 +1,7 @@
 import { requireSession } from "@/lib/api-auth";
 import { buildRoundBetslipLinks } from "@/lib/odds/betslip-links";
 import { computeAccaRankingsForLegs } from "@/lib/odds/lock-round";
+import { lockOpenRoundsAtKickoff } from "@/lib/rounds/lock-open-rounds-at-kickoff";
 import { openRound } from "@/lib/rounds/open-round";
 import { prisma } from "@the-syndicate/database";
 import type { AccaBookmakerRanking } from "@the-syndicate/shared";
@@ -58,6 +59,17 @@ export async function GET(_request: Request, { params }: Params) {
     const created = await openRound(id);
     activeRound = { ...created, legs: [] };
     group.status = "open";
+  } else if (activeRound.status === "open") {
+    await lockOpenRoundsAtKickoff();
+    const refreshed = await prisma.round.findUnique({
+      where: { id: activeRound.id },
+      include: {
+        legs: {
+          include: { user: { select: { id: true, name: true } } },
+        },
+      },
+    });
+    if (refreshed) activeRound = refreshed;
   }
 
   let accaBookmakerRankings: AccaBookmakerRanking[] | null = null;

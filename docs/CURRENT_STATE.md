@@ -49,7 +49,7 @@ Match sync + odds warm: Cloud Scheduler (Terraform) → `POST /api/internal/sync
 | Notifications | `apps/web/src/lib/notifications/` |
 | Auth | `apps/web/src/lib/auth.ts`, `apps/web/src/lib/auth.config.ts` |
 | Settlement (auto) | `apps/web/src/lib/settlement/auto-settle-round.ts` |
-| Round lifecycle | `apps/web/src/lib/rounds/open-round.ts` |
+| Round lifecycle | `apps/web/src/lib/rounds/open-round.ts`, `claim-lock-round.ts`, `lock-open-rounds-at-kickoff.ts`, `first-kickoff.ts` |
 | Group UI | `apps/web/src/components/group-ui.tsx`, `group-stats.tsx` |
 | App navigation | `apps/web/src/components/app-nav.tsx`, `group-nav.tsx`, `header.tsx` |
 | Logo & marketing | `apps/web/src/components/logo.tsx`, `components/marketing/`, `lib/marketing-content.ts` |
@@ -225,7 +225,9 @@ Email notifications (Resend) fire on lock and settle when `RESEND_API_KEY` + `EM
 
 **Exactly-once settlement.** `applyRoundSettlement()` runs in a `prisma.$transaction` that opens with an atomic claim — `round.updateMany({ where: { status: "locked" }, data: { status: "settled" } })`. Overlapping settle attempts (e.g. two cron runs) can't double-count points: the loser matches zero rows and throws `RoundNotSettleableError`, treated as a benign `skipped` no-op.
 
-**Lock is likewise atomic.** When two members submit the final legs at once, the leg route claims `open → locked` via `updateMany` before repricing, so only one request reprices the acca (Odds API credits) and sends the lock email; repricing failures revert the round to `open`.
+**Lock triggers.** A round moves `open → locked` when **all members have submitted** or when the **earliest submitted leg kicks off** (partial accas — missing members are excluded). `claimAndLockRound()` in `claim-lock-round.ts` atomically claims via `updateMany`, reprices, and emails; repricing failures revert to `open`. Kickoff locks run on each match-sync cron (5 min) and when loading `GET /api/groups/[id]`. See [specs/round-deadline-lock.md](./specs/round-deadline-lock.md).
+
+**Lock is likewise atomic.** When two members submit the final legs at once, only one request reprices the acca (Odds API credits) and sends the lock email; repricing failures revert the round to `open`.
 
 ### Editing picks (until first kickoff)
 
@@ -240,7 +242,7 @@ Members can change **their own leg** via `PATCH /api/legs/[id]` while the round 
 
 | Route | Role |
 |-------|------|
-| `POST /api/internal/sync-matches` | football-data.org → `Match` table |
+| `POST /api/internal/sync-matches` | football-data.org → `Match` table; locks open rounds at first kickoff; auto-settles locked rounds |
 | `POST /api/internal/warm-odds-cache` | Refresh odds snapshots in DB |
 
 ### Key files

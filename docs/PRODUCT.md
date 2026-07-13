@@ -27,7 +27,7 @@ Owner creates group (name only) → invite code + link. Anyone with the link can
 1. Each syndicate has an always-open round on the **Round** tab — no manual start step
 2. Each member picks a **competition**, fixture, market, selection (4-step form)
 3. **Best odds only** shown per selection
-4. All legs in → acca **locks** with best combined bookmaker
+4. All legs in **or the first submitted leg kicks off** → acca **locks** with best combined bookmaker (members who haven't picked miss that round)
 5. Members receive **email notification** when acca locks (if Resend configured)
 6. When a round settles, the next open round starts automatically
 
@@ -78,11 +78,12 @@ Platform admins (`ADMIN_EMAILS`) see an **Admin** tab in the header with `/admin
 
 ### Backlog
 - [ ] Affiliate links + improved betslip deeplinks — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md)
+- [ ] Pick reminders before kickoff deadline — [specs/round-deadline-lock.md](./specs/round-deadline-lock.md) Phase 2
 - [ ] Public platform leaderboards (admin version exists)
 - [ ] Dedicated user profile page (optional — `/performance` covers stats today)
 - [ ] FA Cup + EFL Cup competitions
 
-**Deferred:** paid subscriptions — no current plan; core loop stays free.
+**Deferred:** paid subscriptions — no current plan; core loop stays free. **Multi-leg accas** (owner chooses 1 / 2 / 3 legs per player, same quota for all members; default 1) — deferred until after user validation — [specs/multi-leg-accas.md](./specs/multi-leg-accas.md).
 
 Full priority list: [ROADMAP.md](./ROADMAP.md)
 

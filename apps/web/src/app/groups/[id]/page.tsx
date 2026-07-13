@@ -63,6 +63,7 @@ export default function GroupRoundPage() {
           members={group.members}
           legs={activeRound.legs}
           status={activeRound.status}
+          firstKickoff={firstKickoff}
         />
       )}
 

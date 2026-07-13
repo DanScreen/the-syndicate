@@ -86,20 +86,25 @@ export function RoundProgress({
   members,
   legs,
   status,
+  firstKickoff,
 }: {
   members: GroupMember[];
   legs: GroupLeg[];
   status: string;
+  firstKickoff?: Date | null;
 }) {
   const submittedIds = new Set(legs.map((l) => l.user.id));
   const pending = members.filter((m) => !submittedIds.has(m.id));
 
   let banner = "";
   if (status === "open") {
-    banner =
-      pending.length === 0
-        ? "Everyone has submitted — locking acca..."
-        : `Waiting on ${pending.length} leg${pending.length === 1 ? "" : "s"}`;
+    if (pending.length === 0) {
+      banner = "Everyone has submitted — locking acca...";
+    } else if (firstKickoff) {
+      banner = `Waiting on ${pending.length} leg${pending.length === 1 ? "" : "s"} — acca locks at first kickoff`;
+    } else {
+      banner = `Waiting on ${pending.length} leg${pending.length === 1 ? "" : "s"}`;
+    }
   } else if (status === "locked") {
     banner = "Acca locked — place your bet at the bookmaker";
   } else if (status === "settled") {
@@ -111,6 +116,12 @@ export function RoundProgress({
       {banner ? (
         <View style={styles.banner}>
           <Text style={styles.bannerText}>{banner}</Text>
+          {status === "open" && firstKickoff && pending.length > 0 ? (
+            <Text style={styles.bannerHint}>
+              Locks {formatKickoff(firstKickoff.toISOString())} — members who
+              haven&apos;t picked will miss this acca
+            </Text>
+          ) : null}
         </View>
       ) : null}
       {members.map((member) => {
@@ -723,6 +734,12 @@ const styles = StyleSheet.create({
   bannerText: {
     color: colors.accent,
     fontSize: 14,
+  },
+  bannerHint: {
+    color: colors.accent,
+    fontSize: 12,
+    marginTop: 4,
+    opacity: 0.85,
   },
   memberRow: {
     flexDirection: "row",

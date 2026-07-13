@@ -80,6 +80,8 @@ docs/
     ├── group-stats-and-points.md     ← Phases 1–4 done
     ├── platform-admin.md             ← Admin, analytics, points-first UX (shipped)
     ├── affiliate-and-betslips.md     ← Affiliate tracking + betslip deeplink improvements (backlog)
+    ├── round-deadline-lock.md        ← Lock at first kickoff + pick reminders (Phase 1 shipped)
+    ├── multi-leg-accas.md            ← Opt-in 2–3 legs per member (deferred; owner setting)
     └── mobile-apps.md                ← iOS + Android strategy, parity plan, anti-divergence (spec)
 ```
 

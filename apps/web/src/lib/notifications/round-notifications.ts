@@ -15,7 +15,9 @@ export async function notifyRoundLocked(roundId: string): Promise<void> {
     where: { id: roundId },
     include: {
       legs: { include: { user: { select: { name: true } } } },
-      group: { select: { id: true, name: true } },
+      group: {
+        select: { id: true, name: true, members: { select: { userId: true } } },
+      },
     },
   });
 
@@ -25,6 +27,7 @@ export async function notifyRoundLocked(roundId: string): Promise<void> {
   const emails = await memberEmails(round.groupId);
   const url = `${appBaseUrl()}/groups/${round.group.id}`;
   const odds = round.combinedOdds?.toFixed(2) ?? "—";
+  const missingCount = round.group.members.length - round.legs.length;
 
   const legLines = round.legs
     .map(
@@ -33,6 +36,11 @@ export async function notifyRoundLocked(roundId: string): Promise<void> {
     )
     .join("");
 
+  const partialNote =
+    missingCount > 0
+      ? `<p><em>${missingCount} member${missingCount === 1 ? "" : "s"} did not submit before the first kickoff and ${missingCount === 1 ? "is" : "are"} not in this acca.</em></p>`
+      : "";
+
   const sent = await sendEmail({
     to: emails,
     subject: `${round.group.name} — acca locked`,
@@ -40,6 +48,7 @@ export async function notifyRoundLocked(roundId: string): Promise<void> {
       <p>Your syndicate acca is locked and ready to place.</p>
       <p><strong>Combined odds:</strong> ${odds}</p>
       <ul>${legLines}</ul>
+      ${partialNote}
       <p><a href="${url}">View acca on The Syndicate</a></p>
     `,
   });

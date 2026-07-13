@@ -1,9 +1,9 @@
 import { requireSession } from "@/lib/api-auth";
 import { sortQuotesByBestOdds } from "@/lib/odds/bookmakers";
-import { lockRoundWithAccaPricing } from "@/lib/odds/lock-round";
 import { findSelection } from "@/lib/odds/provider";
-import { notifyRoundLocked } from "@/lib/notifications/round-notifications";
 import { isCompetitionEnabled } from "@/lib/competitions/settings";
+import { claimAndLockRound } from "@/lib/rounds/claim-lock-round";
+import { isPastKickoffCutoff } from "@/lib/rounds/first-kickoff";
 import { prisma } from "@the-syndicate/database";
 import { getCompetitionById, submitLegSchema } from "@the-syndicate/shared";
 import { NextResponse } from "next/server";
@@ -32,6 +32,18 @@ export async function POST(request: Request) {
 
   if (round.status !== "open") {
     return NextResponse.json({ error: "Round is not accepting legs" }, { status: 400 });
+  }
+
+  if (round.legs.length > 0 && isPastKickoffCutoff(round.legs)) {
+    try {
+      await claimAndLockRound(round.id);
+    } catch (err) {
+      console.error("[legs] kickoff lock on submit failed", round.id, err);
+    }
+    return NextResponse.json(
+      { error: "This acca locked at the first kickoff — you missed this round" },
+      { status: 403 }
+    );
   }
 
   const isMember = round.group.members.some((m) => m.userId === session!.user!.id);
@@ -107,38 +119,21 @@ export async function POST(request: Request) {
     updatedRound.legs.length >= updatedRound.group.members.length;
 
   if (shouldLock) {
-    // Atomically claim the lock so that when two members submit the final legs
-    // at once, only one request reprices the acca (which costs Odds API
-    // credits) and sends the "locked" email. The loser's round is already
-    // being locked by the winner.
-    const claim = await prisma.round.updateMany({
-      where: { id: round.id, status: "open" },
-      data: { status: "locked" },
-    });
-
-    if (claim.count === 1) {
-      try {
-        await lockRoundWithAccaPricing(round.id, updatedRound!.legs);
-      } catch (err) {
-        // Repricing failed — revert so members can retry the final leg.
-        await prisma.round.updateMany({
-          where: { id: round.id, status: "locked" },
-          data: { status: "open" },
-        });
-        throw err;
-      }
-
-      await prisma.group.update({
-        where: { id: round.groupId },
-        data: { status: "locked" },
-      });
-
-      void notifyRoundLocked(round.id);
+    try {
+      await claimAndLockRound(round.id);
+    } catch (err) {
+      console.error("[legs] lock on final submit failed", round.id, err);
+      throw err;
     }
   }
 
+  const lockedRound = await prisma.round.findUnique({
+    where: { id: round.id },
+    select: { status: true },
+  });
+
   return NextResponse.json({
     leg,
-    locked: Boolean(shouldLock),
+    locked: lockedRound?.status === "locked",
   });
 }

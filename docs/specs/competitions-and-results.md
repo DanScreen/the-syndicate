@@ -44,6 +44,7 @@ If no single bookmaker covers all legs → best-per-leg combined odds locked at 
 - **Progressive outcomes:** `persistResolvableLegOutcomes()` updates leg `outcome` as matches finish; round settles when all legs ready
 - **Exactly-once:** `applyRoundSettlement()` is transactional and claims the round with an atomic `locked → settled` `updateMany`, so overlapping settle attempts never double-count points (loser throws `RoundNotSettleableError`, treated as a no-op)
 - **System-only:** owner settle routes removed (July 2026) — the cron is the sole settlement path; picks are editable until the first kickoff via `PATCH /api/legs/[id]`
+- **Deadline lock (July 2026):** open rounds with ≥1 leg lock when the earliest leg kicks off; partial accas allowed — [round-deadline-lock.md](./round-deadline-lock.md)
 
 ---
 
