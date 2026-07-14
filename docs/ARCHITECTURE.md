@@ -1,4 +1,4 @@
-# The Syndicate — Architecture
+# Tiki Acca — Architecture
 
 **As-built detail:** [CURRENT_STATE.md](./CURRENT_STATE.md) · **Index:** [README.md](./README.md)
 
@@ -105,7 +105,7 @@ GCP: Cloud Run + Cloud SQL + Secret Manager + **Cloud Scheduler** (all provision
 
 See [DEPLOYMENT.md](./DEPLOYMENT.md).
 
-Production URL: **https://www.the-syndicate.uk** (Cloudflare → Cloud Run, `europe-west2`).
+Production URL: **https://www.tikiacca.com** (Cloudflare → Cloud Run, `europe-west2`).
 
 ---
 

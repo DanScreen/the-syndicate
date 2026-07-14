@@ -71,7 +71,7 @@ export default function HomePage() {
               <span className="h-2.5 w-2.5 rounded-full bg-red-500/70" />
               <span className="h-2.5 w-2.5 rounded-full bg-amber-500/70" />
               <span className="h-2.5 w-2.5 rounded-full bg-accent/70" />
-              <span className="ml-2 text-xs text-muted">Saturday Syndicate · Round locked</span>
+              <span className="ml-2 text-xs text-muted">Saturday Squad · Round locked</span>
             </div>
             <div className="grid gap-px bg-border md:grid-cols-3">
               {[
@@ -108,7 +108,7 @@ export default function HomePage() {
             More than a group chat acca
           </h2>
           <p className="mt-4 text-lg text-muted">
-            The Syndicate gives your group structure — live odds, automatic locking, settlement,
+            Tiki Acca gives your group structure — live odds, automatic locking, settlement,
             and stats that show who actually knows their football.
           </p>
         </div>

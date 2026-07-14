@@ -4,8 +4,8 @@ import {
   syncDateRange,
   type FootballDataMatch,
 } from "@/lib/results/football-data";
-import { prisma } from "@the-syndicate/database";
-import { COMPETITIONS } from "@the-syndicate/shared";
+import { prisma } from "@tiki-acca/database";
+import { COMPETITIONS } from "@tiki-acca/shared";
 
 function matchDataFromFootballData(competitionId: string, match: FootballDataMatch) {
   const homeTeam = match.homeTeam?.name;

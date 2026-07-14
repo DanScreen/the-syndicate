@@ -1,6 +1,6 @@
 import { sendEmail } from "@/lib/notifications/email";
-import type { NotificationChannel } from "@the-syndicate/shared";
-import { Prisma, prisma } from "@the-syndicate/database";
+import type { NotificationChannel } from "@tiki-acca/shared";
+import { Prisma, prisma } from "@tiki-acca/database";
 
 export async function sendEmailToUser(
   userId: string,

@@ -2,7 +2,7 @@ import {
   notifyRoundLocked,
   notifyRoundSettled,
 } from "@/lib/notifications/round-notifications";
-import { prisma } from "@the-syndicate/database";
+import { prisma } from "@tiki-acca/database";
 
 export type RetryPendingRoundNotificationsResult = {
   lockedRetried: number;

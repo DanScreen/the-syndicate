@@ -1,6 +1,6 @@
 import { requireSession } from "@/lib/api-auth";
-import { deletePushTokenSchema, pushTokenSchema } from "@the-syndicate/shared";
-import { prisma } from "@the-syndicate/database";
+import { deletePushTokenSchema, pushTokenSchema } from "@tiki-acca/shared";
+import { prisma } from "@tiki-acca/database";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {

@@ -1,9 +1,9 @@
-import { prisma } from "@the-syndicate/database";
+import { prisma } from "@tiki-acca/database";
 import {
   COMPETITIONS,
   DEFAULT_ENABLED_COMPETITION_IDS,
   type Competition,
-} from "@the-syndicate/shared";
+} from "@tiki-acca/shared";
 
 export type CompetitionSettingView = {
   id: string;

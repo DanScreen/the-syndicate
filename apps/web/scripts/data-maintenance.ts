@@ -10,7 +10,7 @@
  *   npx tsx apps/web/scripts/data-maintenance.ts reconcile-points --execute
  *   npx tsx apps/web/scripts/data-maintenance.ts resync-matches --execute
  */
-import { prisma } from "@the-syndicate/database";
+import { prisma } from "@tiki-acca/database";
 import type { Leg, Prisma, Round } from "@prisma/client";
 import { applyRoundSettlement } from "../src/lib/settlement/apply-round-settlement";
 import { resolveRoundOutcomes } from "../src/lib/settlement/resolve-round-outcomes";
@@ -220,7 +220,7 @@ async function previewResettle(roundId: string) {
 async function resettleRound(
   roundId: string,
   legs: Leg[],
-  outcomeMap: Map<string, import("@the-syndicate/shared").LegOutcome>
+  outcomeMap: Map<string, import("@tiki-acca/shared").LegOutcome>
 ) {
   const round = await prisma.round.findUnique({
     where: { id: roundId },

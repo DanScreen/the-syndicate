@@ -4,7 +4,7 @@ import {
   groupAccaRoundPoints,
   memberAccaLegPoints,
   type LegOutcome,
-} from "@the-syndicate/shared";
+} from "@tiki-acca/shared";
 
 export type RoundWithLegs = Round & { legs: Leg[] };
 
@@ -17,7 +17,7 @@ export function roundGroupPoints(round: RoundWithLegs): number {
   return groupAccaRoundPoints(roundOutcomes(round), round.combinedOdds ?? 1);
 }
 
-/** Cumulative acca points earned by the syndicate across settled rounds. */
+/** Cumulative acca points earned by the group across settled rounds. */
 export function groupNetPoints(rounds: RoundWithLegs[]): number {
   const total = sortedSettledRounds(rounds).reduce((sum, round) => sum + roundGroupPoints(round), 0);
   return Number(total.toFixed(2));

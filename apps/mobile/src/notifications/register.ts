@@ -35,19 +35,22 @@ export async function registerForPushNotifications(
     return null;
   }
 
-  const { status: existing } = await Notifications.getPermissionsAsync();
-  let finalStatus = existing;
-  if (existing !== "granted") {
-    const { status } = await Notifications.requestPermissionsAsync();
-    finalStatus = status;
+  // NotificationPermissionsStatus extends expo's PermissionResponse, whose
+  // types don't resolve in this workspace — cast to the fields we use.
+  type PermissionLike = { granted?: boolean; status?: string };
+  const existing = (await Notifications.getPermissionsAsync()) as PermissionLike;
+  let granted = existing.granted ?? existing.status === "granted";
+  if (!granted) {
+    const requested = (await Notifications.requestPermissionsAsync()) as PermissionLike;
+    granted = requested.granted ?? requested.status === "granted";
   }
-  if (finalStatus !== "granted") {
+  if (!granted) {
     return null;
   }
 
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync("default", {
-      name: "The Syndicate",
+      name: "Tiki Acca",
       importance: Notifications.AndroidImportance.DEFAULT,
     });
   }

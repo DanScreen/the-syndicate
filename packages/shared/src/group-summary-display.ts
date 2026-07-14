@@ -8,7 +8,7 @@ export function yourLegStatusMessage(
   if (yourLeg) return "";
 
   if (roundStatus === "open") {
-    return "Waiting for your pick — syndicate can't lock until you submit";
+    return "Waiting for your pick — group can't lock until you submit";
   }
 
   if (roundStatus === "locked") {

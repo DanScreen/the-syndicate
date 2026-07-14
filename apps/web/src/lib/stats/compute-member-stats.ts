@@ -1,6 +1,6 @@
 import type { Leg } from "@prisma/client";
-import { bestWorstLegHighlights } from "@the-syndicate/shared";
-import type { LegHighlight } from "@the-syndicate/shared";
+import { bestWorstLegHighlights } from "@tiki-acca/shared";
+import type { LegHighlight } from "@tiki-acca/shared";
 import {
   favouriteCategory,
   bestWorstCategory,

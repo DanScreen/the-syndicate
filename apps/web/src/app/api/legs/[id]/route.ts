@@ -6,8 +6,8 @@ import { findSelection } from "@/lib/odds/provider";
 import { bookmakerLinksFromQuotes } from "@/lib/odds/quotes";
 import { isCompetitionEnabled } from "@/lib/competitions/settings";
 import { firstKickoff } from "@/lib/rounds/first-kickoff";
-import { prisma } from "@the-syndicate/database";
-import { getCompetitionById, editLegSchema } from "@the-syndicate/shared";
+import { prisma } from "@tiki-acca/database";
+import { getCompetitionById, editLegSchema } from "@tiki-acca/shared";
 import { NextResponse } from "next/server";
 
 type Params = { params: Promise<{ id: string }> };

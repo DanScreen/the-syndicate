@@ -1,6 +1,6 @@
-# The Syndicate — Deployment Plan (Google Cloud Platform)
+# Tiki Acca — Deployment Plan (Google Cloud Platform)
 
-This document records our **intention** to host The Syndicate on GCP with **continuous deployment from GitHub** on every push to `main`.
+This document records our **intention** to host Tiki Acca on GCP with **continuous deployment from GitHub** on every push to `main`.
 
 ## Goals
 
@@ -62,6 +62,8 @@ See [infra/terraform/README.md](../infra/terraform/README.md) for bootstrap, fir
 3. Run `terraform apply` locally (creates all infra + WIF)
 4. Copy Terraform outputs into GitHub secrets/variables
 5. Push app to `main` — `deploy.yml` builds and deploys the Docker image
+
+> **Legacy resource names (intentional):** GCP resources predate the July 2026 rename to Tiki Acca and keep their original identifiers — Cloud SQL DB `the_syndicate` (user `syndicate`), Cloud Run service `the-syndicate-web`, artifact repo `the-syndicate`, Terraform `name_prefix`, state bucket. Renaming them would recreate infrastructure (and migrate data) for zero user value. Do not "fix" these.
 
 ## GCP resources (provisioned by Terraform)
 
@@ -201,7 +203,7 @@ Optional. When configured, members receive **email** on round lock, settle, and 
 
 1. Create account at [resend.com](https://resend.com) and verify sending domain.
 2. Add `RESEND_API_KEY` to GitHub secrets.
-3. Add `EMAIL_FROM` GitHub variable (e.g. `The Syndicate <notifications@the-syndicate.uk>`).
+3. Add `EMAIL_FROM` GitHub variable (e.g. `Tiki Acca <notifications@tikiacca.com>`).
 4. Deploy — `deploy.yml` passes both to Cloud Run.
 
 Optional: `EXPO_ACCESS_TOKEN` for Expo Push API rate limits (mobile push).
@@ -247,8 +249,8 @@ Full behaviour: [specs/platform-admin.md](./specs/platform-admin.md).
 | `GCP_REGION` | `europe-west2` |
 | `ARTIFACT_REGISTRY_REPO` | `the-syndicate` |
 | `CLOUD_RUN_SERVICE` | `the-syndicate-web` |
-| `NEXTAUTH_URL` | `https://the-syndicate.example.com` |
-| `EMAIL_FROM` | `The Syndicate <notifications@the-syndicate.uk>` (optional) |
+| `NEXTAUTH_URL` | `https://www.tikiacca.com` |
+| `EMAIL_FROM` | `Tiki Acca <notifications@tikiacca.com>` (optional) |
 | `ADMIN_EMAILS` | Comma-separated emails granted platform admin (GitHub **secret** in `deploy.yml`) |
 
 ## Deployment flow (on push to `main`)
@@ -293,7 +295,7 @@ Guides: [apps/mobile/DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md) 
 
 ### Architecture
 
-- `apps/mobile` → `EXPO_PUBLIC_API_URL` → same Cloud Run API as web (`https://www.the-syndicate.uk`)
+- `apps/mobile` → `EXPO_PUBLIC_API_URL` → same Cloud Run API as web (`https://www.tikiacca.com`)
 - Auth: `POST /api/auth/mobile/sign-in` → Bearer JWT on all API calls
 - No direct database access from the app
 
@@ -329,10 +331,10 @@ npm run ios            # or npm run android
 
 | Setting | Value |
 |---------|-------|
-| iOS bundle ID | `com.thesyndicate.app` |
-| Android package | `com.thesyndicate.app` |
-| URL scheme | `the-syndicate` |
-| Production API | `EXPO_PUBLIC_API_URL=https://www.the-syndicate.uk` (in `eas.json` profiles) |
+| iOS bundle ID | `com.tikiacca.app` |
+| Android package | `com.tikiacca.app` |
+| URL scheme | `tikiacca` |
+| Production API | `EXPO_PUBLIC_API_URL=https://www.tikiacca.com` (in `eas.json` profiles) |
 
 Store listing copy: [apps/mobile/STORE_LISTING.md](../apps/mobile/STORE_LISTING.md).  
 Icons/splash: `apps/mobile/assets/` — export checklist in [BRAND.md](./BRAND.md#cross-platform-brand).
@@ -345,29 +347,29 @@ Icons/splash: `apps/mobile/assets/` — export checklist in [BRAND.md](./BRAND.m
 
 ### Universal links (optional)
 
-`app.json` declares `associatedDomains` (iOS) and Android App Links for `https://www.the-syndicate.uk/groups/*`. For taps from Safari/Chrome to open the native app, host:
+`app.json` declares `associatedDomains` (iOS) and Android App Links for `https://www.tikiacca.com/groups/*`. For taps from Safari/Chrome to open the native app, host:
 
-- `https://www.the-syndicate.uk/.well-known/apple-app-site-association`
-- `https://www.the-syndicate.uk/.well-known/assetlinks.json`
+- `https://www.tikiacca.com/.well-known/apple-app-site-association`
+- `https://www.tikiacca.com/.well-known/assetlinks.json`
 
-Until those are live, use custom scheme links: `the-syndicate://groups/join?code=`.
+Until those are live, use custom scheme links: `tikiacca://groups/join?code=`.
 
 ### Deep links
 
-Custom scheme: `the-syndicate` (`app.json`).
+Custom scheme: `tikiacca` (`app.json`).
 
 | URL | Route |
 |-----|-------|
-| `the-syndicate://groups/join?code=INVITE` | Join group (stores code if signed out; pre-fills after sign-in) |
-| `the-syndicate://groups/{groupId}` | Open group round tab |
+| `tikiacca://groups/join?code=INVITE` | Join group (stores code if signed out; pre-fills after sign-in) |
+| `tikiacca://groups/{groupId}` | Open group round tab |
 
 Test on simulator:
 
 ```bash
-xcrun simctl openurl booted "the-syndicate://groups/join?code=YOURCODE"
+xcrun simctl openurl booted "tikiacca://groups/join?code=YOURCODE"
 ```
 
-Universal links (`https://www.the-syndicate.uk/groups/join?code=`) open the website until associated domains are configured in Phase 5.
+Universal links (`https://www.tikiacca.com/groups/join?code=`) open the website until associated domains are configured in Phase 5.
 
 ### CORS
 
@@ -442,7 +444,7 @@ One-off fixes (solo test rounds, re-settle after a bug) use `apps/web/scripts/da
 
 ## DDoS & abuse protection
 
-Cloudflare proxies `www.the-syndicate.uk` and absorbs volumetric (L3/L4) attacks on every plan. Two additional layers close the remaining gaps:
+Cloudflare proxies `www.tikiacca.com` and absorbs volumetric (L3/L4) attacks on every plan. Two additional layers close the remaining gaps:
 
 ### 1. Origin bypass protection (`ORIGIN_AUTH_SECRET`)
 
@@ -473,6 +475,24 @@ App-level fixed-window limits (per instance, in-memory — `apps/web/src/lib/rat
 **Recommended Cloudflare rule (first line of defence):** zone → **Security → WAF → Rate limiting rules** (1 rule free): URI path starts with `/api/auth/` → 10 requests / 1 min per IP → Block for 1 min. This stops floods before they consume Cloud Run CPU at all.
 
 **Residual risk (accepted at current scale):** a distributed L7 flood through Cloudflare can still saturate `max_instances = 3` and `db-f1-micro` — availability only, bounded cost. Revisit (Cloud Armor / bigger tiers) when real traffic justifies it.
+
+## Rename cutover runbook (The Syndicate → Tiki Acca, July 2026)
+
+Merging `rename/tiki-acca` into `main` deploys the new brand. Manual steps around the merge:
+
+**Pre-merge (safe any time):**
+1. Cloudflare zone `tikiacca.com`: proxied DNS to the same Cloud Run origin as the old zone, `www` canonical + apex 301, **Transform Rule** setting `x-origin-auth` (same `ORIGIN_AUTH_SECRET` value), WAF rate-limit rule on `/api/auth/*`.
+2. Resend: verify `tikiacca.com` as a sending domain.
+3. (Optional) register `tikiacca.uk` / `tikiacca.co.uk`.
+
+**At merge:** merge branch → immediately update GitHub **variables** `NEXTAUTH_URL=https://www.tikiacca.com` and `EMAIL_FROM=Tiki Acca <notifications@tikiacca.com>` → the auto-deploy picks up brand + URLs together.
+
+**Post-merge:**
+4. Old zone `the-syndicate.uk`: bulk 301 → `https://www.tikiacca.com` preserving path + query (**keeps old invite links working**).
+5. Terraform CI apply refreshes Cloud Scheduler targets (derives from the `NEXTAUTH_URL` variable).
+6. Mobile: rebuild dev/test clients — new API URL, `tikiacca://` scheme, `com.tikiacca.app` identity. If EAS complains about the slug change (`tiki-acca`), re-link with `eas init`.
+7. Local dev: update `.env.local` / `packages/database/.env` `DATABASE_URL` to `postgresql://tikiacca:tikiacca@localhost:5432/tiki_acca`, then `docker compose down && docker compose up -d && npm run db:migrate:deploy` (local DB data resets).
+8. Sessions are host-scoped — everyone signs in again once. Expected.
 
 ## Future improvements
 

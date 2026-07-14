@@ -1,5 +1,5 @@
 ---
-description: API and database conventions for The Syndicate
+description: API and database conventions for Tiki Acca
 globs: packages/database/**/*,apps/web/src/app/api/**/*
 alwaysApply: false
 ---

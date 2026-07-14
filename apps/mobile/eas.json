@@ -10,19 +10,19 @@
         "simulator": true
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://www.the-syndicate.uk"
+        "EXPO_PUBLIC_API_URL": "https://www.tikiacca.com"
       }
     },
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://www.the-syndicate.uk"
+        "EXPO_PUBLIC_API_URL": "https://www.tikiacca.com"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://www.the-syndicate.uk"
+        "EXPO_PUBLIC_API_URL": "https://www.tikiacca.com"
       }
     }
   },

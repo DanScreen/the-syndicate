@@ -1,4 +1,4 @@
-import { formatLegPoints } from "@the-syndicate/shared";
+import { formatLegPoints } from "@tiki-acca/shared";
 import type { PlatformLeaderboards } from "@/lib/admin/compute-platform-leaderboards";
 
 function LeaderboardTable({
@@ -51,10 +51,10 @@ export function PlatformLeaderboards({ data }: { data: PlatformLeaderboards }) {
 
       <div className="grid gap-8 lg:grid-cols-2">
         <LeaderboardTable
-          title="Syndicate leaderboard"
+          title="Group leaderboard"
           description="Ranked by combined member points in each group."
-          headers={["#", "Syndicate", "Owner", "Members", "Points", "Record"]}
-          rows={data.syndicates.map((row) => (
+          headers={["#", "Group", "Owner", "Members", "Points", "Record"]}
+          rows={data.groups.map((row) => (
             <tr key={row.groupId} className="border-b border-border/60 last:border-0">
               <td className="px-5 py-3 text-muted">#{row.rank}</td>
               <td className="px-5 py-3 font-medium">{row.name}</td>
@@ -72,7 +72,7 @@ export function PlatformLeaderboards({ data }: { data: PlatformLeaderboards }) {
 
         <LeaderboardTable
           title="Player leaderboard"
-          description="Ranked by total points across all syndicates."
+          description="Ranked by total points across all groups."
           headers={["#", "Player", "Groups", "Points", "Record"]}
           rows={data.players.map((row) => (
             <tr key={row.userId} className="border-b border-border/60 last:border-0">

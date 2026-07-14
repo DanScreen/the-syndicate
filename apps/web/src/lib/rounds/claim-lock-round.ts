@@ -1,6 +1,6 @@
 import { lockRoundWithAccaPricing } from "@/lib/odds/lock-round";
 import { notifyRoundLocked } from "@/lib/notifications/round-notifications";
-import { prisma } from "@the-syndicate/database";
+import { prisma } from "@tiki-acca/database";
 
 export type ClaimLockResult =
   | { ok: true }

@@ -1,6 +1,6 @@
-import { prisma } from "@the-syndicate/database";
+import { prisma } from "@tiki-acca/database";
 
-export type SyndicateLeaderboardEntry = {
+export type GroupLeaderboardEntry = {
   rank: number;
   groupId: string;
   name: string;
@@ -22,12 +22,12 @@ export type PlayerLeaderboardEntry = {
 };
 
 export type PlatformLeaderboards = {
-  syndicates: SyndicateLeaderboardEntry[];
+  groups: GroupLeaderboardEntry[];
   players: PlayerLeaderboardEntry[];
 };
 
 export async function computePlatformLeaderboards(): Promise<PlatformLeaderboards> {
-  const [groups, users] = await Promise.all([
+  const [groupRecords, users] = await Promise.all([
     prisma.group.findMany({
       select: {
         id: true,
@@ -51,7 +51,7 @@ export async function computePlatformLeaderboards(): Promise<PlatformLeaderboard
     }),
   ]);
 
-  const syndicateRows = groups
+  const groupRows = groupRecords
     .map((g) => ({
       groupId: g.id,
       name: g.name,
@@ -64,7 +64,7 @@ export async function computePlatformLeaderboards(): Promise<PlatformLeaderboard
     .filter((g) => g.memberCount > 0)
     .sort((a, b) => b.totalPoints - a.totalPoints);
 
-  const syndicates: SyndicateLeaderboardEntry[] = syndicateRows.map((row, i) => ({
+  const groups: GroupLeaderboardEntry[] = groupRows.map((row, i) => ({
     rank: i + 1,
     ...row,
   }));
@@ -81,5 +81,5 @@ export async function computePlatformLeaderboards(): Promise<PlatformLeaderboard
       groupCount: u._count.memberships,
     }));
 
-  return { syndicates, players };
+  return { groups, players };
 }

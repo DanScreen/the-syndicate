@@ -1,4 +1,4 @@
-import { prisma } from "@the-syndicate/database";
+import { prisma } from "@tiki-acca/database";
 
 /** A pending leg is flagged for intervention this long after its scheduled kickoff. */
 export const OVERDUE_AFTER_HOURS = 2;

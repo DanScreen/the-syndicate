@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "The Syndicate",
-    "slug": "the-syndicate",
+    "name": "Tiki Acca",
+    "slug": "tiki-acca",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "the-syndicate",
+    "scheme": "tikiacca",
     "platforms": ["ios", "android"],
     "userInterfaceStyle": "dark",
     "splash": {
@@ -15,12 +15,12 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.thesyndicate.app",
+      "bundleIdentifier": "com.tikiacca.app",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       },
       "associatedDomains": [
-        "applinks:www.the-syndicate.uk"
+        "applinks:www.tikiacca.com"
       ]
     },
     "android": {
@@ -30,7 +30,7 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "package": "com.thesyndicate.app",
+      "package": "com.tikiacca.app",
       "intentFilters": [
         {
           "action": "VIEW",
@@ -38,7 +38,7 @@
           "data": [
             {
               "scheme": "https",
-              "host": "www.the-syndicate.uk",
+              "host": "www.tikiacca.com",
               "pathPrefix": "/groups"
             }
           ],
@@ -53,7 +53,7 @@
       [
         "expo-router",
         {
-          "origin": "https://www.the-syndicate.uk"
+          "origin": "https://www.tikiacca.com"
         }
       ],
       "expo-secure-store",

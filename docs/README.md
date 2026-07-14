@@ -2,7 +2,7 @@
 
 **Start here** if you are an agent or developer new to this repo — **do not rely on chat history.**
 
-The Syndicate is a social group football acca platform. Production: [www.the-syndicate.uk](https://www.the-syndicate.uk).
+Tiki Acca is a social group football acca platform. Production: [www.tikiacca.com](https://www.tikiacca.com).
 
 ---
 

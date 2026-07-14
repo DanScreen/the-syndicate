@@ -1,4 +1,6 @@
-# The Syndicate — Design & Marketing Brief
+# Tiki Acca — Design & Marketing Brief
+
+> **Brand rename (July 2026):** written for / updated to **Tiki Acca** (formerly The Syndicate). See [specs/rename-tiki-acca.md](./specs/rename-tiki-acca.md) and [BRAND.md](./BRAND.md).
 
 | Field | Value |
 |-------|-------|
@@ -12,13 +14,13 @@
 
 ## 1. The core insight
 
-Group betting already happens — in WhatsApp, badly. Screenshots of betslips, arguments about whose pick died, a spreadsheet someone abandoned in November. The Syndicate doesn't invent a behaviour; it gives an existing ritual **structure, receipts, and a scoreboard**.
+Group betting already happens — in WhatsApp, badly. Screenshots of betslips, arguments about whose pick died, a spreadsheet someone abandoned in November. Tiki Acca doesn't invent a behaviour; it gives an existing ritual **structure, receipts, and a scoreboard**.
 
 The emotional engine is the **social contract of the shared acca**: one leg each means your pick carries the whole group's hopes. When it lands, everyone's a hero. When it dies, everyone knows exactly whose leg killed it. No other product owns this moment — bookmakers sell odds, tipsters sell picks, but nobody sells *shared accountability*. That is the thing to communicate.
 
 **One-sentence pitch:**
 
-> The Syndicate turns your group chat's Saturday acca into a proper competition — one leg each, best odds locked, and a leaderboard that settles who's actually good.
+> Tiki Acca turns your group chat's Saturday acca into a proper competition — one leg each, best odds locked, and a leaderboard that settles who's actually good.
 
 ---
 
@@ -61,13 +63,13 @@ Warm, cultural, pub-flavoured. Broadest reach, least differentiated — any foot
 
 **Option 1 — evolve current (shipped July 2026):**
 
-> *(top bar: logo + "The Syndicate — Social Group Betting"; no eyebrow above the headline)*
+> *(top bar: logo + "Tiki Acca — Social Group Betting"; no eyebrow above the headline)*
 >
 > **Your mates. One acca. Every leg counts.**
 >
-> Each member picks one leg and The Syndicate handles the rest — locking in the best odds from UK bookmakers, tracking every result, and keeping score of who consistently delivers, and who lets the acca down. It's free for your whole group.
+> Each member picks one leg and Tiki Acca handles the rest — locking in the best odds from UK bookmakers, tracking every result, and keeping score of who consistently delivers, and who lets the acca down. It's free for your whole group.
 >
-> **[Start a syndicate — free]** *(existing CTA — unchanged)*
+> **[Sign up]** *(existing CTA — unchanged)*
 >
 > *Subhead is deliberately one flowing paragraph — a counterweight to the three staccato beats of the headline.*
 
@@ -75,9 +77,9 @@ Warm, cultural, pub-flavoured. Broadest reach, least differentiated — any foot
 
 > **Whose leg lost the acca? Now there's proof.**
 >
-> One pick each. Best odds locked. A leaderboard with a long memory. The Syndicate is where football groups build accas together — and settle the argument for good.
+> One pick each. Best odds locked. A leaderboard with a long memory. Tiki Acca is where football groups build accas together — and settle the argument for good.
 >
-> **[Start a syndicate — free]** *(existing CTA — unchanged)*
+> **[Sign up]** *(existing CTA — unchanged)*
 
 Option 2 is a stronger *ad*; Option 1 is a stronger *homepage*. Ship 1; test 2 in campaigns.
 
@@ -93,7 +95,7 @@ Option 2 is a stronger *ad*; Option 1 is a stronger *homepage*. Ship 1; test 2 i
 | 4 | **Value props** | Keep all four; reorder to lead with feeling: Built for friend groups → Track who's actually good → **Best odds, done for you** (retitled — comparison is a chore we remove, not a feature users operate) → You place the bets. |
 | 5 | **Who it's for** | Current three audience cards are good. *"Stop arguing about whose pick lost the acca — the stats settle it"* is the best line on the site; promote that energy upward. |
 | 6 | **Trust strip** | One plain sentence, always visible before the CTA: *"We're not a bookmaker. We never touch your money — you bet with licensed UK bookmakers, we keep the score. 18+. GambleAware."* |
-| 7 | **FAQ** | Keep current four; add a fifth: **"Do we have to bet real money?"** — *"No. Plenty of syndicates play for points and pride alone."* True, widens the funnel, strengthens the RG posture. |
+| 7 | **FAQ** | Keep current four; add a fifth: **"Do we have to bet real money?"** — *"No. Plenty of groups play for points and pride alone."* True, widens the funnel, strengthens the RG posture. |
 | 8 | **Closing CTA** | *"One leg each. Best odds locked. Bragging rights forever."* **[Get started free]** *(existing CTA — unchanged)* — inclusive of newcomers; avoids "your group already does this" framing. |
 
 ---
@@ -104,7 +106,7 @@ Structure as a story, not a feature list — five short sections:
 
 ### 4.1 Why this exists
 
-> If your group already builds a Saturday acca, you know the drill: a betslip screenshot in the chat, a spreadsheet nobody updates, and a debate about whose pick let everyone down. We built The Syndicate to give that a proper home. And if you've never built one together, there's no better way to start — one leg each, live odds, and the score kept for you.
+> If your group already builds a Saturday acca, you know the drill: a betslip screenshot in the chat, a spreadsheet nobody updates, and a debate about whose pick let everyone down. We built Tiki Acca to give that a proper home. And if you've never built one together, there's no better way to start — one leg each, live odds, and the score kept for you.
 
 First person, human, specific. Speaks to **both** audiences: groups who already build accas together (give the ritual a proper home) and newcomers who've never tried one (the easiest way to start). Avoid "every group does this" framing — it excludes the second audience.
 
@@ -124,7 +126,7 @@ Unit-stake scoring explained in three lines with a worked example (win @ 2.50 �
 
 Responsible gambling, written warmly rather than legally:
 
-> The Syndicate works just as well for points and pride as it does for money. If you do bet, set a stake the whole group's comfortable with and stick to it. If it stops being fun, stop.
+> Tiki Acca works just as well for points and pride as it does for money. If you do bet, set a stake the whole group's comfortable with and stick to it. If it stops being fun, stop.
 
 Then GambleAware/GamStop links and 18+.
 
@@ -144,7 +146,7 @@ Then GambleAware/GamStop links and 18+.
 
 **Always**
 
-- Speak to the group ("your syndicate"), not the individual.
+- Speak to the group ("your group"), not the individual.
 - Name the ritual: Saturday, the group chat, the pub.
 - Keep scores and odds precise.
 

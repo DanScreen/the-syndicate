@@ -1,5 +1,5 @@
-import type { BookmakerQuote, Fixture, Market, MarketSelection } from "@the-syndicate/shared";
-import { filterUpcomingFixtures } from "@the-syndicate/shared";
+import type { BookmakerQuote, Fixture, Market, MarketSelection } from "@tiki-acca/shared";
+import { filterUpcomingFixtures } from "@tiki-acca/shared";
 import {
   formatCommenceTimeFrom,
   ODDS_QUOTA_BLOCK_CACHE_KEY,

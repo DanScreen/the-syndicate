@@ -5,13 +5,13 @@ import {
 } from "@/lib/notifications/channels/email-channel";
 import { sendPushToUser } from "@/lib/notifications/channels/push-channel";
 import { getNotificationPreferences } from "@/lib/notifications/preferences";
-import { prisma } from "@the-syndicate/database";
+import { prisma } from "@tiki-acca/database";
 import {
   emailPrefKey,
   pushPrefKey,
   type NotificationChannel,
   type NotificationType,
-} from "@the-syndicate/shared";
+} from "@tiki-acca/shared";
 
 export type DispatchNotificationInput = {
   userId: string;

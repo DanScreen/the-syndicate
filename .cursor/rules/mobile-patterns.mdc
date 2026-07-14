@@ -1,5 +1,5 @@
 ---
-description: Expo mobile patterns for The Syndicate
+description: Expo mobile patterns for Tiki Acca
 globs: apps/mobile/**/*
 alwaysApply: false
 ---
@@ -7,7 +7,7 @@ alwaysApply: false
 # Mobile patterns
 
 - Expo + TypeScript; call web API at `EXPO_PUBLIC_API_URL`
-- Reuse types from `@the-syndicate/shared`
+- Reuse types from `@tiki-acca/shared`
 - Match web flows: auth, dashboard, group detail, submit leg
 - Use `fetch` with `Authorization: Bearer <token>` from SecureStore
 - Sign in via `POST /api/auth/mobile/sign-in`; sign up via `/api/auth/sign-up` then sign in

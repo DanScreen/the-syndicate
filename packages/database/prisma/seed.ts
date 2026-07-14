@@ -2,7 +2,7 @@ import { prisma } from "../src";
 
 async function main() {
   const userCount = await prisma.user.count();
-  console.log(`The Syndicate seed complete. Users in DB: ${userCount}`);
+  console.log(`Tiki Acca seed complete. Users in DB: ${userCount}`);
 }
 
 main()

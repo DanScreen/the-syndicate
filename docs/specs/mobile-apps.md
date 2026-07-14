@@ -10,7 +10,7 @@
 
 ## Vision
 
-We want **native iPhone (App Store)** and **Android (Play Store)** apps so syndicate members can:
+We want **native iPhone (App Store)** and **Android (Play Store)** apps so group members can:
 
 - Sign in and manage groups on mobile
 - Pick legs (competition, fixture, market, selection) with the same odds behaviour as the web
@@ -19,7 +19,7 @@ We want **native iPhone (App Store)** and **Android (Play Store)** apps so syndi
 
 The apps are **not** a bookmaker. All copy and UI must make clear users place bets with licensed operators (see [../BRAND.md](../BRAND.md)).
 
-Apps call the **same production API** as the website (`https://www.the-syndicate.uk`). There is no separate mobile backend.
+Apps call the **same production API** as the website (`https://www.tikiacca.com`). There is no separate mobile backend.
 
 **Platform admin** (`/admin/*`) is **out of scope** for v1 parity — web only.
 
@@ -188,7 +188,7 @@ Checklist for implementation. Web route → API → mobile screen.
 ### Phase 4 — Polish
 
 - [x] Pull-to-refresh + 60s poll while acca locked (match web `GroupDataProvider`) — poll shipped Phase 2; refresh was already present
-- [x] Deep links: `the-syndicate://` scheme, invite `?code=` handling (`app/groups/join.tsx`, pending invite after sign-in)
+- [x] Deep links: `tikiacca://` scheme, invite `?code=` handling (`app/groups/join.tsx`, pending invite after sign-in)
 - [x] Error / empty states aligned with web messaging (`apps/mobile/src/lib/copy.ts`, `EmptyState`)
 - [x] Responsible gambling disclosure near betslip + footer (`compliance.tsx`) — affiliate commission copy deferred until [affiliate-and-betslips.md](./affiliate-and-betslips.md) ships
 
@@ -226,11 +226,11 @@ Mobile is **not** deployed by [`.github/workflows/deploy.yml`](../../.github/wor
 |------|-------|
 | Framework | Expo SDK ~54, Expo Router |
 | Package | `apps/mobile` |
-| iOS bundle ID | `com.thesyndicate.app` |
-| Android package | `com.thesyndicate.app` |
+| iOS bundle ID | `com.tikiacca.app` |
+| Android package | `com.tikiacca.app` |
 | API env | `EXPO_PUBLIC_API_URL` (see `apps/mobile/.env.example`) |
 | Build service | [EAS Build](https://docs.expo.dev/build/introduction/) — [eas.json](../../apps/mobile/eas.json), [eas.yml](../../.github/workflows/eas.yml) |
-| Scheme | `the-syndicate` (`app.json`) |
+| Scheme | `tikiacca` (`app.json`) |
 
 Local dev:
 

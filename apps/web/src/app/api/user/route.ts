@@ -1,5 +1,5 @@
 import { requireSession } from "@/lib/api-auth";
-import { prisma } from "@the-syndicate/database";
+import { prisma } from "@tiki-acca/database";
 import { NextResponse } from "next/server";
 
 export async function GET() {

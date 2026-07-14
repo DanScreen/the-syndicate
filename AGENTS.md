@@ -1,4 +1,4 @@
-# The Syndicate — Agent Guide
+# Tiki Acca — Agent Guide
 
 Social group football acca platform. **Read [docs/README.md](docs/README.md) first — do not rely on chat history.**
 

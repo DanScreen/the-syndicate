@@ -1,7 +1,7 @@
 import type { LegHighlight } from "./api-types";
 import type { LegOutcome } from "./types";
 
-/** Per-leg unit stake when the syndicate acca wins (or leg void). */
+/** Per-leg unit stake when the group acca wins (or leg void). */
 export function legPointsForOutcome(outcome: LegOutcome, odds: number): number {
   switch (outcome) {
     case "won":

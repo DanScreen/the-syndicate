@@ -18,7 +18,7 @@ import type {
   Market,
   MarketTierOption,
   SubmitLegInput,
-} from "@the-syndicate/shared";
+} from "@tiki-acca/shared";
 import {
   groupAccaRoundPoints,
   formatLegPoints,
@@ -29,7 +29,7 @@ import {
   groupMarkets,
   sortQuotesByBestOdds,
   type LegOutcome,
-} from "@the-syndicate/shared";
+} from "@tiki-acca/shared";
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,

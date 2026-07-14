@@ -1,6 +1,6 @@
 import { claimAndLockRound } from "@/lib/rounds/claim-lock-round";
 import { firstKickoff } from "@/lib/rounds/first-kickoff";
-import { prisma } from "@the-syndicate/database";
+import { prisma } from "@tiki-acca/database";
 
 export type LockAtKickoffResult = {
   locked: string[];

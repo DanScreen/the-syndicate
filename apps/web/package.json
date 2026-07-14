@@ -1,5 +1,5 @@
 {
-  "name": "@the-syndicate/web",
+  "name": "@tiki-acca/web",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -10,8 +10,8 @@
     "db:maintenance": "npx tsx scripts/data-maintenance.ts"
   },
   "dependencies": {
-    "@the-syndicate/database": "*",
-    "@the-syndicate/shared": "*",
+    "@tiki-acca/database": "*",
+    "@tiki-acca/shared": "*",
     "bcryptjs": "^3.0.2",
     "jose": "^6.2.3",
     "next": "^15.2.4",

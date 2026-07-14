@@ -1,6 +1,8 @@
 # Brand & design
 
-Visual identity for The Syndicate.
+Visual identity for Tiki Acca.
+
+**Renamed (July 2026):** **The Syndicate → Tiki Acca** — tiki-taka pun; everyone touches the ball, each member adds one leg. Groups are called **"groups"** (the noun "syndicate" is retired). Full rationale + rename scope: [specs/rename-tiki-acca.md](./specs/rename-tiki-acca.md). Legacy internals that deliberately keep old names: GCP resources (Cloud SQL `the_syndicate`, Cloud Run `the-syndicate-web`, artifact repo), mobile SecureStore keys, GitHub repo name, `lib/brand/archive.ts` history.
 
 **Locked (July 2026):** Turf Green palette + Acca stack logo.
 
@@ -13,7 +15,7 @@ Visual identity for The Syndicate.
 | | |
 |---|---|
 | **What** | Social group football acca platform |
-| **Who** | Friend groups, pub syndicates, office leagues |
+| **Who** | Friend groups, pub groups, office leagues |
 | **Tone** | Confident, social, data-forward — mates first, not a tipster |
 | **Tagline** | Social group accas (SEO/meta descriptor) |
 | **Header descriptor** | Social Group Betting (marketing top bar, right of wordmark) |
@@ -29,7 +31,7 @@ We are **not** a bookmaker. Copy and UI must always make clear users place bets 
 
 **Component:** `apps/web/src/components/logo.tsx` — `LogoMark`, `Logo`.
 
-**Wordmark:** “The **Syndicate**” — “Syndicate” in accent colour.
+**Wordmark:** “Tiki **Acca**” — “Acca” in accent colour.
 
 ---
 

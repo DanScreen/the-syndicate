@@ -3,7 +3,7 @@ import { colors } from "@/config";
 import { Redirect, useLocalSearchParams } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
 
-/** Deep link: the-syndicate://groups/{groupId} */
+/** Deep link: tikiacca://groups/{groupId} */
 export default function DeepLinkGroupScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user, loading } = useAuth();

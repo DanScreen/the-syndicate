@@ -1,5 +1,5 @@
 import type { DefaultSession } from "next-auth";
-import type { UserRole } from "@the-syndicate/shared";
+import type { UserRole } from "@tiki-acca/shared";
 
 declare module "next-auth" {
   interface Session {

@@ -1,5 +1,5 @@
-import { prisma } from "@the-syndicate/database";
-import type { UserRole } from "@the-syndicate/shared";
+import { prisma } from "@tiki-acca/database";
+import type { UserRole } from "@tiki-acca/shared";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";

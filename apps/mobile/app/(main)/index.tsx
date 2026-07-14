@@ -1,5 +1,5 @@
 import { api } from "@/api/client";
-import type { GroupSummary, GroupsListResponse } from "@the-syndicate/shared";
+import type { GroupSummary, GroupsListResponse } from "@tiki-acca/shared";
 import {
   formatActiveLegSummary,
   formatLegPoints,
@@ -7,7 +7,7 @@ import {
   legOutcomeShortLabel,
   pointsTone,
   yourLegStatusMessage,
-} from "@the-syndicate/shared";
+} from "@tiki-acca/shared";
 import { useAuth } from "@/auth/AuthProvider";
 import { Button, Card, EmptyState, Screen, Subtitle, Title } from "@/components/ui";
 import { colors } from "@/config";

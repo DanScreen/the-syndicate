@@ -1,4 +1,4 @@
-import { prisma } from "@the-syndicate/database";
+import { prisma } from "@tiki-acca/database";
 import type { Prisma } from "@prisma/client";
 
 type DbClient = Prisma.TransactionClient | typeof prisma;

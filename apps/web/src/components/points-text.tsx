@@ -1,4 +1,4 @@
-import { formatLegPoints, pointsTone } from "@the-syndicate/shared";
+import { formatLegPoints, pointsTone } from "@tiki-acca/shared";
 
 export function pointsTextClass(points: number): string {
   const tone = pointsTone(points);

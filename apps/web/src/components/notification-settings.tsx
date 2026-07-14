@@ -1,6 +1,6 @@
 "use client";
 
-import type { NotificationPreferences } from "@the-syndicate/shared";
+import type { NotificationPreferences } from "@tiki-acca/shared";
 import { useEffect, useState } from "react";
 
 type PrefRow = {
@@ -22,7 +22,7 @@ const ROWS: { title: string; channel: "email" | "push"; items: PrefRow[] }[] = [
       {
         key: "emailRoundLocked",
         label: "Acca locked",
-        description: "When your syndicate acca is locked and ready to place.",
+        description: "When your group acca is locked and ready to place.",
       },
       {
         key: "emailRoundSettled",
@@ -130,7 +130,7 @@ export function NotificationSettings() {
   return (
     <div className="space-y-8">
       <p className="text-sm text-muted">
-        Choose how The Syndicate keeps you in the loop. Pick reminders help you
+        Choose how Tiki Acca keeps you in the loop. Pick reminders help you
         submit before the acca locks at the first kickoff.
         {saving ? " Saving…" : null}
       </p>

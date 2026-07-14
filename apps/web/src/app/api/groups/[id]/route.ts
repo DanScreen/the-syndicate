@@ -7,8 +7,8 @@ import {
 } from "@/lib/odds/lock-round";
 import { lockOpenRoundsAtKickoff } from "@/lib/rounds/lock-open-rounds-at-kickoff";
 import { openRound } from "@/lib/rounds/open-round";
-import { prisma } from "@the-syndicate/database";
-import type { AccaBookmakerRanking } from "@the-syndicate/shared";
+import { prisma } from "@tiki-acca/database";
+import type { AccaBookmakerRanking } from "@tiki-acca/shared";
 import { NextResponse } from "next/server";
 
 type Params = { params: Promise<{ id: string }> };

@@ -2,7 +2,7 @@ import { GroupNav } from "@/components/group-nav";
 import { ErrorText } from "@/components/ui";
 import { colors } from "@/config";
 import { copy } from "@/lib/copy";
-import { formatRoundStatusBadge } from "@the-syndicate/shared";
+import { formatRoundStatusBadge } from "@tiki-acca/shared";
 import { GroupDataProvider, useGroupData } from "@/context/group-data";
 import { router, Slot, useLocalSearchParams } from "expo-router";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";

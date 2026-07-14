@@ -14,7 +14,7 @@ export default async function AdminLeaderboardsPage() {
   return (
     <AdminPageShell
       title="Platform leaderboards"
-      description="Syndicate and player rankings by points. Admin-only until we have more users."
+      description="Group and player rankings by points. Admin-only until we have more users."
       path="/admin/leaderboards"
     >
       <PlatformLeaderboards data={leaderboards} />

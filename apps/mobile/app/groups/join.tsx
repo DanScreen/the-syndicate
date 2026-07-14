@@ -5,7 +5,7 @@ import { Redirect, useLocalSearchParams } from "expo-router";
 import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 
-/** Deep link: the-syndicate://groups/join?code=INVITE */
+/** Deep link: tikiacca://groups/join?code=INVITE */
 export default function DeepLinkJoinScreen() {
   const { code } = useLocalSearchParams<{ code?: string }>();
   const { user, loading } = useAuth();

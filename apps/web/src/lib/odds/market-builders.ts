@@ -1,4 +1,4 @@
-import type { BookmakerQuote, Market, MarketSelection } from "@the-syndicate/shared";
+import type { BookmakerQuote, Market, MarketSelection } from "@tiki-acca/shared";
 import type { OddsApiBookmaker, OddsApiEvent, OddsApiMarket, OddsApiOutcome } from "./api-types";
 import { addQuote, resolveDeeplink } from "./quotes";
 

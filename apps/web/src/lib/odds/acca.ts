@@ -1,4 +1,4 @@
-import type { BookmakerQuote } from "@the-syndicate/shared";
+import type { BookmakerQuote } from "@tiki-acca/shared";
 import { sortQuotesByBestOdds } from "./bookmakers";
 import { calculateCombinedOdds } from "./betslip-links";
 

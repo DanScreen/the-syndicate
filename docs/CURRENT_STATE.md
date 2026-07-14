@@ -2,7 +2,9 @@
 
 Last updated July 2026. **This file is the source of truth for agents — update when you ship.**
 
-Production: **https://www.the-syndicate.uk** (apex → 301 to www via Cloudflare).
+Production: **https://www.tikiacca.com** (apex → 301 to www via Cloudflare).
+
+> **Rebrand (July 2026):** The Syndicate → **Tiki Acca** ([spec](./specs/rename-tiki-acca.md)). Groups are called "groups". **Legacy internal names kept on purpose** — GCP resources (Cloud SQL `the_syndicate`, Cloud Run `the-syndicate-web`, artifact repo), mobile SecureStore keys (`syndicate_token`/`syndicate_user`), GitHub repo name. Do not rename these.
 
 Mobile (`apps/mobile/`) — v1 parity shipped. **Developer testing:** Expo Go / device build ([DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md)); friend APK/TestFlight deferred.
 
@@ -196,11 +198,11 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 | `/` | Landing — hero (Sign up / Sign in), value props, how it works, FAQ, CTA |
 | `/about` | Product story, what we are/aren’t, responsible gambling |
 | `/sign-in`, `/sign-up` | Auth — sign-up collects **first name** + **last name** |
-| `/dashboard` | **Groups home** — list of user's syndicates; **group/your points**; **current betslip** legs (fixture, market, selection, odds); waiting status if you haven't picked |
-| `/performance` | Cross-group stats (`DashboardStats`) — syndicate filter dropdown, charts, share cards |
+| `/dashboard` | **Groups home** — list of user's groups; **group/your points**; **current betslip** legs (fixture, market, selection, odds); waiting status if you haven't picked |
+| `/performance` | Cross-group stats (`DashboardStats`) — group filter dropdown, charts, share cards |
 | `/admin` | **Admin** — platform metrics (admin role only) |
 | `/admin/settlement` | **Admin** — settlement queue: locked rounds, overdue legs (2h+ after KO), manual settle |
-| `/admin/leaderboards` | **Admin** — syndicate & player rankings by points |
+| `/admin/leaderboards` | **Admin** — group & player rankings by points |
 | `/admin/competitions` | **Admin** — enable/disable competitions in leg picker |
 | `/admin/odds` | **Admin** — Odds API diagnostics (fixture pipeline) |
 | `/groups/create`, `/groups/join` | Create / join group |
@@ -301,7 +303,7 @@ Platform admins (`User.role = admin`) see an **Admin** tab with **Overview** and
 
 | Leaderboard | Ranked by |
 |-------------|-----------|
-| Syndicates | Sum of `GroupMember.points` per group; columns: name, **owner**, members, points, W/L record |
+| Groups | Sum of `GroupMember.points` per group; columns: name, **owner**, members, points, W/L record |
 | Players | `User.totalPoints` (all groups) |
 
 Admin-only for now; public rollout planned when user base grows.
@@ -431,7 +433,7 @@ Recent migrations include `20260711100000_competition_settings` (admin competiti
 | `POST/DELETE /api/user/push-token` | Session / mobile JWT | Expo push token |
 | `POST /api/internal/round-reminders` | Cron | Pick reminder dispatch |
 | `GET /api/admin/stats` | Admin | Platform summary metrics |
-| `GET /api/admin/leaderboards` | Admin | Syndicate + player point rankings |
+| `GET /api/admin/leaderboards` | Admin | Group + player point rankings |
 | `GET /api/admin/competitions` | Admin | All competitions + enabled flags |
 | `PATCH /api/admin/competitions` | Admin | Enable/disable competition for users |
 | `POST /api/admin/rounds/[id]/settle` | Admin | Manual settle (escape hatch for stuck rounds) |
@@ -459,7 +461,7 @@ Recent migrations include `20260711100000_competition_settings` (admin competiti
 - [x] `ODDS_API_KEY` in GitHub secrets
 - [x] `FOOTBALL_DATA_API_KEY` in GitHub secrets
 - [x] `CRON_SECRET` in Secret Manager + Cloud Scheduler jobs (`sync-matches`, `warm-odds-cache`) via Terraform
-- [x] `NEXTAUTH_URL=https://www.the-syndicate.uk`
+- [x] `NEXTAUTH_URL=https://www.tikiacca.com`
 - [x] Cloudflare Worker + www redirect configured
 - [ ] `ORIGIN_AUTH_SECRET`: Cloudflare Transform Rule (`x-origin-auth`) + GitHub secret — [DEPLOYMENT.md](./DEPLOYMENT.md#ddos--abuse-protection)
 - [ ] Cloudflare rate-limiting rule on `/api/auth/*` (free tier: 1 rule)

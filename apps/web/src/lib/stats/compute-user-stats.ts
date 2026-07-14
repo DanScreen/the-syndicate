@@ -220,13 +220,13 @@ export function buildShareText(
   stats: { netPoints: number; legsPlayed: number; winRate: number | null }
 ): string {
   const lines = [
-    `${title} on The Syndicate`,
+    `${title} on Tiki Acca`,
     `Net points: ${stats.netPoints >= 0 ? "+" : ""}${stats.netPoints.toFixed(2)}`,
     `Legs: ${stats.legsPlayed}`,
   ];
   if (stats.winRate != null) {
     lines.push(`Win rate: ${stats.winRate}%`);
   }
-  lines.push("https://www.the-syndicate.uk");
+  lines.push("https://www.tikiacca.com");
   return lines.join("\n");
 }

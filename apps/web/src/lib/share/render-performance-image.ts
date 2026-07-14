@@ -1,4 +1,4 @@
-import { BRAND_COLORS } from "@the-syndicate/shared";
+import { BRAND_COLORS } from "@tiki-acca/shared";
 
 export type ShareChartPoint = {
   cumulativePoints: number;
@@ -140,7 +140,7 @@ export async function renderPerformanceShareImage(
   ctx.fillStyle = BRAND_COLORS.muted;
   ctx.font = '600 24px "Outfit", system-ui, sans-serif';
   ctx.textAlign = "left";
-  ctx.fillText("THE SYNDICATE", 188, 132);
+  ctx.fillText("TIKI ACCA", 188, 132);
 
   ctx.fillStyle = BRAND_COLORS.foreground;
   ctx.font = '700 52px "Outfit", system-ui, sans-serif';
@@ -197,7 +197,7 @@ export async function renderPerformanceShareImage(
   ctx.fillStyle = BRAND_COLORS.accent;
   ctx.font = '600 30px "Outfit", system-ui, sans-serif';
   ctx.textAlign = "center";
-  ctx.fillText("www.the-syndicate.uk", WIDTH / 2, HEIGHT - 96);
+  ctx.fillText("www.tikiacca.com", WIDTH / 2, HEIGHT - 96);
 
   ctx.fillStyle = BRAND_COLORS.muted;
   ctx.font = "500 22px system-ui, sans-serif";

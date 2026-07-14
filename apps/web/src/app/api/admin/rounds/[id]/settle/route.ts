@@ -3,9 +3,9 @@ import {
   applyRoundSettlement,
   RoundNotSettleableError,
 } from "@/lib/settlement/apply-round-settlement";
-import { prisma } from "@the-syndicate/database";
-import { adminSettleRoundSchema } from "@the-syndicate/shared";
-import type { LegOutcome } from "@the-syndicate/shared";
+import { prisma } from "@tiki-acca/database";
+import { adminSettleRoundSchema } from "@tiki-acca/shared";
+import type { LegOutcome } from "@tiki-acca/shared";
 import { NextResponse } from "next/server";
 
 type Params = { params: Promise<{ id: string }> };

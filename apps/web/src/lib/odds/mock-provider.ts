@@ -1,5 +1,5 @@
-import type { Fixture } from "@the-syndicate/shared";
-import { getCompetitionById } from "@the-syndicate/shared";
+import type { Fixture } from "@tiki-acca/shared";
+import { getCompetitionById } from "@tiki-acca/shared";
 
 const kickoff = (daysFromNow: number, hour = 15): string => {
   const d = new Date();

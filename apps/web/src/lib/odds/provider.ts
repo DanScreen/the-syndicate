@@ -1,5 +1,5 @@
-import type { Fixture, Market } from "@the-syndicate/shared";
-import { filterUpcomingFixtures, getCompetitionById } from "@the-syndicate/shared";
+import type { Fixture, Market } from "@tiki-acca/shared";
+import { filterUpcomingFixtures, getCompetitionById } from "@tiki-acca/shared";
 import { isOddsApiConfigured, isProductionRuntime, oddsDbOnly } from "./config";
 import { getMockFixtures } from "./mock-provider";
 import {

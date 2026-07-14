@@ -1,6 +1,6 @@
 "use client";
 
-import { COMPETITIONS } from "@the-syndicate/shared";
+import { COMPETITIONS } from "@tiki-acca/shared";
 import { useCallback, useEffect, useState } from "react";
 
 type Diagnostics = {

@@ -3,7 +3,7 @@ import {
   getNotificationPreferences,
   upsertNotificationPreferences,
 } from "@/lib/notifications/preferences";
-import { notificationPreferencesSchema } from "@the-syndicate/shared";
+import { notificationPreferencesSchema } from "@tiki-acca/shared";
 import { NextResponse } from "next/server";
 
 export async function GET() {

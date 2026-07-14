@@ -1,6 +1,6 @@
 "use client";
 
-import { formatLegPoints, formatProfitGbp, profitFromPoints } from "@the-syndicate/shared";
+import { formatLegPoints, formatProfitGbp, profitFromPoints } from "@tiki-acca/shared";
 import { useState } from "react";
 
 const DEFAULT_STAKE = 10;

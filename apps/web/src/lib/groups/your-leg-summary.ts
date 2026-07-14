@@ -1,7 +1,7 @@
 import type {
   GroupSummaryActiveLeg,
   GroupSummaryYourLeg,
-} from "@the-syndicate/shared";
+} from "@tiki-acca/shared";
 
 type LegRow = {
   userId: string;

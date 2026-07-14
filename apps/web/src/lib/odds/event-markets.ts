@@ -1,4 +1,4 @@
-import type { Market } from "@the-syndicate/shared";
+import type { Market } from "@tiki-acca/shared";
 import type { OddsApiBookmaker, OddsApiEvent } from "./api-types";
 import { isRetailBookmaker } from "./bookmakers";
 import {

@@ -3,9 +3,9 @@ import { resolveUserRole } from "@/lib/admin";
 import { normalizeEmail } from "@/lib/auth-email";
 import { recordAnalyticsEventAsync } from "@/lib/analytics";
 import { clientIpFrom, isRateLimited, retryAfterSeconds } from "@/lib/rate-limit";
-import { prisma } from "@the-syndicate/database";
+import { prisma } from "@tiki-acca/database";
 import bcrypt from "bcryptjs";
-import { signInSchema } from "@the-syndicate/shared";
+import { signInSchema } from "@tiki-acca/shared";
 import { NextResponse } from "next/server";
 
 const SIGN_IN_LIMIT = 10;

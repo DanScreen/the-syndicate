@@ -1,4 +1,4 @@
-import { prisma } from "@the-syndicate/database";
+import { prisma } from "@tiki-acca/database";
 import { isOddsApiConfigured } from "@/lib/odds/config";
 import { NextResponse } from "next/server";
 

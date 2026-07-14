@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/lib/admin";
 import { runOddsDiagnostics } from "@/lib/odds/diagnostics";
-import { DEFAULT_COMPETITION_ID, isValidCompetitionId } from "@the-syndicate/shared";
+import { DEFAULT_COMPETITION_ID, isValidCompetitionId } from "@tiki-acca/shared";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {

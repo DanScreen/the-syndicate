@@ -1,5 +1,5 @@
-import { prisma } from "@the-syndicate/database";
-import type { AnalyticsEventType } from "@the-syndicate/shared";
+import { prisma } from "@tiki-acca/database";
+import type { AnalyticsEventType } from "@tiki-acca/shared";
 
 type RecordEventInput = {
   type: AnalyticsEventType;

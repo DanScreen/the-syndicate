@@ -3,7 +3,7 @@ import { useAuth } from "@/auth/AuthProvider";
 import { RoundHistory } from "@/components/group-round";
 import { colors } from "@/config";
 import { useGroupData } from "@/context/group-data";
-import type { GroupHistoryResponse, HistoryRound } from "@the-syndicate/shared";
+import type { GroupHistoryResponse, HistoryRound } from "@tiki-acca/shared";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,

@@ -1,7 +1,7 @@
 import { getFixtures } from "@/lib/odds/provider";
 import { requireSession } from "@/lib/api-auth";
 import { isCompetitionEnabled } from "@/lib/competitions/settings";
-import { isValidCompetitionId } from "@the-syndicate/shared";
+import { isValidCompetitionId } from "@tiki-acca/shared";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {

@@ -1,8 +1,8 @@
 import { getMatchResultForLegFromDb } from "@/lib/results/match-store";
 import { resolveLegOutcome } from "@/lib/results/resolve-leg";
-import { prisma } from "@the-syndicate/database";
+import { prisma } from "@tiki-acca/database";
 import type { Leg } from "@prisma/client";
-import type { LegOutcome } from "@the-syndicate/shared";
+import type { LegOutcome } from "@tiki-acca/shared";
 
 export type PendingLeg = { legId: string; reason: string };
 

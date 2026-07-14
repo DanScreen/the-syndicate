@@ -1,4 +1,4 @@
-import type { LegOutcome } from "@the-syndicate/shared";
+import type { LegOutcome } from "@tiki-acca/shared";
 import { overUnderLineFromType, asianHandicapLineFromType } from "@/lib/odds/market-groups";
 
 /** Standard markets settle on 90-minute (regulation) score, not extra time. */

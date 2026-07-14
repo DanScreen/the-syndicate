@@ -41,6 +41,10 @@ jobs:
         with:
           terraform_version: 1.9.8
 
+      # Check committed .tf only — before generated prod.tfvars exists.
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+
       - name: Write tfvars
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
@@ -56,15 +60,13 @@ jobs:
           if [ -n "$CRON_SECRET" ]; then
             printf 'cron_secret = "%s"\n' "$CRON_SECRET" >> environments/prod.tfvars
           fi
+          terraform fmt environments/prod.tfvars
 
       - name: Terraform Init
         run: |
           terraform init \
             -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
             -backend-config="prefix=prod"
-
-      - name: Terraform Format Check
-        run: terraform fmt -check -recursive
 
       - name: Terraform Validate
         run: terraform validate

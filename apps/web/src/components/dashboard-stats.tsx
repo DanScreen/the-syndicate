@@ -8,7 +8,7 @@ import {
 } from "@/lib/stats/compute-user-stats";
 import { ShareCard } from "@/components/share-card";
 import { StakeProfit } from "@/components/stake-profit";
-import { formatLegPoints } from "@the-syndicate/shared";
+import { formatLegPoints } from "@tiki-acca/shared";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -109,7 +109,7 @@ export function DashboardStats({ userName }: { userName: string }) {
   const viewingAll = selectedGroupId === "all";
   const shareTitle = selectedGroup
     ? `${selectedGroup.groupName} stats`
-    : `${userName}'s syndicate stats`;
+    : `${userName}'s group stats`;
   const shareSubtitle = selectedGroup
     ? `${summary.settledRounds} settled round${summary.settledRounds === 1 ? "" : "s"}`
     : `Across ${summary.groupCount} group${summary.groupCount === 1 ? "" : "s"}`;
@@ -118,16 +118,16 @@ export function DashboardStats({ userName }: { userName: string }) {
     <section className="space-y-6">
       {groups.length > 1 ? (
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <label htmlFor="syndicate-filter" className="text-sm text-muted">
-            Syndicate
+          <label htmlFor="group-filter" className="text-sm text-muted">
+            Group
           </label>
           <select
-            id="syndicate-filter"
+            id="group-filter"
             value={selectedGroupId}
             onChange={(event) => setSelectedGroupId(event.target.value)}
             className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm sm:max-w-xs"
           >
-            <option value="all">All syndicates</option>
+            <option value="all">All groups</option>
             {groups.map((group) => (
               <option key={group.groupId} value={group.groupId}>
                 {group.groupName}
@@ -153,7 +153,7 @@ export function DashboardStats({ userName }: { userName: string }) {
       {chart.length > 1 ? (
         <div className="rounded-xl border border-border bg-card p-4">
           <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">
-            {viewingAll ? "Cumulative points (all syndicates)" : "Cumulative points"}
+            {viewingAll ? "Cumulative points (all groups)" : "Cumulative points"}
           </p>
           <div className="h-48 w-full">
             <ResponsiveContainer width="100%" height="100%">

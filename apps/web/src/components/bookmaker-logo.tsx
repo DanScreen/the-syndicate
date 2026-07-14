@@ -5,7 +5,7 @@ import {
   bookmakerLogoUrl,
   bookmakerRankPlace,
   type BookmakerRankPlace,
-} from "@the-syndicate/shared";
+} from "@tiki-acca/shared";
 import { useState } from "react";
 
 export function BookmakerLogo({
