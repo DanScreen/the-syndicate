@@ -15,10 +15,10 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.the-syndicate.uk"),
+  metadataBase: new URL("https://www.tikiacca.com"),
   title: {
-    default: "The Syndicate — Social Group Accas",
-    template: "%s · The Syndicate",
+    default: "Tiki Acca — Social Group Accas",
+    template: "%s · Tiki Acca",
   },
   description:
     "Create social betting groups, contribute legs to shared football accumulators, and compete on the leaderboard.",
@@ -27,17 +27,17 @@ export const metadata: Metadata = {
     apple: "/apple-icon",
   },
   openGraph: {
-    title: "The Syndicate — Social Group Accas",
+    title: "Tiki Acca — Social Group Accas",
     description:
       "Build accas with your mates. Each member picks a leg, track combined odds, and compete on the leaderboard.",
-    url: "https://www.the-syndicate.uk",
-    siteName: "The Syndicate",
+    url: "https://www.tikiacca.com",
+    siteName: "Tiki Acca",
     locale: "en_GB",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "The Syndicate — Social Group Accas",
+    title: "Tiki Acca — Social Group Accas",
     description:
       "Build accas with your mates. Each member picks a leg and competes on the leaderboard.",
   },

@@ -3,18 +3,18 @@ export const tagline = "Social group accas";
 export const hero = {
   headline: "Your mates. One acca. Every leg counts.",
   subhead:
-    "Each member picks one leg and The Syndicate handles the rest — locking in the best odds from UK bookmakers, tracking every result, and keeping score of who consistently delivers, and who lets the acca down. It's free for your whole group.",
+    "Each member picks one leg and Tiki Acca handles the rest — locking in the best odds from UK bookmakers, tracking every result, and keeping score of who consistently delivers, and who lets the acca down. It's free for your whole group.",
 };
 
 export const valueProps = [
   {
     title: "Built for friend groups",
-    body: "Pub syndicates, WhatsApp groups, five-a-side teams — create a private group, share an invite link, and everyone contributes one selection.",
+    body: "Pub groups, WhatsApp groups, five-a-side teams — create a private group, share an invite link, and everyone contributes one selection.",
     icon: "users",
   },
   {
     title: "Track who’s actually good",
-    body: "Leaderboards, performance charts, and leg-by-leg stats — see who consistently finds winners and how your syndicate performs over time.",
+    body: "Leaderboards, performance charts, and leg-by-leg stats — see who consistently finds winners and how your group performs over time.",
     icon: "trophy",
   },
   {
@@ -32,7 +32,7 @@ export const valueProps = [
 export const howItWorks = [
   {
     step: "01",
-    title: "Start a syndicate",
+    title: "Start a group",
     body: "Create a group and drop the invite link in your group chat.",
   },
   {
@@ -49,7 +49,7 @@ export const howItWorks = [
 
 export const audiences = [
   {
-    title: "Pub syndicates",
+    title: "Pub groups",
     body: "Replace the Saturday spreadsheet with a shared acca everyone can see and contribute to.",
   },
   {
@@ -64,12 +64,12 @@ export const audiences = [
 
 export const faqs = [
   {
-    q: "Is The Syndicate a bookmaker?",
+    q: "Is Tiki Acca a bookmaker?",
     a: "No. We help groups coordinate accumulator picks and compare odds. You place bets directly with licensed UK bookmakers via their own sites.",
   },
   {
     q: "How does scoring work?",
-    a: "Each member stakes one unit on the syndicate acca. A winning acca scores combined odds minus one for the group; each member gets odds minus one on their own leg. A losing acca costs one point each. Leaderboards rank members over time.",
+    a: "Each member stakes one unit on the group acca. A winning acca scores combined odds minus one for the group; each member gets odds minus one on their own leg. A losing acca costs one point each. Leaderboards rank members over time.",
   },
   {
     q: "Can we mix competitions?",
@@ -81,6 +81,6 @@ export const faqs = [
   },
   {
     q: "Do we have to bet real money?",
-    a: "No. Plenty of syndicates play for points and pride alone — the leaderboard works exactly the same whether or not anyone places a bet.",
+    a: "No. Plenty of groups play for points and pride alone — the leaderboard works exactly the same whether or not anyone places a bet.",
   },
 ] as const;

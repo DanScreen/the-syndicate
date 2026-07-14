@@ -1,6 +1,6 @@
 # Roadmap
 
-Production: [www.the-syndicate.uk](https://www.the-syndicate.uk) · **Index:** [README.md](./README.md)
+Production: [www.tikiacca.com](https://www.tikiacca.com) · **Index:** [README.md](./README.md)
 
 ---
 
@@ -57,7 +57,7 @@ Core loop and MVP polish are **shipped**:
 
 | Item | Notes |
 |------|-------|
-| **Paid subscriptions** | Core syndicate loop stays free; revisit only if a clear paid value prop emerges (e.g. organiser tools with proven demand) |
+| **Paid subscriptions** | Core group loop stays free; revisit only if a clear paid value prop emerges (e.g. organiser tools with proven demand) |
 | **Multi-leg accas** | Opt-in group setting: owner picks **1 / 2 / 3 legs per player** (symmetric — everyone same quota). Default stays 1. Build after user validation — [specs/multi-leg-accas.md](./specs/multi-leg-accas.md) |
 
 ---

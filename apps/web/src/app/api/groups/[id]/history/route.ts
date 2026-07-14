@@ -1,6 +1,6 @@
 import { requireSession } from "@/lib/api-auth";
 import { mapHistoryRound } from "@/lib/groups/map-history-round";
-import { prisma } from "@the-syndicate/database";
+import { prisma } from "@tiki-acca/database";
 import { NextResponse } from "next/server";
 
 type Params = { params: Promise<{ id: string }> };

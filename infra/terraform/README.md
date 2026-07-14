@@ -1,6 +1,6 @@
 # Terraform
 
-Provisions GCP infrastructure for **The Syndicate** as reproducible Infrastructure as Code.
+Provisions GCP infrastructure for **Tiki Acca** as reproducible Infrastructure as Code.
 
 **Policy:** All durable GCP infrastructure (Cloud SQL, Cloud Run service shell, Secret Manager, IAM, Workload Identity Federation, **Cloud Scheduler**, and related APIs) must be defined in this directory — not created with one-off `gcloud` commands. Application **releases** (Docker image, migrations, runtime env vars for API keys) stay in [`.github/workflows/deploy.yml`](../../.github/workflows/deploy.yml).
 

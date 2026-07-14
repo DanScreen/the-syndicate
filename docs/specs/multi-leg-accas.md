@@ -12,10 +12,10 @@
 
 We **may** allow groups to run accas where each member contributes more than one leg, but:
 
-1. **Not now** — priority remains validating the one-leg-each product with real syndicates ([ROADMAP.md](../ROADMAP.md)).
+1. **Not now** — priority remains validating the one-leg-each product with real groups ([ROADMAP.md](../ROADMAP.md)).
 2. **Opt-in only** — default stays **1 leg per member**; multi-leg is a group-level setting chosen at create time or in group settings (exact UX TBD).
 3. **Symmetric quota** — group owner picks **1, 2, or 3 legs per player**; **every member must submit the same number** before the round can lock. No mixed quotas within a group.
-4. **Owner configures syndicate format**; **platform admins set global ceilings** (abuse prevention, odds API cost).
+4. **Owner configures group format**; **platform admins set global ceilings** (abuse prevention, odds API cost).
 
 **Why defer:** one leg each is the product wedge (accountability, fair contribution, simple lock/scoring). Multi-leg is useful for small groups wanting longer accas but changes schema, lock logic, UX, scoring fairness, and mobile parity.
 
@@ -25,7 +25,7 @@ We **may** allow groups to run accas where each member contributes more than one
 
 | Use case | Why groups might want it |
 |----------|--------------------------|
-| Small syndicate (3–4 mates) | Build a 6–9 leg Saturday acca without recruiting more members |
+| Small group (3–4 mates) | Build a 6–9 leg Saturday acca without recruiting more members |
 | Regular pub / office group | Same core crew, occasional bigger acca |
 | Organiser-led group | Captain sets “2 legs each this week” for a cup final card |
 
@@ -50,7 +50,7 @@ We **may** allow groups to run accas where each member contributes more than one
 
 ## Platform admin ceilings (proposed)
 
-Global limits — not per-syndicate micromanagement:
+Global limits — not per-group micromanagement:
 
 | Setting | Example default | Purpose |
 |---------|-----------------|--------|

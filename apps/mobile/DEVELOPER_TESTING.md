@@ -31,7 +31,7 @@ Best for day-to-day development: hot reload, no build step, no Apple Developer a
    cd apps/mobile
    cp .env.example .env
    # Edit .env:
-   # EXPO_PUBLIC_API_URL=https://www.the-syndicate.uk
+   # EXPO_PUBLIC_API_URL=https://www.tikiacca.com
    ```
 
 3. Start the dev server:
@@ -59,7 +59,7 @@ Best for day-to-day development: hot reload, no build step, no Apple Developer a
 cd apps/mobile
 cp .env.example .env
 # EXPO_PUBLIC_API_URL=http://localhost:3000  (with npm run dev in apps/web)
-# or EXPO_PUBLIC_API_URL=https://www.the-syndicate.uk
+# or EXPO_PUBLIC_API_URL=https://www.tikiacca.com
 npm run ios:prod   # prod API
 # npm run ios      # uses .env
 ```
@@ -70,11 +70,11 @@ Good for UI and navigation; use Expo Go on a real device for gestures, keyboard,
 
 ## Option 3 — Standalone app on **your** iPhone (£0 Apple ID)
 
-Install **The Syndicate** as its own app icon on your phone — no Expo Go shell, no paid developer program (personal Apple ID only; cert renews ~every 7 days).
+Install **Tiki Acca** as its own app icon on your phone — no Expo Go shell, no paid developer program (personal Apple ID only; cert renews ~every 7 days).
 
 ```bash
 cd apps/mobile
-# .env with EXPO_PUBLIC_API_URL=https://www.the-syndicate.uk
+# .env with EXPO_PUBLIC_API_URL=https://www.tikiacca.com
 npx expo run:ios --device
 ```
 
@@ -82,7 +82,7 @@ First run: Xcode may prompt you to sign in with your **Apple ID** (Settings → 
 
 | Pros | Cons |
 |------|------|
-| Real app icon + `the-syndicate://` deep links | First build is slow (CocoaPods, native compile) |
+| Real app icon + `tikiacca://` deep links | First build is slow (CocoaPods, native compile) |
 | No £99/year yet | Only **your** devices — cannot share IPA with friends without Apple Developer |
 | Matches production binary closely | Re-sign weekly on free provisioning |
 
@@ -92,7 +92,7 @@ First run: Xcode may prompt you to sign in with your **Apple ID** (Settings → 
 
 ```bash
 cd apps/mobile
-EXPO_PUBLIC_API_URL=https://www.the-syndicate.uk npm run android
+EXPO_PUBLIC_API_URL=https://www.tikiacca.com npm run android
 ```
 
 Or Expo Go: `npm run dev:prod` → scan QR on Android with Expo Go app.
@@ -101,7 +101,7 @@ Or Expo Go: `npm run dev:prod` → scan QR on Android with Expo Go app.
 
 ## What to validate
 
-Same checklist as [FRIEND_TESTING.md](./FRIEND_TESTING.md#what-to-validate) — use **production** (`https://www.the-syndicate.uk`) unless you are deliberately testing against local web.
+Same checklist as [FRIEND_TESTING.md](./FRIEND_TESTING.md#what-to-validate) — use **production** (`https://www.tikiacca.com`) unless you are deliberately testing against local web.
 
 ---
 
@@ -122,7 +122,7 @@ Web “Add to Home Screen” is a **last-resort fallback** for iPhone friends if
 | Issue | Fix |
 |-------|-----|
 | QR code won’t connect | Same Wi‑Fi; disable VPN; try `npx expo start --tunnel` |
-| API errors on phone | `.env` must use `https://www.the-syndicate.uk`, not `localhost` |
+| API errors on phone | `.env` must use `https://www.tikiacca.com`, not `localhost` |
 | `expo run:ios --device` signing error | Xcode → Signing & Capabilities → Team = your Apple ID |
 | Expo Go version mismatch | App targets **SDK 54** — update Expo Go from App Store; `npx expo install --fix` in `apps/mobile` |
 | `Web Bundling failed` / `react-native-web` | Native app only — don’t press `w` in Expo CLI; scan QR with **Expo Go** or press `i` for Simulator |

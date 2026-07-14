@@ -1,4 +1,4 @@
-import type { HistoryLeg, HistoryRound } from "@the-syndicate/shared";
+import type { HistoryLeg, HistoryRound } from "@tiki-acca/shared";
 
 type LegRow = {
   id: string;

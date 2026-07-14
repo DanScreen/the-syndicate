@@ -1,6 +1,6 @@
 import { requireSession } from "@/lib/api-auth";
-import { prisma } from "@the-syndicate/database";
-import { joinGroupSchema } from "@the-syndicate/shared";
+import { prisma } from "@tiki-acca/database";
+import { joinGroupSchema } from "@tiki-acca/shared";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {

@@ -30,13 +30,13 @@ export function pickReminderEmail(params: {
   return {
     subject: `${params.groupName} — pick your leg (locks ${time})`,
     html: `
-      <p>Your syndicate acca locks at <strong>${time}</strong> when the first match kicks off.</p>
+      <p>Your group acca locks at <strong>${time}</strong> when the first match kicks off.</p>
       <p>You haven&apos;t submitted a leg yet${
         params.pendingCount > 1
           ? ` — ${params.pendingCount} members still waiting`
           : ""
       }.</p>
-      <p><a href="${params.groupUrl}">Submit your pick on The Syndicate</a></p>
+      <p><a href="${params.groupUrl}">Submit your pick on Tiki Acca</a></p>
       ${emailFooter()}
     `,
   };
@@ -52,11 +52,11 @@ export function roundLockedEmail(params: {
   return {
     subject: `${params.groupName} — acca locked`,
     html: `
-      <p>Your syndicate acca is locked and ready to place.</p>
+      <p>Your group acca is locked and ready to place.</p>
       <p><strong>Combined odds:</strong> ${params.combinedOdds}</p>
       <ul>${params.legLines}</ul>
       ${params.partialNote}
-      <p><a href="${params.groupUrl}">View acca on The Syndicate</a></p>
+      <p><a href="${params.groupUrl}">View acca on Tiki Acca</a></p>
       ${emailFooter()}
     `,
   };
@@ -73,10 +73,10 @@ export function roundSettledEmail(params: {
   return {
     subject: `${params.groupName} — round settled (${params.wonCount}W ${params.lostCount}L)`,
     html: `
-      <p>Your syndicate round has been settled.</p>
+      <p>Your group round has been settled.</p>
       <p><strong>Acca P/L (£10 stake):</strong> ${params.plLabel}</p>
       <ul>${params.legLines}</ul>
-      <p><a href="${params.groupUrl}">View stats on The Syndicate</a></p>
+      <p><a href="${params.groupUrl}">View stats on Tiki Acca</a></p>
       ${emailFooter()}
     `,
   };
@@ -96,7 +96,7 @@ export function pickReminderPush(params: {
 export function roundLockedPush(groupName: string): { title: string; body: string } {
   return {
     title: `${groupName} — acca locked`,
-    body: "Your syndicate acca is locked. Open the app to place your bet.",
+    body: "Your group acca is locked. Open the app to place your bet.",
   };
 }
 
@@ -107,6 +107,6 @@ export function roundSettledPush(params: {
 }): { title: string; body: string } {
   return {
     title: `${params.groupName} — round settled`,
-    body: `Result: ${params.wonCount}W ${params.lostCount}L. See how your syndicate did.`,
+    body: `Result: ${params.wonCount}W ${params.lostCount}L. See how your group did.`,
   };
 }

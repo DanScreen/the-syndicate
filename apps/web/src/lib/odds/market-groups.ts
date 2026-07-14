@@ -6,4 +6,4 @@ export {
   overUnderLineFromType,
   prefixedHandicapLineFromType,
   type MarketGroup,
-} from "@the-syndicate/shared";
+} from "@tiki-acca/shared";

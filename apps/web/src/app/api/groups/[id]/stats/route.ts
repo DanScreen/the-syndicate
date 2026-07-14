@@ -1,6 +1,6 @@
 import { requireSession } from "@/lib/api-auth";
 import { computeGroupStats } from "@/lib/stats/compute-group-stats";
-import { prisma } from "@the-syndicate/database";
+import { prisma } from "@tiki-acca/database";
 import { NextResponse } from "next/server";
 
 type Params = { params: Promise<{ id: string }> };

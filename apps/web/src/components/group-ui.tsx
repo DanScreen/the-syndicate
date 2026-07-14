@@ -1,7 +1,7 @@
 "use client";
 
-import type { Fixture, Market } from "@the-syndicate/shared";
-import { formatLegPoints, type AccaBookmakerRanking } from "@the-syndicate/shared";
+import type { Fixture, Market } from "@tiki-acca/shared";
+import { formatLegPoints, type AccaBookmakerRanking } from "@tiki-acca/shared";
 import {
   BookmakerLogo,
   bookmakerRankBadgeClass,

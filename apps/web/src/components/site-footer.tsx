@@ -8,7 +8,7 @@ export function GamblingFooter() {
       <div className="mx-auto max-w-5xl px-4 py-8 text-sm text-muted">
         <p className="font-medium text-foreground">Gamble responsibly</p>
         <p className="mt-2 max-w-2xl">
-          The Syndicate helps groups coordinate accumulator ideas. We do not take
+          Tiki Acca helps groups coordinate accumulator ideas. We do not take
           bets or handle money. You place bets directly with licensed bookmakers.
         </p>
         <p className="mt-3">
@@ -23,7 +23,7 @@ export function GamblingFooter() {
           </a>{" "}
           or call the National Gambling Helpline on <strong>0808 8020 133</strong>.
         </p>
-        <p className="mt-4 text-xs">© {new Date().getFullYear()} The Syndicate</p>
+        <p className="mt-4 text-xs">© {new Date().getFullYear()} Tiki Acca</p>
       </div>
     </footer>
   );

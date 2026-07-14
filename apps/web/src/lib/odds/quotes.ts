@@ -1,4 +1,4 @@
-import type { BookmakerQuote } from "@the-syndicate/shared";
+import type { BookmakerQuote } from "@tiki-acca/shared";
 import type { OddsApiMarket, OddsApiOutcome } from "./api-types";
 import { filterRealDeeplinks, isBookmakerHubUrl } from "./betslip-links";
 

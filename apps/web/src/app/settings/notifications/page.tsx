@@ -16,7 +16,7 @@ export default async function NotificationsSettingsPage() {
       <main className="mx-auto max-w-lg px-4 py-8">
         <h1 className="text-2xl font-bold">Notifications</h1>
         <p className="mt-2 text-sm text-muted">
-          Email and push alerts for your syndicates.
+          Email and push alerts for your groups.
         </p>
         <div className="mt-8">
           <NotificationSettings />

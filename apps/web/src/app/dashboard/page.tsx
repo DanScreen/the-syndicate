@@ -2,14 +2,14 @@ import { AppHeader } from "@/components/header";
 import { PageView } from "@/components/analytics/page-view";
 import { ActiveBetslipSummary } from "@/components/active-betslip-summary";
 import { PointsText } from "@/components/points-text";
-import { yourLegStatusMessage } from "@the-syndicate/shared";
+import { yourLegStatusMessage } from "@tiki-acca/shared";
 import { activeLegsInRound, yourLegInRound } from "@/lib/groups/your-leg-summary";
 import { openRound } from "@/lib/rounds/open-round";
 import { groupNetPoints } from "@/lib/stats/helpers";
-import { formatLegPoints, formatRoundStatusBadge } from "@the-syndicate/shared";
+import { formatLegPoints, formatRoundStatusBadge } from "@tiki-acca/shared";
 import { auth } from "@/lib/auth";
 import { greetingFirstName } from "@/lib/user-display";
-import { prisma } from "@the-syndicate/database";
+import { prisma } from "@tiki-acca/database";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -79,7 +79,7 @@ export default async function DashboardPage() {
 
         {isNewUser && (
           <section className="mt-8 rounded-xl border border-accent/30 bg-accent-muted/20 p-6">
-            <h2 className="font-semibold text-accent">Welcome to The Syndicate</h2>
+            <h2 className="font-semibold text-accent">Welcome to Tiki Acca</h2>
             <p className="mt-2 text-sm text-muted">
               Get your mates together in three steps:
             </p>
@@ -92,7 +92,7 @@ export default async function DashboardPage() {
               href="/groups/create"
               className="mt-4 inline-block rounded-lg bg-accent px-4 py-2 text-sm font-medium text-black hover:bg-green-400"
             >
-              Create your first syndicate
+              Create your first group
             </Link>
           </section>
         )}
@@ -102,7 +102,7 @@ export default async function DashboardPage() {
             <div className="rounded-xl border border-dashed border-border p-8 text-center text-muted">
               <p>No groups yet.</p>
               <p className="mt-2 text-sm">
-                Create a syndicate for your mates or join with an invite code.
+                Create a group for your mates or join with an invite code.
               </p>
             </div>
           ) : (
@@ -121,14 +121,14 @@ export default async function DashboardPage() {
                     activeRound = await openRound(m.group.id);
                   }
                   const legs = activeRoundRow?.legs ?? [];
-                  const syndicatePoints = groupNetPoints(allRounds);
+                  const groupPoints = groupNetPoints(allRounds);
                   const yourLeg = yourLegInRound(legs, session.user.id);
                   const activeLegs = activeLegsInRound(legs, session.user.id);
                   const roundStatus = activeRound?.status ?? "open";
                   return {
                     membership: m,
                     activeRound,
-                    syndicatePoints,
+                    groupPoints,
                     yourLeg,
                     activeLegs,
                     roundStatus,
@@ -138,7 +138,7 @@ export default async function DashboardPage() {
                 ({
                   membership: m,
                   activeRound,
-                  syndicatePoints,
+                  groupPoints,
                   yourLeg,
                   activeLegs,
                   roundStatus,
@@ -158,7 +158,7 @@ export default async function DashboardPage() {
                       {m.group._count.members} members · Owner: {m.group.owner.name}
                     </p>
                     <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
-                      <PointsText points={syndicatePoints} label="Group points" />
+                      <PointsText points={groupPoints} label="Group points" />
                       <PointsText points={m.points} label="Your points" />
                     </div>
                     <ActiveBetslipSummary

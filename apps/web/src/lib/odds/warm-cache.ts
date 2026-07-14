@@ -1,4 +1,4 @@
-import type { Fixture } from "@the-syndicate/shared";
+import type { Fixture } from "@tiki-acca/shared";
 import { getEnabledCompetitions } from "@/lib/competitions/settings";
 import { isOddsApiConfigured, oddsWarmCoreWithinHours } from "./config";
 import { MARKET_TIER_IDS, type MarketTierId } from "./market-tiers";

@@ -5,7 +5,7 @@ import {
   renderPerformanceShareImage,
   type ShareChartPoint,
 } from "@/lib/share/render-performance-image";
-import { formatLegPoints, pointsTone } from "@the-syndicate/shared";
+import { formatLegPoints, pointsTone } from "@tiki-acca/shared";
 import { useCallback, useEffect, useState } from "react";
 
 type ShareCardProps = {
@@ -101,7 +101,7 @@ export function ShareCard({
     setError("");
 
     try {
-      const file = new File([imageBlob], "syndicate-performance.png", {
+      const file = new File([imageBlob], "tiki-acca-performance.png", {
         type: "image/png",
       });
 
@@ -125,7 +125,7 @@ export function ShareCard({
 
       const link = document.createElement("a");
       link.href = URL.createObjectURL(imageBlob);
-      link.download = "syndicate-performance.png";
+      link.download = "tiki-acca-performance.png";
       link.click();
       URL.revokeObjectURL(link.href);
       setPreviewOpen(false);

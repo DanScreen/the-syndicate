@@ -5,7 +5,7 @@ import { GroupNav } from "@/components/group-nav";
 import { AppHeader } from "@/components/header";
 import { GroupDataProvider, useGroupData } from "@/context/group-data";
 import { greetingFirstName } from "@/lib/user-display";
-import { formatRoundStatusBadge } from "@the-syndicate/shared";
+import { formatRoundStatusBadge } from "@tiki-acca/shared";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";

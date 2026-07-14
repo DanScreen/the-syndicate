@@ -13,8 +13,8 @@ import {
   roundSettledEmail,
   roundSettledPush,
 } from "@/lib/notifications/templates";
-import { prisma } from "@the-syndicate/database";
-import { formatLegPoints } from "@the-syndicate/shared";
+import { prisma } from "@tiki-acca/database";
+import { formatLegPoints } from "@tiki-acca/shared";
 
 const DEDUPE_ROUND_LOCKED = "round_locked";
 const DEDUPE_ROUND_SETTLED = "round_settled";
@@ -28,7 +28,7 @@ function pushData(groupId: string, roundId?: string) {
   return {
     groupId,
     ...(roundId ? { roundId } : {}),
-    url: `the-syndicate://groups/${groupId}`,
+    url: `tikiacca://groups/${groupId}`,
   };
 }
 

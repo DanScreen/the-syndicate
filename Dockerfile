@@ -18,11 +18,11 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV DATABASE_URL="postgresql://syndicate:syndicate@localhost:5432/the_syndicate"
+ENV DATABASE_URL="postgresql://tikiacca:tikiacca@localhost:5432/tiki_acca"
 
 RUN mkdir -p apps/web/public
 RUN npm run db:generate
-RUN npm run build --workspace=@the-syndicate/web
+RUN npm run build --workspace=@tiki-acca/web
 
 FROM base AS runner
 WORKDIR /app

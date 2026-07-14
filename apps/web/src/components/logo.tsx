@@ -53,7 +53,7 @@ export function Logo({
       <LogoMark size={mark} />
       {showWordmark && (
         <span className={`${text} font-bold tracking-tight`}>
-          The <span className="text-accent">Syndicate</span>
+          Tiki <span className="text-accent">Acca</span>
         </span>
       )}
     </span>

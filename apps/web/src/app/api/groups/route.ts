@@ -3,8 +3,8 @@ import { generateInviteCode } from "@/lib/invite-code";
 import { activeLegsInRound, yourLegInRound } from "@/lib/groups/your-leg-summary";
 import { openRound } from "@/lib/rounds/open-round";
 import { groupNetPoints } from "@/lib/stats/helpers";
-import { prisma } from "@the-syndicate/database";
-import { createGroupSchema } from "@the-syndicate/shared";
+import { prisma } from "@tiki-acca/database";
+import { createGroupSchema } from "@tiki-acca/shared";
 import { NextResponse } from "next/server";
 
 export async function GET() {

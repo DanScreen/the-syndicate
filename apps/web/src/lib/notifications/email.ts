@@ -43,5 +43,5 @@ export async function sendEmail(params: SendEmailParams): Promise<boolean> {
 }
 
 export function appBaseUrl(): string {
-  return process.env.NEXTAUTH_URL ?? "https://www.the-syndicate.uk";
+  return process.env.NEXTAUTH_URL ?? "https://www.tikiacca.com";
 }

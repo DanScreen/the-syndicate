@@ -5,8 +5,8 @@ import type { MemberChartPoint, MemberSeries } from "@/lib/stats/compute-member-
 import type { MemberStatsResult } from "@/lib/stats/compute-member-stats";
 import { ShareCard } from "@/components/share-card";
 import { StakeProfit } from "@/components/stake-profit";
-import { formatLegHighlight, formatLegPoints } from "@the-syndicate/shared";
-import type { LegHighlight } from "@the-syndicate/shared";
+import { formatLegHighlight, formatLegPoints } from "@tiki-acca/shared";
+import type { LegHighlight } from "@tiki-acca/shared";
 import { useEffect, useState } from "react";
 import {
   CartesianGrid,

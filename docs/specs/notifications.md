@@ -10,7 +10,7 @@
 
 ## Goals
 
-1. **Keep syndicates on schedule** — remind members to submit before kickoff deadline ([round-deadline-lock.md](./round-deadline-lock.md)).
+1. **Keep groups on schedule** — remind members to submit before kickoff deadline ([round-deadline-lock.md](./round-deadline-lock.md)).
 2. **Surface acca lifecycle** — lock, in-progress legs, settle (today: lock + settle email only).
 3. **One notification model** — same events, channels (email + push), preferences, and deduplication.
 4. **Mobile-first for urgency** — push for time-sensitive nudges; email for receipts and detail.
@@ -90,7 +90,7 @@ flowchart TB
 2. **Channel adapters** — `EmailChannel`, `PushChannel` implement a shared interface; easy to add SMS later.
 3. **User preferences** — per-channel toggles per notification type (defaults on for transactional).
 4. **Dedup log** — `NotificationLog` rows prevent duplicate reminders (not just round-level timestamps).
-5. **Deep links** — every message links to `https://www.the-syndicate.uk/groups/{id}` or `the-syndicate://groups/{id}` on mobile.
+5. **Deep links** — every message links to `https://www.tikiacca.com/groups/{id}` or `tikiacca://groups/{id}` on mobile.
 6. **Fail open on email** — if Resend unset, skip silently (today's behaviour). Push skips if no token.
 7. **Async** — dispatch after HTTP response / after settlement transaction commits (`void dispatch(...)`).
 

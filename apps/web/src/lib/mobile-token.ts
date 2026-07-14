@@ -7,7 +7,7 @@ function getAuthSecret(): Uint8Array {
       throw new Error("AUTH_SECRET is required in production");
     }
     return new TextEncoder().encode(
-      "dev-secret-change-in-production-the-syndicate-2026"
+      "dev-secret-change-in-production-tiki-acca-2026"
     );
   }
   return new TextEncoder().encode(secret);

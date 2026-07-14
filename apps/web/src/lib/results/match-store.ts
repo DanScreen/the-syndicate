@@ -4,7 +4,7 @@ import {
   isLegOrientationReversed,
 } from "@/lib/results/football-data";
 import type { MatchResult } from "@/lib/results/resolve-leg";
-import { prisma } from "@the-syndicate/database";
+import { prisma } from "@tiki-acca/database";
 import type { Match } from "@prisma/client";
 
 const VOID_STATUSES = new Set(["POSTPONED", "CANCELLED", "SUSPENDED", "AWARDED"]);

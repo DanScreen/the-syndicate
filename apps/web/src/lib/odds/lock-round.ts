@@ -3,8 +3,8 @@ import { findBestAccaBookmaker, quoteForBookmaker, rankAccaBookmakers } from "@/
 import { buildRoundBetslipLinks, isBookmakerHubUrl } from "@/lib/odds/betslip-links";
 import { sortQuotesByBestOdds } from "@/lib/odds/bookmakers";
 import { bookmakerLinksFromQuotes } from "@/lib/odds/quotes";
-import { prisma } from "@the-syndicate/database";
-import type { AccaBookmakerRanking } from "@the-syndicate/shared";
+import { prisma } from "@tiki-acca/database";
+import type { AccaBookmakerRanking } from "@tiki-acca/shared";
 import type { Leg } from "@prisma/client";
 
 export async function lockRoundWithAccaPricing(roundId: string, legs: Leg[]) {

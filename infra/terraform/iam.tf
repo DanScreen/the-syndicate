@@ -1,7 +1,7 @@
 # Runtime service account — used by the Cloud Run service at request time
 resource "google_service_account" "cloud_run" {
   account_id   = "${replace(local.name_prefix, "-", "")}-run"
-  display_name = "The Syndicate Cloud Run runtime (${var.environment})"
+  display_name = "Tiki Acca Cloud Run runtime (${var.environment})"
 }
 
 resource "google_project_iam_member" "cloud_run_sql_client" {
@@ -19,7 +19,7 @@ resource "google_project_iam_member" "cloud_run_secret_accessor" {
 # GitHub Actions deploy service account
 resource "google_service_account" "github_deploy" {
   account_id   = "${replace(local.name_prefix, "-", "")}-deploy"
-  display_name = "The Syndicate GitHub deploy (${var.environment})"
+  display_name = "Tiki Acca GitHub deploy (${var.environment})"
 }
 
 resource "google_project_iam_member" "github_deploy_roles" {

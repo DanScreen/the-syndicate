@@ -34,7 +34,7 @@ export default function SignUpScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <Screen>
-        <Title>Join the Syndicate</Title>
+        <Title>Join Tiki Acca</Title>
         <Subtitle>Create your account</Subtitle>
         <View style={{ flexDirection: "row", gap: 8 }}>
           <View style={{ flex: 1 }}>

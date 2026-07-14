@@ -1,6 +1,6 @@
 import { notifyPickReminder } from "@/lib/notifications/round-notifications";
 import { firstKickoff } from "@/lib/rounds/first-kickoff";
-import { prisma } from "@the-syndicate/database";
+import { prisma } from "@tiki-acca/database";
 
 const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
 

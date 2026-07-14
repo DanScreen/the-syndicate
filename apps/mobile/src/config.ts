@@ -1,9 +1,9 @@
-import { BRAND_COLORS } from "@the-syndicate/shared";
+import { BRAND_COLORS } from "@tiki-acca/shared";
 
 export const API_URL =
   process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
 
-/** Turf Green — sourced from @the-syndicate/shared (matches web globals.css) */
+/** Turf Green — sourced from @tiki-acca/shared (matches web globals.css) */
 export const colors = {
   bg: BRAND_COLORS.background,
   card: BRAND_COLORS.card,

@@ -1,8 +1,8 @@
-import { prisma } from "@the-syndicate/database";
+import { prisma } from "@tiki-acca/database";
 import {
   DEFAULT_NOTIFICATION_PREFERENCES,
   type NotificationPreferences,
-} from "@the-syndicate/shared";
+} from "@tiki-acca/shared";
 
 export async function getNotificationPreferences(
   userId: string

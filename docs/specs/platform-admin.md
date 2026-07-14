@@ -12,7 +12,7 @@
 
 1. **Developer admin accounts** — platform-level access separate from group owner role.
 2. **Admin dashboard** — product metrics (users, picks, accas, activity).
-3. **Platform leaderboards** — rank syndicates and players by points (admin-only until more users).
+3. **Platform leaderboards** — rank groups and players by points (admin-only until more users).
 4. **Lightweight analytics** — logins, sign-ups, page views in Postgres.
 5. **Points-first UX** — points are the primary metric; profit = points × user stake.
 
@@ -48,7 +48,7 @@ Protected by middleware (`/admin/*` requires login) + `requireAdminPage()` (redi
 |-------|---------|
 | `/admin` | Platform overview — users, groups, picks, accas, activity |
 | `/admin/settlement` | Settlement queue — locked rounds, overdue-leg flags, manual settle |
-| `/admin/leaderboards` | Syndicate + player rankings by points |
+| `/admin/leaderboards` | Group + player rankings by points |
 | `/admin/competitions` | Enable/disable competitions in the leg picker |
 | `/admin/odds` | Odds API diagnostics — raw events, filter pipeline, quota |
 
@@ -74,7 +74,7 @@ Settlement is system-only (owners cannot settle), so this page is the **escape h
 | Route | Auth | Response |
 |-------|------|----------|
 | `GET /api/admin/stats` | Admin session | Platform aggregates |
-| `GET /api/admin/leaderboards` | Admin session | Syndicate + player rankings |
+| `GET /api/admin/leaderboards` | Admin session | Group + player rankings |
 | `GET /api/admin/competitions` | Admin session | Catalogue + enabled flags |
 | `PATCH /api/admin/competitions` | Admin session | Toggle `{ competitionId, enabled }` |
 | `GET /api/admin/odds-diagnostics` | Admin session | Odds API probe (`?competition=world-cup`) |
@@ -106,7 +106,7 @@ Non-admin → `403 Forbidden`. Unauthenticated → `401`.
 
 | Leaderboard | Sort key | Notes |
 |-------------|----------|-------|
-| **Syndicates** | Sum of `GroupMember.points` per group | Owner name, member count + W/L shown |
+| **Groups** | Sum of `GroupMember.points` per group | Owner name, member count + W/L shown |
 | **Players** | `User.totalPoints` | Group count + W/L shown |
 
 **Future:** Roll out public `/leaderboards` when user base grows — reuse `computePlatformLeaderboards()` and `PlatformLeaderboards` component.

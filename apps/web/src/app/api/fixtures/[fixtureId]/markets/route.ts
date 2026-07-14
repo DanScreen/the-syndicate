@@ -7,7 +7,7 @@ import {
   MARKET_TIERS,
 } from "@/lib/odds/market-tiers";
 import { findFixture, getExtendedMarketsForTier } from "@/lib/odds/provider";
-import { isValidCompetitionId } from "@the-syndicate/shared";
+import { isValidCompetitionId } from "@tiki-acca/shared";
 import { NextResponse } from "next/server";
 
 type Params = { params: Promise<{ fixtureId: string }> };

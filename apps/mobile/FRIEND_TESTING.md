@@ -20,7 +20,7 @@ Run 2–3 groups through the success metric ([docs/ROADMAP.md](../../docs/ROADMA
 6. Leg results update  
 7. Settle → leaderboard / stats  
 
-Use **production API:** `https://www.the-syndicate.uk`
+Use **production API:** `https://www.tikiacca.com`
 
 ---
 
@@ -69,10 +69,10 @@ eas build --profile preview --platform ios
 
 If you need iPhone friends in the loop **before** TestFlight:
 
-Everyone visits **https://www.the-syndicate.uk** in Safari → Share → **Add to Home Screen**.
+Everyone visits **https://www.tikiacca.com** in Safari → Share → **Add to Home Screen**.
 
 ```
-https://www.the-syndicate.uk/groups/join?code=INVITECODE
+https://www.tikiacca.com/groups/join?code=INVITECODE
 ```
 
 This is the **web product**, not the native app — use only when APK/TestFlight is not an option.
@@ -105,8 +105,8 @@ EAS **Submit** and `STORE_LISTING.md` are ready when you are.
 
 | Issue | Fix |
 |-------|-----|
-| Can't sign in on phone | Prod builds use `https://www.the-syndicate.uk` via `eas.json` / `.env` |
-| Invite link doesn't pre-fill code | Web: `/groups/join?code=`; native APK: `the-syndicate://groups/join?code=` |
+| Can't sign in on phone | Prod builds use `https://www.tikiacca.com` via `eas.json` / `.env` |
+| Invite link doesn't pre-fill code | Web: `/groups/join?code=`; native APK: `tikiacca://groups/join?code=` |
 | APK won't install | Enable unknown sources; ARM64 device |
 | iPhone mates want native app | TestFlight after Apple Developer — or web fallback temporarily |
 

@@ -11,7 +11,7 @@
 
 ## Brief
 
-The Syndicate is a **social group acca** product: one leg per member, shared stake, leaderboard accountability. The current **Acca stack** mark (three green bars on a rounded square) reads as “building an acca” but does not show **outcomes** or **multiple people**.
+Tiki Acca is a **social group acca** product: one leg per member, shared stake, leaderboard accountability. The current **Acca stack** mark (three green bars on a rounded square) reads as “building an acca” but does not show **outcomes** or **multiple people**.
 
 These concepts explore a mark that communicates:
 

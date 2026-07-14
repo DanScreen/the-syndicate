@@ -14,7 +14,7 @@
 2. **Better betslip UX** — links that land users closer to a ready-to-place acca, not generic football hubs.
 3. **Stay compliant** — clear disclosure, 18+, responsible gambling; UK CAP/ASA affiliate rules.
 
-**Out of scope (for now):** paid subscriptions — core syndicate loop stays free; no Pro tier planned until a clear paid value prop emerges.
+**Out of scope (for now):** paid subscriptions — core group loop stays free; no Pro tier planned until a clear paid value prop emerges.
 
 ---
 

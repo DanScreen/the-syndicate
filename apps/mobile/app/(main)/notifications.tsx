@@ -3,7 +3,7 @@ import { useAuth } from "@/auth/AuthProvider";
 import { Button, Card, ErrorText } from "@/components/ui";
 import { colors } from "@/config";
 import { copy } from "@/lib/copy";
-import type { NotificationPreferences } from "@the-syndicate/shared";
+import type { NotificationPreferences } from "@tiki-acca/shared";
 import { registerForPushNotifications } from "@/notifications/register";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -32,7 +32,7 @@ const SECTIONS: {
       {
         key: "emailRoundLocked",
         label: "Acca locked",
-        hint: "When your syndicate acca is ready",
+        hint: "When your group acca is ready",
       },
       {
         key: "emailRoundSettled",

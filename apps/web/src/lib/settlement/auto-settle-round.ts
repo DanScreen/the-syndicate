@@ -6,7 +6,7 @@ import {
   persistResolvableLegOutcomes,
   resolveRoundOutcomes,
 } from "@/lib/settlement/resolve-round-outcomes";
-import { prisma } from "@the-syndicate/database";
+import { prisma } from "@tiki-acca/database";
 
 export type AutoSettleRoundResult =
   | { status: "settled"; roundId: string; profitLossGbp: number }

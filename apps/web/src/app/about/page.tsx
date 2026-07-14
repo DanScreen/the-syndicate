@@ -6,7 +6,7 @@ import { howItWorks } from "@/lib/marketing-content";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "What The Syndicate is, who it's for, and how social group accumulators work.",
+    "What Tiki Acca is, who it's for, and how social group accumulators work.",
 };
 
 export default function AboutPage() {
@@ -19,7 +19,7 @@ export default function AboutPage() {
             Football accas, built for groups
           </h1>
           <p className="mt-6 text-lg leading-relaxed text-muted">
-            The Syndicate is a free platform for friend groups who build shared football
+            Tiki Acca is a free platform for friend groups who build shared football
             accumulators together. Each member contributes one leg. When everyone has picked,
             the acca locks, odds are compared across UK bookmakers, and you track results and
             performance over time.
@@ -33,7 +33,7 @@ export default function AboutPage() {
           <p className="mt-4 leading-relaxed text-muted">
             If your group already builds a Saturday acca, you know the drill: a betslip
             screenshot in the chat, a spreadsheet nobody updates, and a debate about whose pick
-            let everyone down. We built The Syndicate to give that a proper home — structured
+            let everyone down. We built Tiki Acca to give that a proper home — structured
             rounds, live odds, automatic settlement, and leaderboards that keep the score. And if
             you&apos;ve never built one together, there&apos;s no better way to start: one leg
             each, live odds, and the score kept for you.
@@ -83,7 +83,7 @@ export default function AboutPage() {
 
           <h2 className="mt-12 font-display text-2xl font-bold">Responsible gambling</h2>
           <p className="mt-4 leading-relaxed text-muted">
-            The Syndicate is for adults who choose to bet responsibly with licensed UK bookmakers.
+            Tiki Acca is for adults who choose to bet responsibly with licensed UK bookmakers.
             We encourage setting limits, never chasing losses, and seeking help if gambling stops
             being fun. Visit{" "}
             <a
@@ -99,7 +99,7 @@ export default function AboutPage() {
         </section>
 
         <div className="mt-16 rounded-2xl border border-border bg-card p-8 text-center">
-          <h2 className="font-display text-2xl font-bold">Start your syndicate</h2>
+          <h2 className="font-display text-2xl font-bold">Start your group</h2>
           <p className="mt-2 text-muted">Free to create a group and invite your mates.</p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link

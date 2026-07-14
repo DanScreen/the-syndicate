@@ -1,8 +1,8 @@
 import { calculateGroupProfitLoss, pointsForMemberLeg } from "@/lib/settlement";
 import { notifyRoundSettled } from "@/lib/notifications/round-notifications";
 import { openRound } from "@/lib/rounds/open-round";
-import { prisma } from "@the-syndicate/database";
-import type { LegOutcome } from "@the-syndicate/shared";
+import { prisma } from "@tiki-acca/database";
+import type { LegOutcome } from "@tiki-acca/shared";
 
 /**
  * Thrown when a round can no longer be settled — typically because a

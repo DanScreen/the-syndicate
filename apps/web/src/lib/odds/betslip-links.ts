@@ -1,4 +1,4 @@
-import type { AccaBookmakerRanking } from "@the-syndicate/shared";
+import type { AccaBookmakerRanking } from "@tiki-acca/shared";
 
 export type BetslipLinkQuality = "deeplink" | "hub";
 

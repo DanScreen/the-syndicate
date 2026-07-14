@@ -9,14 +9,14 @@ import type {
   MemberSeries,
   MemberStatsResponse,
   UserStatsResponse,
-} from "@the-syndicate/shared";
+} from "@tiki-acca/shared";
 import {
   formatLegHighlight,
   formatLegPoints,
   formatProfitGbp,
   profitFromPoints,
-} from "@the-syndicate/shared";
-import type { LegHighlight } from "@the-syndicate/shared";
+} from "@tiki-acca/shared";
+import type { LegHighlight } from "@tiki-acca/shared";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -372,7 +372,7 @@ export function UserPerformancePanel({
       />
 
       <Card>
-        <Text style={styles.blockTitle}>{userName}&apos;s syndicate stats</Text>
+        <Text style={styles.blockTitle}>{userName}&apos;s group stats</Text>
         <Text style={styles.meta}>
           {formatLegPoints(summary.netPoints)} pts · {summary.legsPlayed} legs across{" "}
           {summary.groupCount} group{summary.groupCount === 1 ? "" : "s"}

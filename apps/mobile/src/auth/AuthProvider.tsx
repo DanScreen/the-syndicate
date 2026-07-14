@@ -10,7 +10,7 @@ import {
 } from "react";
 import { api } from "@/api/client";
 import { unregisterPushNotifications } from "@/notifications/register";
-import type { AuthUser } from "@the-syndicate/shared";
+import type { AuthUser } from "@tiki-acca/shared";
 
 const TOKEN_KEY = "syndicate_token";
 const USER_KEY = "syndicate_user";

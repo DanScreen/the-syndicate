@@ -1,4 +1,4 @@
-import { prisma } from "@the-syndicate/database";
+import { prisma } from "@tiki-acca/database";
 
 type ExpoPushMessage = {
   to: string;

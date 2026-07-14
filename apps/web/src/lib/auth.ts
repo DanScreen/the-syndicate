@@ -1,8 +1,8 @@
-import { prisma } from "@the-syndicate/database";
+import { prisma } from "@tiki-acca/database";
 import bcrypt from "bcryptjs";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { signInSchema } from "@the-syndicate/shared";
+import { signInSchema } from "@tiki-acca/shared";
 import { resolveUserRole, getSessionUserRole } from "@/lib/admin";
 import { authConfig } from "@/lib/auth.config";
 import { normalizeEmail } from "@/lib/auth-email";

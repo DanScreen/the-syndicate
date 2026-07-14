@@ -2,7 +2,7 @@ import {
   formatActiveLegSummary,
   legOutcomeShortLabel,
   type GroupSummaryActiveLeg,
-} from "@the-syndicate/shared";
+} from "@tiki-acca/shared";
 
 export function ActiveBetslipSummary({
   legs,

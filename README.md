@@ -1,4 +1,4 @@
-# The Syndicate
+# Tiki Acca
 
 Social group accumulator betting platform for football fans. Each group member contributes one leg; when everyone submits, the acca locks with combined odds and bookmaker betslip links.
 

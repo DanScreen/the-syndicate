@@ -1,6 +1,6 @@
-import type { Fixture, Market } from "@the-syndicate/shared";
-import { getCompetitionById } from "@the-syndicate/shared";
-import { prisma } from "@the-syndicate/database";
+import type { Fixture, Market } from "@tiki-acca/shared";
+import { getCompetitionById } from "@tiki-acca/shared";
+import { prisma } from "@tiki-acca/database";
 import { oddsCacheTtlMs, oddsApiRegions } from "./config";
 import {
   fetchOddsApiFixturesLive,

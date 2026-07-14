@@ -1,5 +1,5 @@
 {
-  "name": "@the-syndicate/shared",
+  "name": "@tiki-acca/shared",
   "version": "0.0.1",
   "private": true,
   "main": "./src/index.ts",

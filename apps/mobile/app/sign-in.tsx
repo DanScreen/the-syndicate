@@ -32,7 +32,7 @@ export default function SignInScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <Screen>
-        <Title>The Syndicate</Title>
+        <Title>Tiki Acca</Title>
         <Subtitle>Sign in to your account</Subtitle>
         <Field
           placeholder="Email"

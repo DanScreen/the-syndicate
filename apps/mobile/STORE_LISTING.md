@@ -8,7 +8,7 @@ Source of truth for marketing voice: [docs/BRAND.md](../../docs/BRAND.md), [apps
 
 ## App name
 
-**The Syndicate**
+**Tiki Acca**
 
 ## Subtitle (iOS, 30 chars max)
 
@@ -22,9 +22,9 @@ Pick legs with your mates, lock the acca, compare bookmakers, track performance.
 
 Your mates. One acca. Every leg counts.
 
-The Syndicate is where football groups build shared accumulators together. Everyone picks one leg, you lock in the best odds, open bookmaker betslips, and keep score of who consistently delivers, and who lets the acca down.
+Tiki Acca is where football groups build shared accumulators together. Everyone picks one leg, you lock in the best odds, open bookmaker betslips, and keep score of who consistently delivers, and who lets the acca down.
 
-**Built for friend groups** — Create a private syndicate, share an invite code, and everyone contributes one selection per round.
+**Built for friend groups** — Create a private group, share an invite code, and everyone contributes one selection per round.
 
 **Track who's actually good** — Group and cross-group stats, leaderboards, and round history.
 
@@ -36,7 +36,7 @@ The Syndicate is where football groups build shared accumulators together. Every
 
 ## Keywords (iOS, comma-separated)
 
-football,acca,accumulator,syndicate,betting,odds,bookmaker,friends,leaderboard,premier league
+football,acca,accumulator,tiki acca,betting,odds,bookmaker,friends,leaderboard,premier league
 
 ## Category
 
@@ -45,11 +45,11 @@ football,acca,accumulator,syndicate,betting,odds,bookmaker,friends,leaderboard,p
 
 ## Privacy policy URL
 
-https://www.the-syndicate.uk/about
+https://www.tikiacca.com/about
 
 ## Support URL
 
-https://www.the-syndicate.uk/about
+https://www.tikiacca.com/about
 
 ## Screenshots (required before submission)
 

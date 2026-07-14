@@ -6,8 +6,8 @@ import { bookmakerLinksFromQuotes } from "@/lib/odds/quotes";
 import { isCompetitionEnabled } from "@/lib/competitions/settings";
 import { claimAndLockRound } from "@/lib/rounds/claim-lock-round";
 import { isPastKickoffCutoff } from "@/lib/rounds/first-kickoff";
-import { prisma } from "@the-syndicate/database";
-import { getCompetitionById, submitLegSchema } from "@the-syndicate/shared";
+import { prisma } from "@tiki-acca/database";
+import { getCompetitionById, submitLegSchema } from "@tiki-acca/shared";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {

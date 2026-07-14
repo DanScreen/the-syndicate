@@ -1,4 +1,4 @@
-# The Syndicate — mobile app
+# Tiki Acca — mobile app
 
 Expo React Native app (`apps/mobile`). Strategy: [docs/specs/mobile-apps.md](../../docs/specs/mobile-apps.md).
 
@@ -39,7 +39,7 @@ Store `EXPO_TOKEN` in GitHub secrets for CI (expo.dev → Access tokens).
 
 Optional — App Store Connect app ID for `eas submit` (after Apple Developer):
 
-1. Create the app in App Store Connect (`com.thesyndicate.app`)
+1. Create the app in App Store Connect (`com.tikiacca.app`)
 2. Replace `ascAppId` in `eas.json` → `submit.production.ios`
 
 ## Local development
@@ -52,7 +52,7 @@ npm run ios             # or npm run android
 Physical device against prod API:
 
 ```bash
-EXPO_PUBLIC_API_URL=https://www.the-syndicate.uk npm run ios
+EXPO_PUBLIC_API_URL=https://www.tikiacca.com npm run ios
 ```
 
 ## Build profiles (`eas.json`)
@@ -86,7 +86,7 @@ eas submit --platform android --profile production --latest
 ## Deep links (testing)
 
 ```bash
-xcrun simctl openurl booted "the-syndicate://groups/join?code=YOURCODE"
+xcrun simctl openurl booted "tikiacca://groups/join?code=YOURCODE"
 ```
 
 ## Store listing copy

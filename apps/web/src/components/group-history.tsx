@@ -6,7 +6,7 @@ import {
   groupAccaRoundPoints,
   type HistoryRound,
   type LegOutcome,
-} from "@the-syndicate/shared";
+} from "@tiki-acca/shared";
 import Link from "next/link";
 
 function legOutcomeLabel(outcome: string): string {

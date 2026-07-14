@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui";
 import { colors } from "@/config";
-import { formatLegPoints } from "@the-syndicate/shared";
+import { formatLegPoints } from "@tiki-acca/shared";
 import { useMemo, useState } from "react";
 import { LayoutChangeEvent, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Line, Polyline } from "react-native-svg";

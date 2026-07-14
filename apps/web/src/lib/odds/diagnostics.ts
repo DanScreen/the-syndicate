@@ -14,7 +14,7 @@ import {
   mapOddsEventToFixture,
 } from "@/lib/odds/the-odds-api";
 import { getOddsApiQuotaSnapshot } from "@/lib/odds/quota-snapshot";
-import { filterUpcomingFixtures, getCompetitionById } from "@the-syndicate/shared";
+import { filterUpcomingFixtures, getCompetitionById } from "@tiki-acca/shared";
 
 export type OddsEventSample = {
   id: string;

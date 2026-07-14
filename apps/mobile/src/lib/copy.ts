@@ -2,7 +2,7 @@
 export const copy = {
   dashboard: {
     emptyTitle: "No groups yet.",
-    emptyBody: "Create a syndicate for your mates or join with an invite code.",
+    emptyBody: "Create a group for your mates or join with an invite code.",
   },
   join: {
     title: "Join a group",
@@ -35,10 +35,10 @@ export const copy = {
   },
   compliance: {
     betslip:
-      "You place bets directly with licensed bookmakers. The Syndicate does not take bets or handle money. 18+ only.",
+      "You place bets directly with licensed bookmakers. Tiki Acca does not take bets or handle money. 18+ only.",
     footerTitle: "Gamble responsibly",
     footerBody:
-      "The Syndicate helps groups coordinate accumulator ideas. We do not take bets or handle money. You place bets directly with licensed bookmakers.",
+      "Tiki Acca helps groups coordinate accumulator ideas. We do not take bets or handle money. You place bets directly with licensed bookmakers.",
     helpline: "Need support? Visit BeGambleAware.org or call 0808 8020 133.",
     begambleawareUrl: "https://www.begambleaware.org",
   },

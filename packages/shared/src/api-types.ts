@@ -44,7 +44,7 @@ export type GroupSummary = {
   memberCount: number;
   status: string;
   ownerName: string;
-  /** Syndicate acca points (combined-odds scoring on wins). */
+  /** Group acca points (combined-odds scoring on wins). */
   groupPoints: number;
   /** This member's leg points in the group. */
   points: number;

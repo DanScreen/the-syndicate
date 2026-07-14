@@ -3,4 +3,4 @@ export {
   isRetailBookmaker,
   sortQuotesByBestOdds,
   topQuotes,
-} from "@the-syndicate/shared";
+} from "@tiki-acca/shared";

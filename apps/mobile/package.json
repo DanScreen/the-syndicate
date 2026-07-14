@@ -1,15 +1,15 @@
 {
-  "name": "@the-syndicate/mobile",
+  "name": "@tiki-acca/mobile",
   "version": "0.0.1",
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
     "dev": "expo start",
-    "dev:prod": "EXPO_PUBLIC_API_URL=https://www.the-syndicate.uk expo start",
+    "dev:prod": "EXPO_PUBLIC_API_URL=https://www.tikiacca.com expo start",
     "ios": "expo start --ios",
-    "ios:prod": "EXPO_PUBLIC_API_URL=https://www.the-syndicate.uk expo start --ios",
+    "ios:prod": "EXPO_PUBLIC_API_URL=https://www.tikiacca.com expo start --ios",
     "android": "expo start --android",
-    "android:prod": "EXPO_PUBLIC_API_URL=https://www.the-syndicate.uk expo start --android",
+    "android:prod": "EXPO_PUBLIC_API_URL=https://www.tikiacca.com expo start --android",
     "build:preview:ios": "eas build --profile preview --platform ios",
     "build:preview:android": "eas build --profile preview --platform android",
     "build:production:ios": "eas build --profile production --platform ios",
@@ -18,7 +18,7 @@
     "submit:android": "eas submit --platform android --profile production --latest"
   },
   "dependencies": {
-    "@the-syndicate/shared": "*",
+    "@tiki-acca/shared": "*",
     "expo": "^54.0.0",
     "expo-asset": "~12.0.13",
     "expo-constants": "~18.0.13",

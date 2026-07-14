@@ -1,5 +1,5 @@
 ---
-description: Next.js and React patterns for The Syndicate web app
+description: Next.js and React patterns for Tiki Acca web app
 globs: apps/web/**/*
 alwaysApply: false
 ---
@@ -8,7 +8,7 @@ alwaysApply: false
 
 - Use App Router; server components for data fetch, client components for forms
 - API routes return `NextResponse.json()` with correct status codes
-- Validate request bodies with Zod schemas from `@the-syndicate/shared`
+- Validate request bodies with Zod schemas from `@tiki-acca/shared`
 - Use `requireSession()` from `@/lib/api-auth` on protected routes
 - Tailwind only; dark theme tokens in `globals.css`
-- Prefer `prisma` from `@the-syndicate/database` — never raw SQL
+- Prefer `prisma` from `@tiki-acca/database` — never raw SQL

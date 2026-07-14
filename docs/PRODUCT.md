@@ -1,4 +1,4 @@
-# The Syndicate — Product
+# Tiki Acca — Product
 
 **Pitch:** Social groups where each member adds one leg to a shared football acca, track performance together, compete on picks.
 
@@ -10,7 +10,7 @@
 
 ## Target users
 
-- Recreational football bettors, friend groups, pub syndicates
+- Recreational football bettors, friend groups, pub groups
 - Future: other sports (update this doc first)
 
 ---
@@ -18,13 +18,13 @@
 ## Core flows
 
 ### 1. Onboarding
-Sign up (first + last name) → **Groups** home (`/dashboard`) listing syndicates. Cross-group stats on **Performance** (`/performance`). Header greets with first name only.
+Sign up (first + last name) → **Groups** home (`/dashboard`) listing groups. Cross-group stats on **Performance** (`/performance`). Header greets with first name only.
 
 ### 2. Create / join group
 Owner creates group (name only) → invite code + link. Anyone with the link can join via code or `/groups/join?code=`.
 
 ### 3. Build the acca
-1. Each syndicate has an always-open round on the **Round** tab — no manual start step
+1. Each group has an always-open round on the **Round** tab — no manual start step
 2. Each member picks a **competition**, fixture, market, selection (4-step form)
 3. **Best odds only** shown per selection
 4. All legs in **or the first submitted leg kicks off** → acca **locks** with best combined bookmaker (members who haven't picked miss that round)

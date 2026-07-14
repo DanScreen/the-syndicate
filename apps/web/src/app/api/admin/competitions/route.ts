@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/lib/admin";
 import { getCompetitionSettings, setCompetitionEnabled } from "@/lib/competitions/settings";
-import { updateCompetitionSettingSchema } from "@the-syndicate/shared";
+import { updateCompetitionSettingSchema } from "@tiki-acca/shared";
 import { NextResponse } from "next/server";
 
 export async function GET() {
