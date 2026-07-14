@@ -20,7 +20,12 @@ type AuthContextValue = {
   token: string | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (name: string, email: string, password: string) => Promise<void>;
+  signUp: (
+    firstName: string,
+    lastName: string,
+    email: string,
+    password: string
+  ) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -72,10 +77,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signUp = useCallback(
-    async (name: string, email: string, password: string) => {
+    async (
+      firstName: string,
+      lastName: string,
+      email: string,
+      password: string
+    ) => {
       await api("/api/auth/sign-up", {
         method: "POST",
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ firstName, lastName, email, password }),
       });
       await signIn(email, password);
     },

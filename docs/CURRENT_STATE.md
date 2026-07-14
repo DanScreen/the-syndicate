@@ -192,9 +192,9 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 
 | Path | Purpose |
 |------|---------|
-| `/` | Landing — hero, value props, how it works, FAQ, CTA |
+| `/` | Landing — hero (Sign up / Sign in), value props, how it works, FAQ, CTA |
 | `/about` | Product story, what we are/aren’t, responsible gambling |
-| `/sign-in`, `/sign-up` | Auth |
+| `/sign-in`, `/sign-up` | Auth — sign-up collects **first name** + **last name** |
 | `/dashboard` | **Groups home** — list of user's syndicates; **group/your points** (green/red); **your leg** or waiting status per card |
 | `/performance` | Cross-group stats (`DashboardStats`) — syndicate filter dropdown, charts, share cards |
 | `/admin` | **Admin** — platform metrics (admin role only) |
@@ -389,6 +389,8 @@ Env vars on Cloud Run: `NEXTAUTH_URL`, `EMAIL_FROM`, `ADMIN_EMAILS` (from GitHub
 
 Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `AnalyticsEvent`, `CompetitionSetting`.
 
+- `User.firstName` / `User.lastName` — collected at sign-up; header greeting uses first name only (`lib/user-display.ts`).
+- `User.name` — full display name (`firstName lastName`) for leaderboards, picks, emails.
 - `User.role` — platform role: `user` (default) or `admin` (via `ADMIN_EMAILS`).
 - `AnalyticsEvent` — lightweight product analytics (`type`, `userId?`, `path?`, `createdAt`).
 - One leg per user per round (`@@unique([roundId, userId])`).

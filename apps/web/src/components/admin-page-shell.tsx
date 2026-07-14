@@ -3,6 +3,7 @@ import { AppHeader } from "@/components/header";
 import { AdminNav } from "@/components/admin-nav";
 import { PageView } from "@/components/analytics/page-view";
 import { requireAdminPage } from "@/lib/admin";
+import { greetingFirstName } from "@/lib/user-display";
 
 export async function AdminPageShell({
   title,
@@ -21,7 +22,7 @@ export async function AdminPageShell({
   return (
     <div className="min-h-screen">
       <PageView path={path} userId={session!.user?.id} />
-      <AppHeader userName={session!.user?.name ?? "Admin"} />
+      <AppHeader userName={greetingFirstName(session!.user ?? {})} />
       <main className="mx-auto max-w-5xl px-4 py-8">
         <AdminNav />
         <div className="mb-8">

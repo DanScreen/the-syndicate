@@ -4,7 +4,7 @@ import { recordAnalyticsEventAsync } from "@/lib/analytics";
 import { clientIpFrom, isRateLimited, retryAfterSeconds } from "@/lib/rate-limit";
 import { prisma } from "@the-syndicate/database";
 import bcrypt from "bcryptjs";
-import { signUpSchema } from "@the-syndicate/shared";
+import { formatDisplayName, signUpSchema } from "@the-syndicate/shared";
 import { NextResponse } from "next/server";
 
 const SIGN_UP_LIMIT = 5;
@@ -40,16 +40,21 @@ export async function POST(request: Request) {
       );
     }
 
+    const firstName = parsed.data.firstName.trim();
+    const lastName = parsed.data.lastName.trim();
+    const name = formatDisplayName(firstName, lastName);
     const passwordHash = await bcrypt.hash(parsed.data.password, 10);
     const role = isAdminEmail(email) ? "admin" : "user";
     const user = await prisma.user.create({
       data: {
-        name: parsed.data.name,
+        firstName,
+        lastName,
+        name,
         email,
         passwordHash,
         role,
       },
-      select: { id: true, name: true, email: true },
+      select: { id: true, firstName: true, lastName: true, name: true, email: true },
     });
 
     recordAnalyticsEventAsync({ type: "sign_up", userId: user.id });

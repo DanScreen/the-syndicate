@@ -7,6 +7,7 @@ import { openRound } from "@/lib/rounds/open-round";
 import { groupNetPoints } from "@/lib/stats/helpers";
 import { formatLegPoints, formatRoundStatusBadge } from "@the-syndicate/shared";
 import { auth } from "@/lib/auth";
+import { greetingFirstName } from "@/lib/user-display";
 import { prisma } from "@the-syndicate/database";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -17,7 +18,7 @@ export default async function DashboardPage() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { name: true, totalPoints: true },
+    select: { firstName: true, name: true, totalPoints: true },
   });
 
   const memberships = await prisma.groupMember.findMany({
@@ -42,7 +43,7 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen">
       <PageView path="/dashboard" userId={session.user.id} />
-      <AppHeader userName={user?.name ?? "Player"} />
+      <AppHeader userName={greetingFirstName(user ?? {})} />
       <main className="mx-auto max-w-5xl px-4 py-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>

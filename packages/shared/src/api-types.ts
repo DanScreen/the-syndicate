@@ -3,6 +3,9 @@ import type { Fixture, LeaderboardEntry, Market, RoundStatus } from "./types";
 
 export type AuthUser = {
   id: string;
+  firstName: string;
+  lastName: string;
+  /** Full display name (`firstName lastName`). */
   name: string;
   email: string;
 };

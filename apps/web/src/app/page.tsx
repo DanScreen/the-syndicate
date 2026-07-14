@@ -54,13 +54,13 @@ export default function HomePage() {
                 href="/sign-up"
                 className="rounded-xl bg-accent px-6 py-3 font-medium text-black transition-colors hover:bg-accent-bright"
               >
-                Start a syndicate — free
+                Sign up
               </Link>
               <Link
-                href="/about"
+                href="/sign-in"
                 className="rounded-xl border border-border px-6 py-3 font-medium transition-colors hover:bg-card"
               >
-                What is The Syndicate?
+                Sign in
               </Link>
             </div>
           </div>
@@ -179,12 +179,20 @@ export default function HomePage() {
           <p className="mx-auto mt-4 max-w-xl text-muted">
             One leg each. Best odds locked. Bragging rights forever.
           </p>
-          <Link
-            href="/sign-up"
-            className="mt-8 inline-block rounded-xl bg-accent px-8 py-3.5 font-medium text-black transition-colors hover:bg-accent-bright"
-          >
-            Get started free
-          </Link>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <Link
+              href="/sign-up"
+              className="rounded-xl bg-accent px-8 py-3.5 font-medium text-black transition-colors hover:bg-accent-bright"
+            >
+              Sign up
+            </Link>
+            <Link
+              href="/sign-in"
+              className="rounded-xl border border-border px-8 py-3.5 font-medium transition-colors hover:bg-card"
+            >
+              Sign in
+            </Link>
+          </div>
           <p className="mx-auto mt-6 max-w-xl text-xs text-muted">
             We&apos;re not a bookmaker — you bet with licensed UK bookmakers, we keep the score. 18+
           </p>

@@ -64,7 +64,7 @@ export default function GroupsScreen() {
         <View style={styles.header}>
           <View>
             <Title>Dashboard</Title>
-            <Subtitle>Welcome, {user?.name}</Subtitle>
+            <Subtitle>Welcome, {user?.firstName ?? user?.name}</Subtitle>
           </View>
           <Pressable onPress={() => signOut().then(() => router.replace("/sign-in"))}>
             <Text style={styles.signOut}>Sign out</Text>

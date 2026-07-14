@@ -4,11 +4,12 @@ import { Button, ErrorText, Field, LinkText, Screen, Subtitle, Title } from "@/c
 import { redirectAfterAuth } from "@/lib/auth-redirect";
 import { router } from "expo-router";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform } from "react-native";
+import { KeyboardAvoidingView, Platform, View } from "react-native";
 
 export default function SignUpScreen() {
   const { signUp } = useAuth();
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,7 +19,7 @@ export default function SignUpScreen() {
     setLoading(true);
     setError("");
     try {
-      await signUp(name.trim(), email.trim(), password);
+      await signUp(firstName.trim(), lastName.trim(), email.trim(), password);
       redirectAfterAuth();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Sign up failed");
@@ -35,7 +36,14 @@ export default function SignUpScreen() {
       <Screen>
         <Title>Join the Syndicate</Title>
         <Subtitle>Create your account</Subtitle>
-        <Field placeholder="Name" value={name} onChangeText={setName} />
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          <View style={{ flex: 1 }}>
+            <Field placeholder="First name" value={firstName} onChangeText={setFirstName} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Field placeholder="Last name" value={lastName} onChangeText={setLastName} />
+          </View>
+        </View>
         <Field
           placeholder="Email"
           autoCapitalize="none"

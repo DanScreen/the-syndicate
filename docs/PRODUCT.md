@@ -18,7 +18,7 @@
 ## Core flows
 
 ### 1. Onboarding
-Sign up → **Groups** home (`/dashboard`) listing syndicates. Cross-group stats on **Performance** (`/performance`).
+Sign up (first + last name) → **Groups** home (`/dashboard`) listing syndicates. Cross-group stats on **Performance** (`/performance`). Header greets with first name only.
 
 ### 2. Create / join group
 Owner creates group (name only) → invite code + link. Anyone with the link can join via code or `/groups/join?code=`.

@@ -6,7 +6,8 @@ import { useState } from "react";
 
 export default function SignUpPage() {
   const router = useRouter();
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -20,14 +21,19 @@ export default function SignUpPage() {
     const res = await fetch("/api/auth/sign-up", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ firstName, lastName, email, password }),
     });
 
     const data = await res.json();
     setLoading(false);
 
     if (!res.ok) {
-      setError(data.error?.formErrors?.[0] ?? data.error ?? "Sign up failed");
+      const fieldError =
+        data.error?.fieldErrors?.firstName?.[0] ??
+        data.error?.fieldErrors?.lastName?.[0] ??
+        data.error?.fieldErrors?.email?.[0] ??
+        data.error?.fieldErrors?.password?.[0];
+      setError(fieldError ?? data.error?.formErrors?.[0] ?? data.error ?? "Sign up failed");
       return;
     }
 
@@ -45,15 +51,29 @@ export default function SignUpPage() {
       </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-        <div>
-          <label className="text-sm text-muted">Name</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2"
-            required
-          />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-sm text-muted">First name</label>
+            <input
+              type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              autoComplete="given-name"
+              className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2"
+              required
+            />
+          </div>
+          <div>
+            <label className="text-sm text-muted">Last name</label>
+            <input
+              type="text"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              autoComplete="family-name"
+              className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2"
+              required
+            />
+          </div>
         </div>
         <div>
           <label className="text-sm text-muted">Email</label>
@@ -61,6 +81,7 @@ export default function SignUpPage() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
             className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2"
             required
           />
@@ -71,6 +92,7 @@ export default function SignUpPage() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            autoComplete="new-password"
             className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2"
             minLength={8}
             required

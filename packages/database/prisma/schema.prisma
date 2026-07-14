@@ -9,6 +9,9 @@ datasource db {
 
 model User {
   id           String        @id @default(cuid())
+  firstName    String
+  lastName     String
+  /// Full display name (`firstName lastName`) for leaderboards, picks, emails.
   name         String
   email        String        @unique
   passwordHash String

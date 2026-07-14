@@ -39,7 +39,7 @@ flowchart TB
 
 | Entity | Purpose |
 |--------|---------|
-| **User** | Account; `role` (`user` \| `admin`); aggregate `totalPoints` |
+| **User** | Account; `firstName` / `lastName` / `name` (full display); `role` (`user` \| `admin`); aggregate `totalPoints` |
 | **Group** | Name, invite code, owner, status |
 | **GroupMember** | Membership, group role (`owner` \| `member`), group-scoped points |
 | **Round** | Acca cycle: open → locked → settled; `accaBookmakerRankings` JSON at lock |

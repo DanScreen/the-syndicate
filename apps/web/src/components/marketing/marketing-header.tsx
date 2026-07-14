@@ -14,13 +14,13 @@ export function MarketingHeader() {
         <nav className="flex items-center gap-1 sm:gap-2">
           <Link
             href="/about"
-            className="rounded-lg px-3 py-1.5 text-sm text-muted transition-colors hover:bg-card hover:text-foreground"
+            className="hidden rounded-lg px-3 py-1.5 text-sm text-muted transition-colors hover:bg-card hover:text-foreground sm:inline"
           >
             About
           </Link>
           <Link
             href="/sign-in"
-            className="hidden rounded-lg px-3 py-1.5 text-sm text-muted transition-colors hover:text-foreground sm:inline"
+            className="rounded-lg px-3 py-1.5 text-sm text-muted transition-colors hover:text-foreground"
           >
             Sign in
           </Link>
@@ -28,7 +28,7 @@ export function MarketingHeader() {
             href="/sign-up"
             className="rounded-lg bg-accent px-3.5 py-1.5 text-sm font-medium text-black transition-colors hover:bg-accent-bright"
           >
-            Get started
+            Sign up
           </Link>
         </nav>
       </div>

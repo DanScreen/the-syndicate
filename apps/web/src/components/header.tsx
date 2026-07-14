@@ -21,7 +21,7 @@ export function SiteHeader() {
             href="/sign-up"
             className="rounded-lg bg-accent px-3 py-1.5 font-medium text-black hover:bg-accent-bright"
           >
-            Get started
+            Sign up
           </Link>
         </nav>
       </div>

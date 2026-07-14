@@ -4,6 +4,7 @@ import { CopyInviteButton } from "@/components/site-footer";
 import { GroupNav } from "@/components/group-nav";
 import { AppHeader } from "@/components/header";
 import { GroupDataProvider, useGroupData } from "@/context/group-data";
+import { greetingFirstName } from "@/lib/user-display";
 import { formatRoundStatusBadge } from "@the-syndicate/shared";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -32,7 +33,7 @@ function GroupShell({ groupId, children }: { groupId: string; children: React.Re
 
   return (
     <div className="min-h-screen">
-      <AppHeader userName={session?.user?.name ?? "Player"} />
+      <AppHeader userName={greetingFirstName(session?.user ?? {})} />
       <main className="mx-auto max-w-5xl px-4 py-8">
         <Link href="/dashboard" className="text-sm text-muted hover:text-foreground">
           ← All groups

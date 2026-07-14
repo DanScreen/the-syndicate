@@ -106,13 +106,13 @@ export default function AboutPage() {
               href="/sign-up"
               className="rounded-xl bg-accent px-6 py-3 font-medium text-black hover:bg-accent-bright"
             >
-              Create account
+              Sign up
             </Link>
             <Link
-              href="/"
+              href="/sign-in"
               className="rounded-xl border border-border px-6 py-3 font-medium hover:bg-background"
             >
-              Back to home
+              Sign in
             </Link>
           </div>
         </div>

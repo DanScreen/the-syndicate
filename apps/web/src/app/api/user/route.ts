@@ -10,6 +10,8 @@ export async function GET() {
     where: { id: session!.user!.id },
     select: {
       id: true,
+      firstName: true,
+      lastName: true,
       name: true,
       email: true,
       totalPoints: true,
