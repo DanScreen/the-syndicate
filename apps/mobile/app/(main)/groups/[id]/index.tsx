@@ -128,8 +128,7 @@ export default function GroupRoundScreen() {
           lockedBookmakerName;
         const show =
           Boolean(combinedOdds) &&
-          rankings.length > 0 &&
-          (isLocked || (isOpen && (round?.legs.length ?? 0) > 0));
+          (isLocked || (isOpen && (round?.legs.length ?? 0) > 0 && rankings.length > 0));
         if (!show || combinedOdds == null) return null;
         return (
           <AccaSummary
@@ -138,8 +137,14 @@ export default function GroupRoundScreen() {
             bookmakerName={bookmakerName}
             singleBookmaker={Boolean(bestBookmakerId)}
             bookmakerRankings={rankings}
-            betslipLink={isLocked && resolvedLegs > 0 ? null : data.betslipLink}
-            showBookmakerCompare
+            betslipLink={
+              isLocked && resolvedLegs === 0
+                ? data.betslipLink
+                : isOpen
+                  ? data.betslipLink
+                  : null
+            }
+            showBookmakerCompare={isOpen}
             preview={isOpen}
           />
         );

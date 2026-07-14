@@ -34,7 +34,7 @@ Owner creates group (name only) → invite code + link. Anyone with the link can
 → [specs/competitions-and-results.md](./specs/competitions-and-results.md)
 
 ### 4. Place & track
-While the bet is open: leg picker shows **best odds only** per selection. Once locked: **frozen odds** per leg and combined acca odds — no live bookmaker comparison. Per-leg **Won / Lost / Awaiting** badges update as matches finish (acca may still be open). Betslip links shown until the first result; then tracking only. Page auto-refreshes every 60s while locked.
+While the bet is open: leg picker shows **best odds only** per selection; **Compare bookmakers** shows a provisional ranking from legs submitted so far. Once locked: **frozen combined odds** and the **recommended bookmaker** from lock only (compare list hidden). Per-leg **Won / Lost / Awaiting** badges update as matches finish. Betslip links shown until the first result; then tracking only. Page auto-refreshes every 60s while locked.
 
 **Editing picks:** members can change their own leg — in open rounds and in locked rounds — until the **first kickoff** among the acca's legs. Editing a locked round reprices the whole acca at current odds. Once the first match starts, picks are final.
 

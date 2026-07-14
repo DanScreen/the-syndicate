@@ -66,8 +66,7 @@ export default function GroupRoundPage() {
     lockedBookmakerName;
   const showAccaSummary =
     Boolean(combinedOdds) &&
-    rankings.length > 0 &&
-    (isLocked || (isOpen && activeRound.legs.length > 0));
+    (isLocked || (isOpen && activeRound.legs.length > 0 && rankings.length > 0));
 
   return (
     <div className="space-y-6">
@@ -105,8 +104,8 @@ export default function GroupRoundPage() {
           bookmakerName={bookmakerName}
           singleBookmaker={Boolean(bestBookmakerId)}
           bookmakerRankings={rankings}
-          betslipLink={isLocked && resolvedLegs > 0 ? null : betslipLink}
-          showBookmakerCompare
+          betslipLink={isLocked && resolvedLegs === 0 ? betslipLink : isOpen ? betslipLink : null}
+          showBookmakerCompare={isOpen}
           inProgress={isLocked}
           preview={isOpen}
         />
