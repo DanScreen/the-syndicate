@@ -101,9 +101,24 @@ export async function computeAccaRankingsForLegs(legs: Leg[]) {
     })
   );
 
-  return rankAccaBookmakers(legQuotes).map((r) => ({
-    bookmakerId: r.bookmakerId,
-    bookmakerName: r.bookmakerName,
-    combinedOdds: r.combinedOdds,
-  }));
+  const ranked = rankAccaBookmakers(legQuotes);
+  if (ranked.length > 0) {
+    return ranked.map((r) => ({
+      bookmakerId: r.bookmakerId,
+      bookmakerName: r.bookmakerName,
+      combinedOdds: r.combinedOdds,
+    }));
+  }
+
+  // Fallback when no single bookmaker quotes every leg: best-per-leg combined.
+  const best = findBestAccaBookmaker(legQuotes);
+  if (!best) return [];
+  return [
+    {
+      bookmakerId: best.bookmakerId,
+      bookmakerName: best.bookmakerName,
+      combinedOdds: best.combinedOdds,
+    },
+  ];
 }
+

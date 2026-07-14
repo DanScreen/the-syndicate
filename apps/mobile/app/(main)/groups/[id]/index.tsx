@@ -119,17 +119,31 @@ export default function GroupRoundScreen() {
         </View>
       ) : null}
 
-      {isLocked && round?.combinedOdds ? (
-        <AccaSummary
-          combinedOdds={round.combinedOdds}
-          bookmakerId={round.bestBookmakerId}
-          bookmakerName={lockedBookmakerName}
-          singleBookmaker={Boolean(round.bestBookmakerId)}
-          bookmakerRankings={round.accaBookmakerRankings ?? []}
-          betslipLink={resolvedLegs === 0 ? data.betslipLink : null}
-          showBookmakerCompare
-        />
-      ) : null}
+      {(() => {
+        const rankings = round?.accaBookmakerRankings ?? [];
+        const combinedOdds = round?.combinedOdds ?? rankings[0]?.combinedOdds ?? null;
+        const bestBookmakerId = round?.bestBookmakerId ?? rankings[0]?.bookmakerId ?? null;
+        const bookmakerName =
+          rankings.find((r) => r.bookmakerId === bestBookmakerId)?.bookmakerName ??
+          lockedBookmakerName;
+        const show =
+          Boolean(combinedOdds) &&
+          rankings.length > 0 &&
+          (isLocked || (isOpen && (round?.legs.length ?? 0) > 0));
+        if (!show || combinedOdds == null) return null;
+        return (
+          <AccaSummary
+            combinedOdds={combinedOdds}
+            bookmakerId={bestBookmakerId}
+            bookmakerName={bookmakerName}
+            singleBookmaker={Boolean(bestBookmakerId)}
+            bookmakerRankings={rankings}
+            betslipLink={isLocked && resolvedLegs > 0 ? null : data.betslipLink}
+            showBookmakerCompare
+            preview={isOpen}
+          />
+        );
+      })()}
 
       {canSubmit && round && token ? (
         <SubmitLegForm roundId={round.id} token={token} onSubmitted={reload} />

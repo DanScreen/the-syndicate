@@ -261,6 +261,7 @@ export function AccaSummary({
   singleBookmaker,
   bookmakerRankings = [],
   betslipLink,
+  preview = false,
   showBookmakerCompare = true,
 }: {
   combinedOdds: number;
@@ -269,6 +270,7 @@ export function AccaSummary({
   singleBookmaker: boolean;
   bookmakerRankings?: AccaBookmakerRanking[];
   betslipLink?: string | null;
+  preview?: boolean;
   showBookmakerCompare?: boolean;
 }) {
   const [bookmakersOpen, setBookmakersOpen] = useState(true);
@@ -279,17 +281,26 @@ export function AccaSummary({
     <View style={styles.stack}>
       <View style={styles.accaCard}>
         <View style={styles.accaMain}>
-          <Text style={styles.accaLabel}>Locked combined odds</Text>
+          <Text style={styles.accaLabel}>
+            {preview ? "Provisional combined odds" : "Locked combined odds"}
+          </Text>
           <Text style={styles.accaOdds}>{combinedOdds}</Text>
           {singleBookmaker && bookmakerName ? (
             <View style={styles.lockedAtRow}>
               {bookmakerId ? (
                 <BookmakerLogo bookmakerId={bookmakerId} name={bookmakerName} size={18} />
               ) : null}
-              <Text style={styles.meta}>Locked at {bookmakerName}</Text>
+              <Text style={styles.meta}>
+                {preview ? `Best so far at ${bookmakerName}` : `Locked at ${bookmakerName}`}
+              </Text>
             </View>
           ) : null}
-          {!singleBookmaker ? (
+          {preview ? (
+            <Text style={styles.meta}>
+              Live preview from legs so far — final bookmaker locks when the bet closes.
+            </Text>
+          ) : null}
+          {!singleBookmaker && !preview ? (
             <Text style={styles.warnText}>Best per-leg odds locked at submission</Text>
           ) : null}
         </View>
@@ -316,6 +327,7 @@ export function AccaSummary({
           >
             <Text style={styles.sectionTitle}>
               Compare bookmakers ({bookmakerRankings.length})
+              {preview ? " · provisional" : ""}
             </Text>
             <Text style={styles.meta}>{bookmakersOpen ? "▲" : "▼"}</Text>
           </Pressable>

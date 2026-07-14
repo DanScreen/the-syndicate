@@ -82,29 +82,53 @@ export async function GET(_request: Request, { params }: Params) {
   let accaBookmakerRankings: AccaBookmakerRanking[] | null = null;
   let betslipLinks = null;
   let betslipLink: string | null = null;
+  let previewCombinedOdds: number | null = null;
+  let previewBestBookmakerId: string | null = null;
 
-  if (activeRound?.status === "locked" && activeRound.legs.length > 0) {
-    const stored = activeRound.accaBookmakerRankings as AccaBookmakerRanking[] | null;
-    const rankings =
-      stored && stored.length > 0
-        ? stored
-        : await computeAccaRankingsForLegs(activeRound.legs);
+  if (activeRound && activeRound.legs.length > 0) {
+    if (activeRound.status === "locked") {
+      const stored = activeRound.accaBookmakerRankings as AccaBookmakerRanking[] | null;
+      const rankings =
+        stored && stored.length > 0
+          ? stored
+          : await computeAccaRankingsForLegs(activeRound.legs);
 
-    betslipLinks = buildRoundBetslipLinks(
-      activeRound.legs,
-      rankings,
-      activeRound.bestBookmakerId
-    );
+      betslipLinks = buildRoundBetslipLinks(
+        activeRound.legs,
+        rankings,
+        activeRound.bestBookmakerId
+      );
 
-    accaBookmakerRankings = betslipLinks.rankedLinks.map((r) => ({
-      bookmakerId: r.bookmakerId,
-      bookmakerName: r.bookmakerName,
-      combinedOdds: r.combinedOdds,
-      url: r.url,
-      hasAllLegLinks: r.hasAllLegLinks,
-    }));
+      accaBookmakerRankings = betslipLinks.rankedLinks.map((r) => ({
+        bookmakerId: r.bookmakerId,
+        bookmakerName: r.bookmakerName,
+        combinedOdds: r.combinedOdds,
+        url: r.url,
+        hasAllLegLinks: r.hasAllLegLinks,
+      }));
 
-    betslipLink = betslipLinks.primaryLink;
+      betslipLink = betslipLinks.primaryLink;
+    } else if (activeRound.status === "open") {
+      // Live preview from current submitted legs — not persisted until lock.
+      const rankings = await computeAccaRankingsForLegs(activeRound.legs);
+      if (rankings.length > 0) {
+        previewBestBookmakerId = rankings[0]!.bookmakerId;
+        previewCombinedOdds = rankings[0]!.combinedOdds;
+        betslipLinks = buildRoundBetslipLinks(
+          activeRound.legs,
+          rankings,
+          previewBestBookmakerId
+        );
+        accaBookmakerRankings = betslipLinks.rankedLinks.map((r) => ({
+          bookmakerId: r.bookmakerId,
+          bookmakerName: r.bookmakerName,
+          combinedOdds: r.combinedOdds,
+          url: r.url,
+          hasAllLegLinks: r.hasAllLegLinks,
+        }));
+        betslipLink = betslipLinks.primaryLink;
+      }
+    }
   }
 
   const leaderboard = group.members.map((m) => ({
@@ -132,7 +156,18 @@ export async function GET(_request: Request, { params }: Params) {
     },
     leaderboard,
     activeRound: activeRound
-      ? { ...activeRound, accaBookmakerRankings }
+      ? {
+          ...activeRound,
+          combinedOdds:
+            activeRound.status === "open" && previewCombinedOdds != null
+              ? previewCombinedOdds
+              : activeRound.combinedOdds,
+          bestBookmakerId:
+            activeRound.status === "open" && previewBestBookmakerId
+              ? previewBestBookmakerId
+              : activeRound.bestBookmakerId,
+          accaBookmakerRankings,
+        }
       : null,
     betslipLink,
     betslipLinks,

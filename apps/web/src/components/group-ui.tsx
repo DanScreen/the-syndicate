@@ -563,6 +563,7 @@ export function AccaSummary({
   bookmakerRankings = [],
   betslipLink,
   inProgress = false,
+  preview = false,
   showBookmakerCompare = true,
 }: {
   combinedOdds: number;
@@ -573,30 +574,45 @@ export function AccaSummary({
   betslipLink?: string | null;
   /** Locked acca — frozen odds copy; outcomes may be in progress. */
   inProgress?: boolean;
-  /** Show ranked bookmaker list (hidden after first result when tracking only). */
+  /** Open round — live provisional odds from legs so far. */
+  preview?: boolean;
+  /** Show ranked bookmaker list. */
   showBookmakerCompare?: boolean;
 }) {
   const [bookmakersOpen, setBookmakersOpen] = useState(true);
   const topBookmaker = bookmakerRankings[0];
   const showCompare = showBookmakerCompare && bookmakerRankings.length > 0;
+  const oddsLabel = inProgress
+    ? "Locked combined odds"
+    : preview
+      ? "Provisional combined odds"
+      : "Combined odds";
+  const bookmakerLine = inProgress
+    ? `Locked at ${bookmakerName}`
+    : preview
+      ? `Best so far at ${bookmakerName}`
+      : `Best at ${bookmakerName}`;
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent/30 bg-accent-muted/20 px-4 py-3 text-sm">
         <div>
-          <p className="font-semibold">{inProgress ? "Locked combined odds" : "Combined odds"}</p>
+          <p className="font-semibold">{oddsLabel}</p>
           <p className="text-2xl font-bold text-accent">{combinedOdds}</p>
           {singleBookmaker && bookmakerName && (
             <p className="mt-1 flex items-center gap-2 text-xs text-muted">
               {bookmakerId ? (
                 <BookmakerLogo bookmakerId={bookmakerId} name={bookmakerName} size={18} />
               ) : null}
-              <span>
-                {inProgress ? `Locked at ${bookmakerName}` : `Best at ${bookmakerName}`}
-              </span>
+              <span>{bookmakerLine}</span>
             </p>
           )}
-          {!singleBookmaker && (
+          {preview ? (
+            <p className="mt-1 text-xs text-muted">
+              Live preview from legs submitted so far — final bookmaker locks when the bet closes.
+            </p>
+          ) : null}
+          {!singleBookmaker && !preview && (
             <p className="mt-0.5 text-xs text-amber-400">
               {inProgress ? "Best per-leg odds locked at submission" : "Place legs individually"}
             </p>
@@ -626,6 +642,9 @@ export function AccaSummary({
             <span className="font-medium">
               Compare bookmakers
               <span className="ml-2 text-muted">({bookmakerRankings.length})</span>
+              {preview ? (
+                <span className="ml-2 text-xs font-normal text-muted">provisional</span>
+              ) : null}
             </span>
             <span className="text-muted">{bookmakersOpen ? "▲" : "▼"}</span>
           </button>

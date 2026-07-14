@@ -139,7 +139,7 @@ POST /api/legs                        → best retail quote; stores competitionI
 (lock) lockRoundWithAccaPricing()     → re-fetch quotes, rankAccaBookmakers(), store deeplinks on Leg
 ```
 
-At lock, `Leg.betslipUrl` stores the chosen bookmaker's outcome deeplink; `Leg.bookmakerLinks` maps all retail bookmakers → link. **While bet is open:** leg picker shows best odds only. **Once locked:** frozen odds per leg + combined acca; **Compare bookmakers** panel stays visible for the pending/locked acca; betslip **Open** links until the first result, then tracking only.
+At lock, `Leg.betslipUrl` stores the chosen bookmaker's outcome deeplink; `Leg.bookmakerLinks` maps all retail bookmakers → link. **While bet is open:** leg picker shows best odds only; **Compare bookmakers** shows a live provisional ranking from legs submitted so far. **Once locked:** frozen odds + the same podium for the pending acca; betslip **Open** links until the first result, then tracking only.
 
 Requires live odds (`ODDS_API_KEY`) — mock fixtures have no deeplinks. Odds are stored in **PostgreSQL** (`OddsBulkSnapshot`, `OddsEventSnapshot`) and refreshed by cron (`POST /api/internal/warm-odds-cache`). User picks read the DB; set `ODDS_DB_ONLY=true` in production to block live API calls from user traffic.
 
@@ -210,7 +210,7 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 
 **Navigation:** `AppNav` in header (Groups ↔ Performance ↔ Admin for platform admins). Inside a group, `GroupNav` tabs (Round / History / Leaderboard / Performance) share data via `GroupDataProvider` (fetched once in group layout; polls every 60s while acca locked).
 
-**Locked round UI:** Picks list with per-leg outcomes as matches finish (Won/Lost/Awaiting badges) → locked combined odds + **Compare bookmakers** podium (1st–3rd highlighted; bookmaker logos) for the whole locked/pending acca → betslip CTA until the first result, then tracking only. Polls every 60s while locked. **History** tab lists all settled rounds.
+**Locked round UI:** Picks list with per-leg outcomes as matches finish (Won/Lost/Awaiting badges) → locked combined odds + **Compare bookmakers** podium (1st–3rd highlighted; bookmaker logos). **Open round UI:** provisional combined odds + the same compare list from legs submitted so far. Betslip CTA until the first result once locked. Polls every 60s while locked. **History** tab lists all settled rounds.
 
 ---
 

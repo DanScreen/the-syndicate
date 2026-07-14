@@ -56,6 +56,19 @@ export default function GroupRoundPage() {
     lockedBanner = "All legs settled — acca will finalize shortly";
   }
 
+  const rankings = activeRound.accaBookmakerRankings ?? [];
+  const combinedOdds =
+    activeRound.combinedOdds ?? rankings[0]?.combinedOdds ?? null;
+  const bestBookmakerId =
+    activeRound.bestBookmakerId ?? rankings[0]?.bookmakerId ?? null;
+  const bookmakerName =
+    rankings.find((r) => r.bookmakerId === bestBookmakerId)?.bookmakerName ??
+    lockedBookmakerName;
+  const showAccaSummary =
+    Boolean(combinedOdds) &&
+    rankings.length > 0 &&
+    (isLocked || (isOpen && activeRound.legs.length > 0));
+
   return (
     <div className="space-y-6">
       {isOpen && (
@@ -85,16 +98,17 @@ export default function GroupRoundPage() {
         </div>
       </section>
 
-      {isLocked && activeRound.combinedOdds && (
+      {showAccaSummary && combinedOdds != null && (
         <AccaSummary
-          combinedOdds={activeRound.combinedOdds}
-          bookmakerId={activeRound.bestBookmakerId}
-          bookmakerName={lockedBookmakerName}
-          singleBookmaker={Boolean(activeRound.bestBookmakerId)}
-          bookmakerRankings={activeRound.accaBookmakerRankings ?? []}
-          betslipLink={resolvedLegs === 0 ? betslipLink : null}
+          combinedOdds={combinedOdds}
+          bookmakerId={bestBookmakerId}
+          bookmakerName={bookmakerName}
+          singleBookmaker={Boolean(bestBookmakerId)}
+          bookmakerRankings={rankings}
+          betslipLink={isLocked && resolvedLegs > 0 ? null : betslipLink}
           showBookmakerCompare
-          inProgress
+          inProgress={isLocked}
+          preview={isOpen}
         />
       )}
 
