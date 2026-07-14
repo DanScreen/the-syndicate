@@ -93,7 +93,7 @@ export default function GroupRoundPage() {
           singleBookmaker={Boolean(activeRound.bestBookmakerId)}
           bookmakerRankings={activeRound.accaBookmakerRankings ?? []}
           betslipLink={resolvedLegs === 0 ? betslipLink : null}
-          showBookmakerCompare={resolvedLegs === 0}
+          showBookmakerCompare
           inProgress
         />
       )}

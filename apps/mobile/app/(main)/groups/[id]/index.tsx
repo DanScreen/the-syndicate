@@ -127,7 +127,7 @@ export default function GroupRoundScreen() {
           singleBookmaker={Boolean(round.bestBookmakerId)}
           bookmakerRankings={round.accaBookmakerRankings ?? []}
           betslipLink={resolvedLegs === 0 ? data.betslipLink : null}
-          showBookmakerCompare={resolvedLegs === 0}
+          showBookmakerCompare
         />
       ) : null}
 
