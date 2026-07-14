@@ -261,6 +261,9 @@ export function AccaSummary({
   singleBookmaker,
   bookmakerRankings = [],
   betslipLink,
+  betslipLinkQuality = null,
+  betslipHasAllLegLinks = false,
+  legCount = 1,
   preview = false,
   showBookmakerCompare = true,
 }: {
@@ -270,12 +273,37 @@ export function AccaSummary({
   singleBookmaker: boolean;
   bookmakerRankings?: AccaBookmakerRanking[];
   betslipLink?: string | null;
+  betslipLinkQuality?: "deeplink" | "hub" | null;
+  betslipHasAllLegLinks?: boolean;
+  legCount?: number;
   preview?: boolean;
   showBookmakerCompare?: boolean;
 }) {
   const [bookmakersOpen, setBookmakersOpen] = useState(true);
   const topBookmaker = bookmakerRankings[0];
   const showCompare = showBookmakerCompare && bookmakerRankings.length > 0;
+  const ctaBookmaker = bookmakerName || topBookmaker?.bookmakerName || null;
+  const linkQuality =
+    betslipLinkQuality ??
+    topBookmaker?.linkQuality ??
+    (topBookmaker?.url ? "deeplink" : null);
+  const multiLeg = legCount > 1;
+  const ctaLabel =
+    linkQuality === "hub"
+      ? ctaBookmaker
+        ? `Open ${ctaBookmaker}`
+        : "Open bookmaker"
+      : multiLeg
+        ? `Open first pick${ctaBookmaker ? ` · ${ctaBookmaker}` : ""}`
+        : `Open betslip${ctaBookmaker ? ` · ${ctaBookmaker}` : ""}`;
+  const ctaHint =
+    linkQuality === "hub"
+      ? "Opens the football section — add each pick on-site, or use Open on a pick when available."
+      : multiLeg
+        ? betslipHasAllLegLinks
+          ? "Opens the first selection — use Open on each pick to add the rest."
+          : "Opens the closest selection — use Open on each pick to build the acca."
+        : null;
 
   return (
     <View style={styles.stack}>
@@ -306,14 +334,8 @@ export function AccaSummary({
         </View>
         {betslipLink ? (
           <>
-            <Button
-              label={
-                topBookmaker && bookmakerName
-                  ? `Open betslip · ${bookmakerName}`
-                  : "Open betslip"
-              }
-              onPress={() => Linking.openURL(betslipLink)}
-            />
+            <Button label={ctaLabel} onPress={() => Linking.openURL(betslipLink)} />
+            {ctaHint ? <Text style={styles.meta}>{ctaHint}</Text> : null}
             <BetslipDisclosure />
           </>
         ) : null}
@@ -335,6 +357,12 @@ export function AccaSummary({
             ? bookmakerRankings.map((entry, index) => {
                 const place = bookmakerRankPlace(index);
                 const logoSize = place === 1 ? 32 : place === "other" ? 24 : 28;
+                const qualityHint =
+                  entry.linkQuality === "hub"
+                    ? "Football hub"
+                    : entry.hasAllLegLinks === false && entry.url
+                      ? "First pick only"
+                      : null;
                 return (
                   <View
                     key={entry.bookmakerId}
@@ -381,8 +409,8 @@ export function AccaSummary({
                         >
                           {entry.bookmakerName}
                         </Text>
-                        {entry.hasAllLegLinks === false && entry.url ? (
-                          <Text style={styles.warnText}>Partial deeplink</Text>
+                        {qualityHint ? (
+                          <Text style={styles.warnText}>{qualityHint}</Text>
                         ) : null}
                       </View>
                     </View>

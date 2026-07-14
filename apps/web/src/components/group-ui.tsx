@@ -562,6 +562,9 @@ export function AccaSummary({
   singleBookmaker,
   bookmakerRankings = [],
   betslipLink,
+  betslipLinkQuality = null,
+  betslipHasAllLegLinks = false,
+  legCount = 1,
   inProgress = false,
   preview = false,
   showBookmakerCompare = true,
@@ -572,6 +575,9 @@ export function AccaSummary({
   singleBookmaker: boolean;
   bookmakerRankings?: AccaBookmakerRanking[];
   betslipLink?: string | null;
+  betslipLinkQuality?: "deeplink" | "hub" | null;
+  betslipHasAllLegLinks?: boolean;
+  legCount?: number;
   /** Locked acca — frozen odds copy; outcomes may be in progress. */
   inProgress?: boolean;
   /** Open round — live provisional odds from legs so far. */
@@ -592,6 +598,33 @@ export function AccaSummary({
     : preview
       ? `Best so far at ${bookmakerName}`
       : `Best at ${bookmakerName}`;
+
+  const ctaBookmaker =
+    (inProgress && bookmakerName) ||
+    (!inProgress && topBookmaker?.bookmakerName) ||
+    bookmakerName ||
+    null;
+  const linkQuality =
+    betslipLinkQuality ??
+    topBookmaker?.linkQuality ??
+    (topBookmaker?.url ? "deeplink" : null);
+  const multiLeg = legCount > 1;
+  const ctaLabel =
+    linkQuality === "hub"
+      ? ctaBookmaker
+        ? `Open ${ctaBookmaker}`
+        : "Open bookmaker"
+      : multiLeg
+        ? `Open first pick${ctaBookmaker ? ` · ${ctaBookmaker}` : ""}`
+        : `Open betslip${ctaBookmaker ? ` · ${ctaBookmaker}` : ""}`;
+  const ctaHint =
+    linkQuality === "hub"
+      ? "Opens the bookmaker’s football section — add each pick on-site, or use Open on a pick when a deeplink is available."
+      : multiLeg
+        ? betslipHasAllLegLinks
+          ? "Opens the first selection — use Open on each pick below to add the rest at this bookmaker."
+          : "Opens the closest available selection — use Open on each pick to build the acca."
+        : null;
 
   return (
     <div className="space-y-4">
@@ -619,16 +652,17 @@ export function AccaSummary({
           )}
         </div>
         {betslipLink && (
-          <a
-            href={betslipLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-black hover:bg-green-400"
-          >
-            Open betslip
-            {topBookmaker && !inProgress ? ` · ${topBookmaker.bookmakerName}` : ""}
-            {inProgress && bookmakerName ? ` · ${bookmakerName}` : ""}
-          </a>
+          <div className="flex max-w-xs flex-col items-end gap-1.5">
+            <a
+              href={betslipLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-black hover:bg-green-400"
+            >
+              {ctaLabel}
+            </a>
+            {ctaHint ? <p className="text-right text-[11px] leading-snug text-muted">{ctaHint}</p> : null}
+          </div>
         )}
       </div>
 
@@ -652,6 +686,12 @@ export function AccaSummary({
             <ol className="space-y-2 border-t border-border px-2 py-2">
               {bookmakerRankings.map((entry, index) => {
                 const place = bookmakerRankPlace(index);
+                const qualityHint =
+                  entry.linkQuality === "hub"
+                    ? "Football hub"
+                    : entry.hasAllLegLinks === false && entry.url
+                      ? "First pick only"
+                      : null;
                 return (
                   <li
                     key={entry.bookmakerId}
@@ -680,8 +720,8 @@ export function AccaSummary({
                         >
                           {entry.bookmakerName}
                         </span>
-                        {entry.hasAllLegLinks === false && entry.url ? (
-                          <span className="text-xs text-amber-400">Partial deeplink</span>
+                        {qualityHint ? (
+                          <span className="text-xs text-amber-400">{qualityHint}</span>
                         ) : null}
                       </span>
                     </span>

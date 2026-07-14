@@ -1,15 +1,21 @@
 import type { BookmakerQuote } from "@the-syndicate/shared";
 import type { OddsApiMarket, OddsApiOutcome } from "./api-types";
-import { bookmakerHubUrl } from "./betslip-links";
+import { filterRealDeeplinks, isBookmakerHubUrl } from "./betslip-links";
 
+/**
+ * Prefer selection → market → event links from The Odds API.
+ * Do not fall back to generic football hubs — those are UI-only last resorts
+ * in `buildRoundBetslipLinks`, not stored as if they were deeplinks.
+ */
 export function resolveDeeplink(
   outcome: OddsApiOutcome,
   market: OddsApiMarket,
   bookmakerEventLink?: string | null,
-  bookmakerId?: string
+  _bookmakerId?: string
 ): string | undefined {
-  const hub = bookmakerId ? bookmakerHubUrl(bookmakerId) : undefined;
-  return outcome.link ?? market.link ?? bookmakerEventLink ?? hub ?? undefined;
+  const candidate = outcome.link ?? market.link ?? bookmakerEventLink ?? undefined;
+  if (!candidate || isBookmakerHubUrl(candidate)) return undefined;
+  return candidate;
 }
 
 export function addQuote(
@@ -36,5 +42,5 @@ export function bookmakerLinksFromQuotes(quotes: BookmakerQuote[]): Record<strin
   for (const quote of quotes) {
     if (quote.link) links[quote.bookmakerId] = quote.link;
   }
-  return links;
+  return filterRealDeeplinks(links);
 }

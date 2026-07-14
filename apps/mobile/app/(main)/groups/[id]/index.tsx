@@ -144,6 +144,9 @@ export default function GroupRoundScreen() {
                   ? data.betslipLink
                   : null
             }
+            betslipLinkQuality={data.betslipLinks?.primaryLinkQuality ?? null}
+            betslipHasAllLegLinks={data.betslipLinks?.primaryHasAllLegLinks ?? false}
+            legCount={round?.legs.length ?? 1}
             showBookmakerCompare={isOpen}
             preview={isOpen}
           />

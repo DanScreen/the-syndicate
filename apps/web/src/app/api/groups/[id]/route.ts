@@ -1,7 +1,10 @@
 import { requireSession } from "@/lib/api-auth";
 import { mapHistoryRound } from "@/lib/groups/map-history-round";
 import { buildRoundBetslipLinks } from "@/lib/odds/betslip-links";
-import { computeAccaRankingsForLegs } from "@/lib/odds/lock-round";
+import {
+  computeAccaRankingsForLegs,
+  mergeLegBookmakerLinks,
+} from "@/lib/odds/lock-round";
 import { lockOpenRoundsAtKickoff } from "@/lib/rounds/lock-open-rounds-at-kickoff";
 import { openRound } from "@/lib/rounds/open-round";
 import { prisma } from "@the-syndicate/database";
@@ -15,6 +18,19 @@ const recentRoundInclude = {
     include: { user: { select: { id: true, name: true } } },
   },
 } as const;
+
+function rankedLinksForClient(
+  betslip: ReturnType<typeof buildRoundBetslipLinks>
+): AccaBookmakerRanking[] {
+  return betslip.rankedLinks.map((r) => ({
+    bookmakerId: r.bookmakerId,
+    bookmakerName: r.bookmakerName,
+    combinedOdds: r.combinedOdds,
+    url: r.url,
+    hasAllLegLinks: r.hasAllLegLinks,
+    linkQuality: r.linkQuality,
+  }));
+}
 
 export async function GET(_request: Request, { params }: Params) {
   const { session, error } = await requireSession();
@@ -86,48 +102,34 @@ export async function GET(_request: Request, { params }: Params) {
   let previewBestBookmakerId: string | null = null;
 
   if (activeRound && activeRound.legs.length > 0) {
+    const { rankings: computedRankings, bookmakerLinksByLegId } =
+      await computeAccaRankingsForLegs(activeRound.legs);
+    const legsForLinks = mergeLegBookmakerLinks(activeRound.legs, bookmakerLinksByLegId);
+
     if (activeRound.status === "locked") {
       const stored = activeRound.accaBookmakerRankings as AccaBookmakerRanking[] | null;
       const rankings =
-        stored && stored.length > 0
-          ? stored
-          : await computeAccaRankingsForLegs(activeRound.legs);
+        stored && stored.length > 0 ? stored : computedRankings;
 
       betslipLinks = buildRoundBetslipLinks(
-        activeRound.legs,
+        legsForLinks,
         rankings,
         activeRound.bestBookmakerId
       );
 
-      accaBookmakerRankings = betslipLinks.rankedLinks.map((r) => ({
-        bookmakerId: r.bookmakerId,
-        bookmakerName: r.bookmakerName,
-        combinedOdds: r.combinedOdds,
-        url: r.url,
-        hasAllLegLinks: r.hasAllLegLinks,
-      }));
-
+      accaBookmakerRankings = rankedLinksForClient(betslipLinks);
       betslipLink = betslipLinks.primaryLink;
-    } else if (activeRound.status === "open") {
+    } else if (activeRound.status === "open" && computedRankings.length > 0) {
       // Live preview from current submitted legs — not persisted until lock.
-      const rankings = await computeAccaRankingsForLegs(activeRound.legs);
-      if (rankings.length > 0) {
-        previewBestBookmakerId = rankings[0]!.bookmakerId;
-        previewCombinedOdds = rankings[0]!.combinedOdds;
-        betslipLinks = buildRoundBetslipLinks(
-          activeRound.legs,
-          rankings,
-          previewBestBookmakerId
-        );
-        accaBookmakerRankings = betslipLinks.rankedLinks.map((r) => ({
-          bookmakerId: r.bookmakerId,
-          bookmakerName: r.bookmakerName,
-          combinedOdds: r.combinedOdds,
-          url: r.url,
-          hasAllLegLinks: r.hasAllLegLinks,
-        }));
-        betslipLink = betslipLinks.primaryLink;
-      }
+      previewBestBookmakerId = computedRankings[0]!.bookmakerId;
+      previewCombinedOdds = computedRankings[0]!.combinedOdds;
+      betslipLinks = buildRoundBetslipLinks(
+        legsForLinks,
+        computedRankings,
+        previewBestBookmakerId
+      );
+      accaBookmakerRankings = rankedLinksForClient(betslipLinks);
+      betslipLink = betslipLinks.primaryLink;
     }
   }
 

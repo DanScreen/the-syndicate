@@ -91,12 +91,15 @@ export type GroupLeaderboardEntry = LeaderboardEntry & {
 export type BetslipLinks = {
   primaryLink: string | null;
   primaryBookmakerId: string | null;
+  primaryLinkQuality?: "deeplink" | "hub" | null;
+  primaryHasAllLegLinks?: boolean;
   legLinks: {
     legId: string;
     userName?: string;
     selectionLabel?: string;
     fixtureLabel?: string;
     url: string | null;
+    linkQuality?: "deeplink" | "hub" | null;
   }[];
 };
 

@@ -40,6 +40,7 @@ export type GroupData = {
       combinedOdds: number;
       url?: string | null;
       hasAllLegLinks?: boolean;
+      linkQuality?: "deeplink" | "hub" | null;
     }[] | null;
     legs: {
       id: string;
@@ -83,12 +84,15 @@ export type GroupData = {
   betslipLinks: {
     primaryLink: string | null;
     primaryBookmakerId: string | null;
+    primaryLinkQuality?: "deeplink" | "hub" | null;
+    primaryHasAllLegLinks?: boolean;
     legLinks: {
       legId: string;
       userName: string;
       selectionLabel: string;
       fixtureLabel: string;
       url: string | null;
+      linkQuality?: "deeplink" | "hub" | null;
     }[];
   } | null;
   isOwner: boolean;

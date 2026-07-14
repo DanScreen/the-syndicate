@@ -1,6 +1,8 @@
 import { requireSession } from "@/lib/api-auth";
+import { isBookmakerHubUrl } from "@/lib/odds/betslip-links";
 import { sortQuotesByBestOdds } from "@/lib/odds/bookmakers";
 import { findSelection } from "@/lib/odds/provider";
+import { bookmakerLinksFromQuotes } from "@/lib/odds/quotes";
 import { isCompetitionEnabled } from "@/lib/competitions/settings";
 import { claimAndLockRound } from "@/lib/rounds/claim-lock-round";
 import { isPastKickoffCutoff } from "@/lib/rounds/first-kickoff";
@@ -82,9 +84,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No odds available for this selection" }, { status: 400 });
   }
 
-  const bookmakerLinks = Object.fromEntries(
-    selection.odds.filter((q) => q.link).map((q) => [q.bookmakerId, q.link!])
-  );
+  const bookmakerLinks = bookmakerLinksFromQuotes(selection.odds);
+  const betslipUrl =
+    quote.link && !isBookmakerHubUrl(quote.link) ? quote.link : bookmakerLinks[quote.bookmakerId] ?? null;
 
   const leg = await prisma.leg.create({
     data: {
@@ -103,7 +105,7 @@ export async function POST(request: Request) {
       odds: quote.odds,
       bookmakerId: quote.bookmakerId,
       bookmakerName: quote.bookmakerName,
-      betslipUrl: quote.link ?? null,
+      betslipUrl,
       bookmakerLinks: Object.keys(bookmakerLinks).length > 0 ? bookmakerLinks : undefined,
     },
     include: { user: { select: { name: true } } },

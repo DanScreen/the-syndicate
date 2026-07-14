@@ -20,7 +20,7 @@ Core loop and MVP polish are **shipped**:
 - Live odds (The Odds API) + mock fallback; extended markets (BTTS, double chance, DNB)
 - Per-leg **competition picker** (EPL, Championship, La Liga, Ligue 1, Serie A, Bundesliga, World Cup)
 - **Acca lock** with best combined bookmaker + ranked bookmaker list at lock
-- **Real bookmaker betslip deeplinks** (The Odds API `includeLinks`)
+- **Real bookmaker betslip deeplinks** (Odds API `includeLinks`; hubs labelled last-resort; per-leg Open at recommended book)
 - **Match table** + football-data.org sync cron + hands-off auto-settle
 - **Email + push notifications** — lock, settle, pick reminders (T−2h); preferences UI — [specs/notifications.md](./specs/notifications.md)
 - **Unit-stake points** (win: `odds−1`, loss: `−1`, void: `0`)
@@ -42,7 +42,7 @@ Core loop and MVP polish are **shipped**:
 |---|---------|------|-------|
 | 1 | **Validate with real users** | Product | Run 2–3 friend groups through full loop on prod |
 | 2 | **Affiliate links** | Code + ops | Bookmaker affiliate programmes — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md) Phase A |
-| 3 | **Better betslip deeplinks** | Code | Acca-builder URLs, fewer hub fallbacks — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md) Phase B |
+| 3 | **Better betslip deeplinks** | Code | Remaining: acca-builder patterns + link-quality audit — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md) Phase B (hubs/per-leg/CTA honesty shipped) |
 | 4 | **FA Cup + EFL Cup** | Code | Phase 1b — `packages/shared/src/competitions.ts` |
 | 5 | **GCP cost reduction** | Ops/infra | Cloud SQL ~90% of spend; see [DEPLOYMENT.md](./DEPLOYMENT.md#cost-optimization) |
 | 6 | **Public platform leaderboards** | Code | Admin version shipped; open to all users when ready |

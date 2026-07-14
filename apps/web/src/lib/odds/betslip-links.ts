@@ -1,21 +1,27 @@
 import type { AccaBookmakerRanking } from "@the-syndicate/shared";
 
+export type BetslipLinkQuality = "deeplink" | "hub";
+
 export type LegBetslipLink = {
   legId: string;
   userName: string;
   selectionLabel: string;
   fixtureLabel: string;
   url: string | null;
+  linkQuality: BetslipLinkQuality | null;
 };
 
 export type RankedBetslipLink = AccaBookmakerRanking & {
   url: string | null;
   hasAllLegLinks: boolean;
+  linkQuality: BetslipLinkQuality | null;
 };
 
 export type RoundBetslipLinks = {
   primaryLink: string | null;
   primaryBookmakerId: string | null;
+  primaryLinkQuality: BetslipLinkQuality | null;
+  primaryHasAllLegLinks: boolean;
   rankedLinks: RankedBetslipLink[];
   legLinks: LegBetslipLink[];
 };
@@ -53,40 +59,86 @@ const BOOKMAKER_HUB_URLS: Record<string, string> = {
   copybet: "https://www.copybet.com/sport/football",
 };
 
+function normalizeUrl(url: string): string {
+  return url.trim().replace(/\/+$/, "").toLowerCase();
+}
+
+const HUB_URL_SET = new Set(Object.values(BOOKMAKER_HUB_URLS).map(normalizeUrl));
+
 export function bookmakerHubUrl(bookmakerId: string): string | null {
   return BOOKMAKER_HUB_URLS[bookmakerId] ?? null;
 }
 
-function parseBookmakerLinks(raw: unknown): Record<string, string> | null {
-  if (!raw || typeof raw !== "object") return null;
+/** True when URL is a known generic football hub (not a selection/event deeplink). */
+export function isBookmakerHubUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  const normalized = normalizeUrl(url);
+  if (HUB_URL_SET.has(normalized)) return true;
+  // Tolerate query/hash variants of a known hub base
+  for (const hub of HUB_URL_SET) {
+    if (normalized === hub || normalized.startsWith(`${hub}?`) || normalized.startsWith(`${hub}#`)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function filterRealDeeplinks(
+  links: Record<string, string> | null | undefined
+): Record<string, string> {
+  if (!links) return {};
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(links)) {
+    if (typeof value === "string" && value && !isBookmakerHubUrl(value)) {
+      out[key] = value;
+    }
+  }
+  return out;
+}
+
+function parseBookmakerLinks(raw: unknown): Record<string, string> {
+  if (!raw || typeof raw !== "object") return {};
   const links: Record<string, string> = {};
   for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
     if (typeof value === "string" && value) links[key] = value;
   }
-  return Object.keys(links).length > 0 ? links : null;
+  return filterRealDeeplinks(links);
 }
 
-function deeplinkForLeg(
-  leg: LegForBetslip,
-  bookmakerId: string
-): string | null {
+function realUrl(url: string | null | undefined): string | null {
+  if (!url || isBookmakerHubUrl(url)) return null;
+  return url;
+}
+
+function deeplinkForLeg(leg: LegForBetslip, bookmakerId: string): string | null {
   const links = parseBookmakerLinks(leg.bookmakerLinks);
-  if (links?.[bookmakerId]) return links[bookmakerId];
-  return null;
+  return links[bookmakerId] ?? null;
 }
 
 function rankedLinkForBookmaker(
   legs: LegForBetslip[],
   bookmakerId: string
-): { url: string | null; hasAllLegLinks: boolean } {
+): {
+  url: string | null;
+  hasAllLegLinks: boolean;
+  linkQuality: BetslipLinkQuality | null;
+} {
   const legUrls = legs
     .map((leg) => deeplinkForLeg(leg, bookmakerId))
     .filter((url): url is string => Boolean(url));
 
   const hasAllLegLinks = legUrls.length === legs.length && legs.length > 0;
-  const url = legUrls[0] ?? bookmakerHubUrl(bookmakerId);
 
-  return { url, hasAllLegLinks };
+  if (legUrls[0]) {
+    return { url: legUrls[0], hasAllLegLinks, linkQuality: "deeplink" };
+  }
+
+  const hub = bookmakerHubUrl(bookmakerId);
+  if (hub) {
+    return { url: hub, hasAllLegLinks: false, linkQuality: "hub" };
+  }
+
+  return { url: null, hasAllLegLinks: false, linkQuality: null };
 }
 
 export function buildRoundBetslipLinks(
@@ -95,28 +147,43 @@ export function buildRoundBetslipLinks(
   bestBookmakerId: string | null
 ): RoundBetslipLinks {
   const rankedLinks: RankedBetslipLink[] = rankings.map((ranking) => {
-    const { url, hasAllLegLinks } = rankedLinkForBookmaker(legs, ranking.bookmakerId);
-    return { ...ranking, url, hasAllLegLinks };
+    const { url, hasAllLegLinks, linkQuality } = rankedLinkForBookmaker(
+      legs,
+      ranking.bookmakerId
+    );
+    return { ...ranking, url, hasAllLegLinks, linkQuality };
   });
 
   const primaryBookmakerId = bestBookmakerId ?? rankedLinks[0]?.bookmakerId ?? null;
+  const primaryResolved = primaryBookmakerId
+    ? rankedLinkForBookmaker(legs, primaryBookmakerId)
+    : { url: null, hasAllLegLinks: false, linkQuality: null as BetslipLinkQuality | null };
   const primaryRank = rankedLinks.find((r) => r.bookmakerId === primaryBookmakerId);
-  const primaryLink =
-    (primaryBookmakerId && rankedLinkForBookmaker(legs, primaryBookmakerId).url) ??
-    primaryRank?.url ??
-    null;
+  const primaryLink = primaryResolved.url ?? primaryRank?.url ?? null;
+  const primaryLinkQuality =
+    primaryResolved.linkQuality ?? primaryRank?.linkQuality ?? null;
+  const primaryHasAllLegLinks =
+    primaryResolved.hasAllLegLinks || primaryRank?.hasAllLegLinks === true;
 
-  const legLinks: LegBetslipLink[] = legs.map((leg) => ({
-    legId: leg.id,
-    userName: leg.user.name,
-    selectionLabel: leg.selectionLabel,
-    fixtureLabel: `${leg.homeTeam} vs ${leg.awayTeam}`,
-    url: leg.betslipUrl ?? null,
-  }));
+  const legLinks: LegBetslipLink[] = legs.map((leg) => {
+    const preferred =
+      (primaryBookmakerId ? deeplinkForLeg(leg, primaryBookmakerId) : null) ??
+      realUrl(leg.betslipUrl);
+    return {
+      legId: leg.id,
+      userName: leg.user.name,
+      selectionLabel: leg.selectionLabel,
+      fixtureLabel: `${leg.homeTeam} vs ${leg.awayTeam}`,
+      url: preferred,
+      linkQuality: preferred ? "deeplink" : null,
+    };
+  });
 
   return {
     primaryLink,
     primaryBookmakerId,
+    primaryLinkQuality,
+    primaryHasAllLegLinks,
     rankedLinks,
     legLinks,
   };

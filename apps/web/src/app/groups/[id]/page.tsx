@@ -105,6 +105,9 @@ export default function GroupRoundPage() {
           singleBookmaker={Boolean(bestBookmakerId)}
           bookmakerRankings={rankings}
           betslipLink={isLocked && resolvedLegs === 0 ? betslipLink : isOpen ? betslipLink : null}
+          betslipLinkQuality={betslipLinks?.primaryLinkQuality ?? null}
+          betslipHasAllLegLinks={betslipLinks?.primaryHasAllLegLinks ?? false}
+          legCount={activeRound.legs.length}
           showBookmakerCompare={isOpen}
           inProgress={isLocked}
           preview={isOpen}

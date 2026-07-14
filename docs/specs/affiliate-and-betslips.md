@@ -22,11 +22,12 @@
 
 | Area | Current behaviour |
 |------|-------------------|
-| Deeplink source | The Odds API `includeLinks` on outcomes + bookmaker event links |
+| Deeplink source | The Odds API `includeLinks` on outcomes + bookmaker event links (hubs **not** stored as quotes) |
 | Storage | `Leg.betslipUrl`, `Leg.bookmakerLinks` JSON at lock; `Round.accaBookmakerRankings` |
-| Builder | `apps/web/src/lib/odds/betslip-links.ts` — per-leg links, ranked acca bookmakers |
-| Fallback | Static `BOOKMAKER_HUB_URLS` when API omits a link |
-| Gaps | Cross-bookmaker accas often have no single acca deeplink; ranked acca URL uses first leg link only; hub fallbacks are not selection-specific |
+| Builder | `apps/web/src/lib/odds/betslip-links.ts` — per-leg links for recommended bookmaker, ranked URLs with `linkQuality` |
+| Fallback | Static `BOOKMAKER_HUB_URLS` only when no real deeplink; UI labels hub vs first-pick |
+| Live refresh | `GET /api/groups/[id]` merges fresh Odds API links into open + locked CTAs |
+| Gaps | Cross-bookmaker/acca one-click slips still rare; ranked primary URL is first-leg deeplink |
 
 ---
 
@@ -50,12 +51,12 @@
 ## Phase B — Better betslip deeplinks
 
 - [ ] Audit link quality per bookmaker: selection-level vs event-level vs hub fallback (log or admin report)
-- [ ] Prefer **acca-builder** URLs from Odds API where the ranked bookmaker quotes all legs (`hasAllLegLinks`)
+- [ ] Prefer **acca-builder** URLs from Odds API where the ranked bookmaker quotes all legs (`hasAllLegLinks`) — when API exposes them
 - [ ] Investigate bookmaker-specific acca deep link patterns beyond first-leg URL
-- [ ] Per-leg **Open** links: always use stored `bookmakerLinks[bookmakerId]` for the locked bookmaker, not only `betslipUrl`
-- [ ] Reduce hub fallbacks — expand `BOOKMAKER_HUB_URLS` only as last resort; document known gaps
-- [ ] Handle cross-competition accas: clear UX when user must place legs on separate bookmaker pages
-- [ ] Re-fetch / refresh links at lock (already in `lockRoundWithAccaPricing`) — verify stale link edge cases
+- [x] Per-leg **Open** links: use `bookmakerLinks[recommendedBookmaker]`, not only `betslipUrl`
+- [x] Reduce hub fallbacks — hubs are last resort only; never stored as quote deeplinks; UI distinguishes hub vs first-pick
+- [x] Clear multi-leg UX: CTA = first pick / hub; hint to Open each pick
+- [x] Refresh links on group fetch (open + locked) via `computeAccaRankingsForLegs` + merge
 
 ---
 

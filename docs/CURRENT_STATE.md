@@ -139,7 +139,7 @@ POST /api/legs                        → best retail quote; stores competitionI
 (lock) lockRoundWithAccaPricing()     → re-fetch quotes, rankAccaBookmakers(), store deeplinks on Leg
 ```
 
-At lock, `Leg.betslipUrl` stores the chosen bookmaker's outcome deeplink; `Leg.bookmakerLinks` maps all retail bookmakers → link. **While bet is open:** leg picker shows best odds only; **Compare bookmakers** shows a live provisional ranking from legs submitted so far. **Once locked:** only the **final combined odds** and **recommended bookmaker** from lock (no compare list); betslip **Open** until the first result, then tracking only.
+At lock, `Leg.betslipUrl` stores the chosen bookmaker's **real** outcome/event deeplink (never a generic football hub); `Leg.bookmakerLinks` maps retail bookmakers → Odds API links only. **Hub URLs** (`BOOKMAKER_HUB_URLS`) are a last-resort UI fallback and are tagged `linkQuality: "hub"`. **While bet is open:** leg picker shows best odds only; **Compare bookmakers** shows a live provisional ranking + refreshed deeplinks from current quotes. **Once locked:** only the **final combined odds** and **recommended bookmaker** from lock (no compare list); primary CTA opens the best available deeplink (first pick when multi-leg) until the first result, then tracking only. Per-leg **Open** uses `bookmakerLinks[recommendedBookmaker]` when present.
 
 Requires live odds (`ODDS_API_KEY`) — mock fixtures have no deeplinks. Odds are stored in **PostgreSQL** (`OddsBulkSnapshot`, `OddsEventSnapshot`) and refreshed by cron (`POST /api/internal/warm-odds-cache`). User picks read the DB; set `ODDS_DB_ONLY=true` in production to block live API calls from user traffic.
 
@@ -159,7 +159,7 @@ Full budgeting: [DEPLOYMENT.md — The Odds API](./DEPLOYMENT.md#the-odds-api--c
 
 ### Acca bookmaker rankings
 
-At lock, `rankAccaBookmakers()` in `apps/web/src/lib/odds/acca.ts` ranks all retail bookmakers by combined acca odds. Stored as `Round.accaBookmakerRankings` (JSON). Older locked rounds backfill lazily on `GET /api/groups/[id]`. **Open rounds** use a live provisional ranking for the Compare UI. **Locked rounds** surface final odds + best bookmaker from that ranking (compare list hidden); deeplinks until the first leg result.
+At lock, `rankAccaBookmakers()` in `apps/web/src/lib/odds/acca.ts` ranks all retail bookmakers by combined acca odds. Stored as `Round.accaBookmakerRankings` (JSON). Older locked rounds backfill lazily on `GET /api/groups/[id]`. **Open rounds** use a live provisional ranking for the Compare UI. **Locked rounds** surface final odds + best bookmaker from that ranking (compare list hidden). `GET /api/groups/[id]` refreshes Odds API deeplinks for the CTA and per-leg Open (odds remain frozen at lock). Multi-leg CTAs label **Open first pick** (or **Open {bookmaker}** for hubs) — UK books rarely expose a one-click full-acca URL.
 
 Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_rankings`.
 
@@ -174,9 +174,10 @@ Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_
 | `apps/web/src/lib/odds/odds-store.ts` | PostgreSQL odds snapshots (bulk + per-event tiers) |
 | `apps/web/src/lib/odds/warm-cache.ts` | Cron odds refresh logic |
 | `apps/web/src/lib/odds/market-builders.ts` | Odds API → app market mappers |
-| `apps/web/src/lib/odds/quotes.ts` | Quote helpers + deeplink resolution |
+| `apps/web/src/lib/odds/quotes.ts` | Quote helpers + deeplink resolution (no hub fallback) |
+| `apps/web/src/lib/odds/betslip-links.ts` | Ranked/per-leg links; hub detection; CTA link quality |
 | `apps/web/src/lib/odds/acca.ts` | Acca bookmaker ranking + best combined |
-| `apps/web/src/lib/odds/lock-round.ts` | Lock + reprice + store deeplinks |
+| `apps/web/src/lib/odds/lock-round.ts` | Lock + reprice + store deeplinks; live link enrichment |
 | `apps/web/src/lib/odds/bookmakers.ts` | Retail filter, sort best odds |
 | `apps/web/src/components/group-ui.tsx` | Leg picker (4-step), locked round picks, settle UI |
 | `apps/web/src/components/app-nav.tsx` | Header nav: Groups / Performance / Admin |
@@ -445,8 +446,8 @@ Recent migrations include `20260711100000_competition_settings` (admin competiti
 2. **Settlement is system-only** — auto-settle runs after match sync (every 5 min); leg outcomes update as matches finish; round settles when all legs are ready. Owners cannot settle (routes removed July 2026). Overlapping settle attempts are safe — transactional, exactly-once via an atomic `locked → settled` claim (see [Settlement](#settlement)). Rounds the system cannot resolve are handled by admins via the **settlement queue** (`/admin/settlement`) — legs still pending 2h+ after kickoff are flagged for intervention.
 3. **Email notifications** require Resend setup (`RESEND_API_KEY`, `EMAIL_FROM`); skipped if unset.
 4. **Auto-settle requires synced `Match` rows** — 5-min cron or manual `POST /api/internal/sync-matches`.
-5. **Cross-competition acca** — often no single bookmaker; best-per-leg odds locked at submission; per-leg deeplinks at lock only.
-6. **Betslip deeplinks** require live odds API (`includeLinks`); mock mode falls back to bookmaker hub URLs only.
+5. **Cross-competition acca** — often no single bookmaker; best-per-leg odds locked at submission; per-leg deeplinks when Odds API provides them.
+6. **Betslip deeplinks** — selection/event links from Odds API (`includeLinks`); hubs only as labelled last resort. **No one-click full multi-leg betslip** for most UK books — CTA opens first available pick; users add remaining legs via per-leg Open. Mock mode has hubs only.
 7. **The Odds API quota** — credits = `markets × regions`. Cron warm: **3** bulk + **5 × N** core per enabled competition every 6 h (`N` = fixtures within `ODDS_WARM_CORE_WITHIN_HOURS`, default 72). User “specials” tier = **7** per fixture on demand only. Set `ODDS_DB_ONLY=true` so users do not call the API. See [DEPLOYMENT.md](./DEPLOYMENT.md#the-odds-api--calls-credits--cron).
 8. **Terraform CI** needs `storage.objectAdmin` on the deploy SA for the GCS state bucket. If CI fails with `storage.objects.list` denied, grant bucket access once (see [infra/terraform/README.md](../infra/terraform/README.md#terraform-ci-state-bucket-access)), then re-run the workflow. `deploy.yml` bootstraps `CRON_SECRET` in Secret Manager from the GitHub secret when missing.
 9. **Odds snapshots in PostgreSQL** — shared across Cloud Run instances; refreshed by `POST /api/internal/warm-odds-cache` (Cloud Scheduler job in Terraform). Set `ODDS_DB_ONLY=true` so users never burn API credits. In-memory cache remains for quota block/snapshot and football-data only.
