@@ -2,6 +2,13 @@
 
 import type { Fixture, Market } from "@the-syndicate/shared";
 import { formatLegPoints, type AccaBookmakerRanking } from "@the-syndicate/shared";
+import {
+  BookmakerLogo,
+  bookmakerRankBadgeClass,
+  bookmakerRankLabel,
+  bookmakerRankPlace,
+  bookmakerRankRowClass,
+} from "@/components/bookmaker-logo";
 import { useEffect, useMemo, useState } from "react";
 import { sortQuotesByBestOdds } from "@/lib/odds/bookmakers";
 import { groupMarkets } from "@/lib/odds/market-groups";
@@ -569,7 +576,7 @@ export function AccaSummary({
   /** Show ranked bookmaker list (hidden after first result when tracking only). */
   showBookmakerCompare?: boolean;
 }) {
-  const [bookmakersOpen, setBookmakersOpen] = useState(false);
+  const [bookmakersOpen, setBookmakersOpen] = useState(true);
   const topBookmaker = bookmakerRankings[0];
   const showCompare = showBookmakerCompare && bookmakerRankings.length > 0;
 
@@ -580,8 +587,13 @@ export function AccaSummary({
           <p className="font-semibold">{inProgress ? "Locked combined odds" : "Combined odds"}</p>
           <p className="text-2xl font-bold text-accent">{combinedOdds}</p>
           {singleBookmaker && bookmakerName && (
-            <p className="mt-0.5 text-xs text-muted">
-              {inProgress ? `Locked at ${bookmakerName}` : `Best at ${bookmakerName}`}
+            <p className="mt-1 flex items-center gap-2 text-xs text-muted">
+              {bookmakerId ? (
+                <BookmakerLogo bookmakerId={bookmakerId} name={bookmakerName} size={18} />
+              ) : null}
+              <span>
+                {inProgress ? `Locked at ${bookmakerName}` : `Best at ${bookmakerName}`}
+              </span>
             </p>
           )}
           {!singleBookmaker && (
@@ -618,38 +630,72 @@ export function AccaSummary({
             <span className="text-muted">{bookmakersOpen ? "▲" : "▼"}</span>
           </button>
           {bookmakersOpen && (
-            <ol className="space-y-1 border-t border-border px-2 py-2">
-              {bookmakerRankings.map((entry, index) => (
-                <li
-                  key={entry.bookmakerId}
-                  className={`flex items-center justify-between gap-2 rounded-lg px-2 py-2 ${
-                    index === 0 ? "bg-accent-muted/20" : ""
-                  }`}
-                >
-                  <span>
-                    <span className="text-muted">#{index + 1}</span>{" "}
-                    <span className="font-medium">{entry.bookmakerName}</span>
-                    {entry.hasAllLegLinks === false && entry.url && (
-                      <span className="ml-1 text-xs text-amber-400">partial</span>
-                    )}
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <span className={index === 0 ? "font-semibold text-accent" : ""}>
-                      {entry.combinedOdds}
-                    </span>
-                    {entry.url && (
-                      <a
-                        href={entry.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="rounded border border-accent/50 px-2 py-0.5 text-xs font-medium text-accent hover:bg-accent-muted/30"
+            <ol className="space-y-2 border-t border-border px-2 py-2">
+              {bookmakerRankings.map((entry, index) => {
+                const place = bookmakerRankPlace(index);
+                return (
+                  <li
+                    key={entry.bookmakerId}
+                    className={`flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 ${bookmakerRankRowClass(place)}`}
+                  >
+                    <span className="flex min-w-0 items-center gap-2.5">
+                      <span
+                        className={`inline-flex shrink-0 items-center justify-center rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${bookmakerRankBadgeClass(place)}`}
                       >
-                        Open
-                      </a>
-                    )}
-                  </span>
-                </li>
-              ))}
+                        {bookmakerRankLabel(place, index)}
+                      </span>
+                      <BookmakerLogo
+                        bookmakerId={entry.bookmakerId}
+                        name={entry.bookmakerName}
+                        size={place === 1 ? 32 : place === "other" ? 24 : 28}
+                      />
+                      <span className="min-w-0">
+                        <span
+                          className={`block truncate ${
+                            place === 1
+                              ? "text-base font-semibold text-foreground"
+                              : place === "other"
+                                ? "font-medium text-foreground"
+                                : "font-semibold text-foreground"
+                          }`}
+                        >
+                          {entry.bookmakerName}
+                        </span>
+                        {entry.hasAllLegLinks === false && entry.url ? (
+                          <span className="text-xs text-amber-400">Partial deeplink</span>
+                        ) : null}
+                      </span>
+                    </span>
+                    <span className="flex shrink-0 items-center gap-2">
+                      <span
+                        className={
+                          place === 1
+                            ? "text-lg font-bold text-accent"
+                            : place === "other"
+                              ? "font-medium tabular-nums"
+                              : "text-base font-semibold tabular-nums text-foreground"
+                        }
+                      >
+                        {entry.combinedOdds}
+                      </span>
+                      {entry.url && (
+                        <a
+                          href={entry.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`rounded border px-2 py-0.5 text-xs font-medium hover:bg-accent-muted/30 ${
+                            place === 1
+                              ? "border-accent bg-accent/15 text-accent"
+                              : "border-accent/50 text-accent"
+                          }`}
+                        >
+                          Open
+                        </a>
+                      )}
+                    </span>
+                  </li>
+                );
+              })}
             </ol>
           )}
         </div>

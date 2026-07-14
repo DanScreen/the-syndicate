@@ -122,6 +122,7 @@ export default function GroupRoundScreen() {
       {isLocked && round?.combinedOdds ? (
         <AccaSummary
           combinedOdds={round.combinedOdds}
+          bookmakerId={round.bestBookmakerId}
           bookmakerName={lockedBookmakerName}
           singleBookmaker={Boolean(round.bestBookmakerId)}
           bookmakerRankings={round.accaBookmakerRankings ?? []}

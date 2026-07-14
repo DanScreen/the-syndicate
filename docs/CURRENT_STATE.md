@@ -159,7 +159,7 @@ Full budgeting: [DEPLOYMENT.md — The Odds API](./DEPLOYMENT.md#the-odds-api--c
 
 ### Acca bookmaker rankings
 
-At lock, `rankAccaBookmakers()` in `apps/web/src/lib/odds/acca.ts` ranks all retail bookmakers by combined acca odds. Stored as `Round.accaBookmakerRankings` (JSON). Older locked rounds backfill lazily on `GET /api/groups/[id]`. Rankings power the **Compare bookmakers** panel and betslip deeplinks until the first leg result.
+At lock, `rankAccaBookmakers()` in `apps/web/src/lib/odds/acca.ts` ranks all retail bookmakers by combined acca odds. Stored as `Round.accaBookmakerRankings` (JSON). Older locked rounds backfill lazily on `GET /api/groups/[id]`. Rankings power the **Compare bookmakers** podium (logos + 1st–3rd emphasis) and betslip deeplinks until the first leg result.
 
 Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_rankings`.
 
@@ -210,7 +210,7 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 
 **Navigation:** `AppNav` in header (Groups ↔ Performance ↔ Admin for platform admins). Inside a group, `GroupNav` tabs (Round / History / Leaderboard / Performance) share data via `GroupDataProvider` (fetched once in group layout; polls every 60s while acca locked).
 
-**Locked round UI:** Picks list with per-leg outcomes as matches finish (Won/Lost/Awaiting badges) → locked combined odds + **Compare bookmakers** (until first result) → betslip CTA until first result, then tracking only. Polls every 60s while locked. **Recent rounds** show locked odds per leg.
+**Locked round UI:** Picks list with per-leg outcomes as matches finish (Won/Lost/Awaiting badges) → locked combined odds + **Compare bookmakers** podium (1st–3rd highlighted; bookmaker logos) until first result → betslip CTA until first result, then tracking only. Polls every 60s while locked. **History** tab lists all settled rounds.
 
 ---
 

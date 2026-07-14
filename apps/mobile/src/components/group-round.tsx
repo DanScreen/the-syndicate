@@ -23,6 +23,9 @@ import {
   groupAccaRoundPoints,
   formatLegPoints,
   formatRoundStatusBadge,
+  bookmakerInitials,
+  bookmakerLogoUrl,
+  bookmakerRankPlace,
   groupMarkets,
   sortQuotesByBestOdds,
   type LegOutcome,
@@ -30,6 +33,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   Linking,
   Pressable,
   StyleSheet,
@@ -221,9 +225,39 @@ export function LegsList({
   );
 }
 
+function BookmakerLogo({
+  bookmakerId,
+  name,
+  size = 28,
+}: {
+  bookmakerId: string;
+  name: string;
+  size?: number;
+}) {
+  const [failed, setFailed] = useState(false);
+  const src = bookmakerLogoUrl(bookmakerId, Math.max(64, size * 2));
+
+  if (!src || failed) {
+    return (
+      <View style={[styles.logoFallback, { width: size, height: size }]}>
+        <Text style={styles.logoFallbackText}>{bookmakerInitials(name)}</Text>
+      </View>
+    );
+  }
+
+  return (
+    <Image
+      source={{ uri: src }}
+      style={[styles.logoImage, { width: size, height: size }]}
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 export function AccaSummary({
   combinedOdds,
   bookmakerName,
+  bookmakerId,
   singleBookmaker,
   bookmakerRankings = [],
   betslipLink,
@@ -231,12 +265,13 @@ export function AccaSummary({
 }: {
   combinedOdds: number;
   bookmakerName?: string | null;
+  bookmakerId?: string | null;
   singleBookmaker: boolean;
   bookmakerRankings?: AccaBookmakerRanking[];
   betslipLink?: string | null;
   showBookmakerCompare?: boolean;
 }) {
-  const [bookmakersOpen, setBookmakersOpen] = useState(false);
+  const [bookmakersOpen, setBookmakersOpen] = useState(true);
   const topBookmaker = bookmakerRankings[0];
   const showCompare = showBookmakerCompare && bookmakerRankings.length > 0;
 
@@ -247,7 +282,12 @@ export function AccaSummary({
           <Text style={styles.accaLabel}>Locked combined odds</Text>
           <Text style={styles.accaOdds}>{combinedOdds}</Text>
           {singleBookmaker && bookmakerName ? (
-            <Text style={styles.meta}>Locked at {bookmakerName}</Text>
+            <View style={styles.lockedAtRow}>
+              {bookmakerId ? (
+                <BookmakerLogo bookmakerId={bookmakerId} name={bookmakerName} size={18} />
+              ) : null}
+              <Text style={styles.meta}>Locked at {bookmakerName}</Text>
+            </View>
           ) : null}
           {!singleBookmaker ? (
             <Text style={styles.warnText}>Best per-leg odds locked at submission</Text>
@@ -280,31 +320,79 @@ export function AccaSummary({
             <Text style={styles.meta}>{bookmakersOpen ? "▲" : "▼"}</Text>
           </Pressable>
           {bookmakersOpen
-            ? bookmakerRankings.map((entry, index) => (
-                <View
-                  key={entry.bookmakerId}
-                  style={[styles.rankRow, index === 0 && styles.rankRowTop]}
-                >
-                  <View style={styles.rankLeft}>
-                    <Text style={styles.rankName}>
-                      #{index + 1} {entry.bookmakerName}
-                      {entry.hasAllLegLinks === false && entry.url ? (
-                        <Text style={styles.warnText}> partial</Text>
+            ? bookmakerRankings.map((entry, index) => {
+                const place = bookmakerRankPlace(index);
+                const logoSize = place === 1 ? 32 : place === "other" ? 24 : 28;
+                return (
+                  <View
+                    key={entry.bookmakerId}
+                    style={[
+                      styles.rankRow,
+                      place === 1 && styles.rankRow1,
+                      place === 2 && styles.rankRow2,
+                      place === 3 && styles.rankRow3,
+                    ]}
+                  >
+                    <View style={styles.rankLeft}>
+                      <View
+                        style={[
+                          styles.rankBadge,
+                          place === 1 && styles.rankBadge1,
+                          place === 2 && styles.rankBadge2,
+                          place === 3 && styles.rankBadge3,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.rankBadgeText,
+                            place === 1 && styles.rankBadgeTextDark,
+                            place === 2 && styles.rankBadgeTextDark,
+                            place === 3 && styles.rankBadgeTextDark,
+                          ]}
+                        >
+                          {place === 1 ? "Best" : `#${index + 1}`}
+                        </Text>
+                      </View>
+                      <BookmakerLogo
+                        bookmakerId={entry.bookmakerId}
+                        name={entry.bookmakerName}
+                        size={logoSize}
+                      />
+                      <View style={styles.rankNameCol}>
+                        <Text
+                          style={[
+                            styles.rankName,
+                            place === 1 && styles.rankName1,
+                            (place === 2 || place === 3) && styles.rankNamePodium,
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {entry.bookmakerName}
+                        </Text>
+                        {entry.hasAllLegLinks === false && entry.url ? (
+                          <Text style={styles.warnText}>Partial deeplink</Text>
+                        ) : null}
+                      </View>
+                    </View>
+                    <View style={styles.rankRight}>
+                      <Text
+                        style={[
+                          styles.meta,
+                          place === 1 && styles.rankOdds1,
+                          (place === 2 || place === 3) && styles.rankOddsPodium,
+                        ]}
+                      >
+                        {entry.combinedOdds}
+                      </Text>
+                      {entry.url ? (
+                        <Pressable onPress={() => Linking.openURL(entry.url!)}>
+                          <Text style={styles.openLinkText}>Open</Text>
+                        </Pressable>
                       ) : null}
-                    </Text>
+                    </View>
                   </View>
-                  <View style={styles.rankRight}>
-                    <Text style={index === 0 ? styles.odds : styles.meta}>
-                      {entry.combinedOdds}
-                    </Text>
-                    {entry.url ? (
-                      <Pressable onPress={() => Linking.openURL(entry.url!)}>
-                        <Text style={styles.openLinkText}>Open</Text>
-                      </Pressable>
-                    ) : null}
-                  </View>
-                </View>
-              ))
+                );
+              })
             : null}
         </Card>
       ) : null}
@@ -878,30 +966,112 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 8,
   },
+  lockedAtRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 2,
+  },
+  logoImage: {
+    borderRadius: 6,
+    backgroundColor: "#fff",
+  },
+  logoFallback: {
+    borderRadius: 6,
+    backgroundColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  logoFallbackText: {
+    color: colors.muted,
+    fontSize: 9,
+    fontWeight: "700",
+  },
   rankRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 8,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  rankRowTop: {
-    backgroundColor: "rgba(20, 83, 45, 0.2)",
-    borderRadius: 8,
+    paddingVertical: 10,
     paddingHorizontal: 8,
+    marginTop: 6,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "transparent",
+    gap: 8,
+  },
+  rankRow1: {
+    borderColor: "rgba(34, 197, 94, 0.55)",
+    backgroundColor: "rgba(20, 83, 45, 0.45)",
+  },
+  rankRow2: {
+    borderColor: "rgba(148, 163, 184, 0.5)",
+    backgroundColor: "rgba(100, 116, 139, 0.2)",
+  },
+  rankRow3: {
+    borderColor: "rgba(217, 119, 6, 0.45)",
+    backgroundColor: "rgba(180, 83, 9, 0.18)",
   },
   rankLeft: {
     flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    minWidth: 0,
   },
   rankRight: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
   },
+  rankBadge: {
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    backgroundColor: colors.border,
+  },
+  rankBadge1: {
+    backgroundColor: colors.accent,
+  },
+  rankBadge2: {
+    backgroundColor: "#cbd5e1",
+  },
+  rankBadge3: {
+    backgroundColor: "#d97706",
+  },
+  rankBadgeText: {
+    color: colors.muted,
+    fontSize: 10,
+    fontWeight: "700",
+    textTransform: "uppercase",
+  },
+  rankBadgeTextDark: {
+    color: "#000",
+  },
+  rankNameCol: {
+    flex: 1,
+    minWidth: 0,
+  },
   rankName: {
     color: colors.text,
     fontSize: 14,
+    fontWeight: "500",
+  },
+  rankName1: {
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  rankNamePodium: {
+    fontWeight: "600",
+  },
+  rankOdds1: {
+    color: colors.accent,
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  rankOddsPodium: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: "600",
   },
   settleLeg: {
     marginTop: 12,
