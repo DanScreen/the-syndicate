@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 const TABS = [
   { segment: "index", label: "Round" },
+  { segment: "history", label: "History" },
   { segment: "leaderboard", label: "Leaderboard" },
   { segment: "performance", label: "Performance" },
 ] as const;

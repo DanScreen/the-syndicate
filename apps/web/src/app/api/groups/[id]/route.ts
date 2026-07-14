@@ -1,4 +1,5 @@
 import { requireSession } from "@/lib/api-auth";
+import { mapHistoryRound } from "@/lib/groups/map-history-round";
 import { buildRoundBetslipLinks } from "@/lib/odds/betslip-links";
 import { computeAccaRankingsForLegs } from "@/lib/odds/lock-round";
 import { lockOpenRoundsAtKickoff } from "@/lib/rounds/lock-open-rounds-at-kickoff";
@@ -8,6 +9,12 @@ import type { AccaBookmakerRanking } from "@the-syndicate/shared";
 import { NextResponse } from "next/server";
 
 type Params = { params: Promise<{ id: string }> };
+
+const recentRoundInclude = {
+  legs: {
+    include: { user: { select: { id: true, name: true } } },
+  },
+} as const;
 
 export async function GET(_request: Request, { params }: Params) {
   const { session, error } = await requireSession();
@@ -38,13 +45,10 @@ export async function GET(_request: Request, { params }: Params) {
         orderBy: { points: "desc" },
       },
       rounds: {
+        where: { status: { in: ["open", "locked"] } },
         orderBy: { createdAt: "desc" },
-        take: 5,
-        include: {
-          legs: {
-            include: { user: { select: { id: true, name: true } } },
-          },
-        },
+        take: 1,
+        include: recentRoundInclude,
       },
     },
   });
@@ -53,7 +57,7 @@ export async function GET(_request: Request, { params }: Params) {
     return NextResponse.json({ error: "Group not found" }, { status: 404 });
   }
 
-  let activeRound = group.rounds.find((r) => r.status !== "settled") ?? null;
+  let activeRound = group.rounds[0] ?? null;
 
   if (!activeRound) {
     const created = await openRound(id);
@@ -63,14 +67,17 @@ export async function GET(_request: Request, { params }: Params) {
     await lockOpenRoundsAtKickoff();
     const refreshed = await prisma.round.findUnique({
       where: { id: activeRound.id },
-      include: {
-        legs: {
-          include: { user: { select: { id: true, name: true } } },
-        },
-      },
+      include: recentRoundInclude,
     });
     if (refreshed) activeRound = refreshed;
   }
+
+  const recentSettled = await prisma.round.findMany({
+    where: { groupId: id, status: "settled" },
+    orderBy: [{ settledAt: "desc" }, { createdAt: "desc" }],
+    take: 3,
+    include: recentRoundInclude,
+  });
 
   let accaBookmakerRankings: AccaBookmakerRanking[] | null = null;
   let betslipLinks = null;
@@ -130,18 +137,6 @@ export async function GET(_request: Request, { params }: Params) {
     betslipLink,
     betslipLinks,
     isOwner: membership.role === "owner",
-    recentRounds: group.rounds
-      .filter((r) => r.status === "settled")
-      .map((r) => ({
-        id: r.id,
-        status: r.status,
-        combinedOdds: r.combinedOdds,
-        legs: r.legs.map((leg) => ({
-          selectionLabel: leg.selectionLabel,
-          outcome: leg.outcome,
-          odds: leg.odds,
-          pointsAwarded: leg.pointsAwarded,
-        })),
-      })),
+    recentRounds: recentSettled.map(mapHistoryRound),
   });
 }

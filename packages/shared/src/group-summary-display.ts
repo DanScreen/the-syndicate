@@ -1,4 +1,4 @@
-import type { GroupSummaryYourLeg } from "./api-types";
+import type { GroupSummaryActiveLeg, GroupSummaryYourLeg } from "./api-types";
 import type { RoundStatus } from "./types";
 
 export function yourLegStatusMessage(
@@ -20,4 +20,15 @@ export function yourLegStatusMessage(
 
 export function formatYourLegSummary(leg: GroupSummaryYourLeg): string {
   return `${leg.homeTeam} vs ${leg.awayTeam} · ${leg.marketLabel}: ${leg.selectionLabel} @ ${leg.odds.toFixed(2)}`;
+}
+
+export function formatActiveLegSummary(leg: GroupSummaryActiveLeg): string {
+  return `${leg.homeTeam} vs ${leg.awayTeam} · ${leg.marketLabel}: ${leg.selectionLabel} @ ${leg.odds.toFixed(2)}`;
+}
+
+export function legOutcomeShortLabel(outcome: string): string {
+  if (outcome === "won") return "Won";
+  if (outcome === "lost") return "Lost";
+  if (outcome === "void") return "Void";
+  return "";
 }

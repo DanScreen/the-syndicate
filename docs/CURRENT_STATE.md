@@ -180,7 +180,7 @@ Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_
 | `apps/web/src/lib/odds/bookmakers.ts` | Retail filter, sort best odds |
 | `apps/web/src/components/group-ui.tsx` | Leg picker (4-step), locked round picks, settle UI |
 | `apps/web/src/components/app-nav.tsx` | Header nav: Groups / Performance / Admin |
-| `apps/web/src/components/group-nav.tsx` | Group tabs: Round / Leaderboard / Performance |
+| `apps/web/src/components/group-nav.tsx` | Group tabs: Round / History / Leaderboard / Performance |
 | `apps/web/src/components/group-layout-client.tsx` | Shared group shell + `GroupDataProvider` |
 | `apps/web/src/context/group-data.tsx` | Group data context for sub-pages |
 
@@ -195,7 +195,7 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 | `/` | Landing — hero (Sign up / Sign in), value props, how it works, FAQ, CTA |
 | `/about` | Product story, what we are/aren’t, responsible gambling |
 | `/sign-in`, `/sign-up` | Auth — sign-up collects **first name** + **last name** |
-| `/dashboard` | **Groups home** — list of user's syndicates; **group/your points** (green/red); **your leg** or waiting status per card |
+| `/dashboard` | **Groups home** — list of user's syndicates; **group/your points**; **current betslip** legs (fixture, market, selection, odds); waiting status if you haven't picked |
 | `/performance` | Cross-group stats (`DashboardStats`) — syndicate filter dropdown, charts, share cards |
 | `/admin` | **Admin** — platform metrics (admin role only) |
 | `/admin/settlement` | **Admin** — settlement queue: locked rounds, overdue legs (2h+ after KO), manual settle |
@@ -204,10 +204,11 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 | `/admin/odds` | **Admin** — Odds API diagnostics (fixture pipeline) |
 | `/groups/create`, `/groups/join` | Create / join group |
 | `/groups/[id]` | **Round** tab — active round, leg picker, picks, lock, settle |
+| `/groups/[id]/history` | **History** tab — every settled acca with fixtures, markets, outcomes |
 | `/groups/[id]/leaderboard` | Points leaderboard |
 | `/groups/[id]/performance` | Group stats (`GroupStats`) — charts, member breakdown |
 
-**Navigation:** `AppNav` in header (Groups ↔ Performance ↔ Admin for platform admins). Inside a group, `GroupNav` tabs share data via `GroupDataProvider` (fetched once in group layout; polls every 60s while acca locked).
+**Navigation:** `AppNav` in header (Groups ↔ Performance ↔ Admin for platform admins). Inside a group, `GroupNav` tabs (Round / History / Leaderboard / Performance) share data via `GroupDataProvider` (fetched once in group layout; polls every 60s while acca locked).
 
 **Locked round UI:** Picks list with per-leg outcomes as matches finish (Won/Lost/Awaiting badges) → locked combined odds + **Compare bookmakers** (until first result) → betslip CTA until first result, then tracking only. Polls every 60s while locked. **Recent rounds** show locked odds per leg.
 
@@ -416,9 +417,11 @@ Recent migrations include `20260711100000_competition_settings` (admin competiti
 | `GET /api/fixtures/[id]/markets` | Session | Extended markets (`?competition=` required) |
 | `POST /api/legs` | Session | Submit leg |
 | `PATCH /api/legs/[id]` | Leg owner | Edit own pick until first kickoff (locked rounds reprice) |
+| `GET /api/groups` | Session | Groups list + current betslip `activeLegs` + yourLeg |
 | `POST /api/internal/sync-matches` | `CRON_SECRET` | Sync football-data.org → `Match` |
 | `POST /api/internal/warm-odds-cache` | `CRON_SECRET` | Refresh odds DB snapshots |
-| `GET /api/groups/[id]` | Member | Group + active round + betslip deeplinks |
+| `GET /api/groups/[id]` | Member | Group + active round + recent settled bets + betslip deeplinks |
+| `GET /api/groups/[id]/history` | Member | Full settled bet history (fixtures, markets, outcomes) |
 | `GET /api/groups/[id]/stats` | Member | Group summary stats + chart series |
 | `GET /api/groups/[id]/members/[userId]/stats` | Member | Member breakdown + favourites |
 | `GET /api/user/stats` | Session | Cross-group performance stats |

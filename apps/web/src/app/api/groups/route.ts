@@ -1,6 +1,6 @@
 import { requireSession } from "@/lib/api-auth";
 import { generateInviteCode } from "@/lib/invite-code";
-import { yourLegInRound } from "@/lib/groups/your-leg-summary";
+import { activeLegsInRound, yourLegInRound } from "@/lib/groups/your-leg-summary";
 import { openRound } from "@/lib/rounds/open-round";
 import { groupNetPoints } from "@/lib/stats/helpers";
 import { prisma } from "@the-syndicate/database";
@@ -21,7 +21,11 @@ export async function GET() {
           owner: { select: { name: true } },
           _count: { select: { members: true, rounds: true } },
           rounds: {
-            include: { legs: true },
+            include: {
+              legs: {
+                include: { user: { select: { id: true, name: true } } },
+              },
+            },
             orderBy: { createdAt: "desc" },
           },
         },
@@ -44,6 +48,8 @@ export async function GET() {
         activeRound = await openRound(m.group.id);
       }
 
+      const legs = activeRoundRow?.legs ?? [];
+
       return {
         id: m.group.id,
         name: m.group.name,
@@ -55,7 +61,8 @@ export async function GET() {
         groupPoints: groupNetPoints(allRounds),
         points: m.points,
         activeRound,
-        yourLeg: yourLegInRound(activeRoundRow?.legs ?? [], userId),
+        activeLegs: activeLegsInRound(legs, userId),
+        yourLeg: yourLegInRound(legs, userId),
       };
     })
   );

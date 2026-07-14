@@ -1,8 +1,9 @@
 import { AppHeader } from "@/components/header";
 import { PageView } from "@/components/analytics/page-view";
+import { ActiveBetslipSummary } from "@/components/active-betslip-summary";
 import { PointsText } from "@/components/points-text";
-import { yourLegStatusMessage, formatYourLegSummary } from "@the-syndicate/shared";
-import { yourLegInRound } from "@/lib/groups/your-leg-summary";
+import { yourLegStatusMessage } from "@the-syndicate/shared";
+import { activeLegsInRound, yourLegInRound } from "@/lib/groups/your-leg-summary";
 import { openRound } from "@/lib/rounds/open-round";
 import { groupNetPoints } from "@/lib/stats/helpers";
 import { formatLegPoints, formatRoundStatusBadge } from "@the-syndicate/shared";
@@ -29,7 +30,11 @@ export default async function DashboardPage() {
           owner: { select: { name: true } },
           _count: { select: { members: true } },
           rounds: {
-            include: { legs: true },
+            include: {
+              legs: {
+                include: { user: { select: { id: true, name: true } } },
+              },
+            },
             orderBy: { createdAt: "desc" },
           },
         },
@@ -115,21 +120,29 @@ export default async function DashboardPage() {
                   if (!activeRound) {
                     activeRound = await openRound(m.group.id);
                   }
+                  const legs = activeRoundRow?.legs ?? [];
                   const syndicatePoints = groupNetPoints(allRounds);
-                  const yourLeg = yourLegInRound(
-                    activeRoundRow?.legs ?? [],
-                    session.user.id
-                  );
+                  const yourLeg = yourLegInRound(legs, session.user.id);
+                  const activeLegs = activeLegsInRound(legs, session.user.id);
                   const roundStatus = activeRound?.status ?? "open";
                   return {
                     membership: m,
                     activeRound,
                     syndicatePoints,
                     yourLeg,
+                    activeLegs,
                     roundStatus,
                   };
                 })
-              )).map(({ membership: m, activeRound, syndicatePoints, yourLeg, roundStatus }) => (
+              )).map(
+                ({
+                  membership: m,
+                  activeRound,
+                  syndicatePoints,
+                  yourLeg,
+                  activeLegs,
+                  roundStatus,
+                }) => (
                   <Link
                     key={m.group.id}
                     href={`/groups/${m.group.id}`}
@@ -148,24 +161,17 @@ export default async function DashboardPage() {
                       <PointsText points={syndicatePoints} label="Group points" />
                       <PointsText points={m.points} label="Your points" />
                     </div>
-                    {yourLeg ? (
-                      <p className="mt-3 rounded-lg border border-border bg-background/50 px-3 py-2 text-sm text-foreground">
-                        <span className="font-medium text-accent">Your leg · </span>
-                        {formatYourLegSummary(yourLeg)}
-                      </p>
-                    ) : (
-                      <p
-                        className={`mt-3 text-sm ${
-                          roundStatus === "open"
-                            ? "text-amber-400"
-                            : "text-muted"
-                        }`}
-                      >
-                        {yourLegStatusMessage(roundStatus, yourLeg)}
-                      </p>
-                    )}
+                    <ActiveBetslipSummary
+                      legs={activeLegs}
+                      currentUserId={session.user.id}
+                      combinedOdds={activeRound?.combinedOdds}
+                      waitingMessage={
+                        yourLegStatusMessage(roundStatus, yourLeg) || undefined
+                      }
+                    />
                   </Link>
-              ))}
+                )
+              )}
             </div>
           )}
         </section>

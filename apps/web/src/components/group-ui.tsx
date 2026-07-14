@@ -1,7 +1,7 @@
 "use client";
 
-import type { Fixture, Market, LegOutcome } from "@the-syndicate/shared";
-import { groupAccaRoundPoints, formatLegPoints, formatRoundStatusBadge, type AccaBookmakerRanking } from "@the-syndicate/shared";
+import type { Fixture, Market } from "@the-syndicate/shared";
+import { formatLegPoints, type AccaBookmakerRanking } from "@the-syndicate/shared";
 import { useEffect, useMemo, useState } from "react";
 import { sortQuotesByBestOdds } from "@/lib/odds/bookmakers";
 import { groupMarkets } from "@/lib/odds/market-groups";
@@ -782,63 +782,5 @@ export function Leaderboard({
         </li>
       ))}
     </ol>
-  );
-}
-
-export function RoundHistory({
-  rounds,
-}: {
-  rounds: {
-    id: string;
-    status: string;
-    combinedOdds: number | null;
-    legs: {
-      selectionLabel: string;
-      outcome: string;
-      odds?: number;
-      pointsAwarded?: number;
-    }[];
-  }[];
-}) {
-  if (rounds.length === 0) return null;
-
-  return (
-    <section className="mt-8">
-      <h2 className="text-lg font-semibold">Recent rounds</h2>
-      <ul className="mt-4 space-y-3">
-        {rounds.map((round) => {
-          const outcomes = round.legs.map((l) => l.outcome as LegOutcome);
-          const roundPoints = groupAccaRoundPoints(
-            outcomes,
-            round.combinedOdds ?? 1
-          );
-          return (
-          <li key={round.id} className="rounded-xl border border-border bg-card p-4 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted">{formatRoundStatusBadge(round.status)}</span>
-              {round.combinedOdds && (
-                <span className="text-accent">Locked {round.combinedOdds}</span>
-              )}
-            </div>
-            <p className="mt-1 font-semibold text-accent">
-              {formatLegPoints(roundPoints)} pts
-            </p>
-            <ul className="mt-2 space-y-1 text-xs text-muted">
-              {round.legs.map((l, i) => (
-                <li key={i}>
-                  {l.selectionLabel}
-                  {l.odds != null && <span> @ {l.odds}</span>}
-                  {" "}
-                  <span className={l.outcome === "won" ? "text-green-400" : l.outcome === "lost" ? "text-red-400" : ""}>
-                    ({legOutcomeLabel(l.outcome)})
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </li>
-          );
-        })}
-      </ul>
-    </section>
   );
 }

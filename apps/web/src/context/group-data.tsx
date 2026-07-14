@@ -60,7 +60,24 @@ export type GroupData = {
     id: string;
     status: string;
     combinedOdds: number | null;
-    legs: { selectionLabel: string; outcome: string; odds: number; pointsAwarded: number }[];
+    lockedAt: string | null;
+    settledAt: string | null;
+    createdAt: string;
+    legs: {
+      id: string;
+      user: { id: string; name: string };
+      homeTeam: string;
+      awayTeam: string;
+      competition: string;
+      kickoff: string;
+      selectionLabel: string;
+      marketLabel: string;
+      marketType: string;
+      odds: number;
+      bookmakerName: string;
+      outcome: string;
+      pointsAwarded: number;
+    }[];
   }[];
   betslipLink: string | null;
   betslipLinks: {

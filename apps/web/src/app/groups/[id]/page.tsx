@@ -3,10 +3,10 @@
 import {
   AccaSummary,
   LegsList,
-  RoundHistory,
   RoundProgress,
   SubmitLegForm,
 } from "@/components/group-ui";
+import { RoundHistory } from "@/components/group-history";
 import { useGroupData } from "@/context/group-data";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
@@ -134,7 +134,7 @@ export default function GroupRoundPage() {
         />
       )}
 
-      <RoundHistory rounds={data.recentRounds} />
+      <RoundHistory rounds={data.recentRounds} groupId={group.id} />
     </div>
   );
 }

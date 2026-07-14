@@ -24,6 +24,18 @@ export type GroupSummaryYourLeg = {
   outcome: string;
 };
 
+/** One submitted leg on the group's active round (open or locked betslip). */
+export type GroupSummaryActiveLeg = {
+  userId: string;
+  userName: string;
+  selectionLabel: string;
+  marketLabel: string;
+  homeTeam: string;
+  awayTeam: string;
+  odds: number;
+  outcome: string;
+};
+
 export type GroupSummary = {
   id: string;
   name: string;
@@ -41,6 +53,8 @@ export type GroupSummary = {
     status: RoundStatus;
     combinedOdds: number | null;
   } | null;
+  /** All submitted legs on the active round (current betslip). */
+  activeLegs: GroupSummaryActiveLeg[];
   /** Member's leg in the active round, if submitted. */
   yourLeg: GroupSummaryYourLeg | null;
 };
@@ -86,17 +100,38 @@ export type BetslipLinks = {
   }[];
 };
 
-export type RecentRoundSummary = {
+export type HistoryLeg = {
+  id: string;
+  user: { id: string; name: string };
+  homeTeam: string;
+  awayTeam: string;
+  competition: string;
+  kickoff: string;
+  selectionLabel: string;
+  marketLabel: string;
+  marketType: string;
+  odds: number;
+  bookmakerName: string;
+  outcome: string;
+  pointsAwarded: number;
+};
+
+export type HistoryRound = {
   id: string;
   status: string;
   combinedOdds: number | null;
-  legs: {
-    selectionLabel: string;
-    outcome: string;
-    odds?: number;
-    pointsAwarded?: number;
-  }[];
+  lockedAt: string | null;
+  settledAt: string | null;
+  createdAt: string;
+  legs: HistoryLeg[];
 };
+
+export type GroupHistoryResponse = {
+  rounds: HistoryRound[];
+};
+
+/** @deprecated Prefer HistoryRound — kept for older mobile clients during rollout. */
+export type RecentRoundSummary = HistoryRound;
 
 export type GroupDetailResponse = {
   group: {

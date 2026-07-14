@@ -141,7 +141,7 @@ Checklist for implementation. Web route → API → mobile screen.
 | Group performance | `GET /api/groups/[id]/stats` | New tab / screen |
 | Member stats | `GET /api/groups/[id]/members/[userId]/stats` | Drill-down from performance |
 | Cross-group performance | `GET /api/user/stats` | New screen (web `/performance`) |
-| Round history | `recentRounds` in group payload | Section on group screen |
+| Round history | `GET /api/groups/[id]/history` + `recentRounds` | History tab + Round tab teaser |
 
 ### Explicitly out of v1 parity
 
@@ -182,7 +182,7 @@ Checklist for implementation. Web route → API → mobile screen.
 
 - [x] Group tabs: Round / Leaderboard / Performance (`group-nav.tsx`, nested routes)
 - [x] Cross-group performance screen (`GET /api/user/stats` → `(main)/performance.tsx`)
-- [x] Round history section (`RoundHistory` on round tab)
+- [x] Round / bet history (`RoundHistory` + History tab via `GET /api/groups/[id]/history`)
 - [x] Group performance tab (`GET /api/groups/[id]/stats`, member drill-down)
 
 ### Phase 4 — Polish

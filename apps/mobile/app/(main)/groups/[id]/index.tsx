@@ -9,6 +9,7 @@ import {
 import { Button, Card, ErrorText } from "@/components/ui";
 import { colors } from "@/config";
 import { useGroupData } from "@/context/group-data";
+import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -30,6 +31,7 @@ function formatCutoff(date: Date) {
 }
 
 export default function GroupRoundScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
   const { token, user } = useAuth();
   const { data, error, reload } = useGroupData();
   const [refreshing, setRefreshing] = useState(false);
@@ -161,7 +163,10 @@ export default function GroupRoundScreen() {
 
       {data.recentRounds && data.recentRounds.length > 0 ? (
         <View style={styles.section}>
-          <RoundHistory rounds={data.recentRounds} />
+          <RoundHistory
+            rounds={data.recentRounds}
+            onViewAll={() => router.push(`/(main)/groups/${id}/history`)}
+          />
         </View>
       ) : null}
 

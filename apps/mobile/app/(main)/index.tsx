@@ -1,9 +1,10 @@
 import { api } from "@/api/client";
 import type { GroupSummary, GroupsListResponse } from "@the-syndicate/shared";
 import {
+  formatActiveLegSummary,
   formatLegPoints,
   formatRoundStatusBadge,
-  formatYourLegSummary,
+  legOutcomeShortLabel,
   pointsTone,
   yourLegStatusMessage,
 } from "@the-syndicate/shared";
@@ -80,45 +81,87 @@ export default function GroupsScreen() {
             message={copy.dashboard.emptyBody}
           />
         ) : (
-          groups.map((g) => (
-            <Pressable
-              key={g.id}
-              onPress={() => router.push(`/(main)/groups/${g.id}`)}
-            >
-              <Card>
-                <View style={styles.row}>
-                  <Text style={styles.groupName}>{g.name}</Text>
-                  <Text style={styles.badge}>{formatRoundStatusBadge(g.status)}</Text>
-                </View>
-                <Text style={styles.meta}>
-                  {g.memberCount} members · Owner: {g.ownerName}
-                </Text>
-                <View style={styles.pointsRow}>
-                  <Text style={[styles.points, pointsStyle(g.groupPoints)]}>
-                    Group points: {formatLegPoints(g.groupPoints)}
+          groups.map((g) => {
+            const legs = g.activeLegs ?? [];
+            const waiting = yourLegStatusMessage(g.status, g.yourLeg);
+            return (
+              <Pressable
+                key={g.id}
+                onPress={() => router.push(`/(main)/groups/${g.id}`)}
+                style={{ marginBottom: 12 }}
+              >
+                <Card>
+                  <View style={styles.row}>
+                    <Text style={styles.groupName}>{g.name}</Text>
+                    <Text style={styles.badge}>{formatRoundStatusBadge(g.status)}</Text>
+                  </View>
+                  <Text style={styles.meta}>
+                    {g.memberCount} members · Owner: {g.ownerName}
                   </Text>
-                  <Text style={[styles.points, pointsStyle(g.points)]}>
-                    Your points: {formatLegPoints(g.points)}
-                  </Text>
-                </View>
-                {g.yourLeg ? (
-                  <Text style={styles.yourLeg}>
-                    <Text style={styles.yourLegLabel}>Your leg · </Text>
-                    {formatYourLegSummary(g.yourLeg)}
-                  </Text>
-                ) : yourLegStatusMessage(g.status, g.yourLeg) ? (
-                  <Text
-                    style={[
-                      styles.waiting,
-                      g.status === "open" ? styles.waitingOpen : styles.waitingMuted,
-                    ]}
-                  >
-                    {yourLegStatusMessage(g.status, g.yourLeg)}
-                  </Text>
-                ) : null}
-              </Card>
-            </Pressable>
-          ))
+                  <View style={styles.pointsRow}>
+                    <Text style={[styles.points, pointsStyle(g.groupPoints)]}>
+                      Group points: {formatLegPoints(g.groupPoints)}
+                    </Text>
+                    <Text style={[styles.points, pointsStyle(g.points)]}>
+                      Your points: {formatLegPoints(g.points)}
+                    </Text>
+                  </View>
+                  {legs.length > 0 ? (
+                    <View style={styles.betslip}>
+                      <View style={styles.betslipHeader}>
+                        <Text style={styles.betslipTitle}>
+                          Current betslip · {legs.length} leg{legs.length === 1 ? "" : "s"}
+                        </Text>
+                        {g.activeRound?.combinedOdds != null ? (
+                          <Text style={styles.meta}>Acca @ {g.activeRound.combinedOdds}</Text>
+                        ) : null}
+                      </View>
+                      {legs.map((leg) => {
+                        const outcome = legOutcomeShortLabel(leg.outcome);
+                        const yours = user?.id === leg.userId;
+                        return (
+                          <View
+                            key={`${leg.userId}-${leg.selectionLabel}-${leg.odds}`}
+                            style={styles.betslipLeg}
+                          >
+                            <Text style={styles.betslipUser}>
+                              {yours ? "You" : leg.userName}
+                              {outcome ? (
+                                <Text
+                                  style={
+                                    leg.outcome === "won"
+                                      ? styles.outcomeWon
+                                      : leg.outcome === "lost"
+                                        ? styles.outcomeLost
+                                        : styles.meta
+                                  }
+                                >
+                                  {` · ${outcome}`}
+                                </Text>
+                              ) : null}
+                            </Text>
+                            <Text style={styles.betslipDetail}>
+                              {formatActiveLegSummary(leg)}
+                            </Text>
+                          </View>
+                        );
+                      })}
+                      {waiting ? <Text style={styles.waitingOpen}>{waiting}</Text> : null}
+                    </View>
+                  ) : waiting ? (
+                    <Text
+                      style={[
+                        styles.waiting,
+                        g.status === "open" ? styles.waitingOpen : styles.waitingMuted,
+                      ]}
+                    >
+                      {waiting}
+                    </Text>
+                  ) : null}
+                </Card>
+              </Pressable>
+            );
+          })
         )}
 
         <View style={styles.actions}>
@@ -216,10 +259,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
   },
-  yourLeg: {
-    color: colors.text,
-    fontSize: 13,
-    lineHeight: 18,
+  betslip: {
     marginTop: 10,
     borderWidth: 1,
     borderColor: colors.border,
@@ -227,9 +267,40 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,
+    gap: 8,
   },
-  yourLegLabel: {
+  betslipHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 8,
+  },
+  betslipTitle: {
     color: colors.accent,
+    fontSize: 11,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  betslipLeg: {
+    gap: 2,
+  },
+  betslipUser: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  betslipDetail: {
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  outcomeWon: {
+    color: colors.accent,
+    fontWeight: "600",
+  },
+  outcomeLost: {
+    color: colors.danger,
     fontWeight: "600",
   },
   waiting: {
@@ -239,6 +310,9 @@ const styles = StyleSheet.create({
   },
   waitingOpen: {
     color: "#fbbf24",
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 4,
   },
   waitingMuted: {
     color: colors.muted,

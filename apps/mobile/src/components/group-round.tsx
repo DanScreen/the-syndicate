@@ -14,6 +14,7 @@ import type {
   EditLegInput,
   GroupLeg,
   GroupMember,
+  HistoryRound,
   Market,
   MarketTierOption,
   SubmitLegInput,
@@ -646,41 +647,72 @@ export function Leaderboard({
 
 export function RoundHistory({
   rounds,
+  onViewAll,
+  title = "Recent settled bets",
 }: {
-  rounds: {
-    id: string;
-    status: string;
-    combinedOdds: number | null;
-    legs: {
-      selectionLabel: string;
-      outcome: string;
-      odds?: number;
-      pointsAwarded?: number;
-    }[];
-  }[];
+  rounds: HistoryRound[];
+  onViewAll?: () => void;
+  title?: string;
 }) {
   if (rounds.length === 0) return null;
 
   return (
     <View style={styles.stack}>
-      <Text style={styles.sectionTitle}>Recent rounds</Text>
+      <View style={styles.historyTitleRow}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+        {onViewAll ? (
+          <Pressable onPress={onViewAll} hitSlop={8}>
+            <Text style={styles.viewAll}>Full history</Text>
+          </Pressable>
+        ) : null}
+      </View>
       {rounds.map((round) => {
         const outcomes = round.legs.map((l) => l.outcome as LegOutcome);
         const roundPoints = groupAccaRoundPoints(outcomes, round.combinedOdds ?? 1);
+        const settledLabel = round.settledAt
+          ? new Date(round.settledAt).toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })
+          : null;
         return (
           <View key={round.id} style={styles.historyCard}>
             <View style={styles.historyHeader}>
-              <Text style={styles.meta}>{formatRoundStatusBadge(round.status)}</Text>
+              <Text style={styles.meta}>
+                {formatRoundStatusBadge(round.status)}
+                {settledLabel ? ` · ${settledLabel}` : ""}
+              </Text>
               {round.combinedOdds ? (
-                <Text style={styles.odds}>Locked {round.combinedOdds}</Text>
+                <Text style={styles.odds}>Acca @ {round.combinedOdds}</Text>
               ) : null}
             </View>
             <Text style={styles.odds}>{formatLegPoints(roundPoints)} pts</Text>
-            {round.legs.map((leg, i) => (
-              <Text key={i} style={styles.meta}>
-                {leg.selectionLabel}
-                {leg.odds != null ? ` @ ${leg.odds}` : ""} ({legOutcomeLabel(leg.outcome)})
-              </Text>
+            {round.legs.map((leg) => (
+              <View key={leg.id} style={styles.historyLeg}>
+                <View style={styles.historyHeader}>
+                  <Text style={styles.legUser}>{leg.user.name}</Text>
+                  <Text style={styles.odds}>
+                    {legOutcomeLabel(leg.outcome)} · {leg.odds}
+                  </Text>
+                </View>
+                <Text style={styles.legPick}>
+                  {leg.homeTeam} vs {leg.awayTeam}
+                </Text>
+                <Text style={styles.meta}>
+                  {leg.marketLabel}: {leg.selectionLabel}
+                </Text>
+                <Text style={styles.meta}>
+                  {leg.competition} ·{" "}
+                  {new Date(leg.kickoff).toLocaleString("en-GB", {
+                    weekday: "short",
+                    day: "numeric",
+                    month: "short",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </Text>
+              </View>
             ))}
           </View>
         );
@@ -915,11 +947,28 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderRadius: 10,
     padding: 12,
-    gap: 4,
+    gap: 8,
   },
   historyHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+  },
+  historyTitleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  viewAll: {
+    color: colors.accent,
+    fontSize: 13,
+    fontWeight: "500",
+  },
+  historyLeg: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+    paddingTop: 8,
+    gap: 2,
   },
 });

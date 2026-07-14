@@ -10,6 +10,11 @@ export function GroupNav({ groupId }: { groupId: string }) {
   const tabs = [
     { href: base, label: "Round", active: pathname === base },
     {
+      href: `${base}/history`,
+      label: "History",
+      active: pathname === `${base}/history`,
+    },
+    {
       href: `${base}/leaderboard`,
       label: "Leaderboard",
       active: pathname === `${base}/leaderboard`,
