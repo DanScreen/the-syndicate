@@ -1,4 +1,5 @@
 import {
+  applyDeferredLegOutcome,
   applyRoundSettlement,
   RoundNotSettleableError,
 } from "@/lib/settlement/apply-round-settlement";
@@ -7,11 +8,25 @@ import {
   resolveRoundOutcomes,
 } from "@/lib/settlement/resolve-round-outcomes";
 import { prisma } from "@tiki-acca/database";
+import { roundIsSettleable, type LegOutcome } from "@tiki-acca/shared";
 
 export type AutoSettleRoundResult =
   | { status: "settled"; roundId: string; profitLossGbp: number }
   | { status: "pending"; roundId: string; pending: { legId: string; reason: string }[] }
   | { status: "skipped"; roundId: string; reason: string };
+
+function knownOutcomesForLegs(
+  legs: { id: string; outcome: string }[],
+  resolved: Map<string, LegOutcome>
+): Map<string, LegOutcome> {
+  const map = new Map(resolved);
+  for (const leg of legs) {
+    if (!map.has(leg.id) && leg.outcome !== "pending") {
+      map.set(leg.id, leg.outcome as LegOutcome);
+    }
+  }
+  return map;
+}
 
 export async function tryAutoSettleRound(roundId: string): Promise<AutoSettleRoundResult> {
   const round = await prisma.round.findUnique({
@@ -32,15 +47,26 @@ export async function tryAutoSettleRound(roundId: string): Promise<AutoSettleRou
   }
 
   const resolved = await resolveRoundOutcomes(round.legs);
-  const knownOutcomes = resolved.ready ? resolved.outcomeMap : resolved.resolved;
-  await persistResolvableLegOutcomes(round.legs, knownOutcomes);
+  const fromMatches = resolved.ready ? resolved.outcomeMap : resolved.resolved;
+  await persistResolvableLegOutcomes(round.legs, fromMatches);
 
-  if (!resolved.ready) {
-    return { status: "pending", roundId, pending: resolved.pending };
+  const outcomeMap = knownOutcomesForLegs(round.legs, fromMatches);
+  const settleOutcomes = round.legs.map(
+    (l) => outcomeMap.get(l.id) ?? (l.outcome as LegOutcome)
+  );
+
+  if (!roundIsSettleable(settleOutcomes)) {
+    return {
+      status: "pending",
+      roundId,
+      pending: resolved.ready
+        ? []
+        : resolved.pending,
+    };
   }
 
   try {
-    const result = await applyRoundSettlement(roundId, resolved.outcomeMap);
+    const result = await applyRoundSettlement(roundId, outcomeMap);
     return { status: "settled", roundId, profitLossGbp: result.profitLossGbp };
   } catch (err) {
     if (err instanceof RoundNotSettleableError) {
@@ -78,4 +104,51 @@ export async function autoSettleLockedRounds(): Promise<AutoSettleAllResult> {
   }
 
   return result;
+}
+
+export type DeferredLegResolveResult = {
+  roundId: string;
+  legId: string;
+  outcome: LegOutcome;
+  points: number;
+};
+
+/**
+ * Continue resolving legs on rounds that settled early after a loss.
+ */
+export async function resolvePendingLegsOnSettledRounds(): Promise<{
+  awarded: DeferredLegResolveResult[];
+}> {
+  const rounds = await prisma.round.findMany({
+    where: {
+      status: "settled",
+      legs: { some: { outcome: "pending" } },
+    },
+    include: { legs: true },
+    orderBy: { settledAt: "asc" },
+  });
+
+  const awarded: DeferredLegResolveResult[] = [];
+
+  for (const round of rounds) {
+    const pendingLegs = round.legs.filter((l) => l.outcome === "pending");
+    if (pendingLegs.length === 0) continue;
+
+    const resolved = await resolveRoundOutcomes(pendingLegs);
+    const known = resolved.ready ? resolved.outcomeMap : resolved.resolved;
+
+    for (const [legId, outcome] of known) {
+      const result = await applyDeferredLegOutcome(round.id, legId, outcome);
+      if (result.awarded) {
+        awarded.push({
+          roundId: round.id,
+          legId,
+          outcome,
+          points: result.points,
+        });
+      }
+    }
+  }
+
+  return { awarded };
 }

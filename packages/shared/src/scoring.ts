@@ -20,15 +20,32 @@ export function accaSucceeded(outcomes: LegOutcome[]): boolean {
   return outcomes.length > 0 && outcomes.every((o) => o === "won" || o === "void");
 }
 
+/** Acca is bust as soon as any leg loses — remaining legs may still be pending. */
+export function accaHasLostLeg(outcomes: LegOutcome[]): boolean {
+  return outcomes.some((o) => o === "lost");
+}
+
+/**
+ * Ready to settle the round: every leg resolved as won/void (acca win),
+ * or at least one leg lost (acca bust — unfinished legs can resolve later).
+ */
+export function roundIsSettleable(outcomes: Array<LegOutcome | undefined>): boolean {
+  if (outcomes.length === 0) return false;
+  if (outcomes.some((o) => o === "lost")) return true;
+  return outcomes.every((o) => o === "won" || o === "void");
+}
+
 /**
  * Group acca points for one settled round — one unit stake on the combined acca.
  * Used for group stats, charts, and round history (not per-member leaderboard).
+ * A known lost leg scores −1 even while later fixtures are still pending.
  */
 export function groupAccaRoundPoints(
   outcomes: LegOutcome[],
   combinedOdds: number
 ): number {
-  if (!accaSucceeded(outcomes)) return -1;
+  if (accaHasLostLeg(outcomes)) return -1;
+  if (!accaSucceeded(outcomes)) return 0;
   return Number((combinedOdds - 1).toFixed(2));
 }
 
@@ -36,6 +53,7 @@ export function groupAccaRoundPoints(
  * Member points for one leg in a settled acca round.
  * - Acca won: `odds − 1` on a won leg, `0` on void (same rule as unit-stake singles)
  * - Acca lost: `−1` per participating member (void leg → `0`)
+ * - Still-pending after an early loss: `0` until the leg resolves, then the lost-acca rule
  *
  * Group total (`groupAccaRoundPoints`) is not split — member totals will not sum to it on wins.
  */
@@ -46,7 +64,7 @@ export function memberAccaLegPoints(
 ): number {
   if (legOutcome === "pending") return 0;
 
-  if (!accaSucceeded(accaOutcomes)) {
+  if (accaHasLostLeg(accaOutcomes) || !accaSucceeded(accaOutcomes)) {
     return legOutcome === "void" ? 0 : -1;
   }
 

@@ -30,7 +30,7 @@ Implementation: `groupAccaRoundPoints()` and `memberAccaLegPoints()` in `package
 
 Member totals on a winning acca **do not** sum to the group total (e.g. legs 1.6 + 2.15 → members 0.6 + 1.15, group 2.44).
 
-**Charts:** cumulative points after each settled round. In-progress leg outcomes on locked accas are visible on the Round tab but do not affect stats until the round settles.
+**Charts:** cumulative points after each settled round. In-progress leg outcomes on locked accas are visible on the Round tab but do not affect stats until the round settles. A losing leg settles the acca immediately (group −1; concluded legs score under the lost-acca rule); later fixtures on that round keep resolving for individual outcomes/points.
 
 **Group chart:** `combinedOdds − 1` per winning acca round, `−1` per losing acca round (one unit stake on the group acca).  
 **Separate stat:** cumulative acca £ P/L from `Round.profitLossGbp` (£10 theoretical stake).

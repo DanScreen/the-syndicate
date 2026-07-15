@@ -20,9 +20,11 @@ export type SettlementQueueLeg = {
 
 export type SettlementQueueRound = {
   id: string;
+  status: string;
   groupId: string;
   groupName: string;
   lockedAt: string | null;
+  settledAt: string | null;
   combinedOdds: number | null;
   resolvedCount: number;
   overdueCount: number;
@@ -30,12 +32,17 @@ export type SettlementQueueRound = {
 };
 
 /**
- * All locked rounds awaiting system settlement, overdue legs flagged.
- * Rounds needing attention (any overdue leg) sort first, then oldest lock.
+ * Locked rounds awaiting settlement, plus settled rounds that still have
+ * unfinished legs after an early loss. Overdue legs flagged.
  */
 export async function computeSettlementQueue(now = new Date()): Promise<SettlementQueueRound[]> {
   const rounds = await prisma.round.findMany({
-    where: { status: "locked" },
+    where: {
+      OR: [
+        { status: "locked" },
+        { status: "settled", legs: { some: { outcome: "pending" } } },
+      ],
+    },
     orderBy: { lockedAt: "asc" },
     include: {
       group: { select: { id: true, name: true } },
@@ -67,9 +74,11 @@ export async function computeSettlementQueue(now = new Date()): Promise<Settleme
 
     return {
       id: round.id,
+      status: round.status,
       groupId: round.group.id,
       groupName: round.group.name,
       lockedAt: round.lockedAt?.toISOString() ?? null,
+      settledAt: round.settledAt?.toISOString() ?? null,
       combinedOdds: round.combinedOdds,
       resolvedCount: legs.filter((l) => l.outcome !== "pending").length,
       overdueCount: legs.filter((l) => l.overdue).length,
@@ -80,6 +89,6 @@ export async function computeSettlementQueue(now = new Date()): Promise<Settleme
   return queue.sort(
     (a, b) =>
       b.overdueCount - a.overdueCount ||
-      (a.lockedAt ?? "").localeCompare(b.lockedAt ?? "")
+      (a.lockedAt ?? a.settledAt ?? "").localeCompare(b.lockedAt ?? b.settledAt ?? "")
   );
 }

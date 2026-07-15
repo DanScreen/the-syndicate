@@ -27,6 +27,10 @@ function outcomeBadgeClass(outcome: string): string {
 
 function SettleRoundCard({ round }: { round: SettlementQueueRound }) {
   const router = useRouter();
+  const earlySettled = round.status === "settled";
+  const actionableLegs = earlySettled
+    ? round.legs.filter((l) => l.outcome === "pending")
+    : round.legs;
   // Pre-fill outcomes the system already resolved; admin fills the rest.
   const [outcomes, setOutcomes] = useState<Record<string, string>>(() =>
     Object.fromEntries(
@@ -36,7 +40,7 @@ function SettleRoundCard({ round }: { round: SettlementQueueRound }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const allChosen = round.legs.every((l) => outcomes[l.id]);
+  const allChosen = actionableLegs.every((l) => outcomes[l.id]);
 
   async function handleSettle() {
     setLoading(true);
@@ -46,7 +50,10 @@ function SettleRoundCard({ round }: { round: SettlementQueueRound }) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        legOutcomes: round.legs.map((l) => ({ legId: l.id, outcome: outcomes[l.id] })),
+        legOutcomes: actionableLegs.map((l) => ({
+          legId: l.id,
+          outcome: outcomes[l.id],
+        })),
       }),
     });
 
@@ -73,7 +80,9 @@ function SettleRoundCard({ round }: { round: SettlementQueueRound }) {
         <div>
           <h3 className="font-semibold">{round.groupName}</h3>
           <p className="text-xs text-muted">
-            Locked {round.lockedAt ? formatKickoff(round.lockedAt) : "—"}
+            {earlySettled
+              ? `Settled early (loss) ${round.settledAt ? formatKickoff(round.settledAt) : "—"}`
+              : `Locked ${round.lockedAt ? formatKickoff(round.lockedAt) : "—"}`}
             {round.combinedOdds ? ` · combined odds ${round.combinedOdds}` : ""}
             {` · ${round.resolvedCount}/${round.legs.length} legs resolved`}
           </p>
@@ -142,10 +151,14 @@ function SettleRoundCard({ round }: { round: SettlementQueueRound }) {
         className="mt-4 w-full rounded-lg border border-accent py-2 text-sm font-medium text-accent hover:bg-accent-muted/30 disabled:opacity-50"
       >
         {loading
-          ? "Settling..."
+          ? earlySettled
+            ? "Resolving..."
+            : "Settling..."
           : allChosen
-            ? "Settle round & award points"
-            : "Choose an outcome for every pending leg to settle"}
+            ? earlySettled
+              ? "Resolve remaining legs & award points"
+              : "Settle round & award points"
+            : "Choose an outcome for every pending leg"}
       </button>
     </div>
   );
@@ -155,7 +168,7 @@ export function AdminSettlement({ rounds }: { rounds: SettlementQueueRound[] }) 
   if (rounds.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-card p-6 text-sm text-muted">
-        No locked rounds waiting on results — the settlement cron is keeping up.
+        No rounds waiting on results — the settlement cron is keeping up.
       </div>
     );
   }

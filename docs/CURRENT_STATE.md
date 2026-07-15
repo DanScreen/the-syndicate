@@ -85,7 +85,7 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 | Acca bookmaker rankings (best odds first, stored at lock) | ✅ |
 | Real bookmaker betslip deeplinks (The Odds API) | ✅ |
 | Match table + football-data.org sync cron | ✅ |
-| Hands-off auto-settle (5-min cron, progressive leg outcomes) | ✅ |
+| Hands-off auto-settle (5-min cron; early settle on first loss; deferred remaining legs) | ✅ |
 | Email + push notifications (lock, settle, pick reminders) | ✅ |
 | System-only settlement (owner settle removed July 2026) | ✅ |
 | Editable picks until first kickoff (open + locked; locked edits reprice acca; web + mobile) | ✅ |
@@ -224,12 +224,14 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 
 | Method | Route | Notes |
 |--------|-------|-------|
-| Auto (hands-off) | Via `POST /api/internal/sync-matches` | Cron sync → auto-settles all ready locked rounds; resolved legs update before full acca settles |
-| Admin (escape hatch) | `POST /api/admin/rounds/[id]/settle` | Platform admin settles rounds the system can't resolve — see `/admin/settlement` |
+| Auto (hands-off) | Via `POST /api/internal/sync-matches` | Cron sync → settles locked rounds when any leg loses **or** all legs are won/void; continues resolving pending legs on early-settled losses |
+| Admin (escape hatch) | `POST /api/admin/rounds/[id]/settle` | Platform admin settles stuck locked rounds, or remaining pending legs after an early loss — see `/admin/settlement` |
 
 Email and push notifications fire on **round locked**, **round settled**, and **pick reminders** (within 2h before first kickoff). Resend for email (`RESEND_API_KEY`, `EMAIL_FROM`); Expo Push API for mobile (`PushDevice` tokens). Per-user preferences at `/settings/notifications` (web) and `(main)/notifications` (mobile). Deduped via `NotificationLog`; round-level `lockedNotificationSentAt` / `settledNotificationSentAt` set only when all members are satisfied (delivered or opted out). Failed lock/settle deliveries retried on `sync-matches` (5 min). Pick reminders cron: `POST /api/internal/round-reminders` every 15 min (Terraform). Notification times formatted in `Europe/London`. See [specs/notifications.md](./specs/notifications.md).
 
-**Exactly-once settlement.** `applyRoundSettlement()` runs in a `prisma.$transaction` that opens with an atomic claim — `round.updateMany({ where: { status: "locked" }, data: { status: "settled" } })`. Overlapping settle attempts (e.g. two cron runs) can't double-count points: the loser matches zero rows and throws `RoundNotSettleableError`, treated as a benign `skipped` no-op.
+**Early settle on loss.** As soon as one leg is `lost`, the round settles: group scores −1, concluded legs award member points under the lost-acca rule (−1 / void 0), and the next open round starts. Remaining legs stay `pending` until match sync (or admin) resolves them via `applyDeferredLegOutcome()` — still exactly-once (pending → outcome claim).
+
+**Exactly-once settlement.** `applyRoundSettlement()` validates settleability, then runs in a `prisma.$transaction` with an atomic claim — `round.updateMany({ where: { status: "locked" }, data: { status: "settled" } })`. Overlapping settle attempts (e.g. two cron runs) can't double-count points: the loser matches zero rows and throws `RoundNotSettleableError`, treated as a benign `skipped` no-op.
 
 **Lock triggers.** A round moves `open → locked` when **all members have submitted** or when the **earliest submitted leg kicks off** (partial accas — missing members are excluded). `claimAndLockRound()` in `claim-lock-round.ts` atomically claims via `updateMany`, reprices, and emails; repricing failures revert to `open`. Kickoff locks run on each match-sync cron (5 min) and when loading `GET /api/groups/[id]`. See [specs/round-deadline-lock.md](./specs/round-deadline-lock.md).
 
@@ -248,7 +250,7 @@ Members can change **their own leg** via `PATCH /api/legs/[id]` while the round 
 
 | Route | Role |
 |-------|------|
-| `POST /api/internal/sync-matches` | football-data.org → `Match` table; locks open rounds at first kickoff; auto-settles locked rounds; retries pending lock/settle notifications |
+| `POST /api/internal/sync-matches` | football-data.org → `Match` table; locks open rounds at first kickoff; auto-settles locked rounds (incl. early loss); awards deferred legs on settled rounds; retries pending lock/settle notifications |
 | `POST /api/internal/round-reminders` | Pick reminder emails/push (T−2h before kickoff) |
 | `POST /api/internal/warm-odds-cache` | Refresh odds snapshots in DB |
 
@@ -256,12 +258,13 @@ Members can change **their own leg** via `PATCH /api/legs/[id]` while the round 
 
 | Path | Role |
 |------|------|
-| `apps/web/src/lib/settlement/auto-settle-round.ts` | Hands-off auto-settle (cron) |
+| `apps/web/src/lib/settlement/auto-settle-round.ts` | Hands-off auto-settle + deferred pending legs on settled rounds |
 | `apps/web/src/app/api/legs/[id]/route.ts` | Leg editing (PATCH) — cutoff, revalidation, locked-round reprice |
-| `apps/web/src/lib/admin/compute-settlement-queue.ts` | Locked-round queue + 2h overdue-leg flags |
-| `apps/web/src/components/admin-settlement.tsx` | Settlement queue UI + manual settle form |
-| `apps/web/src/app/api/admin/rounds/[id]/settle/route.ts` | Admin manual settle (exact leg coverage) |
+| `apps/web/src/lib/admin/compute-settlement-queue.ts` | Locked + early-settled-pending queue + 2h overdue-leg flags |
+| `apps/web/src/components/admin-settlement.tsx` | Settlement queue UI + manual settle / resolve-remaining form |
+| `apps/web/src/app/api/admin/rounds/[id]/settle/route.ts` | Admin manual settle (locked) or deferred leg resolve (settled) |
 | `apps/web/src/lib/settlement/resolve-round-outcomes.ts` | Match → leg outcomes; `persistResolvableLegOutcomes()` |
+| `apps/web/src/lib/settlement/apply-round-settlement.ts` | Atomic settle + `applyDeferredLegOutcome()` |
 | `apps/web/src/lib/notifications/dispatch.ts` | Central notification dispatcher |
 | `apps/web/src/lib/notifications/send-pick-reminders.ts` | Pick reminder cron logic |
 | `apps/web/src/lib/notifications/retry-pending-round-notifications.ts` | Retry failed lock/settle notifications |
