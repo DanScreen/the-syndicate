@@ -185,7 +185,7 @@ Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_
 | `apps/web/src/lib/odds/lock-round.ts` | Lock + reprice + store deeplinks; live link enrichment |
 | `apps/web/src/lib/odds/bookmakers.ts` | Retail filter, sort best odds |
 | `apps/web/src/components/group-ui.tsx` | Leg picker (4-step), locked round picks, settle UI |
-| `apps/web/src/components/app-nav.tsx` | Header nav: Groups / Performance / Admin |
+| `apps/web/src/components/app-nav.tsx` | Header nav: Home / About / Blog / Groups / Performance / Admin / Notifications |
 | `apps/web/src/components/group-nav.tsx` | Group tabs: Round / History / Leaderboard / Performance |
 | `apps/web/src/components/group-layout-client.tsx` | Shared group shell + `GroupDataProvider` |
 | `apps/web/src/context/group-data.tsx` | Group data context for sub-pages |
@@ -198,8 +198,9 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 
 | Path | Purpose |
 |------|---------|
-| `/` | Landing — hero, value props, how it works, FAQ, CTA (signed-in: marketing header + Groups/Performance CTAs) |
+| `/` | Landing — hero, value props, how it works, FAQ, CTA (signed-in: app header + Groups/Performance CTAs) |
 | `/about` | Product story, what we are/aren’t, responsible gambling (reachable when signed in) |
+| `/blog`, `/blog/[slug]` | File-based MDX blog (static; drafts hidden in prod) |
 | `/sign-in`, `/sign-up` | Auth — sign-up collects **first name** + **last name** |
 | `/dashboard` | **Groups home** — list of user's groups; **group/your points**; **current betslip** legs (fixture, market, selection, odds); waiting status if you haven't picked |
 | `/performance` | Cross-group stats (`DashboardStats`) — group filter dropdown, charts, share cards |
@@ -214,7 +215,7 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 | `/groups/[id]/leaderboard` | Points leaderboard |
 | `/groups/[id]/performance` | Group stats (`GroupStats`) — charts, member breakdown |
 
-**Navigation:** `AppNav` in app header (Groups ↔ Performance ↔ Admin for platform admins ↔ Notifications). Logo links to `/` (marketing home); **About** sits beside the greeting. Marketing pages (`/`, `/about`) keep `MarketingHeader` when signed in (About + Groups + sign out) so a future Blog link can land there without crowding app nav. Inside a group, `GroupNav` tabs (Round / History / Leaderboard / Performance) share data via `GroupDataProvider` (fetched once in group layout; polls every 60s while acca locked).
+**Navigation:** Logo + **Social Group Betting** tagline always shown. Logo and **Home** → `/`. `AppNav` order: Home → About → Blog → Groups → Performance → Admin (admins) → Notifications. Signed-in marketing pages use `AppHeader`; signed-out use `MarketingHeader` (Home / About / Blog / Sign in / Sign up). Inside a group, `GroupNav` tabs (Round / History / Leaderboard / Performance) share data via `GroupDataProvider` (fetched once in group layout; polls every 60s while acca locked).
 
 **Open round UI:** provisional combined odds + **Compare bookmakers** podium (logos; 1st–3rd emphasised) from legs submitted so far.  
 **Locked round UI:** picks with per-leg outcomes as matches finish → **locked combined odds + recommended bookmaker only** (no compare list) → betslip CTA until the first result, then tracking only. Polls every 60s while locked. **History** tab lists all settled rounds.

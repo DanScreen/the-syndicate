@@ -9,8 +9,16 @@ export function SiteHeader() {
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-        <Logo href="/" size="md" />
+        <div className="flex items-center gap-2.5">
+          <Logo href="/" size="md" />
+          <span className="relative -top-[3px] hidden text-sm text-muted md:inline">
+            Social Group Betting
+          </span>
+        </div>
         <nav className="flex items-center gap-4 text-sm">
+          <Link href="/" className="hidden text-muted hover:text-foreground sm:inline">
+            Home
+          </Link>
           <Link href="/about" className="hidden text-muted hover:text-foreground sm:inline">
             About
           </Link>
@@ -31,19 +39,18 @@ export function SiteHeader() {
 
 export function AppHeader({ userName }: { userName: string }) {
   return (
-    <header className="border-b border-border bg-card/50 backdrop-blur">
-      <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4">
-        <div className="flex items-center gap-6">
-          <Logo href="/" size="md" />
+    <header className="sticky top-0 z-50 border-b border-border/80 bg-background/80 backdrop-blur-md">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-6 gap-y-2">
+          <div className="flex shrink-0 items-center gap-2.5">
+            <Logo href="/" size="md" />
+            <span className="relative -top-[3px] hidden text-sm text-muted md:inline">
+              Social Group Betting
+            </span>
+          </div>
           <AppNav />
         </div>
-        <div className="flex items-center gap-4 text-sm">
-          <Link
-            href="/about"
-            className="hidden text-muted transition-colors hover:text-foreground sm:inline"
-          >
-            About
-          </Link>
+        <div className="flex shrink-0 items-center gap-4 text-sm">
           <span className="hidden text-muted sm:inline">Hi, {userName}</span>
           <SignOutButton />
         </div>
