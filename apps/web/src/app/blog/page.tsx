@@ -7,6 +7,14 @@ export const metadata: Metadata = {
   title: "Blog",
   description:
     "Guides and product news from Tiki Acca: accas explained, group betting done properly, and what we're building.",
+  alternates: { canonical: "/blog" },
+  openGraph: {
+    title: "Tiki Acca blog",
+    description:
+      "Guides and product news from Tiki Acca: accas explained, group betting done properly, and what we're building.",
+    type: "website",
+    url: "/blog",
+  },
 };
 
 export const dynamic = "force-static";

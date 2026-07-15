@@ -1,10 +1,12 @@
 import { MarketingShell } from "@/components/marketing/marketing-shell";
-import { formatPostDate, getAllPosts, getPost } from "@/lib/blog";
+import { formatPostDate, getAllPosts, getPost, tagSlug } from "@/lib/blog";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import type { ComponentPropsWithoutRef } from "react";
+
+const SITE = "https://www.tikiacca.com";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -18,16 +20,26 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
   const post = getPost(slug);
   if (!post) return {};
+  const url = `/blog/${post.slug}`;
   return {
     title: post.title,
     description: post.description,
+    // Canonical prevents duplicate-URL dilution (trailing slash, query params).
+    // Resolved against metadataBase in layout.tsx.
+    alternates: { canonical: url },
+    authors: [{ name: post.author }],
+    keywords: post.tags,
     openGraph: {
       title: post.title,
       description: post.description,
       type: "article",
       publishedTime: post.date,
-      url: `https://www.tikiacca.com/blog/${post.slug}`,
+      modifiedTime: post.updated,
+      authors: [post.author],
+      tags: post.tags,
+      url,
     },
+    // og:image is supplied automatically by opengraph-image.tsx in this segment.
   };
 }
 
@@ -75,8 +87,35 @@ export default async function BlogPostPage({ params }: Params) {
   const post = getPost(slug);
   if (!post) notFound();
 
+  const url = `${SITE}/blog/${post.slug}`;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.description,
+    datePublished: post.date,
+    dateModified: post.updated,
+    author: { "@type": "Organization", name: post.author, url: SITE },
+    publisher: {
+      "@type": "Organization",
+      name: "Tiki Acca",
+      logo: { "@type": "ImageObject", url: `${SITE}/icon.svg` },
+    },
+    image: `${url}/opengraph-image`,
+    url,
+    mainEntityOfPage: { "@type": "WebPage", "@id": url },
+    keywords: (post.tags ?? []).join(", "),
+    isAccessibleForFree: true,
+  };
+
   return (
     <MarketingShell path={`/blog/${post.slug}`}>
+      {/* BlogPosting structured data for rich results. */}
+      <script
+        type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: static JSON-LD
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="marketing-gradient border-b border-border/60">
         <div className="mx-auto max-w-3xl px-4 py-14 md:py-18">
           <Link href="/blog" className="text-sm text-accent hover:underline">
@@ -86,8 +125,21 @@ export default async function BlogPostPage({ params }: Params) {
             {post.title}
           </h1>
           <p className="mt-3 text-sm text-muted">
-            {formatPostDate(post.date)} · {post.readingMinutes} min read
+            {formatPostDate(post.date)} · {post.readingMinutes} min read · {post.author}
           </p>
+          {post.tags && post.tags.length > 0 ? (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {post.tags.map((tag) => (
+                <Link
+                  key={tag}
+                  href={`/blog/tag/${tagSlug(tag)}`}
+                  className="rounded-full border border-border px-3 py-1 text-xs text-muted transition-colors hover:border-accent/40 hover:text-accent"
+                >
+                  {tag}
+                </Link>
+              ))}
+            </div>
+          ) : null}
         </div>
       </div>
 

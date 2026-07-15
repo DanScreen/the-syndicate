@@ -8,19 +8,30 @@ import matter from "gray-matter";
  * generated), so no runtime fs or DB cost. Publishing = git push.
  */
 
+/** Default author when a post omits one — keeps JSON-LD author non-empty. */
+export const DEFAULT_AUTHOR = "The Tiki Acca team";
+
 export type PostFrontmatter = {
   title: string;
   description: string;
-  /** ISO date, e.g. 2026-07-15 */
+  /** ISO publish date, e.g. 2026-07-15 */
   date: string;
+  /** ISO date of the last meaningful edit. Defaults to `date` when omitted. */
+  updated?: string;
+  /** Named author for byline + JSON-LD. Defaults to DEFAULT_AUTHOR. */
+  author?: string;
   tags?: string[];
   /** Draft posts render in dev but are excluded from production builds. */
   draft?: boolean;
 };
 
-export type PostSummary = PostFrontmatter & {
+export type PostSummary = Omit<PostFrontmatter, "updated" | "author"> & {
   slug: string;
   readingMinutes: number;
+  /** Always resolved (falls back to `date`). */
+  updated: string;
+  /** Always resolved (falls back to DEFAULT_AUTHOR). */
+  author: string;
 };
 
 export type Post = PostSummary & {
@@ -44,11 +55,18 @@ function parseFile(filename: string): Post {
     title: fm.title,
     description: fm.description,
     date: fm.date,
+    updated: fm.updated ?? fm.date,
+    author: fm.author ?? DEFAULT_AUTHOR,
     tags: fm.tags ?? [],
     draft: Boolean(fm.draft),
     readingMinutes: readingMinutes(content),
     content,
   };
+}
+
+/** Normalise a tag to a URL slug: lower-case, spaces → hyphens. */
+export function tagSlug(tag: string): string {
+  return tag.trim().toLowerCase().replace(/\s+/g, "-");
 }
 
 function includeDrafts(): boolean {
@@ -76,6 +94,31 @@ export function getPost(slug: string): Post | null {
     }
   }
   return null;
+}
+
+/** All distinct tag slugs across published posts, for static params. */
+export function getAllTags(): string[] {
+  const slugs = new Set<string>();
+  for (const post of getAllPosts()) {
+    for (const tag of post.tags ?? []) slugs.add(tagSlug(tag));
+  }
+  return [...slugs].sort();
+}
+
+/** Published posts carrying the given tag slug, plus its display label. */
+export function getPostsByTag(slug: string): { label: string; posts: Post[] } {
+  const target = tagSlug(slug);
+  let label = target;
+  const posts = getAllPosts().filter((post) =>
+    (post.tags ?? []).some((tag) => {
+      if (tagSlug(tag) === target) {
+        label = tag;
+        return true;
+      }
+      return false;
+    })
+  );
+  return { label, posts };
 }
 
 export function formatPostDate(iso: string): string {
