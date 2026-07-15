@@ -259,7 +259,7 @@ Refactor `notifyRoundLocked` / `notifyRoundSettled` to call `dispatchNotificatio
 
 | Surface | Location | Controls |
 |---------|----------|----------|
-| Web | `/settings/notifications` (new) or section on `/performance` | Email / push toggles per type |
+| Web | `/account` (greeting in header; `/settings/notifications` redirects) | Email / push toggles per type |
 | Mobile | Settings screen (new tab or profile) | Same toggles + system permission status |
 
 Default: all transactional notifications **on**. Copy: *"Remind me to pick before kickoff"* — ties to product accountability.

@@ -77,7 +77,7 @@ Computed on read from settled rounds. Group + member + **cross-group user** APIs
 → `apps/web/src/lib/stats/`
 
 ### Web UI layout
-- **Header:** Logo + “Social Group Betting” tagline; `AppNav` — Home → About → Groups → Performance → Admin (admins) → Notifications → Blog (rightmost); logo + Home → `/`
+- **Header:** Logo + “Social Group Betting” tagline; `AppNav` — Home → About → Groups → Performance → Admin (admins) → Blog (rightmost); greeting **Hi, {name}** → `/account`; logo + Home → `/`
 - **Marketing chrome:** `SessionAwareMarketingHeader` (`useSession`) so force-static `/blog` still shows signed-in `AppHeader`
 - **Group shell:** `groups/[id]/layout.tsx` + `GroupDataProvider` — shared fetch for sub-pages; polls every 60s while acca locked
 - **Group tabs:** Round (`/groups/[id]`), Leaderboard, Performance

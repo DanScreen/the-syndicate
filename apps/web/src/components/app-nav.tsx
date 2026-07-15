@@ -47,12 +47,6 @@ export function AppNav() {
           Admin
         </Link>
       )}
-      <Link
-        href="/settings/notifications"
-        className={navLinkClass(pathname.startsWith("/settings"))}
-      >
-        Notifications
-      </Link>
       <Link href="/blog" className={navLinkClass(blogActive)}>
         Blog
       </Link>

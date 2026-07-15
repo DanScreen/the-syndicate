@@ -186,7 +186,8 @@ Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_
 | `apps/web/src/lib/odds/lock-round.ts` | Lock + reprice + store deeplinks; live link enrichment |
 | `apps/web/src/lib/odds/bookmakers.ts` | Retail filter, sort best odds |
 | `apps/web/src/components/group-ui.tsx` | Leg picker (4-step), locked round picks, settle UI |
-| `apps/web/src/components/app-nav.tsx` | Header nav: Home / About / Groups / Performance / Admin / Notifications / Blog |
+| `apps/web/src/components/app-nav.tsx` | Header nav: Home / About / Groups / Performance / Admin / Blog |
+| `apps/web/src/app/account/page.tsx` | Account — profile, notification prefs, sign out (greeting in header links here) |
 | `apps/web/src/components/group-nav.tsx` | Group tabs: Round / History / Leaderboard / Performance |
 | `apps/web/src/components/group-layout-client.tsx` | Shared group shell + `GroupDataProvider` |
 | `apps/web/src/context/group-data.tsx` | Group data context for sub-pages |
@@ -203,6 +204,8 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 | `/about` | Product story, what we are/aren’t, responsible gambling (reachable when signed in) |
 | `/blog`, `/blog/[slug]` | File-based MDX blog (static; drafts hidden in prod) |
 | `/sign-in`, `/sign-up` | Auth — sign-up collects **first name** + **last name** |
+| `/account` | Account — profile, notification prefs, sign out (via header greeting) |
+| `/settings/notifications` | Redirect → `/account#notifications` (legacy / List-Unsubscribe) |
 | `/dashboard` | **Groups home** — list of user's groups; **group/your points**; **current betslip** legs (fixture, market, selection, odds); waiting status if you haven't picked |
 | `/performance` | Cross-group stats (`DashboardStats`) — group filter dropdown, charts, share cards |
 | `/admin` | **Admin** — platform metrics (admin role only) |
@@ -217,7 +220,7 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 | `/groups/[id]/performance` | Group stats (`GroupStats`) — charts, member breakdown |
 | `/groups/[id]/settings` | **Owner** — legs per member (open rounds immediately; locked unchanged) |
 
-**Navigation:** Logo + **Social Group Betting** tagline always shown. Logo and **Home** → `/`. `AppNav` order: Home → About → Groups → Performance → Admin (admins) → Notifications → **Blog** (rightmost). Marketing pages use `SessionAwareMarketingHeader` (client `useSession`) so statically generated `/blog` still shows signed-in chrome. Signed-out: Home / About / Blog / Sign in / Sign up. Inside a group, `GroupNav` tabs (Round / History / Leaderboard / Performance / **Settings** for owners) share data via `GroupDataProvider` (fetched once in group layout; polls every 60s while acca locked).
+**Navigation:** Logo + **Social Group Betting** tagline always shown. Logo and **Home** → `/`. `AppNav` order: Home → About → Groups → Performance → Admin (admins) → **Blog** (rightmost). Header greeting **Hi, {firstName}** → `/account` (notifications + sign out). Legacy `/settings/notifications` redirects to `/account#notifications`. Marketing pages use `SessionAwareMarketingHeader` (client `useSession`) so statically generated `/blog` still shows signed-in chrome. Signed-out: Home / About / Blog / Sign in / Sign up. Inside a group, `GroupNav` tabs (Round / History / Leaderboard / Performance / **Settings** for owners) share data via `GroupDataProvider` (fetched once in group layout; polls every 60s while acca locked).
 
 **Open round UI:** provisional combined odds + **Compare bookmakers** podium (logos; 1st–3rd emphasised) from legs submitted so far.  
 **Locked round UI:** picks with per-leg outcomes as matches finish → **locked combined odds + recommended bookmaker only** (no compare list) → betslip CTA until the first result, then tracking only. Polls every 60s while locked. **History** tab lists all settled rounds.
@@ -233,7 +236,7 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 | Auto (hands-off) | Via `POST /api/internal/sync-matches` | Cron sync → settles locked rounds when any leg loses **or** all legs are won/void; continues resolving pending legs on early-settled losses |
 | Admin (escape hatch) | `POST /api/admin/rounds/[id]/settle` | Platform admin settles stuck locked rounds, or remaining pending legs after an early loss — see `/admin/settlement` |
 
-Email and push notifications fire on **round locked**, **round settled**, and **pick reminders** (within 2h before first kickoff). Resend for email (`RESEND_API_KEY`, `EMAIL_FROM`); Expo Push API for mobile (`PushDevice` tokens). Per-user preferences at `/settings/notifications` (web) and `(main)/notifications` (mobile). Deduped via `NotificationLog`; round-level `lockedNotificationSentAt` / `settledNotificationSentAt` set only when all members are satisfied (delivered or opted out). Failed lock/settle deliveries retried on `sync-matches` (5 min). Pick reminders cron: `POST /api/internal/round-reminders` every 15 min (Terraform). Notification times formatted in `Europe/London`. See [specs/notifications.md](./specs/notifications.md).
+Email and push notifications fire on **round locked**, **round settled**, and **pick reminders** (within 2h before first kickoff). Resend for email (`RESEND_API_KEY`, `EMAIL_FROM`); Expo Push API for mobile (`PushDevice` tokens). Per-user preferences at `/account` (web) and `(main)/account` (mobile). Deduped via `NotificationLog`; round-level `lockedNotificationSentAt` / `settledNotificationSentAt` set only when all members are satisfied (delivered or opted out). Failed lock/settle deliveries retried on `sync-matches` (5 min). Pick reminders cron: `POST /api/internal/round-reminders` every 15 min (Terraform). Notification times formatted in `Europe/London`. See [specs/notifications.md](./specs/notifications.md).
 
 **Early settle on loss.** As soon as one leg is `lost`, the round settles: group scores −1, concluded legs award member points under the lost-acca rule (−1 / void 0), and the next open round starts. Remaining legs stay `pending` until match sync (or admin) resolves them via `applyDeferredLegOutcome()` — still exactly-once (pending → outcome claim).
 

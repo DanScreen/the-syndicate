@@ -208,7 +208,7 @@ Optional. When configured, members receive **email** on round lock, settle, and 
 
 Optional: `EXPO_ACCESS_TOKEN` for Expo Push API rate limits (mobile push).
 
-User preferences: `/settings/notifications` (web), mobile Notifications screen. Full spec: [specs/notifications.md](./specs/notifications.md).
+User preferences: `/account` (web), mobile Account screen. Legacy `/settings/notifications` redirects. Full spec: [specs/notifications.md](./specs/notifications.md).
 
 Omit either email variable to skip emails (no-op).
 
@@ -224,7 +224,7 @@ Transactional mail still needs correct DNS and a warm reputation. Checklist:
 | 2. SPF + DKIM | In Resend → Domains → `tikiacca.com`, add the DNS records Resend shows. In Cloudflare DNS, create them as **DNS only** (grey cloud), not proxied. Wait until Resend shows the domain as **Verified**. |
 | 3. DMARC | Add a TXT record at `_dmarc.tikiacca.com`, start gentle: `v=DMARC1; p=none; rua=mailto:you@tikiacca.com`. Tighten to `p=quarantine` once SPF/DKIM are clean for a few weeks. |
 | 4. Alignment | From domain (`tikiacca.com`) must align with DKIM/SPF. Prefer `Tiki Acca <notifications@tikiacca.com>` (or `hello@` / `noreply@`) — avoid mismatched display domains. |
-| 5. Headers we send | App includes `List-Unsubscribe` → `/settings/notifications` and a plain-text part — both help Gmail/Outlook trust. |
+| 5. Headers we send | App includes `List-Unsubscribe` → `/account#notifications` and a plain-text part — both help Gmail/Outlook trust. |
 | 6. Inbox tests | After DNS: send yourself a lock/settle email, then check [mail-tester.com](https://www.mail-tester.com) (aim ≥8/10) and Gmail “Show original” → SPF/DKIM/DMARC **PASS**. |
 | 7. Recipient side | Ask friends to mark “Not spam” / move to Primary once; that trains their mailbox. New domains often land in junk for the first days — volume is low so warming is just: send real transactional mail, don’t blast. |
 

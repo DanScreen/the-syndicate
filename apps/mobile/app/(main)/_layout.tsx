@@ -35,6 +35,7 @@ export default function MainLayout() {
       <Stack.Screen name="performance" options={{ title: "Performance" }} />
       <Stack.Screen name="create-group" options={{ title: "Create group" }} />
       <Stack.Screen name="join-group" options={{ title: "Join group" }} />
+      <Stack.Screen name="account" options={{ title: "Account" }} />
       <Stack.Screen name="notifications" options={{ title: "Notifications" }} />
       <Stack.Screen name="groups/[id]" options={{ headerShown: false }} />
     </Stack>

@@ -20,6 +20,7 @@ export const authConfig = {
         path.startsWith("/groups") ||
         path.startsWith("/admin") ||
         path.startsWith("/settings") ||
+        path.startsWith("/account") ||
         path === "/performance";
       if (isProtected) return isLoggedIn;
       return true;

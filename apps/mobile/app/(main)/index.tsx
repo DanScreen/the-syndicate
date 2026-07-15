@@ -26,7 +26,7 @@ import {
 } from "react-native";
 
 export default function GroupsScreen() {
-  const { token, user, signOut } = useAuth();
+  const { token, user } = useAuth();
   const [groups, setGroups] = useState<GroupSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -68,11 +68,17 @@ export default function GroupsScreen() {
             <LogoMark size={34} />
             <View>
               <Title>Dashboard</Title>
-              <Subtitle>Welcome, {user?.firstName ?? user?.name}</Subtitle>
+              <Subtitle>Your groups</Subtitle>
             </View>
           </View>
-          <Pressable onPress={() => signOut().then(() => router.replace("/sign-in"))}>
-            <Text style={styles.signOut}>Sign out</Text>
+          <Pressable
+            onPress={() => router.push("/(main)/account")}
+            style={styles.accountHit}
+          >
+            <Text style={styles.accountLabel}>
+              Hi, {user?.firstName ?? user?.name ?? "there"}
+            </Text>
+            <Text style={styles.accountHint}>Account</Text>
           </Pressable>
         </View>
 
@@ -184,11 +190,6 @@ export default function GroupsScreen() {
             variant="secondary"
             onPress={() => router.push("/(main)/performance")}
           />
-          <Button
-            label="Notifications"
-            variant="secondary"
-            onPress={() => router.push("/(main)/notifications")}
-          />
         </View>
       </ScrollView>
     </Screen>
@@ -212,10 +213,21 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     marginBottom: 8,
   },
-  signOut: {
-    color: colors.muted,
+  accountHit: {
+    alignItems: "flex-end",
+    marginTop: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 4,
+  },
+  accountLabel: {
+    color: colors.text,
     fontSize: 14,
-    marginTop: 8,
+    fontWeight: "600",
+  },
+  accountHint: {
+    color: colors.muted,
+    fontSize: 12,
+    marginTop: 2,
   },
   sectionLabel: {
     color: colors.muted,

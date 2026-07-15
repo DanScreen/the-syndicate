@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { AppNav } from "./app-nav";
-import { SignOutButton } from "./sign-out-button";
 
 export function SiteHeader() {
   return (
@@ -50,10 +49,13 @@ export function AppHeader({ userName }: { userName: string }) {
           </div>
           <AppNav />
         </div>
-        <div className="flex shrink-0 items-center gap-4 text-sm">
-          <span className="hidden text-muted sm:inline">Hi, {userName}</span>
-          <SignOutButton />
-        </div>
+        <Link
+          href="/account"
+          className="shrink-0 rounded-lg px-2 py-1.5 text-sm text-muted transition-colors hover:bg-accent-muted/30 hover:text-foreground"
+          title="Account & settings"
+        >
+          Hi, {userName}
+        </Link>
       </div>
     </header>
   );

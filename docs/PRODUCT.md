@@ -18,7 +18,7 @@
 ## Core flows
 
 ### 1. Onboarding
-Sign up (first + last name) → **Groups** home (`/dashboard`) listing groups. Cross-group stats on **Performance** (`/performance`). Header greets with first name only.
+Sign up (first + last name) → **Groups** home (`/dashboard`) listing groups. Cross-group stats on **Performance** (`/performance`). Header greets with first name only — tap **Hi, {name}** for **Account** (`/account`: notifications + sign out).
 
 ### 2. Create / join group
 Owner creates group (name only) → invite code + link. Anyone with the link can join via code or `/groups/join?code=`.

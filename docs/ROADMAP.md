@@ -36,6 +36,7 @@ Core loop and MVP polish are **shipped**:
 - **Points-first UX** — stake → profit converter; see [specs/platform-admin.md](./specs/platform-admin.md)
 - Deploy: Cloud Run + Cloud SQL + GitHub Actions; Cloud Scheduler match sync (every 5 min UTC)
 - **Multi-leg accas** — owner sets 1 / 2 / 3 legs per member; web + mobile — [specs/multi-leg-accas.md](./specs/multi-leg-accas.md)
+- **Account page** — greeting → `/account` (notifications + sign out); Notifications removed from app nav
 
 ---
 
@@ -49,7 +50,7 @@ Core loop and MVP polish are **shipped**:
 | 4 | **FA Cup + EFL Cup** | Code | Phase 1b — `packages/shared/src/competitions.ts` |
 | 5 | **GCP cost reduction** | Ops/infra | Cloud SQL ~90% of spend; see [DEPLOYMENT.md](./DEPLOYMENT.md#cost-optimization) |
 | 6 | **Public platform leaderboards** | Code | Admin version shipped; open to all users when ready |
-| 7 | User profile page | Code | Optional; `/performance` covers cross-group stats today |
+| 7 | ~~User profile page~~ | Code | **Done** — `/account` (greeting entry); stats remain on `/performance` |
 | 8 | **Mobile — friend testing** | Product | You: [DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md); mates: APK / later TestFlight |
 | 9 | **Expo push setup** | Mobile ops | See checklist below — required for mobile push notifications |
 | 10 | Terraform CI GCS permissions fix | Infra | App deploy unaffected |

@@ -32,7 +32,7 @@ export function logoUrl(): string {
 }
 
 export function notificationSettingsUrl(): string {
-  return `${appBaseUrl()}/settings/notifications`;
+  return `${appBaseUrl()}/account#notifications`;
 }
 
 export type EmailDocument = {
