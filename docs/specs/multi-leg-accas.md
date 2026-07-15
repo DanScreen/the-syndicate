@@ -23,7 +23,7 @@ Groups can run accas where each member contributes more than one leg:
 | Setting | Values | Notes |
 |---------|--------|-------|
 | `Group.legsPerMember` | `1` (default) · `2` · `3` | Set by owner on create or `PATCH /api/groups/[id]` |
-| `Round.legsPerMember` | Snapshot | Copied from group when the round opens — setting changes apply to **future** rounds only |
+| `Round.legsPerMember` | Round quota | Set when the round opens; Settings updates it while `open` (before first kickoff). Locked / in-progress rounds unchanged. |
 | Lock when | All members have ≥ `legsPerMember` legs | Or first-kickoff partial lock (unchanged) |
 
 **Rules:**
@@ -48,7 +48,7 @@ Groups can run accas where each member contributes more than one leg:
 
 ## Open questions (resolved for v1)
 
-- [x] Can owner change `legsPerMember` with an open round? **Yes** — applies to **next** round only (round snapshot).
+- [x] Can owner change `legsPerMember` with an open round? **Yes** — open rounds update immediately; locked / past-kickoff stay put. Lowering blocked if someone already exceeds the new quota.
 - [x] Leaderboard: all legs vs primary? **All legs** (sum).
 - [ ] Combined-odds ceiling — not in v1.
 - [ ] Block same fixture twice — not in v1.

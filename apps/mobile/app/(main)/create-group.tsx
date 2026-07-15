@@ -37,7 +37,10 @@ export default function CreateGroupScreen() {
       <Subtitle>Start a new acca squad</Subtitle>
       <Field placeholder="Group name" value={name} onChangeText={setName} />
       <Text style={styles.label}>Legs per member</Text>
-      <Text style={styles.hint}>Everyone submits the same number each round.</Text>
+      <Text style={styles.hint}>
+        Everyone submits the same number each round. Change later in settings —
+        open rounds update; locked bets stay as they are.
+      </Text>
       <View style={styles.row}>
         {LEGS_PER_MEMBER_OPTIONS.map((n) => (
           <Pressable

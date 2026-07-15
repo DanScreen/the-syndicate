@@ -25,7 +25,7 @@ Owner creates group (name only) → invite code + link. Anyone with the link can
 
 ### 3. Build the acca
 1. Each group has an always-open round on the **Round** tab — no manual start step
-2. Group owner sets **legs per member** (1, 2, or 3 — default 1) when creating the group or in **Settings**; the quota is snapshotted onto each open round
+2. Group owner sets **legs per member** (1, 2, or 3 — default 1) when creating the group or in **Settings**; changing it updates the **open** round immediately (locked / in-progress bets keep their quota)
 3. Each member picks a **competition**, fixture, market, selection (4-step form) for each of their legs
 4. **Best odds only** shown per selection
 5. Everyone fills their quota **or the first submitted leg kicks off** → acca **locks** with best combined bookmaker (members under quota miss or enter partial)

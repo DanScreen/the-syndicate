@@ -1,23 +1,34 @@
 "use client";
 
 import { useGroupData } from "@/context/group-data";
-import { LEGS_PER_MEMBER_OPTIONS, DEFAULT_LEGS_PER_MEMBER, type LegsPerMember } from "@tiki-acca/shared";
+import {
+  DEFAULT_LEGS_PER_MEMBER,
+  LEGS_PER_MEMBER_OPTIONS,
+  type LegsPerMember,
+} from "@tiki-acca/shared";
 import { useEffect, useState } from "react";
 
 export default function GroupSettingsPage() {
   const { data, reload } = useGroupData();
-  const [legsPerMember, setLegsPerMember] = useState<LegsPerMember>(DEFAULT_LEGS_PER_MEMBER);
+  const [legsPerMember, setLegsPerMember] = useState<LegsPerMember>(
+    DEFAULT_LEGS_PER_MEMBER
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [savedNote, setSavedNote] = useState("");
 
   useEffect(() => {
-    if (data?.group.legsPerMember) {
+    if (data?.group.legsPerMember != null) {
       setLegsPerMember(data.group.legsPerMember as LegsPerMember);
     }
   }, [data?.group.legsPerMember]);
 
   if (!data) return null;
+
+  const openRound =
+    data.activeRound?.status === "open" ? data.activeRound : null;
+  const lockedRound =
+    data.activeRound?.status === "locked" ? data.activeRound : null;
 
   if (!data.isOwner) {
     return (
@@ -26,12 +37,12 @@ export default function GroupSettingsPage() {
         <span className="text-foreground">
           {data.group.legsPerMember} leg
           {data.group.legsPerMember === 1 ? "" : "s"} per member
-        </span>{" "}
-        on new rounds
-        {data.activeRound &&
-        data.activeRound.legsPerMember !== data.group.legsPerMember
-          ? ` (current round: ${data.activeRound.legsPerMember})`
-          : ""}
+        </span>
+        {openRound
+          ? ` — current open round: ${openRound.legsPerMember}`
+          : lockedRound
+            ? ` — locked round stays at ${lockedRound.legsPerMember}`
+            : ""}
         .
       </div>
     );
@@ -59,14 +70,12 @@ export default function GroupSettingsPage() {
       return;
     }
 
-    setSavedNote(
-      json.note ??
-        "Saved. Legs per member applies to the next open round."
-    );
+    setSavedNote(json.note ?? "Saved.");
     await reload();
   }
 
-  const currentRoundQuota = data.activeRound?.legsPerMember;
+  const currentEffective =
+    openRound?.legsPerMember ?? data.group.legsPerMember;
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
@@ -85,13 +94,23 @@ export default function GroupSettingsPage() {
           <legend className="font-medium">Legs per member</legend>
           <p className="mt-1 text-sm text-muted">
             Everyone submits the same number of legs. Changes apply to{" "}
-            <strong className="text-foreground">future rounds</strong> (after the
-            current acca settles)
-            {currentRoundQuota != null
-              ? ` — this round stays at ${currentRoundQuota}`
-              : ""}
-            .
+            <strong className="text-foreground">open rounds immediately</strong>
+            . Locked or in-progress bets keep their quota until the next round.
           </p>
+          {lockedRound && (
+            <p className="mt-2 text-sm text-muted">
+              Current bet is locked at {lockedRound.legsPerMember} leg
+              {lockedRound.legsPerMember === 1 ? "" : "s"} each — a new setting
+              starts with the next open round.
+            </p>
+          )}
+          {openRound && openRound.legsPerMember !== data.group.legsPerMember && (
+            <p className="mt-2 text-sm text-amber-200/90">
+              Open round is on {openRound.legsPerMember}; group default is{" "}
+              {data.group.legsPerMember}. Saving will sync the open round when
+              possible.
+            </p>
+          )}
           <div className="mt-4 grid grid-cols-3 gap-2">
             {LEGS_PER_MEMBER_OPTIONS.map((n) => (
               <button
@@ -115,7 +134,11 @@ export default function GroupSettingsPage() {
 
         <button
           type="submit"
-          disabled={saving || legsPerMember === data.group.legsPerMember}
+          disabled={
+            saving ||
+            (legsPerMember === data.group.legsPerMember &&
+              legsPerMember === currentEffective)
+          }
           className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-black hover:bg-green-400 disabled:opacity-50"
         >
           {saving ? "Saving..." : "Save settings"}

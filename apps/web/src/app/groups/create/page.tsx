@@ -59,7 +59,8 @@ export default function CreateGroupPage() {
             <legend className="text-sm text-muted">Legs per member</legend>
             <p className="mt-1 text-xs text-muted">
               Everyone submits the same number of legs each round. You can change
-              this later in group settings (applies to future rounds).
+              this later in group settings (updates open rounds; locked bets stay
+              as they are).
             </p>
             <div className="mt-3 grid grid-cols-3 gap-2">
               {LEGS_PER_MEMBER_OPTIONS.map((n) => (

@@ -77,7 +77,7 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 |------|--------|
 | Auth (email/password, Auth.js JWT sessions) | ✅ |
 | Groups, invite codes, join links (`?code=`), no member cap | ✅ |
-| Legs per member (1 / 2 / 3) — owner create + Settings; round snapshot | ✅ |
+| Legs per member (1 / 2 / 3) — owner create + Settings; updates open rounds | ✅ |
 | Always-open rounds (auto-created with group; next opens on settle) | ✅ |
 | Rounds: open → locked → settled (badges: **Bet Open**, **Bet Locked**, **Bet Settled**) | ✅ |
 | Live odds ([The Odds API](https://the-odds-api.com/)) + mock fallback | ✅ |
@@ -215,7 +215,7 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 | `/groups/[id]/history` | **History** tab — every settled acca with fixtures, markets, outcomes |
 | `/groups/[id]/leaderboard` | Points leaderboard |
 | `/groups/[id]/performance` | Group stats (`GroupStats`) — charts, member breakdown |
-| `/groups/[id]/settings` | **Owner** — legs per member (applies to future rounds) |
+| `/groups/[id]/settings` | **Owner** — legs per member (open rounds immediately; locked unchanged) |
 
 **Navigation:** Logo + **Social Group Betting** tagline always shown. Logo and **Home** → `/`. `AppNav` order: Home → About → Groups → Performance → Admin (admins) → Notifications → **Blog** (rightmost). Marketing pages use `SessionAwareMarketingHeader` (client `useSession`) so statically generated `/blog` still shows signed-in chrome. Signed-out: Home / About / Blog / Sign in / Sign up. Inside a group, `GroupNav` tabs (Round / History / Leaderboard / Performance / **Settings** for owners) share data via `GroupDataProvider` (fetched once in group layout; polls every 60s while acca locked).
 
@@ -411,7 +411,7 @@ Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `Analytics
 - `User.role` — platform role: `user` (default) or `admin` (via `ADMIN_EMAILS`).
 - `AnalyticsEvent` — lightweight product analytics (`type`, `userId?`, `path?`, `createdAt`).
 - `Group.legsPerMember` — 1–3 (default 1); owner create / Settings.
-- `Round.legsPerMember` — snapshot at round open (setting changes apply to future rounds only).
+- `Round.legsPerMember` — set at round open; owner Settings updates it while the round is `open` and before first kickoff. Locked / kickoff-in-progress rounds keep their quota; group setting then applies to the next open round.
 - Up to `legsPerMember` legs per user per round (`@@unique([roundId, userId, legIndex])`).
 - Leg stores `legIndex` + fixture snapshot: teams, kickoff, `competitionId` (slug), `competition` (display name), optional `matchId` FK, market, odds, bookmaker, `betslipUrl`, `bookmakerLinks` JSON, outcome.
 - `Match` — canonical result per fixture (`externalDataId` from football-data.org).
@@ -437,7 +437,7 @@ Recent migrations include `20260715120000_multi_leg_per_member`.
 | `PATCH /api/legs/[id]` | Leg owner | Edit own pick until first kickoff (locked rounds reprice) |
 | `GET /api/groups` | Session | Groups list + current betslip `activeLegs` + yourLeg / yourLegCount |
 | `POST /api/groups` | Session | Create group (`name`, optional `legsPerMember` 1–3) |
-| `PATCH /api/groups/[id]` | Owner | Update `legsPerMember` (future rounds) |
+| `PATCH /api/groups/[id]` | Owner | Update `legsPerMember` (open round immediately; locked left alone) |
 | `POST /api/internal/sync-matches` | `CRON_SECRET` | Sync football-data.org → `Match` |
 | `POST /api/internal/warm-odds-cache` | `CRON_SECRET` | Refresh odds DB snapshots |
 | `GET /api/groups/[id]` | Member | Group + active round (`legsPerMember`) + recent settled bets + betslip deeplinks |

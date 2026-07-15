@@ -3,7 +3,11 @@ import { useAuth } from "@/auth/AuthProvider";
 import { Button, Card, ErrorText } from "@/components/ui";
 import { colors } from "@/config";
 import { useGroupData } from "@/context/group-data";
-import { LEGS_PER_MEMBER_OPTIONS, DEFAULT_LEGS_PER_MEMBER, type LegsPerMember } from "@tiki-acca/shared";
+import {
+  DEFAULT_LEGS_PER_MEMBER,
+  LEGS_PER_MEMBER_OPTIONS,
+  type LegsPerMember,
+} from "@tiki-acca/shared";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -17,13 +21,15 @@ import {
 export default function GroupSettingsScreen() {
   const { token } = useAuth();
   const { data, reload } = useGroupData();
-  const [legsPerMember, setLegsPerMember] = useState<LegsPerMember>(DEFAULT_LEGS_PER_MEMBER);
+  const [legsPerMember, setLegsPerMember] = useState<LegsPerMember>(
+    DEFAULT_LEGS_PER_MEMBER
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [savedNote, setSavedNote] = useState("");
 
   useEffect(() => {
-    if (data?.group.legsPerMember) {
+    if (data?.group.legsPerMember != null) {
       setLegsPerMember(data.group.legsPerMember as LegsPerMember);
     }
   }, [data?.group.legsPerMember]);
@@ -36,6 +42,13 @@ export default function GroupSettingsScreen() {
     );
   }
 
+  const openRound =
+    data.activeRound?.status === "open" ? data.activeRound : null;
+  const lockedRound =
+    data.activeRound?.status === "locked" ? data.activeRound : null;
+  const currentEffective =
+    openRound?.legsPerMember ?? data.group.legsPerMember;
+
   if (!data.isOwner) {
     return (
       <ScrollView contentContainerStyle={styles.content}>
@@ -43,7 +56,13 @@ export default function GroupSettingsScreen() {
           <Text style={styles.body}>
             Only the group owner can change settings. This group uses{" "}
             {data.group.legsPerMember} leg
-            {data.group.legsPerMember === 1 ? "" : "s"} per member on new rounds.
+            {data.group.legsPerMember === 1 ? "" : "s"} per member
+            {openRound
+              ? ` — current open round: ${openRound.legsPerMember}`
+              : lockedRound
+                ? ` — locked round stays at ${lockedRound.legsPerMember}`
+                : ""}
+            .
           </Text>
         </Card>
       </ScrollView>
@@ -61,10 +80,7 @@ export default function GroupSettingsScreen() {
         token,
         body: JSON.stringify({ legsPerMember }),
       });
-      setSavedNote(
-        json.note ??
-          "Saved. Legs per member applies to the next open round."
-      );
+      setSavedNote(json.note ?? "Saved.");
       await reload();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Failed to save");
@@ -73,16 +89,23 @@ export default function GroupSettingsScreen() {
     }
   }
 
+  const unchanged =
+    legsPerMember === data.group.legsPerMember &&
+    legsPerMember === currentEffective;
+
   return (
     <ScrollView contentContainerStyle={styles.content}>
       <Text style={styles.title}>Group settings</Text>
       <Text style={styles.meta}>
-        Changes apply to future rounds after the current acca settles
-        {data.activeRound
-          ? ` — this round stays at ${data.activeRound.legsPerMember}`
-          : ""}
-        .
+        Changes apply to open rounds immediately. Locked or in-progress bets keep
+        their quota until the next round.
       </Text>
+      {lockedRound ? (
+        <Text style={styles.meta}>
+          Current bet is locked at {lockedRound.legsPerMember} leg
+          {lockedRound.legsPerMember === 1 ? "" : "s"} each.
+        </Text>
+      ) : null}
       <Card>
         <Text style={styles.label}>Legs per member</Text>
         <View style={styles.row}>
@@ -105,7 +128,7 @@ export default function GroupSettingsScreen() {
         </View>
         <ErrorText message={error} />
         {savedNote ? <Text style={styles.saved}>{savedNote}</Text> : null}
-        {legsPerMember !== data.group.legsPerMember ? (
+        {!unchanged ? (
           <Button
             label={saving ? "Saving..." : "Save settings"}
             onPress={handleSave}
