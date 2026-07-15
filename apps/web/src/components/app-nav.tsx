@@ -36,9 +36,6 @@ export function AppNav() {
       <Link href="/about" className={navLinkClass(aboutActive)}>
         About
       </Link>
-      <Link href="/blog" className={navLinkClass(blogActive)}>
-        Blog
-      </Link>
       <Link href="/dashboard" className={navLinkClass(groupsActive)}>
         Groups
       </Link>
@@ -55,6 +52,9 @@ export function AppNav() {
         className={navLinkClass(pathname.startsWith("/settings"))}
       >
         Notifications
+      </Link>
+      <Link href="/blog" className={navLinkClass(blogActive)}>
+        Blog
       </Link>
     </nav>
   );

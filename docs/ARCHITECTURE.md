@@ -77,7 +77,7 @@ Computed on read from settled rounds. Group + member + **cross-group user** APIs
 → `apps/web/src/lib/stats/`
 
 ### Web UI layout
-- **Header:** Logo + “Social Group Betting” tagline; `AppNav` — Home → About → Blog → Groups → Performance → Admin (admins) → Notifications; logo + Home → `/`
+- **Header:** Logo + “Social Group Betting” tagline; `AppNav` — Home → About → Groups → Performance → Admin (admins) → Notifications → Blog (rightmost); logo + Home → `/`
 - **Group shell:** `groups/[id]/layout.tsx` + `GroupDataProvider` — shared fetch for sub-pages; polls every 60s while acca locked
 - **Group tabs:** Round (`/groups/[id]`), Leaderboard, Performance
 - **Locked round:** per-leg outcome badges (Won/Lost/Awaiting) → locked combined odds + bookmaker → betslip CTA until first result, then tracking only (no bookmaker comparison)
