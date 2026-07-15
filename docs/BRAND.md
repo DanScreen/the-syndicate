@@ -4,7 +4,7 @@ Visual identity for Tiki Acca.
 
 **Renamed (July 2026):** **The Syndicate → Tiki Acca** — tiki-taka pun; everyone touches the ball, each member adds one leg. Groups are called **"groups"** (the noun "syndicate" is retired). Full rationale + rename scope: [specs/rename-tiki-acca.md](./specs/rename-tiki-acca.md). Legacy internals that deliberately keep old names: GCP resources (Cloud SQL `the_syndicate`, Cloud Run `the-syndicate-web`, artifact repo), mobile SecureStore keys, GitHub repo name, `lib/brand/archive.ts` history.
 
-**Locked (July 2026):** Turf Green palette + Acca stack logo.
+**Locked (July 2026):** Turf Green palette + **Triangle rondo** logo (replaced the Acca stack at the Tiki Acca rename — see [brand/tiki-logo-review/](./brand/tiki-logo-review/LOGO_REVIEW.md)).
 
 **Messaging & copy direction:** [MARKETING_BRIEF.md](./MARKETING_BRIEF.md) — positioning territories, tagline options, homepage/about page structure (draft, tagline decision open).
 
@@ -27,11 +27,11 @@ We are **not** a bookmaker. Copy and UI must always make clear users place bets 
 
 ## Logo (live)
 
-**Acca stack** — three stacked bars like betslip legs, on a rounded square.
+**Triangle rondo** — an equilateral passing triangle circulating clockwise (white build-up pass, accent killer pass into the green player, bright recycle along the base). Two cuts: **glyph** (standalone, headers/in-app) and **disc** (deep-green circle behind, favicon/app icons). Geometry is exact: vertices at −90°/30°/150°, centroid at the viewBox centre — symmetrical by construction. Arrow tips are explicit chevrons (no SVG markers) so all rasterisers agree.
 
 **Component:** `apps/web/src/components/logo.tsx` — `LogoMark`, `Logo`.
 
-**Wordmark:** “Tiki **Acca**” — “Acca” in accent colour.
+**Wordmark:** none — the mark stands alone (no “Tiki Acca” text or tagline beside the logo, per July 2026 decision). “Tiki Acca” in copy: “Acca” takes accent colour when styled.
 
 ---
 
@@ -86,7 +86,7 @@ The same identity applies to **website**, **in-app mobile**, and **App Store / P
 
 ### Logo export (mobile / stores)
 
-1. Source of truth: **Acca stack** SVG in `logo.tsx`.
+1. Source of truth: **Triangle rondo** — glyph in `logo.tsx`, disc in `app/icon.svg` / `lib/brand/rondo-icon.tsx`.
 2. Export PNGs at required sizes for:
    - `apps/mobile/assets/icon.png` (1024×1024)
    - `apps/mobile/assets/splash-icon.png`
@@ -117,5 +117,5 @@ Rejected logo and palette options are kept for reference (not linked in the app)
 
 ## Open decisions
 
-- [x] Favicon / OG image from Acca stack mark (`app/favicon.ico`, `app/icon.tsx`, `app/apple-icon.tsx`)
+- [x] Favicon / app icons from Triangle rondo mark (`app/icon.svg`, `app/favicon.ico`, `app/apple-icon.tsx`, `apps/mobile/assets/*`)
 - [ ] Apply `font-display` to authenticated app page titles

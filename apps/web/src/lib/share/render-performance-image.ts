@@ -37,24 +37,55 @@ function roundRect(
   ctx.closePath();
 }
 
+/** Triangle rondo disc mark — mirrors `app/icon.svg` geometry (viewBox 220). */
 function drawLogoMark(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
-  const scale = size / 40;
+  const scale = size / 220;
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(scale, scale);
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
 
-  roundRect(ctx, 0, 0, 40, 40, 10);
-  ctx.fillStyle = "rgba(20, 83, 45, 0.6)";
+  // Disc
+  ctx.beginPath();
+  ctx.arc(110, 110, 106, 0, Math.PI * 2);
+  ctx.fillStyle = "#14532d";
   ctx.fill();
 
-  const bars = [
-    { w: 20, x: 10, y: 11, opacity: 1 },
-    { w: 16, x: 10, y: 18, opacity: 0.8 },
-    { w: 12, x: 10, y: 25, opacity: 0.55 },
+  // Passes: line + explicit chevron head, circulating clockwise
+  const passes: {
+    color: string;
+    line: [number, number, number, number];
+    chevron: [number, number, number, number, number, number];
+  }[] = [
+    { color: "#22c55e", line: [120.25, 75.75, 139.28, 108.72], chevron: [133.33, 112.21, 145.28, 119.11, 145.28, 105.31] },
+    { color: "#4ade80", line: [134.53, 136, 96.47, 136], chevron: [96.42, 129.1, 84.47, 136, 96.42, 142.9] },
+    { color: "#f1f5f9", line: [75.22, 118.25, 94.25, 85.28], chevron: [100.25, 88.69, 100.25, 74.89, 88.3, 81.79] },
   ];
-  for (const bar of bars) {
-    roundRect(ctx, bar.x, bar.y, bar.w, 4, 1.5);
-    ctx.fillStyle = `rgba(34, 197, 94, ${bar.opacity})`;
+  for (const p of passes) {
+    ctx.strokeStyle = p.color;
+    ctx.lineWidth = 10;
+    ctx.beginPath();
+    ctx.moveTo(p.line[0], p.line[1]);
+    ctx.lineTo(p.line[2], p.line[3]);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(p.chevron[0], p.chevron[1]);
+    ctx.lineTo(p.chevron[2], p.chevron[3]);
+    ctx.lineTo(p.chevron[4], p.chevron[5]);
+    ctx.stroke();
+  }
+
+  // Players
+  const dots: [number, number, string][] = [
+    [110, 58, "#f1f5f9"],
+    [155.03, 136, "#22c55e"],
+    [64.97, 136, "#f1f5f9"],
+  ];
+  for (const [dx, dy, color] of dots) {
+    ctx.beginPath();
+    ctx.arc(dx, dy, 14.5, 0, Math.PI * 2);
+    ctx.fillStyle = color;
     ctx.fill();
   }
 

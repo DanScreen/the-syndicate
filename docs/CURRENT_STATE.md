@@ -55,7 +55,7 @@ Match sync + odds warm: Cloud Scheduler (Terraform) → `POST /api/internal/sync
 | Group UI | `apps/web/src/components/group-ui.tsx`, `group-stats.tsx` |
 | App navigation | `apps/web/src/components/app-nav.tsx`, `group-nav.tsx`, `header.tsx` |
 | Logo & marketing | `apps/web/src/components/logo.tsx`, `components/marketing/`, `lib/marketing-content.ts` |
-| Favicon / app icons | `apps/web/src/app/icon.svg`, `favicon.ico` (48×48), `apple-icon.tsx` — same Acca stack mark as `logo.tsx` |
+| Favicon / app icons | `apps/web/src/app/icon.svg`, `favicon.ico` (16/32/48), `apple-icon.tsx` (`lib/brand/rondo-icon.tsx`) — Triangle rondo disc; glyph source in `logo.tsx` |
 | Brand archive | `apps/web/src/lib/brand/archive.ts`, `logo-alternatives.tsx` (unused alternatives) |
 | Group layout | `apps/web/src/app/groups/[id]/layout.tsx`, `group-layout-client.tsx`, `context/group-data.tsx` |
 | Scoring | `packages/shared/src/scoring.ts` |
@@ -97,7 +97,7 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 | Split app layout (Groups / Performance nav; group tabs) | ✅ |
 | Platform admin dashboard + leaderboards (`/admin`) | ✅ |
 | Product analytics (logins, signups, page views) | ✅ |
-| Marketing site (homepage, about, Turf Green + Acca stack logo) | ✅ |
+| Marketing site (homepage, about, Turf Green + Triangle rondo logo) | ✅ |
 | Points-first stats UX + stake → profit converter | ✅ |
 | Locked round UX: picks first, locked odds, bookmaker comparison until first result, in-progress leg results | ✅ |
 | Round history, progress UI, landing/SEO | ✅ |
