@@ -88,11 +88,33 @@ export async function GET(_request: Request, { params }: Params) {
     group.status = "open";
   } else if (activeRound.status === "open") {
     await lockOpenRoundsAtKickoff();
-    const refreshed = await prisma.round.findUnique({
+    let refreshed = await prisma.round.findUnique({
       where: { id: activeRound.id },
       include: recentRoundInclude,
     });
     if (refreshed) activeRound = refreshed;
+
+    // Final-submit lock can fail if live odds vanished (fixture kicked off /
+    // feed gap). Retry here so the round doesn't sit on "locking…" forever.
+    if (
+      activeRound.status === "open" &&
+      allMembersFilledQuota({
+        memberUserIds: group.members.map((m) => m.userId),
+        legs: activeRound.legs,
+        legsPerMember: activeRound.legsPerMember,
+      })
+    ) {
+      try {
+        await claimAndLockRound(activeRound.id);
+      } catch (err) {
+        console.error("[groups] retry lock on load failed", activeRound.id, err);
+      }
+      refreshed = await prisma.round.findUnique({
+        where: { id: activeRound.id },
+        include: recentRoundInclude,
+      });
+      if (refreshed) activeRound = refreshed;
+    }
   }
 
   const recentSettled = await prisma.round.findMany({

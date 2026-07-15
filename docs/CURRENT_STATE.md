@@ -1,6 +1,6 @@
 # Current state (as-built)
 
-Last updated 15 July 2026 (no duplicate markets on same fixture). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
+Last updated 15 July 2026 (lock falls back to stored odds). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
 
 Production: **https://www.tikiacca.com** (apex → 301 to www via Cloudflare).
 
@@ -244,7 +244,7 @@ Email and push notifications fire on **round locked**, **round settled**, and **
 
 **Exactly-once settlement.** `applyRoundSettlement()` validates settleability, then runs in a `prisma.$transaction` with an atomic claim — `round.updateMany({ where: { status: "locked" }, data: { status: "settled" } })`. Overlapping settle attempts (e.g. two cron runs) can't double-count points: the loser matches zero rows and throws `RoundNotSettleableError`, treated as a benign `skipped` no-op.
 
-**Lock triggers.** A round moves `open → locked` when **every member has submitted `Round.legsPerMember` legs** or when the **earliest submitted leg kicks off** (partial accas — members under quota are excluded). `claimAndLockRound()` in `claim-lock-round.ts` atomically claims via `updateMany`, reprices, and emails; repricing failures revert to `open`. Kickoff locks run on each match-sync cron (5 min) and when loading `GET /api/groups/[id]`. See [specs/round-deadline-lock.md](./specs/round-deadline-lock.md) and [specs/multi-leg-accas.md](./specs/multi-leg-accas.md).
+**Lock triggers.** A round moves `open → locked` when **every member has submitted `Round.legsPerMember` legs** or when the **earliest submitted leg kicks off** (partial accas — members under quota are excluded). `claimAndLockRound()` in `claim-lock-round.ts` atomically claims via `updateMany`, reprices, and emails; repricing failures revert to `open`. Kickoff locks run on each match-sync cron (5 min) and when loading `GET /api/groups/[id]`. **Reprice falls back to each leg’s stored odds** when live quotes are missing (fixture already kicked off / warmed cache miss) so kickoff locks don’t flap open↔locked. Loading a group with a full quota also retries lock. See [specs/round-deadline-lock.md](./specs/round-deadline-lock.md) and [specs/multi-leg-accas.md](./specs/multi-leg-accas.md).
 
 **Lock is likewise atomic.** When two members submit the final legs at once, only one request reprices the acca (Odds API credits) and sends the lock email; repricing failures revert the round to `open`.
 

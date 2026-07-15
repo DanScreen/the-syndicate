@@ -33,6 +33,7 @@ An acca **locks when the earliest submitted leg kicks off**, even if not every m
 - Edits blocked after first kickoff (unchanged — `PATCH /api/legs/[id]`).
 - Partial acca repriced and settled like any other locked round.
 - Lock email notes how many members missed the deadline (if any).
+- **Reprice:** prefers live quotes; if a fixture has left the upcoming feed (typical at kickoff lock), uses each leg’s **stored odds** so lock doesn’t flap `open → locked → open`.
 
 ---
 
