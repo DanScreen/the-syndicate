@@ -2,10 +2,10 @@
 
 import type { Fixture, Market, MarketConflictLeg } from "@tiki-acca/shared";
 import {
-  formatLegPoints,
   isMarketTakenOnFixture,
   type AccaBookmakerRanking,
 } from "@tiki-acca/shared";
+import { PointsText } from "@/components/points-text";
 import {
   BookmakerLogo,
   bookmakerRankBadgeClass,
@@ -937,7 +937,7 @@ export function Leaderboard({
               </p>
             </div>
           </div>
-          <span className="font-semibold text-accent">{formatLegPoints(entry.points)} pts</span>
+          <PointsText points={entry.points} className="font-semibold" />
         </li>
       ))}
     </ol>

@@ -1,4 +1,5 @@
 import { formatLegPoints } from "@tiki-acca/shared";
+import { pointsTextClass } from "@/components/points-text";
 import type { PlatformLeaderboards } from "@/lib/admin/compute-platform-leaderboards";
 
 function LeaderboardTable({
@@ -60,7 +61,7 @@ export function PlatformLeaderboards({ data }: { data: PlatformLeaderboards }) {
               <td className="px-5 py-3 font-medium">{row.name}</td>
               <td className="px-5 py-3 text-muted">{row.ownerName}</td>
               <td className="px-5 py-3 text-muted">{row.memberCount}</td>
-              <td className="px-5 py-3 font-semibold text-accent tabular-nums">
+              <td className={`px-5 py-3 font-semibold tabular-nums ${pointsTextClass(row.totalPoints)}`}>
                 {formatLegPoints(row.totalPoints)} pts
               </td>
               <td className="px-5 py-3 text-muted tabular-nums">
@@ -79,7 +80,7 @@ export function PlatformLeaderboards({ data }: { data: PlatformLeaderboards }) {
               <td className="px-5 py-3 text-muted">#{row.rank}</td>
               <td className="px-5 py-3 font-medium">{row.name}</td>
               <td className="px-5 py-3 text-muted">{row.groupCount}</td>
-              <td className="px-5 py-3 font-semibold text-accent tabular-nums">
+              <td className={`px-5 py-3 font-semibold tabular-nums ${pointsTextClass(row.totalPoints)}`}>
                 {formatLegPoints(row.totalPoints)} pts
               </td>
               <td className="px-5 py-3 text-muted tabular-nums">
