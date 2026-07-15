@@ -1,3 +1,4 @@
+import { deleteRedundantMarketLegs } from "@/lib/legs/purge-duplicate-markets";
 import { lockRoundWithAccaPricing } from "@/lib/odds/lock-round";
 import { notifyRoundLocked } from "@/lib/notifications/round-notifications";
 import { prisma } from "@tiki-acca/database";
@@ -19,6 +20,9 @@ export async function claimAndLockRound(roundId: string): Promise<ClaimLockResul
   if (claim.count === 0) {
     return { ok: false, reason: "not_open" };
   }
+
+  // Drop legacy duplicate market-family legs before pricing.
+  await deleteRedundantMarketLegs(roundId);
 
   const round = await prisma.round.findUnique({
     where: { id: roundId },

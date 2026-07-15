@@ -1,6 +1,6 @@
 # Current state (as-built)
 
-Last updated 15 July 2026 (no duplicate markets on same fixture). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
+Last updated 15 July 2026 (repair historical duplicate markets). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
 
 Production: **https://www.tikiacca.com** (apex → 301 to www via Cloudflare).
 
@@ -418,7 +418,7 @@ Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `Analytics
 - `Group.legsPerMember` — 1–3 (default 1); owner create / Settings.
 - `Round.legsPerMember` — set at round open; owner Settings updates it while the round is `open` and before first kickoff. Locked / kickoff-in-progress rounds keep their quota; group setting then applies to the next open round.
 - Up to `legsPerMember` legs per user per round (`@@unique([roundId, userId, legIndex])`).
-- **Duplicate market rule:** within a round, only one leg per `(fixtureId, marketFamily)`. Market families group line variants (e.g. `over_under_05` + `over_under_15` → `over_under`). See `packages/shared/src/market-conflicts.ts`. Enforced on `POST`/`PATCH` `/api/legs`; pickers disable taken markets.
+- **Duplicate market rule:** within a round, only one leg per `(fixtureId, marketFamily)`. Market families group line variants (e.g. `over_under_05` + `over_under_15` → `over_under`). See `packages/shared/src/market-conflicts.ts`. Enforced on `POST`/`PATCH` `/api/legs`; pickers disable taken markets. **Historical bets:** open / pre-kickoff locked rounds are purged on group load and before lock; locked rounds are purged again before settle; settled rounds are fixed via `npm run db:maintenance -- fix-duplicate-markets` (keeps earliest leg, re-scores points).
 - Leg stores `legIndex` + fixture snapshot: teams, kickoff, `competitionId` (slug), `competition` (display name), optional `matchId` FK, market, odds, bookmaker, `betslipUrl`, `bookmakerLinks` JSON, outcome.
 - `Match` — canonical result per fixture (`externalDataId` from football-data.org).
 - `Round.accaBookmakerRankings` — JSON array of ranked bookmakers at lock.
