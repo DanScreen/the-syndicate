@@ -97,6 +97,16 @@ export function pointsTone(points: number): PointsTone {
   return "neutral";
 }
 
+/**
+ * Colour for an individual’s pick result — independent of group acca P/L.
+ * On a lost acca a member can still have a won leg (points −1) and should read green.
+ */
+export function pointsToneFromOutcome(outcome: string): PointsTone {
+  if (outcome === "won") return "positive";
+  if (outcome === "lost") return "negative";
+  return "neutral";
+}
+
 /** Unit-stake points × stake (£) = profit/loss in pounds. */
 export function profitFromPoints(points: number, stakeGbp: number): number {
   return Number((points * stakeGbp).toFixed(2));

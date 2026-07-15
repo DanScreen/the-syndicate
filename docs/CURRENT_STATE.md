@@ -1,6 +1,6 @@
 # Current state (as-built)
 
-Last updated 15 July 2026 (losing points use red tone). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
+Last updated 15 July 2026 (member pick colour vs group P/L). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
 
 Production: **https://www.tikiacca.com** (apex → 301 to www via Cloudflare).
 
@@ -125,7 +125,7 @@ Example: acca @ 3.44 (legs 1.6 × 2.15) → **2.44** group pts; members **0.6** 
 
 **Stats:** `groupAccaRoundPoints()` for group totals; `memberAccaLegPoints()` for members. Leaderboard `pointsAwarded` backfilled by migration `20260712160000_member_leg_acca_points`.
 
-**Points-first UX:** Points are the **primary metric** across performance pages, leaderboards, share cards, and round history. Users convert points to money with `profitFromPoints(points, stake)` — profit = points × stake (£). UI: `StakeProfit` component (default stake £10). Points colour via `pointsTone()` / `PointsText`: positive → accent (green), negative → red, zero → muted.
+**Points-first UX:** Points are the **primary metric** across performance pages, leaderboards, share cards, and round history. Users convert points to money with `profitFromPoints(points, stake)` — profit = points × stake (£). UI: `StakeProfit` component (default stake £10). **Group / acca points** use `pointsTone()` (negative → red). **Individual pick rows** use `pointsToneFromOutcome()` so a won pick stays green even when a lost acca awards −1 pts.
 
 **Acca P/L in DB:** `Round.profitLossGbp` still computed at settle (£10 default stake) for admin “successful acca” counts and settlement emails — not shown as the primary user-facing metric.
 

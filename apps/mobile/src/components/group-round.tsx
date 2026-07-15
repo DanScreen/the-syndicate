@@ -29,6 +29,7 @@ import {
   groupMarkets,
   isMarketTakenOnFixture,
   pointsTone,
+  pointsToneFromOutcome,
   sortQuotesByBestOdds,
   type LegOutcome,
   type MarketConflictLeg,
@@ -92,6 +93,13 @@ function outcomeColors(outcome: string) {
 
 function pointsStyle(value: number) {
   const tone = pointsTone(value);
+  if (tone === "positive") return { color: colors.accent };
+  if (tone === "negative") return { color: colors.danger };
+  return { color: colors.muted };
+}
+
+function outcomePointsStyle(outcome: string) {
+  const tone = pointsToneFromOutcome(outcome);
   if (tone === "positive") return { color: colors.accent };
   if (tone === "negative") return { color: colors.danger };
   return { color: colors.muted };
@@ -866,14 +874,27 @@ export function RoundHistory({
                 <Text style={styles.odds}>Acca @ {round.combinedOdds}</Text>
               ) : null}
             </View>
+            <Text style={styles.meta}>Group</Text>
             <Text style={[styles.odds, pointsStyle(roundPoints)]}>
               {formatLegPoints(roundPoints)} pts
             </Text>
-            {round.legs.map((leg) => (
-              <View key={leg.id} style={styles.historyLeg}>
+            {round.legs.map((leg) => {
+              const oc = outcomeColors(leg.outcome);
+              const wonPickOnLostAcca =
+                outcomes.some((o) => o === "lost") &&
+                leg.outcome === "won" &&
+                leg.pointsAwarded < 0;
+              return (
+              <View
+                key={leg.id}
+                style={[
+                  styles.historyLeg,
+                  { borderColor: oc.border, backgroundColor: oc.bg },
+                ]}
+              >
                 <View style={styles.historyHeader}>
                   <Text style={styles.legUser}>{leg.user.name}</Text>
-                  <Text style={styles.odds}>
+                  <Text style={{ color: oc.text, fontWeight: "600", fontSize: 13 }}>
                     {legOutcomeLabel(leg.outcome)} · {leg.odds}
                   </Text>
                 </View>
@@ -892,9 +913,16 @@ export function RoundHistory({
                     hour: "2-digit",
                     minute: "2-digit",
                   })}
+                  {leg.pointsAwarded !== 0 || leg.outcome !== "pending" ? (
+                    <Text style={outcomePointsStyle(leg.outcome)}>
+                      {` · ${formatLegPoints(leg.pointsAwarded)} pts`}
+                      {wonPickOnLostAcca ? " (pick won, acca lost)" : ""}
+                    </Text>
+                  ) : null}
                 </Text>
               </View>
-            ))}
+              );
+            })}
           </View>
         );
       })}
