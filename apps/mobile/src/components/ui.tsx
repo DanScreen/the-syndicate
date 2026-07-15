@@ -112,23 +112,33 @@ export function OptionRow({
   selected,
   onPress,
   dashed,
+  disabled,
 }: {
   label: string;
   subtitle?: string;
   selected: boolean;
   onPress: () => void;
   dashed?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <Pressable
       onPress={onPress}
+      disabled={disabled}
       style={[
         styles.option,
         dashed && styles.optionDashed,
         selected && styles.optionSelected,
+        disabled && styles.optionDisabled,
       ]}
     >
-      <Text style={[styles.optionText, selected && styles.optionTextSelected]}>
+      <Text
+        style={[
+          styles.optionText,
+          selected && styles.optionTextSelected,
+          disabled && styles.optionTextDisabled,
+        ]}
+      >
         {label}
       </Text>
       {subtitle ? <Text style={styles.optionSubtitle}>{subtitle}</Text> : null}
@@ -227,6 +237,12 @@ const styles = StyleSheet.create({
   optionTextSelected: {
     color: colors.accent,
     fontWeight: "600",
+  },
+  optionDisabled: {
+    opacity: 0.45,
+  },
+  optionTextDisabled: {
+    color: colors.muted,
   },
   optionSubtitle: {
     color: colors.muted,

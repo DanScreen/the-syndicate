@@ -48,10 +48,12 @@ export type GroupData = {
       id: string;
       user: { id: string; name: string };
       legIndex?: number;
+      fixtureId: string;
       homeTeam: string;
       awayTeam: string;
       competition: string;
       kickoff: string;
+      marketType: string;
       selectionLabel: string;
       marketLabel: string;
       odds: number;

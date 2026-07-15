@@ -1,7 +1,11 @@
 "use client";
 
-import type { Fixture, Market } from "@tiki-acca/shared";
-import { formatLegPoints, type AccaBookmakerRanking } from "@tiki-acca/shared";
+import type { Fixture, Market, MarketConflictLeg } from "@tiki-acca/shared";
+import {
+  formatLegPoints,
+  isMarketTakenOnFixture,
+  type AccaBookmakerRanking,
+} from "@tiki-acca/shared";
 import {
   BookmakerLogo,
   bookmakerRankBadgeClass,
@@ -178,6 +182,7 @@ export function SubmitLegForm({
   editLegId,
   onCancel,
   title,
+  existingLegs = [],
 }: {
   roundId: string;
   onSubmitted: () => void;
@@ -186,6 +191,8 @@ export function SubmitLegForm({
   onCancel?: () => void;
   /** Override default heading (e.g. "Submit leg 2 of 3"). */
   title?: string;
+  /** Other legs already on this round — used to block duplicate markets on the same fixture. */
+  existingLegs?: MarketConflictLeg[];
 }) {
   const [competitions, setCompetitions] = useState<Competition[]>([]);
   const [loadingCompetitions, setLoadingCompetitions] = useState(true);
@@ -471,23 +478,41 @@ export function SubmitLegForm({
             <div key={group.id} className="space-y-2">
               <p className="text-xs font-medium text-muted">{group.label}</p>
               <div className="flex flex-wrap gap-2">
-                {group.markets.map((m) => (
-                  <button
-                    key={m.type}
-                    type="button"
-                    onClick={() => {
-                      setMarketType(m.type);
-                      setSelectionId("");
-                    }}
-                    className={`rounded-lg border px-3 py-2 text-sm ${
-                      marketType === m.type
-                        ? "border-accent bg-accent-muted/30"
-                        : "border-border hover:border-accent/40"
-                    }`}
-                  >
-                    {m.label}
-                  </button>
-                ))}
+                {group.markets.map((m) => {
+                  const taken = isMarketTakenOnFixture(
+                    existingLegs,
+                    fixtureId,
+                    m.type,
+                    editLegId
+                  );
+                  return (
+                    <button
+                      key={m.type}
+                      type="button"
+                      disabled={taken}
+                      title={
+                        taken
+                          ? "This market is already on the acca for this fixture"
+                          : undefined
+                      }
+                      onClick={() => {
+                        if (taken) return;
+                        setMarketType(m.type);
+                        setSelectionId("");
+                      }}
+                      className={`rounded-lg border px-3 py-2 text-sm ${
+                        taken
+                          ? "cursor-not-allowed border-border/60 text-muted opacity-50"
+                          : marketType === m.type
+                            ? "border-accent bg-accent-muted/30"
+                            : "border-border hover:border-accent/40"
+                      }`}
+                    >
+                      {m.label}
+                      {taken ? " (taken)" : ""}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           ))}

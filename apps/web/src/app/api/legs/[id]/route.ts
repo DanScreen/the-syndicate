@@ -7,7 +7,12 @@ import { bookmakerLinksFromQuotes } from "@/lib/odds/quotes";
 import { isCompetitionEnabled } from "@/lib/competitions/settings";
 import { firstKickoff } from "@/lib/rounds/first-kickoff";
 import { prisma } from "@tiki-acca/database";
-import { getCompetitionById, editLegSchema } from "@tiki-acca/shared";
+import {
+  editLegSchema,
+  findConflictingMarketLeg,
+  formatMarketConflictError,
+  getCompetitionById,
+} from "@tiki-acca/shared";
 import { NextResponse } from "next/server";
 
 type Params = { params: Promise<{ id: string }> };
@@ -73,6 +78,18 @@ export async function PATCH(request: Request, { params }: Params) {
 
   if (new Date(fixture.kickoff) <= new Date()) {
     return NextResponse.json({ error: "That fixture has already kicked off" }, { status: 400 });
+  }
+
+  const marketConflict = findConflictingMarketLeg(
+    round.legs,
+    { fixtureId: fixture.id, marketType: market.type },
+    leg.id
+  );
+  if (marketConflict) {
+    return NextResponse.json(
+      { error: formatMarketConflictError(marketConflict) },
+      { status: 409 }
+    );
   }
 
   const quote = sortQuotesByBestOdds(selection.odds)[0];

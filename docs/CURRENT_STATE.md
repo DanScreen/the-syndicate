@@ -1,6 +1,6 @@
 # Current state (as-built)
 
-Last updated 15 July 2026 (multi-leg accas). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
+Last updated 15 July 2026 (no duplicate markets on same fixture). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
 
 Production: **https://www.tikiacca.com** (apex → 301 to www via Cloudflare).
 
@@ -44,6 +44,7 @@ Match sync + odds warm: Cloud Scheduler (Terraform) → `POST /api/internal/sync
 |-----------|------|
 | API routes | `apps/web/src/app/api/` |
 | Shared schemas/types | `packages/shared/src/` |
+| Market conflict helpers | `packages/shared/src/market-conflicts.ts` |
 | Prisma schema | `packages/database/prisma/schema.prisma` |
 | Odds | `apps/web/src/lib/odds/` |
 | Settlement | `apps/web/src/lib/settlement/`, `apps/web/src/lib/results/` |
@@ -78,6 +79,7 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 | Auth (email/password, Auth.js JWT sessions) | ✅ |
 | Groups, invite codes, join links (`?code=`), no member cap | ✅ |
 | Legs per member (1 / 2 / 3) — owner create + Settings; updates open rounds | ✅ |
+| No duplicate markets on the same fixture within a round (O/U lines share a family) | ✅ |
 | Always-open rounds (auto-created with group; next opens on settle) | ✅ |
 | Rounds: open → locked → settled (badges: **Bet Open**, **Bet Locked**, **Bet Settled**) | ✅ |
 | Live odds ([The Odds API](https://the-odds-api.com/)) + mock fallback | ✅ |
@@ -416,6 +418,7 @@ Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `Analytics
 - `Group.legsPerMember` — 1–3 (default 1); owner create / Settings.
 - `Round.legsPerMember` — set at round open; owner Settings updates it while the round is `open` and before first kickoff. Locked / kickoff-in-progress rounds keep their quota; group setting then applies to the next open round.
 - Up to `legsPerMember` legs per user per round (`@@unique([roundId, userId, legIndex])`).
+- **Duplicate market rule:** within a round, only one leg per `(fixtureId, marketFamily)`. Market families group line variants (e.g. `over_under_05` + `over_under_15` → `over_under`). See `packages/shared/src/market-conflicts.ts`. Enforced on `POST`/`PATCH` `/api/legs`; pickers disable taken markets.
 - Leg stores `legIndex` + fixture snapshot: teams, kickoff, `competitionId` (slug), `competition` (display name), optional `matchId` FK, market, odds, bookmaker, `betslipUrl`, `bookmakerLinks` JSON, outcome.
 - `Match` — canonical result per fixture (`externalDataId` from football-data.org).
 - `Round.accaBookmakerRankings` — JSON array of ranked bookmakers at lock.
@@ -436,8 +439,8 @@ Recent migrations include `20260715120000_multi_leg_per_member`.
 | `GET /api/competitions` | Session | Enabled competitions for leg picker |
 | `GET /api/fixtures` | Session | List fixtures (`?competition=` required) |
 | `GET /api/fixtures/[id]/markets` | Session | Extended markets (`?competition=` required) |
-| `POST /api/legs` | Session | Submit leg |
-| `PATCH /api/legs/[id]` | Leg owner | Edit own pick until first kickoff (locked rounds reprice) |
+| `POST /api/legs` | Session | Submit leg (rejects same market family on same fixture — 409) |
+| `PATCH /api/legs/[id]` | Leg owner | Edit own pick until first kickoff (locked rounds reprice; same market-family rule) |
 | `GET /api/groups` | Session | Groups list + current betslip `activeLegs` + yourLeg / yourLegCount |
 | `POST /api/groups` | Session | Create group (`name`, optional `legsPerMember` 1–3) |
 | `PATCH /api/groups/[id]` | Owner | Update `legsPerMember` (open round immediately; locked left alone) |
