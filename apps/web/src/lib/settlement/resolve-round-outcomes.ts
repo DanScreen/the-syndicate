@@ -60,7 +60,11 @@ export async function resolveRoundOutcomes(
   return { ready: true, outcomeMap };
 }
 
-/** Update leg outcomes as matches finish; points are awarded only when the round settles. */
+/**
+ * Update leg outcomes as matches finish.
+ * Points for a busted acca may already be partly awarded; unfinished legs
+ * keep `pending` until deferred resolution after early settle.
+ */
 export async function persistResolvableLegOutcomes(
   legs: Leg[],
   outcomeMap: Map<string, LegOutcome>

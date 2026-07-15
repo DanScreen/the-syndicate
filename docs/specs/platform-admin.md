@@ -61,7 +61,8 @@ Settlement is system-only (owners cannot settle), so this page is the **escape h
 - Lists all `locked` rounds (rounds needing attention first, then oldest lock).
 - A pending leg is flagged **overdue** when unresolved **2+ hours after its scheduled kickoff** (`OVERDUE_AFTER_HOURS` in `compute-settlement-queue.ts`) — highlights matches that likely finished but couldn't be auto-resolved (unrecognised market, missing match data).
 - Admin picks won/lost/void for each pending leg (system-resolved outcomes are pre-filled and shown as badges) and settles the round via `POST /api/admin/rounds/[id]/settle`.
-- The route validates outcomes cover exactly the round's legs and reuses `applyRoundSettlement()` — the same exactly-once `locked → settled` claim as the cron; a lost race returns 409.
+- Locked rounds: outcomes must cover every leg; reuses `applyRoundSettlement()` — the same exactly-once `locked → settled` claim as the cron; a lost race returns 409.
+- Settled rounds that still have pending legs (early loss): queue lists them; admin submits outcomes only for remaining pending legs → `applyDeferredLegOutcome()`.
 
 **Nav:** Admin users see **Admin** in `AppNav`. Sub-nav: Overview | Settlement | Leaderboards | Competitions | Odds (`AdminNav`).
 

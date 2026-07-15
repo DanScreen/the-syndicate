@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/admin";
 import {
+  applyDeferredLegOutcome,
   applyRoundSettlement,
   RoundNotSettleableError,
 } from "@/lib/settlement/apply-round-settlement";
@@ -14,6 +15,9 @@ type Params = { params: Promise<{ id: string }> };
  * Platform-admin manual settlement — the escape hatch for rounds the system
  * cannot resolve (unrecognised market, missing match data). Group owners have
  * no settlement powers; this is admin-only by design.
+ *
+ * Also resolves remaining pending legs on rounds that already settled early
+ * after a loss.
  */
 export async function POST(request: Request, { params }: Params) {
   const { error } = await requireAdmin();
@@ -28,20 +32,63 @@ export async function POST(request: Request, { params }: Params) {
 
   const round = await prisma.round.findUnique({
     where: { id: roundId },
-    include: { legs: { select: { id: true } } },
+    include: { legs: { select: { id: true, outcome: true } } },
   });
 
   if (!round) {
     return NextResponse.json({ error: "Round not found" }, { status: 404 });
   }
 
-  if (round.status !== "locked") {
-    return NextResponse.json({ error: "Round is not locked" }, { status: 400 });
-  }
-
   const outcomeMap = new Map<string, LegOutcome>(
     parsed.data.legOutcomes.map((o) => [o.legId, o.outcome])
   );
+
+  if (round.status === "settled") {
+    const pendingLegs = round.legs.filter((l) => l.outcome === "pending");
+    if (pendingLegs.length === 0) {
+      return NextResponse.json(
+        { error: "Round is already fully settled" },
+        { status: 400 }
+      );
+    }
+
+    const pendingIds = new Set(pendingLegs.map((l) => l.id));
+    const unknownLegIds = parsed.data.legOutcomes
+      .map((o) => o.legId)
+      .filter((id) => !pendingIds.has(id));
+    const missingLegIds = pendingLegs
+      .map((l) => l.id)
+      .filter((id) => !outcomeMap.has(id));
+
+    if (
+      unknownLegIds.length > 0 ||
+      missingLegIds.length > 0 ||
+      outcomeMap.size !== parsed.data.legOutcomes.length
+    ) {
+      return NextResponse.json(
+        {
+          error: "Provide exactly one outcome for each remaining pending leg",
+          unknownLegIds,
+          missingLegIds,
+        },
+        { status: 400 }
+      );
+    }
+
+    const awarded = [];
+    for (const [legId, outcome] of outcomeMap) {
+      const result = await applyDeferredLegOutcome(roundId, legId, outcome);
+      if (result.awarded) {
+        awarded.push({ legId, outcome, points: result.points });
+      }
+    }
+
+    return NextResponse.json({ status: "settled", deferred: awarded });
+  }
+
+  if (round.status !== "locked") {
+    return NextResponse.json({ error: "Round is not locked" }, { status: 400 });
+  }
 
   // Outcomes must cover exactly the round's legs — no unknown ids, no
   // duplicates, none missing — so nothing silently defaults to "lost".

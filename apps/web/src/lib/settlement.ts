@@ -16,12 +16,14 @@ export function calculateGroupProfitLoss(
   combinedOdds: number,
   stakeGbp = DEFAULT_STAKE_GBP
 ): number {
-  const allWon = legOutcomes.every((o) => o === "won" || o === "void");
   const anyLost = legOutcomes.some((o) => o === "lost");
-
   if (anyLost) return -stakeGbp;
+
+  const allWon = legOutcomes.every((o) => o === "won" || o === "void");
   if (allWon) return Number((stakeGbp * combinedOdds - stakeGbp).toFixed(2));
-  return -stakeGbp;
+
+  // Still pending and no loss yet — not a final P/L.
+  return 0;
 }
 
 export function deriveCombinedOddsFromLegs(legs: { odds: number }[]): number {
