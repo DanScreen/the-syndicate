@@ -2,7 +2,7 @@ import { requireSession } from "@/lib/api-auth";
 import { generateInviteCode } from "@/lib/invite-code";
 import { activeLegsInRound, yourLegInRound } from "@/lib/groups/your-leg-summary";
 import { openRound } from "@/lib/rounds/open-round";
-import { groupNetPoints } from "@/lib/stats/helpers";
+import { groupNetPoints, memberNetPointsAcrossRounds } from "@/lib/stats/helpers";
 import { prisma } from "@tiki-acca/database";
 import { createGroupSchema } from "@tiki-acca/shared";
 import { NextResponse } from "next/server";
@@ -75,7 +75,8 @@ export async function GET() {
         ownerName: m.group.owner.name,
         legsPerMember: m.group.legsPerMember,
         groupPoints: groupNetPoints(allRounds),
-        points: m.points,
+        // Live member points (same as leaderboard / Performance) — not stored GroupMember.points.
+        points: memberNetPointsAcrossRounds(allRounds, userId),
         activeRound,
         activeLegs: activeLegsInRound(legs, userId),
         yourLeg: yourLegInRound(legs, userId),
