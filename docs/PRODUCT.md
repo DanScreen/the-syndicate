@@ -64,6 +64,7 @@ Platform admins (`ADMIN_EMAILS`) see an **Admin** tab in the header with `/admin
 - [x] Hands-off auto-settle (system-only; owner settlement removed July 2026)
 - [x] Editable picks until first kickoff (open + locked rounds; locked edits reprice the acca; web + mobile)
 - [x] Admin settlement queue with overdue-leg flags (web-only)
+- [x] Blog (`/blog`, file-based MDX) + sitemap/robots
 - [x] Email notifications (round locked / settled)
 - [x] Unit-stake points + leaderboard
 - [x] Group stats + member stats (charts, favourites)
