@@ -51,23 +51,22 @@ export function groupAccaRoundPoints(
 
 /**
  * Member points for one leg in a settled acca round.
- * - Acca won: `odds − 1` on a won leg, `0` on void (same rule as unit-stake singles)
- * - Acca lost: `−1` per participating member (void leg → `0`)
- * - Still-pending after an early loss: `0` until the leg resolves, then the lost-acca rule
+ * Always scores the pick on its own result (independent of group acca P/L):
+ * - Won: `odds − 1`
+ * - Lost: `−1`
+ * - Void: `0`
+ * - Pending (e.g. early settle leftovers): `0` until the leg resolves
  *
- * Group total (`groupAccaRoundPoints`) is not split — member totals will not sum to it on wins.
+ * Group total (`groupAccaRoundPoints`) is separate — on a win, member totals
+ * do not sum to the group total; on a loss the group is −1 while winning
+ * members can still be positive.
  */
 export function memberAccaLegPoints(
-  accaOutcomes: LegOutcome[],
+  _accaOutcomes: LegOutcome[],
   legOutcome: LegOutcome,
   legOdds: number
 ): number {
   if (legOutcome === "pending") return 0;
-
-  if (accaHasLostLeg(accaOutcomes) || !accaSucceeded(accaOutcomes)) {
-    return legOutcome === "void" ? 0 : -1;
-  }
-
   return legPointsForOutcome(legOutcome, legOdds);
 }
 
@@ -98,8 +97,8 @@ export function pointsTone(points: number): PointsTone {
 }
 
 /**
- * Colour for an individual’s pick result — independent of group acca P/L.
- * On a lost acca a member can still have a won leg (points −1) and should read green.
+ * Colour for an individual’s pick result — follows won/lost outcome.
+ * Aligns with member scoring: a won pick is positive (`odds − 1`) even on a lost acca.
  */
 export function pointsToneFromOutcome(outcome: string): PointsTone {
   if (outcome === "won") return "positive";

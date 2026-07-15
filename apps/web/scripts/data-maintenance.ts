@@ -8,10 +8,12 @@
  *   npx tsx apps/web/scripts/data-maintenance.ts resettle-round --round-id <cuid> --execute
  *   npx tsx apps/web/scripts/data-maintenance.ts find-rounds --teams Norway England
  *   npx tsx apps/web/scripts/data-maintenance.ts reconcile-points --execute
+ *   npx tsx apps/web/scripts/data-maintenance.ts rescore-member-legs --execute
  *   npx tsx apps/web/scripts/data-maintenance.ts resync-matches --execute
  */
 import { prisma } from "@tiki-acca/database";
 import type { Leg, Prisma, Round } from "@prisma/client";
+import { memberAccaLegPoints, type LegOutcome } from "@tiki-acca/shared";
 import { applyRoundSettlement } from "../src/lib/settlement/apply-round-settlement";
 import { resolveRoundOutcomes } from "../src/lib/settlement/resolve-round-outcomes";
 import { openRound } from "../src/lib/rounds/open-round";
@@ -306,6 +308,61 @@ async function reconcilePoints(silent = false) {
   if (!execute) console.log("\nPass --execute to apply reconcile-points.");
 }
 
+/**
+ * Recompute Leg.pointsAwarded from outcomes under the current scoring rule
+ * (won pick → odds−1 even when the group acca lost), then reconcile totals.
+ */
+async function rescoreMemberLegs() {
+  const rounds = await prisma.round.findMany({
+    where: { status: "settled" },
+    include: { legs: true, group: { select: { name: true } } },
+    orderBy: { settledAt: "asc" },
+  });
+
+  const changes: string[] = [];
+
+  for (const round of rounds) {
+    const outcomes = round.legs.map((l) => l.outcome as LegOutcome);
+    for (const leg of round.legs) {
+      const expected = memberAccaLegPoints(
+        outcomes,
+        leg.outcome as LegOutcome,
+        leg.odds
+      );
+      const current = Number(leg.pointsAwarded.toFixed(2));
+      if (current === expected) continue;
+
+      changes.push(
+        `[${round.group.name}] ${round.id} leg ${leg.id}: ${current} → ${expected} (${leg.outcome} @ ${leg.odds})`
+      );
+      if (execute) {
+        await prisma.leg.update({
+          where: { id: leg.id },
+          data: { pointsAwarded: expected },
+        });
+      }
+    }
+  }
+
+  if (changes.length === 0) {
+    console.log("All settled leg points already match the current scoring rule.");
+    return;
+  }
+
+  console.log(
+    `${execute ? "Updated" : "Would update"} ${changes.length} leg point(s):`
+  );
+  for (const line of changes) console.log(`  ${line}`);
+
+  if (!execute) {
+    console.log("\nDry run only. Pass --execute with rescore-member-legs to apply.");
+    return;
+  }
+
+  await reconcilePoints(true);
+  console.log("Rescored legs and reconciled user/member totals.");
+}
+
 async function main() {
   if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL is required");
@@ -340,6 +397,9 @@ async function main() {
     case "reconcile-points":
       await reconcilePoints();
       break;
+    case "rescore-member-legs":
+      await rescoreMemberLegs();
+      break;
     case "resync-matches": {
       if (!execute) {
         console.log("Dry run only. Pass --execute to refresh Match rows from football-data.org.");
@@ -355,7 +415,7 @@ async function main() {
     default:
       console.error(`Unknown command: ${command ?? "(none)"}`);
       console.error(
-        "Commands: preview-solo-rounds, remove-solo-rounds, find-rounds, preview-resettle, resettle-round, reconcile-points, resync-matches"
+        "Commands: preview-solo-rounds, remove-solo-rounds, find-rounds, preview-resettle, resettle-round, reconcile-points, rescore-member-legs, resync-matches"
       );
       process.exit(1);
   }
