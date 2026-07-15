@@ -78,6 +78,7 @@ Computed on read from settled rounds. Group + member + **cross-group user** APIs
 
 ### Web UI layout
 - **Header:** Logo + “Social Group Betting” tagline; `AppNav` — Home → About → Groups → Performance → Admin (admins) → Notifications → Blog (rightmost); logo + Home → `/`
+- **Marketing chrome:** `SessionAwareMarketingHeader` (`useSession`) so force-static `/blog` still shows signed-in `AppHeader`
 - **Group shell:** `groups/[id]/layout.tsx` + `GroupDataProvider` — shared fetch for sub-pages; polls every 60s while acca locked
 - **Group tabs:** Round (`/groups/[id]`), Leaderboard, Performance
 - **Locked round:** per-leg outcome badges (Won/Lost/Awaiting) → locked combined odds + bookmaker → betslip CTA until first result, then tracking only (no bookmaker comparison)
@@ -93,7 +94,7 @@ Split config: edge-safe `auth.config.ts` (middleware, no Prisma) + `auth.ts` (cr
 → [specs/platform-admin.md](./specs/platform-admin.md)
 
 ### Marketing (public)
-Homepage (`/`), about (`/about`), blog (`/blog`) — public; signed-in users see `AppHeader` on those pages. Turf Green tokens + Triangle rondo logo. Copy in `lib/marketing-content.ts`. **Blog is file-based**: MDX posts in `apps/web/content/blog/` rendered statically at build (`lib/blog.ts`, next-mdx-remote) — no DB, no CMS; publishing = git push. `sitemap.ts` + `robots.ts` cover marketing + blog routes.
+Homepage (`/`), about (`/about`), blog (`/blog`) — public; signed-in chrome via `SessionAwareMarketingHeader` (not build-time `auth()`, which would bake signed-out UI into static blog). Turf Green tokens + Triangle rondo logo. Copy in `lib/marketing-content.ts`. **Blog is file-based**: MDX posts in `apps/web/content/blog/` rendered statically at build (`lib/blog.ts`, next-mdx-remote) — no DB, no CMS; publishing = git push. Favicon URLs in `layout.tsx` use `?v=` cache-bust against Cloudflare immutable caching. `sitemap.ts` + `robots.ts` cover marketing + blog routes.
 
 → [BRAND.md](./BRAND.md)
 

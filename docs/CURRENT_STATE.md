@@ -1,6 +1,6 @@
 # Current state (as-built)
 
-Last updated July 2026. **This file is the source of truth for agents — update when you ship.**
+Last updated 15 July 2026. **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
 
 Production: **https://www.tikiacca.com** (apex → 301 to www via Cloudflare).
 
@@ -54,7 +54,7 @@ Match sync + odds warm: Cloud Scheduler (Terraform) → `POST /api/internal/sync
 | Round lifecycle | `apps/web/src/lib/rounds/open-round.ts`, `claim-lock-round.ts`, `lock-open-rounds-at-kickoff.ts`, `first-kickoff.ts` |
 | Group UI | `apps/web/src/components/group-ui.tsx`, `group-stats.tsx` |
 | App navigation | `apps/web/src/components/app-nav.tsx`, `group-nav.tsx`, `header.tsx` |
-| Logo & marketing | `apps/web/src/components/logo.tsx`, `components/marketing/`, `lib/marketing-content.ts` |
+| Logo & marketing | `apps/web/src/components/logo.tsx`, `components/marketing/` (`marketing-shell.tsx`, `session-aware-marketing-header.tsx`, `marketing-header.tsx`, `marketing-ctas.tsx`), `lib/marketing-content.ts` |
 | Blog | `apps/web/content/blog/*.mdx` (posts), `apps/web/src/lib/blog.ts`, `app/blog/` — publish = git push; `draft: true` hides in prod |
 | SEO | `apps/web/src/app/sitemap.ts`, `robots.ts` |
 | Favicon / app icons | `apps/web/src/app/icon.svg`, `favicon.ico` (16/32/48), `apple-icon.tsx` (`lib/brand/rondo-icon.tsx`) — Triangle rondo disc; glyph source in `logo.tsx`. Metadata URLs use `?v=` cache-bust (`layout.tsx`) — bump when the mark changes |
@@ -452,7 +452,7 @@ Recent migrations include `20260711100000_competition_settings` (admin competiti
 ## Known limitations
 
 1. **football-data.org free tier:** All catalogue leagues sync on the free tier (incl. La Liga, Ligue 1, Serie A, Bundesliga); EPL/Championship may be empty off-season.
-2. **Settlement is system-only** — auto-settle runs after match sync (every 5 min); leg outcomes update as matches finish; round settles when all legs are ready. Owners cannot settle (routes removed July 2026). Overlapping settle attempts are safe — transactional, exactly-once via an atomic `locked → settled` claim (see [Settlement](#settlement)). Rounds the system cannot resolve are handled by admins via the **settlement queue** (`/admin/settlement`) — legs still pending 2h+ after kickoff are flagged for intervention.
+2. **Settlement is system-only** — auto-settle runs after match sync (every 5 min); leg outcomes update as matches finish; round settles when **any leg loses** or **all legs are won/void**. Remaining legs on an early loss keep resolving via `applyDeferredLegOutcome()`. Owners cannot settle (routes removed July 2026). Overlapping settle attempts are safe — transactional, exactly-once via an atomic `locked → settled` claim (see [Settlement](#settlement)). Rounds the system cannot resolve are handled by admins via the **settlement queue** (`/admin/settlement`) — pending legs 2h+ after kickoff (including leftovers after early settle) are flagged for intervention.
 3. **Email notifications** require Resend setup (`RESEND_API_KEY`, `EMAIL_FROM`); skipped if unset.
 4. **Auto-settle requires synced `Match` rows** — 5-min cron or manual `POST /api/internal/sync-matches`.
 5. **Cross-competition acca** — often no single bookmaker; best-per-leg odds locked at submission; per-leg deeplinks when Odds API provides them.
