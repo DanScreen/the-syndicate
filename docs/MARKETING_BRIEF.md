@@ -136,9 +136,9 @@ Then GambleAware/GamStop links and 18+.
 
 - **Keep the dark theme** — it reads matchday-under-floodlights, distinct from the garish bookmaker aesthetic. Avoid their red/gold/ALL-CAPS urgency vocabulary entirely; visual calm *is* the "not a bookie" message.
 - **Product-as-hero:** real UI screenshots with real-looking group names ("Dog & Duck FC", "Marketing Team Accas") — never stock photos of lads cheering.
-- **Motion (one, only one):** the Acca stack logo's three bars stacking in as legs are submitted — logo, product mechanic, and loading state in a single gesture.
+- **Motion (one, only one):** if you introduce logo motion, prefer the Triangle rondo circulating — not bookmaker urgency.
 - **Outfit for feelings, Geist for facts:** display font on emotional headlines; the moment odds, points, or tables appear, switch to Geist. The typographic contrast reinforces "banter + receipts".
-- **Ship the favicon/OG image** from the Acca stack mark before any promotion — link previews in WhatsApp *are* the primary ad unit for this audience.
+- **Favicon / OG:** Triangle rondo disc is live (`app/icon.svg`, metadata `?v=` cache-bust). Ship a proper OG share image before any paid or heavy WhatsApp promotion — link previews *are* the primary ad unit for this audience.
 
 ---
 
@@ -168,5 +168,5 @@ Then GambleAware/GamStop links and 18+.
 
 1. [x] Tagline decision resolved (see §2): hero eyebrow removed; "— Social Group Betting" descriptor added to the marketing top bar next to the wordmark; headline carries "Every leg counts."; subhead rewritten as one flowing paragraph to contrast the staccato headline.
 2. [x] Copy shipped (July 2026): hero subhead, value prop reorder + "Best odds, done for you" retitle, how-it-works step 3, fifth FAQ, closing CTA line + trust line on `/`, "Why this exists" rewrite on `/about`, store listing aligned (`apps/mobile/STORE_LISTING.md`).
-3. [ ] Produce OG image + favicon from the locked-acca card / Acca stack mark.
+3. [x] Favicon from Triangle rondo disc shipped (`app/icon.svg` + metadata `?v=` cache-bust). [ ] Produce OG / WhatsApp share image (still outstanding).
 4. [ ] Add "The moment" section to `/` (needs a live-tracking product screenshot).

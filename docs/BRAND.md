@@ -67,8 +67,9 @@ Tokens in `apps/web/src/app/globals.css` and `packages/shared/src/brand.ts` (mob
 |-------|---------|
 | `/` | Homepage — hero, value props, how it works, FAQ, CTA |
 | `/about` | Product story, what we are/aren’t, responsible gambling |
+| `/blog`, `/blog/[slug]` | File-based MDX blog (static; `draft: true` hidden in prod) |
 
-Shared shell: `MarketingShell` + `MarketingHeader` in `apps/web/src/components/marketing/`.
+Shared shell: `MarketingShell` + `SessionAwareMarketingHeader` (client session so static `/blog` keeps signed-in chrome) in `apps/web/src/components/marketing/`. Signed-out: Home / About / Blog / Sign in / Sign up. Favicon metadata uses `?v=` cache-bust in `app/layout.tsx` — bump when the mark changes.
 
 Content: `apps/web/src/lib/marketing-content.ts`.
 

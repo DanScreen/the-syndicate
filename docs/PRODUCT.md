@@ -61,10 +61,11 @@ Platform admins (`ADMIN_EMAILS`) see an **Admin** tab in the header with `/admin
 - [x] Leg submit, acca lock, acca bookmaker rankings
 - [x] Real bookmaker betslip deeplinks
 - [x] Match table + football-data.org sync
-- [x] Hands-off auto-settle (system-only; owner settlement removed July 2026)
+- [x] Hands-off auto-settle (system-only; owner settlement removed July 2026; early settle on first loss)
 - [x] Editable picks until first kickoff (open + locked rounds; locked edits reprice the acca; web + mobile)
 - [x] Admin settlement queue with overdue-leg flags (web-only)
-- [x] Blog (`/blog`, file-based MDX) + sitemap/robots
+- [x] Blog (`/blog`, file-based MDX) + sitemap/robots; session-aware marketing header on static pages
+- [x] Public nav: Home / About always reachable when signed in; Blog rightmost in app nav
 - [x] Email notifications (round locked / settled)
 - [x] Unit-stake points + leaderboard
 - [x] Group stats + member stats (charts, favourites)
