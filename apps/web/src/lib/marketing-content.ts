@@ -3,7 +3,7 @@ export const tagline = "Social group accas";
 export const hero = {
   headline: "Your mates. One acca. Every leg counts.",
   subhead:
-    "Each member picks one leg and Tiki Acca handles the rest — locking in the best odds from UK bookmakers, tracking every result, and keeping score of who consistently delivers, and who lets the acca down. It's free for your whole group.",
+    "Tiki-taka is football's great passing game: everyone touches the ball. In a group acca, everyone touches the bet. Each member picks one leg and Tiki Acca handles the rest — locking in the best odds from UK bookmakers, tracking every result, and keeping score of who consistently delivers, and who lets the acca down. It's free for your whole group.",
 };
 
 export const valueProps = [
