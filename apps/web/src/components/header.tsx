@@ -38,6 +38,12 @@ export function AppHeader({ userName }: { userName: string }) {
           <AppNav />
         </div>
         <div className="flex items-center gap-4 text-sm">
+          <Link
+            href="/about"
+            className="hidden text-muted transition-colors hover:text-foreground sm:inline"
+          >
+            About
+          </Link>
           <span className="hidden text-muted sm:inline">Hi, {userName}</span>
           <SignOutButton />
         </div>

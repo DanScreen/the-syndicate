@@ -16,7 +16,6 @@ export function AppNav() {
     pathname.startsWith("/groups/");
   const performanceActive = pathname === "/performance";
   const adminActive = pathname.startsWith("/admin");
-  const aboutActive = pathname === "/about";
 
   return (
     <nav className="flex items-center gap-1">
@@ -61,16 +60,6 @@ export function AppNav() {
         }`}
       >
         Notifications
-      </Link>
-      <Link
-        href="/about"
-        className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
-          aboutActive
-            ? "bg-accent-muted/40 text-accent"
-            : "text-muted hover:text-foreground"
-        }`}
-      >
-        About
       </Link>
     </nav>
   );

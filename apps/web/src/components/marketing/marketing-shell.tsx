@@ -1,4 +1,3 @@
-import { AppHeader } from "@/components/header";
 import { GamblingFooter } from "@/components/site-footer";
 import { PageView } from "@/components/analytics/page-view";
 import { auth } from "@/lib/auth";
@@ -20,11 +19,10 @@ export async function MarketingShell({
       {path ? (
         <PageView path={path} userId={session?.user?.id ?? undefined} />
       ) : null}
-      {signedIn ? (
-        <AppHeader userName={greetingFirstName(session?.user ?? {})} />
-      ) : (
-        <MarketingHeader />
-      )}
+      <MarketingHeader
+        signedIn={signedIn}
+        userName={signedIn ? greetingFirstName(session?.user ?? {}) : undefined}
+      />
       <main className="flex-1">{children}</main>
       <GamblingFooter />
     </div>
