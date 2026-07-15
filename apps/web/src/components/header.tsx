@@ -34,10 +34,16 @@ export function AppHeader({ userName }: { userName: string }) {
     <header className="border-b border-border bg-card/50 backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4">
         <div className="flex items-center gap-6">
-          <Logo href="/dashboard" size="md" />
+          <Logo href="/" size="md" />
           <AppNav />
         </div>
         <div className="flex items-center gap-4 text-sm">
+          <Link
+            href="/about"
+            className="hidden text-muted transition-colors hover:text-foreground sm:inline"
+          >
+            About
+          </Link>
           <span className="hidden text-muted sm:inline">Hi, {userName}</span>
           <SignOutButton />
         </div>

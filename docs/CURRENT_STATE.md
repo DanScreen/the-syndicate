@@ -195,8 +195,8 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 
 | Path | Purpose |
 |------|---------|
-| `/` | Landing — hero (Sign up / Sign in), value props, how it works, FAQ, CTA |
-| `/about` | Product story, what we are/aren’t, responsible gambling |
+| `/` | Landing — hero, value props, how it works, FAQ, CTA (signed-in: marketing header + Groups/Performance CTAs) |
+| `/about` | Product story, what we are/aren’t, responsible gambling (reachable when signed in) |
 | `/sign-in`, `/sign-up` | Auth — sign-up collects **first name** + **last name** |
 | `/dashboard` | **Groups home** — list of user's groups; **group/your points**; **current betslip** legs (fixture, market, selection, odds); waiting status if you haven't picked |
 | `/performance` | Cross-group stats (`DashboardStats`) — group filter dropdown, charts, share cards |
@@ -211,7 +211,7 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 | `/groups/[id]/leaderboard` | Points leaderboard |
 | `/groups/[id]/performance` | Group stats (`GroupStats`) — charts, member breakdown |
 
-**Navigation:** `AppNav` in header (Groups ↔ Performance ↔ Admin for platform admins). Inside a group, `GroupNav` tabs (Round / History / Leaderboard / Performance) share data via `GroupDataProvider` (fetched once in group layout; polls every 60s while acca locked).
+**Navigation:** `AppNav` in app header (Groups ↔ Performance ↔ Admin for platform admins ↔ Notifications). Logo links to `/` (marketing home); **About** sits beside the greeting. Marketing pages (`/`, `/about`) keep `MarketingHeader` when signed in (About + Groups + sign out) so a future Blog link can land there without crowding app nav. Inside a group, `GroupNav` tabs (Round / History / Leaderboard / Performance) share data via `GroupDataProvider` (fetched once in group layout; polls every 60s while acca locked).
 
 **Open round UI:** provisional combined odds + **Compare bookmakers** podium (logos; 1st–3rd emphasised) from legs submitted so far.  
 **Locked round UI:** picks with per-leg outcomes as matches finish → **locked combined odds + recommended bookmaker only** (no compare list) → betslip CTA until the first result, then tracking only. Polls every 60s while locked. **History** tab lists all settled rounds.

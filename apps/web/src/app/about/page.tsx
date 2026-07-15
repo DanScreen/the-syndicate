@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { auth } from "@/lib/auth";
+import { MarketingCtas } from "@/components/marketing/marketing-ctas";
 import { MarketingShell } from "@/components/marketing/marketing-shell";
 import { howItWorks } from "@/lib/marketing-content";
 
@@ -9,7 +10,10 @@ export const metadata: Metadata = {
     "What Tiki Acca is, who it's for, and how social group accumulators work.",
 };
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const session = await auth();
+  const signedIn = Boolean(session?.user?.id);
+
   return (
     <MarketingShell path="/about">
       <div className="marketing-gradient border-b border-border/60">
@@ -99,21 +103,19 @@ export default function AboutPage() {
         </section>
 
         <div className="mt-16 rounded-2xl border border-border bg-card p-8 text-center">
-          <h2 className="font-display text-2xl font-bold">Start your group</h2>
-          <p className="mt-2 text-muted">Free to create a group and invite your mates.</p>
+          <h2 className="font-display text-2xl font-bold">
+            {signedIn ? "Back to your groups" : "Start your group"}
+          </h2>
+          <p className="mt-2 text-muted">
+            {signedIn
+              ? "Jump back into Groups or check your Performance."
+              : "Free to create a group and invite your mates."}
+          </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Link
-              href="/sign-up"
-              className="rounded-xl bg-accent px-6 py-3 font-medium text-black hover:bg-accent-bright"
-            >
-              Sign up
-            </Link>
-            <Link
-              href="/sign-in"
-              className="rounded-xl border border-border px-6 py-3 font-medium hover:bg-background"
-            >
-              Sign in
-            </Link>
+            <MarketingCtas
+              signedIn={signedIn}
+              secondaryClassName="rounded-xl border border-border px-6 py-3 font-medium hover:bg-background"
+            />
           </div>
         </div>
       </article>
