@@ -82,7 +82,7 @@ docs/
     ├── affiliate-and-betslips.md     ← Affiliate tracking + betslip deeplink improvements (backlog)
     ├── round-deadline-lock.md        ← Lock at first kickoff + pick reminders (Phase 1 shipped)
     ├── notifications.md              ← Email + push notification plan (planned)
-    ├── multi-leg-accas.md            ← Opt-in 2–3 legs per member (deferred; owner setting)
+    ├── multi-leg-accas.md            ← Owner 1–3 legs per member (shipped Phases 1–3)
     └── mobile-apps.md                ← iOS + Android strategy, parity plan, anti-divergence (spec)
 ```
 

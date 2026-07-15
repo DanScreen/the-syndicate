@@ -1,6 +1,6 @@
 # Current state (as-built)
 
-Last updated 15 July 2026. **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
+Last updated 15 July 2026 (multi-leg accas). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
 
 Production: **https://www.tikiacca.com** (apex → 301 to www via Cloudflare).
 
@@ -77,6 +77,7 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 |------|--------|
 | Auth (email/password, Auth.js JWT sessions) | ✅ |
 | Groups, invite codes, join links (`?code=`), no member cap | ✅ |
+| Legs per member (1 / 2 / 3) — owner create + Settings; round snapshot | ✅ |
 | Always-open rounds (auto-created with group; next opens on settle) | ✅ |
 | Rounds: open → locked → settled (badges: **Bet Open**, **Bet Locked**, **Bet Settled**) | ✅ |
 | Live odds ([The Odds API](https://the-odds-api.com/)) + mock fallback | ✅ |
@@ -209,13 +210,14 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 | `/admin/leaderboards` | **Admin** — group & player rankings by points |
 | `/admin/competitions` | **Admin** — enable/disable competitions in leg picker |
 | `/admin/odds` | **Admin** — Odds API diagnostics (fixture pipeline) |
-| `/groups/create`, `/groups/join` | Create / join group |
-| `/groups/[id]` | **Round** tab — active round, leg picker, picks, lock, settle |
+| `/groups/create`, `/groups/join` | Create / join group (create: legs-per-member picker) |
+| `/groups/[id]` | **Round** tab — active round, multi-leg picker, picks, lock, settle |
 | `/groups/[id]/history` | **History** tab — every settled acca with fixtures, markets, outcomes |
 | `/groups/[id]/leaderboard` | Points leaderboard |
 | `/groups/[id]/performance` | Group stats (`GroupStats`) — charts, member breakdown |
+| `/groups/[id]/settings` | **Owner** — legs per member (applies to future rounds) |
 
-**Navigation:** Logo + **Social Group Betting** tagline always shown. Logo and **Home** → `/`. `AppNav` order: Home → About → Groups → Performance → Admin (admins) → Notifications → **Blog** (rightmost). Marketing pages use `SessionAwareMarketingHeader` (client `useSession`) so statically generated `/blog` still shows signed-in chrome. Signed-out: Home / About / Blog / Sign in / Sign up. Inside a group, `GroupNav` tabs (Round / History / Leaderboard / Performance) share data via `GroupDataProvider` (fetched once in group layout; polls every 60s while acca locked).
+**Navigation:** Logo + **Social Group Betting** tagline always shown. Logo and **Home** → `/`. `AppNav` order: Home → About → Groups → Performance → Admin (admins) → Notifications → **Blog** (rightmost). Marketing pages use `SessionAwareMarketingHeader` (client `useSession`) so statically generated `/blog` still shows signed-in chrome. Signed-out: Home / About / Blog / Sign in / Sign up. Inside a group, `GroupNav` tabs (Round / History / Leaderboard / Performance / **Settings** for owners) share data via `GroupDataProvider` (fetched once in group layout; polls every 60s while acca locked).
 
 **Open round UI:** provisional combined odds + **Compare bookmakers** podium (logos; 1st–3rd emphasised) from legs submitted so far.  
 **Locked round UI:** picks with per-leg outcomes as matches finish → **locked combined odds + recommended bookmaker only** (no compare list) → betslip CTA until the first result, then tracking only. Polls every 60s while locked. **History** tab lists all settled rounds.
@@ -237,7 +239,7 @@ Email and push notifications fire on **round locked**, **round settled**, and **
 
 **Exactly-once settlement.** `applyRoundSettlement()` validates settleability, then runs in a `prisma.$transaction` with an atomic claim — `round.updateMany({ where: { status: "locked" }, data: { status: "settled" } })`. Overlapping settle attempts (e.g. two cron runs) can't double-count points: the loser matches zero rows and throws `RoundNotSettleableError`, treated as a benign `skipped` no-op.
 
-**Lock triggers.** A round moves `open → locked` when **all members have submitted** or when the **earliest submitted leg kicks off** (partial accas — missing members are excluded). `claimAndLockRound()` in `claim-lock-round.ts` atomically claims via `updateMany`, reprices, and emails; repricing failures revert to `open`. Kickoff locks run on each match-sync cron (5 min) and when loading `GET /api/groups/[id]`. See [specs/round-deadline-lock.md](./specs/round-deadline-lock.md).
+**Lock triggers.** A round moves `open → locked` when **every member has submitted `Round.legsPerMember` legs** or when the **earliest submitted leg kicks off** (partial accas — members under quota are excluded). `claimAndLockRound()` in `claim-lock-round.ts` atomically claims via `updateMany`, reprices, and emails; repricing failures revert to `open`. Kickoff locks run on each match-sync cron (5 min) and when loading `GET /api/groups/[id]`. See [specs/round-deadline-lock.md](./specs/round-deadline-lock.md) and [specs/multi-leg-accas.md](./specs/multi-leg-accas.md).
 
 **Lock is likewise atomic.** When two members submit the final legs at once, only one request reprices the acca (Odds API credits) and sends the lock email; repricing failures revert the round to `open`.
 
@@ -408,8 +410,10 @@ Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `Analytics
 - `User.name` — full display name (`firstName lastName`) for leaderboards, picks, emails.
 - `User.role` — platform role: `user` (default) or `admin` (via `ADMIN_EMAILS`).
 - `AnalyticsEvent` — lightweight product analytics (`type`, `userId?`, `path?`, `createdAt`).
-- One leg per user per round (`@@unique([roundId, userId])`).
-- Leg stores fixture snapshot: teams, kickoff, `competitionId` (slug), `competition` (display name), optional `matchId` FK, market, odds, bookmaker, `betslipUrl`, `bookmakerLinks` JSON, outcome.
+- `Group.legsPerMember` — 1–3 (default 1); owner create / Settings.
+- `Round.legsPerMember` — snapshot at round open (setting changes apply to future rounds only).
+- Up to `legsPerMember` legs per user per round (`@@unique([roundId, userId, legIndex])`).
+- Leg stores `legIndex` + fixture snapshot: teams, kickoff, `competitionId` (slug), `competition` (display name), optional `matchId` FK, market, odds, bookmaker, `betslipUrl`, `bookmakerLinks` JSON, outcome.
 - `Match` — canonical result per fixture (`externalDataId` from football-data.org).
 - `Round.accaBookmakerRankings` — JSON array of ranked bookmakers at lock.
 - `CompetitionSetting` — `competitionId` slug + `enabled` flag for leg-picker visibility (seeded: World Cup on, leagues off).
@@ -418,7 +422,7 @@ Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `Analytics
 
 Schema: `packages/database/prisma/schema.prisma`
 
-Recent migrations include `20260711100000_competition_settings` (admin competition toggles).
+Recent migrations include `20260715120000_multi_leg_per_member`.
 
 ---
 
@@ -431,10 +435,12 @@ Recent migrations include `20260711100000_competition_settings` (admin competiti
 | `GET /api/fixtures/[id]/markets` | Session | Extended markets (`?competition=` required) |
 | `POST /api/legs` | Session | Submit leg |
 | `PATCH /api/legs/[id]` | Leg owner | Edit own pick until first kickoff (locked rounds reprice) |
-| `GET /api/groups` | Session | Groups list + current betslip `activeLegs` + yourLeg |
+| `GET /api/groups` | Session | Groups list + current betslip `activeLegs` + yourLeg / yourLegCount |
+| `POST /api/groups` | Session | Create group (`name`, optional `legsPerMember` 1–3) |
+| `PATCH /api/groups/[id]` | Owner | Update `legsPerMember` (future rounds) |
 | `POST /api/internal/sync-matches` | `CRON_SECRET` | Sync football-data.org → `Match` |
 | `POST /api/internal/warm-odds-cache` | `CRON_SECRET` | Refresh odds DB snapshots |
-| `GET /api/groups/[id]` | Member | Group + active round + recent settled bets + betslip deeplinks |
+| `GET /api/groups/[id]` | Member | Group + active round (`legsPerMember`) + recent settled bets + betslip deeplinks |
 | `GET /api/groups/[id]/history` | Member | Full settled bet history (fixtures, markets, outcomes) |
 | `GET /api/groups/[id]/stats` | Member | Group summary stats + chart series |
 | `GET /api/groups/[id]/members/[userId]/stats` | Member | Member breakdown + favourites |

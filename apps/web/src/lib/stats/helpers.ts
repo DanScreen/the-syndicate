@@ -25,13 +25,16 @@ export function groupNetPoints(rounds: RoundWithLegs[]): number {
 
 export function memberPointsInRound(round: RoundWithLegs, userId: string): number {
   if (round.status !== "settled") return 0;
-  const leg = round.legs.find((l) => l.userId === userId);
-  if (!leg) return 0;
-  return memberAccaLegPoints(
-    roundOutcomes(round),
-    leg.outcome as LegOutcome,
-    leg.odds
-  );
+  const outcomes = roundOutcomes(round);
+  const total = round.legs
+    .filter((l) => l.userId === userId)
+    .reduce(
+      (sum, leg) =>
+        sum +
+        memberAccaLegPoints(outcomes, leg.outcome as LegOutcome, leg.odds),
+      0
+    );
+  return Number(total.toFixed(2));
 }
 
 export function legPoints(leg: Leg, round?: RoundWithLegs): number {
@@ -101,7 +104,7 @@ function aggregateByKey(
     const round = roundMap.get(leg.roundId);
     const entry = map.get(key) ?? { key, count: 0, points: 0 };
     entry.count += 1;
-    entry.points += round ? memberPointsInRound(round, leg.userId) : leg.pointsAwarded;
+    entry.points += round ? legPoints(leg, round) : leg.pointsAwarded;
     map.set(key, entry);
   }
   return [...map.values()];

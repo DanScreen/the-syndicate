@@ -16,6 +16,7 @@ export type GroupData = {
     name: string;
     inviteCode: string;
     status: string;
+    legsPerMember: number;
     memberCount: number;
     members: { id: string; name: string; role: string }[];
     owner: { id: string; name: string };
@@ -31,6 +32,7 @@ export type GroupData = {
   activeRound: {
     id: string;
     status: string;
+    legsPerMember: number;
     combinedOdds: number | null;
     bestBookmakerId: string | null;
     profitLossGbp: number | null;
@@ -45,6 +47,7 @@ export type GroupData = {
     legs: {
       id: string;
       user: { id: string; name: string };
+      legIndex?: number;
       homeTeam: string;
       awayTeam: string;
       competition: string;

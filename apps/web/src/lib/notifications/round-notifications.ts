@@ -14,7 +14,7 @@ import {
   roundSettledPush,
 } from "@/lib/notifications/templates";
 import { prisma } from "@tiki-acca/database";
-import { formatLegPoints } from "@tiki-acca/shared";
+import { formatLegPoints, membersMissingQuota } from "@tiki-acca/shared";
 
 const DEDUPE_ROUND_LOCKED = "round_locked";
 const DEDUPE_ROUND_SETTLED = "round_settled";
@@ -83,17 +83,30 @@ export async function notifyRoundLocked(roundId: string): Promise<void> {
 
   const groupUrl = groupDeepLink(round.group.id);
   const odds = round.combinedOdds?.toFixed(2) ?? "—";
-  const missingCount = round.group.members.length - round.legs.length;
+  const missingCount = membersMissingQuota({
+    memberUserIds: round.group.members.map((m) => m.userId),
+    legs: round.legs,
+    legsPerMember: round.legsPerMember,
+  }).length;
 
   const emailContent = roundLockedEmail({
     groupName: round.group.name,
     combinedOdds: odds,
-    legs: round.legs.map((leg) => ({
-      memberName: leg.user.name,
-      selectionLabel: leg.selectionLabel,
-      marketLabel: leg.marketLabel,
-      odds: leg.odds,
-    })),
+    legs: [...round.legs]
+      .sort((a, b) => {
+        const byName = a.user.name.localeCompare(b.user.name);
+        if (byName !== 0) return byName;
+        return a.legIndex - b.legIndex;
+      })
+      .map((leg) => ({
+        memberName:
+          round.legsPerMember > 1
+            ? `${leg.user.name} (leg ${leg.legIndex})`
+            : leg.user.name,
+        selectionLabel: leg.selectionLabel,
+        marketLabel: leg.marketLabel,
+        odds: leg.odds,
+      })),
     missingCount,
     groupUrl,
   });

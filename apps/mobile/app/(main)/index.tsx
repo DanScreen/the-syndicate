@@ -87,7 +87,11 @@ export default function GroupsScreen() {
         ) : (
           groups.map((g) => {
             const legs = g.activeLegs ?? [];
-            const waiting = yourLegStatusMessage(g.status, g.yourLeg);
+            const waiting = yourLegStatusMessage(g.status, g.yourLeg, {
+              yourLegCount: g.yourLegCount,
+              legsPerMember:
+                g.activeRound?.legsPerMember ?? g.legsPerMember ?? 1,
+            });
             return (
               <Pressable
                 key={g.id}

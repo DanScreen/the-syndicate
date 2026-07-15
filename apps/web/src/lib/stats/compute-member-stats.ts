@@ -53,8 +53,9 @@ export function computeMemberStats(
   const legs: Leg[] = [];
 
   for (const round of settled) {
-    const leg = round.legs.find((l) => l.userId === userId);
-    if (leg) legs.push(leg);
+    for (const leg of round.legs) {
+      if (leg.userId === userId) legs.push(leg);
+    }
   }
 
   const memberRounds = settled.filter((r) => r.legs.some((l) => l.userId === userId));

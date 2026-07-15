@@ -1,8 +1,9 @@
 import { colors } from "@/config";
+import { useGroupData } from "@/context/group-data";
 import { router, useLocalSearchParams, useSegments } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-const TABS = [
+const BASE_TABS = [
   { segment: "index", label: "Round" },
   { segment: "history", label: "History" },
   { segment: "leaderboard", label: "Leaderboard" },
@@ -13,6 +14,10 @@ export function GroupNav() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const segments = useSegments() as string[];
   const activeSegment = segments[3] ?? "index";
+  const { data } = useGroupData();
+  const tabs = data?.isOwner
+    ? [...BASE_TABS, { segment: "settings", label: "Settings" }]
+    : [...BASE_TABS];
 
   function go(segment: string) {
     const base = `/(main)/groups/${id}` as const;
@@ -25,7 +30,7 @@ export function GroupNav() {
 
   return (
     <View style={styles.nav}>
-      {TABS.map((tab) => {
+      {tabs.map((tab) => {
         const active = activeSegment === tab.segment;
         return (
           <Pressable
@@ -33,7 +38,9 @@ export function GroupNav() {
             onPress={() => go(tab.segment)}
             style={[styles.tab, active && styles.tabActive]}
           >
-            <Text style={[styles.tabText, active && styles.tabTextActive]}>{tab.label}</Text>
+            <Text style={[styles.tabText, active && styles.tabTextActive]}>
+              {tab.label}
+            </Text>
           </Pressable>
         );
       })}
@@ -60,7 +67,7 @@ const styles = StyleSheet.create({
   },
   tabText: {
     color: colors.muted,
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "500",
   },
   tabTextActive: {

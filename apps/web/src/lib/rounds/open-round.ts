@@ -10,8 +10,17 @@ export async function openRound(groupId: string, db: DbClient = prisma) {
   });
   if (existing) return existing;
 
+  const group = await db.group.findUniqueOrThrow({
+    where: { id: groupId },
+    select: { legsPerMember: true },
+  });
+
   const round = await db.round.create({
-    data: { groupId, status: "open" },
+    data: {
+      groupId,
+      status: "open",
+      legsPerMember: group.legsPerMember,
+    },
   });
 
   await db.group.update({

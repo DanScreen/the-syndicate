@@ -35,6 +35,7 @@ Core loop and MVP polish are **shipped**:
 - **Platform admin** — overview, leaderboards, `ADMIN_EMAILS`, analytics events
 - **Points-first UX** — stake → profit converter; see [specs/platform-admin.md](./specs/platform-admin.md)
 - Deploy: Cloud Run + Cloud SQL + GitHub Actions; Cloud Scheduler match sync (every 5 min UTC)
+- **Multi-leg accas** — owner sets 1 / 2 / 3 legs per member; web + mobile — [specs/multi-leg-accas.md](./specs/multi-leg-accas.md)
 
 ---
 
@@ -60,13 +61,12 @@ Core loop and MVP polish are **shipped**:
 | Item | Notes |
 |------|-------|
 | **Paid subscriptions** | Core group loop stays free; revisit only if a clear paid value prop emerges (e.g. organiser tools with proven demand) |
-| **Multi-leg accas** | Opt-in group setting: owner picks **1 / 2 / 3 legs per player** (symmetric — everyone same quota). Default stays 1. Build after user validation — [specs/multi-leg-accas.md](./specs/multi-leg-accas.md) |
 
 ---
 
 ## Post-MVP
 
-Chat/feed, stake pooling, social sign-in, more sports. Multi-leg accas — [specs/multi-leg-accas.md](./specs/multi-leg-accas.md). Notification Phase 3 (per-leg results, quiet hours) — [specs/notifications.md](./specs/notifications.md).
+Chat/feed, stake pooling, social sign-in, more sports. Multi-leg admin ceilings — [specs/multi-leg-accas.md](./specs/multi-leg-accas.md). Notification Phase 3 (per-leg results, quiet hours) — [specs/notifications.md](./specs/notifications.md).
 
 ---
 

@@ -58,7 +58,7 @@ function GroupShell({ groupId, children }: { groupId: string; children: React.Re
           </div>
         </div>
 
-        <GroupNav groupId={groupId} />
+        <GroupNav groupId={groupId} showSettings={data.isOwner} />
         <div className="mt-8">{children}</div>
       </main>
     </div>

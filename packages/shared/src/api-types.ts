@@ -44,6 +44,8 @@ export type GroupSummary = {
   memberCount: number;
   status: string;
   ownerName: string;
+  /** Group default — legs each member submits on new rounds. */
+  legsPerMember: number;
   /** Group acca points (combined-odds scoring on wins). */
   groupPoints: number;
   /** This member's leg points in the group. */
@@ -52,11 +54,14 @@ export type GroupSummary = {
     id: string;
     status: RoundStatus;
     combinedOdds: number | null;
+    legsPerMember: number;
   } | null;
   /** All submitted legs on the active round (current betslip). */
   activeLegs: GroupSummaryActiveLeg[];
-  /** Member's leg in the active round, if submitted. */
+  /** Member's first / primary leg in the active round, if any submitted. */
   yourLeg: GroupSummaryYourLeg | null;
+  /** How many legs this member has submitted in the active round. */
+  yourLegCount: number;
 };
 
 export type GroupsListResponse = {
@@ -72,6 +77,7 @@ export type GroupMember = {
 export type GroupLeg = {
   id: string;
   user: { id: string; name: string };
+  legIndex?: number;
   homeTeam: string;
   awayTeam: string;
   competition?: string;
@@ -142,6 +148,7 @@ export type GroupDetailResponse = {
     name: string;
     inviteCode: string;
     status: string;
+    legsPerMember: number;
     owner: { id: string; name: string };
     memberCount: number;
     members: GroupMember[];
@@ -150,6 +157,7 @@ export type GroupDetailResponse = {
   activeRound: {
     id: string;
     status: RoundStatus;
+    legsPerMember: number;
     combinedOdds: number | null;
     bestBookmakerId: string | null;
     legs: GroupLeg[];

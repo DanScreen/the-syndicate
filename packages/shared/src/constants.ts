@@ -9,6 +9,11 @@ export const POINTS = {
 
 export const DEFAULT_STAKE_GBP = 10;
 
+/** Owner-selectable legs each member submits per round. */
+export const LEGS_PER_MEMBER_OPTIONS = [1, 2, 3] as const;
+export type LegsPerMember = (typeof LEGS_PER_MEMBER_OPTIONS)[number];
+export const DEFAULT_LEGS_PER_MEMBER: LegsPerMember = 1;
+
 export const GROUP_STATUSES = ["open", "locked", "settled"] as const;
 
 export const ROUND_STATUSES = ["open", "locked", "settled"] as const;

@@ -40,10 +40,10 @@ flowchart TB
 | Entity | Purpose |
 |--------|---------|
 | **User** | Account; `firstName` / `lastName` / `name` (full display); `role` (`user` \| `admin`); aggregate `totalPoints` |
-| **Group** | Name, invite code, owner, status |
+| **Group** | Name, invite code, owner, status, `legsPerMember` (1–3, default 1) |
 | **GroupMember** | Membership, group role (`owner` \| `member`), group-scoped points |
-| **Round** | Acca cycle: open → locked → settled; `accaBookmakerRankings` JSON at lock |
-| **Leg** | One pick per member: fixture, `competitionId`, market, odds, outcome |
+| **Round** | Acca cycle: open → locked → settled; `legsPerMember` snapshot; `accaBookmakerRankings` JSON at lock |
+| **Leg** | Pick slot (`legIndex` 1..quota) per member: fixture, `competitionId`, market, odds, outcome |
 | **Match** | Canonical fixture result (football-data.org sync); reused for auto-settle |
 | **AnalyticsEvent** | Product analytics: `sign_up`, `login`, `page_view` |
 

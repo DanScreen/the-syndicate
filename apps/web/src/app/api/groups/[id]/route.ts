@@ -9,6 +9,7 @@ import { lockOpenRoundsAtKickoff } from "@/lib/rounds/lock-open-rounds-at-kickof
 import { openRound } from "@/lib/rounds/open-round";
 import { prisma } from "@tiki-acca/database";
 import type { AccaBookmakerRanking } from "@tiki-acca/shared";
+import { updateGroupSettingsSchema } from "@tiki-acca/shared";
 import { NextResponse } from "next/server";
 
 type Params = { params: Promise<{ id: string }> };
@@ -142,12 +143,22 @@ export async function GET(_request: Request, { params }: Params) {
     role: m.role,
   }));
 
+  const sortedActiveLegs = activeRound
+    ? [...activeRound.legs].sort((a, b) => {
+        if (a.userId !== b.userId) {
+          return a.user.name.localeCompare(b.user.name);
+        }
+        return a.legIndex - b.legIndex;
+      })
+    : [];
+
   return NextResponse.json({
     group: {
       id: group.id,
       name: group.name,
       inviteCode: group.inviteCode,
       status: activeRound?.status ?? group.status,
+      legsPerMember: group.legsPerMember,
       owner: group.owner,
       memberCount: group.members.length,
       members: group.members.map((m) => ({
@@ -160,6 +171,8 @@ export async function GET(_request: Request, { params }: Params) {
     activeRound: activeRound
       ? {
           ...activeRound,
+          legs: sortedActiveLegs,
+          legsPerMember: activeRound.legsPerMember,
           combinedOdds:
             activeRound.status === "open" && previewCombinedOdds != null
               ? previewCombinedOdds
@@ -175,5 +188,43 @@ export async function GET(_request: Request, { params }: Params) {
     betslipLinks,
     isOwner: membership.role === "owner",
     recentRounds: recentSettled.map(mapHistoryRound),
+  });
+}
+
+/** Owner updates group settings. `legsPerMember` applies to future rounds only. */
+export async function PATCH(request: Request, { params }: Params) {
+  const { session, error } = await requireSession();
+  if (error) return error;
+
+  const { id } = await params;
+  const body = await request.json().catch(() => null);
+  const parsed = updateGroupSettingsSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+
+  const membership = await prisma.groupMember.findUnique({
+    where: {
+      groupId_userId: { groupId: id, userId: session!.user!.id },
+    },
+  });
+
+  if (!membership || membership.role !== "owner") {
+    return NextResponse.json({ error: "Only the group owner can change settings" }, { status: 403 });
+  }
+
+  const group = await prisma.group.update({
+    where: { id },
+    data: { legsPerMember: parsed.data.legsPerMember },
+    select: {
+      id: true,
+      name: true,
+      legsPerMember: true,
+    },
+  });
+
+  return NextResponse.json({
+    group,
+    note: "Legs per member applies to the next open round (after the current acca settles).",
   });
 }

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DEFAULT_LEGS_PER_MEMBER, LEGS_PER_MEMBER_OPTIONS } from "./constants";
 
 export const signUpSchema = z.object({
   firstName: z.string().trim().min(1).max(40),
@@ -17,8 +18,22 @@ export const signInSchema = z.object({
   password: z.string().min(1),
 });
 
+export const legsPerMemberSchema = z
+  .number()
+  .int()
+  .refine(
+    (n): n is (typeof LEGS_PER_MEMBER_OPTIONS)[number] =>
+      (LEGS_PER_MEMBER_OPTIONS as readonly number[]).includes(n),
+    { message: "legsPerMember must be 1, 2, or 3" }
+  );
+
 export const createGroupSchema = z.object({
   name: z.string().min(3).max(60),
+  legsPerMember: legsPerMemberSchema.optional().default(DEFAULT_LEGS_PER_MEMBER),
+});
+
+export const updateGroupSettingsSchema = z.object({
+  legsPerMember: legsPerMemberSchema,
 });
 
 export const joinGroupSchema = z.object({
@@ -74,6 +89,7 @@ export const notificationPreferencesSchema = z.object({
 export type SignUpInput = z.infer<typeof signUpSchema>;
 export type SignInInput = z.infer<typeof signInSchema>;
 export type CreateGroupInput = z.infer<typeof createGroupSchema>;
+export type UpdateGroupSettingsInput = z.infer<typeof updateGroupSettingsSchema>;
 export type JoinGroupInput = z.infer<typeof joinGroupSchema>;
 export type SubmitLegInput = z.infer<typeof submitLegSchema>;
 export type EditLegInput = z.infer<typeof editLegSchema>;

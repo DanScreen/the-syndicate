@@ -3,16 +3,27 @@ import type { RoundStatus } from "./types";
 
 export function yourLegStatusMessage(
   roundStatus: RoundStatus | string,
-  yourLeg: GroupSummaryYourLeg | null
+  yourLeg: GroupSummaryYourLeg | null,
+  options?: { yourLegCount?: number; legsPerMember?: number }
 ): string {
-  if (yourLeg) return "";
+  const quota = options?.legsPerMember ?? 1;
+  const count = options?.yourLegCount ?? (yourLeg ? 1 : 0);
+
+  if (count >= quota) return "";
 
   if (roundStatus === "open") {
-    return "Waiting for your pick — group can't lock until you submit";
+    if (count === 0) {
+      return quota === 1
+        ? "Waiting for your pick — group can't lock until you submit"
+        : `Waiting for your picks — ${quota} legs each this round`;
+    }
+    return `You've submitted ${count} of ${quota} legs — finish your quota to lock`;
   }
 
   if (roundStatus === "locked") {
-    return "You didn't submit before kickoff — not in this acca";
+    return count === 0
+      ? "You didn't submit before kickoff — not in this acca"
+      : `You only submitted ${count} of ${quota} before kickoff`;
   }
 
   return "";

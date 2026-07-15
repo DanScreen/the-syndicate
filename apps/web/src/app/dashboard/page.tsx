@@ -85,7 +85,7 @@ export default async function DashboardPage() {
             </p>
             <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm text-muted">
               <li>Create a group and share the invite link</li>
-              <li>Each member picks one leg in the open round</li>
+              <li>Each member picks their legs in the open round</li>
               <li>When everyone&apos;s in, the acca locks and you get the best combined odds</li>
             </ol>
             <Link
@@ -116,20 +116,41 @@ export default async function DashboardPage() {
                     id: string;
                     status: string;
                     combinedOdds: number | null;
-                  } | null = activeRoundRow;
+                    legsPerMember: number;
+                  } | null = activeRoundRow
+                    ? {
+                        id: activeRoundRow.id,
+                        status: activeRoundRow.status,
+                        combinedOdds: activeRoundRow.combinedOdds,
+                        legsPerMember: activeRoundRow.legsPerMember,
+                      }
+                    : null;
                   if (!activeRound) {
-                    activeRound = await openRound(m.group.id);
+                    const opened = await openRound(m.group.id);
+                    activeRound = {
+                      id: opened.id,
+                      status: opened.status,
+                      combinedOdds: opened.combinedOdds,
+                      legsPerMember: opened.legsPerMember,
+                    };
                   }
                   const legs = activeRoundRow?.legs ?? [];
                   const groupPoints = groupNetPoints(allRounds);
                   const yourLeg = yourLegInRound(legs, session.user.id);
+                  const yourLegCount = legs.filter(
+                    (l) => l.userId === session.user.id
+                  ).length;
                   const activeLegs = activeLegsInRound(legs, session.user.id);
                   const roundStatus = activeRound?.status ?? "open";
+                  const legsPerMember =
+                    activeRound?.legsPerMember ?? m.group.legsPerMember ?? 1;
                   return {
                     membership: m,
                     activeRound,
                     groupPoints,
                     yourLeg,
+                    yourLegCount,
+                    legsPerMember,
                     activeLegs,
                     roundStatus,
                   };
@@ -140,6 +161,8 @@ export default async function DashboardPage() {
                   activeRound,
                   groupPoints,
                   yourLeg,
+                  yourLegCount,
+                  legsPerMember,
                   activeLegs,
                   roundStatus,
                 }) => (
@@ -166,7 +189,10 @@ export default async function DashboardPage() {
                       currentUserId={session.user.id}
                       combinedOdds={activeRound?.combinedOdds}
                       waitingMessage={
-                        yourLegStatusMessage(roundStatus, yourLeg) || undefined
+                        yourLegStatusMessage(roundStatus, yourLeg, {
+                          yourLegCount,
+                          legsPerMember,
+                        }) || undefined
                       }
                     />
                   </Link>

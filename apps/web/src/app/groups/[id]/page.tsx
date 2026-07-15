@@ -24,20 +24,23 @@ function formatCutoff(date: Date) {
 export default function GroupRoundPage() {
   const { data: session } = useSession();
   const { data, reload } = useGroupData();
-  const [editing, setEditing] = useState(false);
+  const [editingLegId, setEditingLegId] = useState<string | null>(null);
 
   if (!data?.activeRound) return null;
 
   const userId = session?.user?.id;
   const { activeRound, group, betslipLink, betslipLinks } = data;
-  const userLeg = activeRound.legs.find((l) => l.user.id === userId);
-  const hasSubmitted = Boolean(userLeg);
+  const legsPerMember = activeRound.legsPerMember ?? group.legsPerMember ?? 1;
+  const userLegs = activeRound.legs.filter((l) => l.user.id === userId);
+  const canSubmitMore =
+    Boolean(userId) &&
+    activeRound.status === "open" &&
+    userLegs.length < legsPerMember;
 
   const isLocked = activeRound.status === "locked";
   const isOpen = activeRound.status === "open";
   const resolvedLegs = activeRound.legs.filter((l) => l.outcome !== "pending").length;
 
-  // Picks can be edited until the first match in the acca kicks off.
   const firstKickoff =
     activeRound.legs.length > 0
       ? new Date(Math.min(...activeRound.legs.map((l) => new Date(l.kickoff).getTime())))
@@ -68,6 +71,8 @@ export default function GroupRoundPage() {
     Boolean(combinedOdds) &&
     (isLocked || (isOpen && activeRound.legs.length > 0 && rankings.length > 0));
 
+  const nextSlot = userLegs.length + 1;
+
   return (
     <div className="space-y-6">
       {isOpen && (
@@ -76,6 +81,7 @@ export default function GroupRoundPage() {
           legs={activeRound.legs}
           status={activeRound.status}
           firstKickoff={firstKickoff}
+          legsPerMember={legsPerMember}
         />
       )}
 
@@ -87,12 +93,18 @@ export default function GroupRoundPage() {
 
       <section>
         <h2 className="text-lg font-semibold">Picks</h2>
+        {legsPerMember > 1 && (
+          <p className="mt-1 text-sm text-muted">
+            {legsPerMember} legs each this round
+          </p>
+        )}
         <div className="mt-3">
           <LegsList
             legs={activeRound.legs}
             legLinks={betslipLinks?.legLinks}
             showOpenLinks={isLocked && resolvedLegs === 0}
             inProgress={isLocked}
+            showLegIndex={legsPerMember > 1}
           />
         </div>
       </section>
@@ -114,39 +126,65 @@ export default function GroupRoundPage() {
         />
       )}
 
-      {isOpen && userId && !hasSubmitted && (
-        <SubmitLegForm roundId={activeRound.id} onSubmitted={reload} />
+      {canSubmitMore && !editingLegId && (
+        <SubmitLegForm
+          roundId={activeRound.id}
+          onSubmitted={reload}
+          title={
+            legsPerMember > 1
+              ? `Submit leg ${nextSlot} of ${legsPerMember}`
+              : undefined
+          }
+        />
       )}
 
-      {userLeg && editWindowOpen && !editing && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-4">
-          <div className="text-sm">
-            <p className="font-medium">Your pick: {userLeg.selectionLabel} ({userLeg.odds})</p>
-            <p className="mt-1 text-muted">
-              You can change it until the first kickoff
-              {firstKickoff ? ` — ${formatCutoff(firstKickoff)}` : ""}.
-              {isLocked && " Changing a pick reprices the whole acca at current odds."}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            className="rounded-lg border border-accent px-4 py-2 text-sm font-medium text-accent hover:bg-accent-muted/30"
-          >
-            Change my pick
-          </button>
+      {userLegs.length > 0 && editWindowOpen && !editingLegId && (
+        <div className="space-y-2 rounded-xl border border-border bg-card p-4">
+          <p className="text-sm font-medium">Your picks</p>
+          <p className="text-sm text-muted">
+            You can change them until the first kickoff
+            {firstKickoff ? ` — ${formatCutoff(firstKickoff)}` : ""}.
+            {isLocked && " Changing a pick reprices the whole acca at current odds."}
+          </p>
+          <ul className="mt-2 space-y-2">
+            {userLegs.map((leg) => (
+              <li
+                key={leg.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border px-3 py-2 text-sm"
+              >
+                <span>
+                  {legsPerMember > 1 ? `Leg ${leg.legIndex ?? ""}: ` : ""}
+                  {leg.selectionLabel} ({leg.odds})
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setEditingLegId(leg.id)}
+                  className="rounded-lg border border-accent px-3 py-1.5 text-sm font-medium text-accent hover:bg-accent-muted/30"
+                >
+                  Change
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
-      {userLeg && editWindowOpen && editing && (
+      {editingLegId && editWindowOpen && (
         <SubmitLegForm
           roundId={activeRound.id}
-          editLegId={userLeg.id}
+          editLegId={editingLegId}
           onSubmitted={() => {
-            setEditing(false);
+            setEditingLegId(null);
             reload();
           }}
-          onCancel={() => setEditing(false)}
+          onCancel={() => setEditingLegId(null)}
+          title={
+            legsPerMember > 1
+              ? `Change leg ${
+                  userLegs.find((l) => l.id === editingLegId)?.legIndex ?? ""
+                }`
+              : undefined
+          }
         />
       )}
 

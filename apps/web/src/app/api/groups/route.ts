@@ -43,12 +43,27 @@ export async function GET() {
         id: string;
         status: string;
         combinedOdds: number | null;
-      } | null = activeRoundRow;
+        legsPerMember: number;
+      } | null = activeRoundRow
+        ? {
+            id: activeRoundRow.id,
+            status: activeRoundRow.status,
+            combinedOdds: activeRoundRow.combinedOdds,
+            legsPerMember: activeRoundRow.legsPerMember,
+          }
+        : null;
       if (!activeRound) {
-        activeRound = await openRound(m.group.id);
+        const opened = await openRound(m.group.id);
+        activeRound = {
+          id: opened.id,
+          status: opened.status,
+          combinedOdds: opened.combinedOdds,
+          legsPerMember: opened.legsPerMember,
+        };
       }
 
       const legs = activeRoundRow?.legs ?? [];
+      const yourLegCount = legs.filter((l) => l.userId === userId).length;
 
       return {
         id: m.group.id,
@@ -58,11 +73,13 @@ export async function GET() {
         memberCount: m.group._count.members,
         status: activeRound?.status ?? "open",
         ownerName: m.group.owner.name,
+        legsPerMember: m.group.legsPerMember,
         groupPoints: groupNetPoints(allRounds),
         points: m.points,
         activeRound,
         activeLegs: activeLegsInRound(legs, userId),
         yourLeg: yourLegInRound(legs, userId),
+        yourLegCount,
       };
     })
   );
@@ -89,11 +106,14 @@ export async function POST(request: Request) {
     attempts++;
   }
 
+  const legsPerMember = parsed.data.legsPerMember;
+
   const group = await prisma.group.create({
     data: {
       name: parsed.data.name,
       inviteCode,
       status: "open",
+      legsPerMember,
       ownerId: session!.user!.id,
       members: {
         create: {
@@ -102,7 +122,7 @@ export async function POST(request: Request) {
         },
       },
       rounds: {
-        create: { status: "open" },
+        create: { status: "open", legsPerMember },
       },
     },
     include: {

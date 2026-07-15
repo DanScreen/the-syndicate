@@ -92,23 +92,34 @@ export function RoundProgress({
   legs,
   status,
   firstKickoff,
+  legsPerMember = 1,
 }: {
   members: GroupMember[];
   legs: GroupLeg[];
   status: string;
   firstKickoff?: Date | null;
+  legsPerMember?: number;
 }) {
-  const submittedIds = new Set(legs.map((l) => l.user.id));
-  const pending = members.filter((m) => !submittedIds.has(m.id));
+  const counts = new Map<string, number>();
+  for (const leg of legs) {
+    counts.set(leg.user.id, (counts.get(leg.user.id) ?? 0) + 1);
+  }
+  const pending = members.filter((m) => (counts.get(m.id) ?? 0) < legsPerMember);
+  const pendingSlots = pending.reduce(
+    (sum, m) => sum + (legsPerMember - (counts.get(m.id) ?? 0)),
+    0
+  );
 
   let banner = "";
   if (status === "open") {
     if (pending.length === 0) {
       banner = "Everyone has submitted — locking acca...";
     } else if (firstKickoff) {
-      banner = `Waiting on ${pending.length} leg${pending.length === 1 ? "" : "s"} — acca locks at first kickoff`;
+      banner = `Waiting on ${pendingSlots} leg${pendingSlots === 1 ? "" : "s"} — acca locks at first kickoff`;
     } else {
-      banner = `Waiting on ${pending.length} leg${pending.length === 1 ? "" : "s"}`;
+      banner = `Waiting on ${pendingSlots} leg${pendingSlots === 1 ? "" : "s"}${
+        legsPerMember > 1 ? ` (${legsPerMember} each)` : ""
+      }`;
     }
   } else if (status === "locked") {
     banner = "Acca locked — place your bet at the bookmaker";
@@ -124,21 +135,26 @@ export function RoundProgress({
           {status === "open" && firstKickoff && pending.length > 0 ? (
             <Text style={styles.bannerHint}>
               Locks {formatKickoff(firstKickoff.toISOString())} — members who
-              haven&apos;t picked will miss this acca
+              haven&apos;t finished their picks will miss this acca
             </Text>
           ) : null}
         </View>
       ) : null}
       {members.map((member) => {
-        const submitted = submittedIds.has(member.id);
+        const count = counts.get(member.id) ?? 0;
+        const complete = count >= legsPerMember;
         return (
           <View key={member.id} style={styles.memberRow}>
             <Text style={styles.memberName}>
               {member.name}
               {member.role === "owner" ? " (owner)" : ""}
             </Text>
-            <Text style={submitted ? styles.submitted : styles.meta}>
-              {submitted ? "✓ Submitted" : "Pending"}
+            <Text style={complete ? styles.submitted : styles.meta}>
+              {legsPerMember === 1
+                ? complete
+                  ? "✓ Submitted"
+                  : "Pending"
+                : `${count}/${legsPerMember}${complete ? " ✓" : ""}`}
             </Text>
           </View>
         );
@@ -152,11 +168,13 @@ export function LegsList({
   legLinks,
   showOpenLinks = false,
   inProgress = false,
+  showLegIndex = false,
 }: {
   legs: GroupLeg[];
   legLinks?: BetslipLinks["legLinks"];
   showOpenLinks?: boolean;
   inProgress?: boolean;
+  showLegIndex?: boolean;
 }) {
   if (legs.length === 0) {
     return <Text style={styles.meta}>No legs submitted yet.</Text>;
@@ -175,6 +193,10 @@ export function LegsList({
           inProgress && leg.outcome !== "pending"
             ? outcomeColors(leg.outcome)
             : outcomeColors("pending");
+        const nameLabel =
+          showLegIndex && leg.legIndex != null
+            ? `${leg.user.name} · leg ${leg.legIndex}`
+            : leg.user.name;
 
         return (
           <View
@@ -187,7 +209,7 @@ export function LegsList({
             ]}
           >
             <View style={styles.legHeader}>
-              <Text style={styles.legUser}>{leg.user.name}</Text>
+              <Text style={styles.legUser}>{nameLabel}</Text>
               <View style={styles.legHeaderRight}>
                 {showOutcome ? (
                   <View
@@ -446,6 +468,7 @@ export function SubmitLegForm({
   onSubmitted,
   editLegId,
   onCancel,
+  title,
 }: {
   roundId: string;
   token: string;
@@ -453,6 +476,7 @@ export function SubmitLegForm({
   /** When set, the form edits this existing leg (PATCH) instead of submitting a new one. */
   editLegId?: string;
   onCancel?: () => void;
+  title?: string;
 }) {
   const [competitions, setCompetitions] = useState<CompetitionOption[]>([]);
   const [loadingCompetitions, setLoadingCompetitions] = useState(true);
@@ -623,7 +647,9 @@ export function SubmitLegForm({
 
   return (
     <Card>
-      <Text style={styles.sectionTitle}>{editLegId ? "Change your leg" : "Submit your leg"}</Text>
+      <Text style={styles.sectionTitle}>
+        {title ?? (editLegId ? "Change your leg" : "Submit your leg")}
+      </Text>
 
       <Text style={styles.stepLabel}>1. Competition</Text>
       {competitions.map((c) => (

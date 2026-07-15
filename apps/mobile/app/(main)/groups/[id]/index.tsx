@@ -35,7 +35,7 @@ export default function GroupRoundScreen() {
   const { token, user } = useAuth();
   const { data, error, reload } = useGroupData();
   const [refreshing, setRefreshing] = useState(false);
-  const [editing, setEditing] = useState(false);
+  const [editingLegId, setEditingLegId] = useState<string | null>(null);
 
   if (!data) {
     return (
@@ -47,12 +47,13 @@ export default function GroupRoundScreen() {
 
   const round = data.activeRound;
   const members = data.group.members ?? [];
-  const myLeg = round?.legs.find((l) => l.user.id === user?.id);
-  const canSubmit = round?.status === "open" && !myLeg && user?.id;
+  const legsPerMember = round?.legsPerMember ?? data.group.legsPerMember ?? 1;
+  const myLegs = round?.legs.filter((l) => l.user.id === user?.id) ?? [];
+  const canSubmitMore =
+    round?.status === "open" && myLegs.length < legsPerMember && Boolean(user?.id);
   const isLocked = round?.status === "locked";
   const isOpen = round?.status === "open";
 
-  // Picks can be edited until the first match in the acca kicks off.
   const firstKickoff =
     round && round.legs.length > 0
       ? new Date(Math.min(...round.legs.map((l) => new Date(l.kickoff).getTime())))
@@ -82,6 +83,8 @@ export default function GroupRoundScreen() {
     }
   }
 
+  const nextSlot = myLegs.length + 1;
+
   return (
     <ScrollView
       style={styles.scroll}
@@ -97,6 +100,7 @@ export default function GroupRoundScreen() {
             legs={round.legs}
             status={round.status}
             firstKickoff={firstKickoff}
+            legsPerMember={legsPerMember}
           />
         </View>
       ) : null}
@@ -110,11 +114,15 @@ export default function GroupRoundScreen() {
       {round ? (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Picks</Text>
+          {legsPerMember > 1 ? (
+            <Text style={styles.meta}>{legsPerMember} legs each this round</Text>
+          ) : null}
           <LegsList
             legs={round.legs}
             legLinks={data.betslipLinks?.legLinks}
             showOpenLinks={isLocked && resolvedLegs === 0}
             inProgress={isLocked}
+            showLegIndex={legsPerMember > 1}
           />
         </View>
       ) : null}
@@ -153,34 +161,60 @@ export default function GroupRoundScreen() {
         );
       })()}
 
-      {canSubmit && round && token ? (
-        <SubmitLegForm roundId={round.id} token={token} onSubmitted={reload} />
-      ) : null}
-
-      {myLeg && editWindowOpen && !editing ? (
-        <Card>
-          <Text style={styles.editTitle}>
-            Your pick: {myLeg.selectionLabel} ({myLeg.odds})
-          </Text>
-          <Text style={styles.editMeta}>
-            You can change it until the first kickoff
-            {firstKickoff ? ` — ${formatCutoff(firstKickoff)}` : ""}.
-            {isLocked ? " Changing a pick reprices the whole acca at current odds." : ""}
-          </Text>
-          <Button label="Change my pick" onPress={() => setEditing(true)} variant="secondary" />
-        </Card>
-      ) : null}
-
-      {myLeg && editWindowOpen && editing && round && token ? (
+      {canSubmitMore && !editingLegId && round && token ? (
         <SubmitLegForm
           roundId={round.id}
           token={token}
-          editLegId={myLeg.id}
+          onSubmitted={reload}
+          title={
+            legsPerMember > 1
+              ? `Submit leg ${nextSlot} of ${legsPerMember}`
+              : undefined
+          }
+        />
+      ) : null}
+
+      {myLegs.length > 0 && editWindowOpen && !editingLegId ? (
+        <Card>
+          <Text style={styles.editTitle}>Your picks</Text>
+          <Text style={styles.editMeta}>
+            You can change them until the first kickoff
+            {firstKickoff ? ` — ${formatCutoff(firstKickoff)}` : ""}.
+            {isLocked ? " Changing a pick reprices the whole acca at current odds." : ""}
+          </Text>
+          {myLegs.map((leg) => (
+            <View key={leg.id} style={styles.myLegRow}>
+              <Text style={styles.myLegText}>
+                {legsPerMember > 1 ? `Leg ${leg.legIndex ?? ""}: ` : ""}
+                {leg.selectionLabel} ({leg.odds})
+              </Text>
+              <Button
+                label="Change"
+                onPress={() => setEditingLegId(leg.id)}
+                variant="secondary"
+              />
+            </View>
+          ))}
+        </Card>
+      ) : null}
+
+      {editingLegId && editWindowOpen && round && token ? (
+        <SubmitLegForm
+          roundId={round.id}
+          token={token}
+          editLegId={editingLegId}
           onSubmitted={() => {
-            setEditing(false);
+            setEditingLegId(null);
             void reload();
           }}
-          onCancel={() => setEditing(false)}
+          onCancel={() => setEditingLegId(null)}
+          title={
+            legsPerMember > 1
+              ? `Change leg ${
+                  myLegs.find((l) => l.id === editingLegId)?.legIndex ?? ""
+                }`
+              : undefined
+          }
         />
       ) : null}
 
@@ -199,48 +233,28 @@ export default function GroupRoundScreen() {
 }
 
 const styles = StyleSheet.create({
-  scroll: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  content: {
-    padding: 20,
-    paddingBottom: 40,
-    gap: 12,
-  },
+  scroll: { flex: 1, backgroundColor: colors.bg },
+  content: { padding: 16, paddingBottom: 40, gap: 16 },
   centered: {
     flex: 1,
-    justifyContent: "center",
     alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.bg,
   },
-  section: {
-    gap: 8,
-  },
-  sectionTitle: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: "600",
-  },
+  section: { gap: 8 },
+  sectionTitle: { color: colors.text, fontSize: 18, fontWeight: "600" },
+  meta: { color: colors.muted, fontSize: 13 },
   lockedBanner: {
     borderWidth: 1,
     borderColor: "rgba(34, 197, 94, 0.3)",
     backgroundColor: "rgba(20, 83, 45, 0.4)",
-    borderRadius: 10,
-    padding: 12,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
-  lockedBannerText: {
-    color: colors.accent,
-    fontSize: 14,
-  },
-  editTitle: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  editMeta: {
-    color: colors.muted,
-    fontSize: 13,
-    marginTop: 4,
-    marginBottom: 8,
-  },
+  lockedBannerText: { color: colors.accent, fontSize: 14 },
+  editTitle: { color: colors.text, fontWeight: "600", marginBottom: 4 },
+  editMeta: { color: colors.muted, fontSize: 13, marginBottom: 12 },
+  myLegRow: { gap: 8, marginBottom: 10 },
+  myLegText: { color: colors.text, fontSize: 14 },
 });

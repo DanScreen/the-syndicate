@@ -36,6 +36,7 @@ function mergeMarkets(bulk: Market[], extended: Market[]): Market[] {
 type Leg = {
   id: string;
   user: { id: string; name: string };
+  legIndex?: number;
   homeTeam: string;
   awayTeam: string;
   competition: string;
@@ -88,24 +89,37 @@ export function RoundProgress({
   legs,
   status,
   firstKickoff,
+  legsPerMember = 1,
 }: {
   members: Member[];
   legs: Leg[];
   status: string;
   /** Earliest kickoff among submitted legs — acca locks when this match starts. */
   firstKickoff?: Date | null;
+  legsPerMember?: number;
 }) {
-  const submittedIds = new Set(legs.map((l) => l.user.id));
-  const pending = members.filter((m) => !submittedIds.has(m.id));
+  const counts = new Map<string, number>();
+  for (const leg of legs) {
+    counts.set(leg.user.id, (counts.get(leg.user.id) ?? 0) + 1);
+  }
+  const pending = members.filter(
+    (m) => (counts.get(m.id) ?? 0) < legsPerMember
+  );
+  const pendingSlots = pending.reduce(
+    (sum, m) => sum + (legsPerMember - (counts.get(m.id) ?? 0)),
+    0
+  );
 
   let banner = "";
   if (status === "open") {
     if (pending.length === 0) {
       banner = "Everyone has submitted — locking acca...";
     } else if (firstKickoff) {
-      banner = `Waiting on ${pending.length} leg${pending.length === 1 ? "" : "s"} — acca locks at first kickoff`;
+      banner = `Waiting on ${pendingSlots} leg${pendingSlots === 1 ? "" : "s"} — acca locks at first kickoff`;
     } else {
-      banner = `Waiting on ${pending.length} leg${pending.length === 1 ? "" : "s"}`;
+      banner = `Waiting on ${pendingSlots} leg${pendingSlots === 1 ? "" : "s"}${
+        legsPerMember > 1 ? ` (${legsPerMember} each)` : ""
+      }`;
     }
   } else if (status === "locked") {
     banner = "Acca locked — place your bet at the bookmaker";
@@ -121,15 +135,15 @@ export function RoundProgress({
           {status === "open" && firstKickoff && pending.length > 0 ? (
             <p className="mt-1 text-xs text-accent/80">
               Locks {formatKickoff(firstKickoff.toISOString())} — members who
-              haven&apos;t picked will miss this acca
+              haven&apos;t finished their picks will miss this acca
             </p>
           ) : null}
         </div>
       )}
       <ul className="space-y-2">
         {members.map((member) => {
-          const leg = legs.find((l) => l.user.id === member.id);
-          const submitted = Boolean(leg);
+          const count = counts.get(member.id) ?? 0;
+          const complete = count >= legsPerMember;
           return (
             <li
               key={member.id}
@@ -141,8 +155,12 @@ export function RoundProgress({
                   <span className="ml-2 text-xs text-muted">owner</span>
                 )}
               </span>
-              <span className={submitted ? "text-accent" : "text-muted"}>
-                {submitted ? "✓ Submitted" : "Pending"}
+              <span className={complete ? "text-accent" : "text-muted"}>
+                {legsPerMember === 1
+                  ? complete
+                    ? "✓ Submitted"
+                    : "Pending"
+                  : `${count}/${legsPerMember}${complete ? " ✓" : ""}`}
               </span>
             </li>
           );
@@ -159,12 +177,15 @@ export function SubmitLegForm({
   onSubmitted,
   editLegId,
   onCancel,
+  title,
 }: {
   roundId: string;
   onSubmitted: () => void;
   /** When set, the form edits this existing leg (PATCH) instead of submitting a new one. */
   editLegId?: string;
   onCancel?: () => void;
+  /** Override default heading (e.g. "Submit leg 2 of 3"). */
+  title?: string;
 }) {
   const [competitions, setCompetitions] = useState<Competition[]>([]);
   const [loadingCompetitions, setLoadingCompetitions] = useState(true);
@@ -341,7 +362,9 @@ export function SubmitLegForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-border bg-card p-4">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="font-semibold">{editLegId ? "Change your leg" : "Submit your leg"}</h3>
+        <h3 className="font-semibold">
+          {title ?? (editLegId ? "Change your leg" : "Submit your leg")}
+        </h3>
         {competitionId && source === "live" && oddsConfigured && fixtures.length > 0 && (
           <span className="rounded-full bg-accent-muted px-2 py-0.5 text-xs text-accent">
             Live odds
@@ -774,12 +797,14 @@ export function LegsList({
   legLinks,
   showOpenLinks = false,
   inProgress = false,
+  showLegIndex = false,
 }: {
   legs: Leg[];
   legLinks?: { legId: string; url: string | null }[];
   showOpenLinks?: boolean;
   /** Locked acca awaiting results — show outcomes and frozen leg odds. */
   inProgress?: boolean;
+  showLegIndex?: boolean;
 }) {
   if (legs.length === 0) {
     return <p className="text-sm text-muted">No legs submitted yet.</p>;
@@ -794,6 +819,10 @@ export function LegsList({
       {legs.map((leg) => {
         const openUrl = showOpenLinks ? linkByLegId.get(leg.id) : undefined;
         const showOutcome = inProgress || leg.outcome !== "pending";
+        const nameLabel =
+          showLegIndex && leg.legIndex != null
+            ? `${leg.user.name} · leg ${leg.legIndex}`
+            : leg.user.name;
 
         return (
           <li
@@ -807,7 +836,7 @@ export function LegsList({
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-medium">{leg.user.name}</span>
+                  <span className="font-medium">{nameLabel}</span>
                   <div className="flex shrink-0 items-center gap-2">
                     {showOutcome && (
                       <span

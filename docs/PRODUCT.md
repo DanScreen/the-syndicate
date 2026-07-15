@@ -25,11 +25,12 @@ Owner creates group (name only) → invite code + link. Anyone with the link can
 
 ### 3. Build the acca
 1. Each group has an always-open round on the **Round** tab — no manual start step
-2. Each member picks a **competition**, fixture, market, selection (4-step form)
-3. **Best odds only** shown per selection
-4. All legs in **or the first submitted leg kicks off** → acca **locks** with best combined bookmaker (members who haven't picked miss that round)
-5. Members receive **email notification** when acca locks (if Resend configured)
-6. When a round settles, the next open round starts automatically
+2. Group owner sets **legs per member** (1, 2, or 3 — default 1) when creating the group or in **Settings**; the quota is snapshotted onto each open round
+3. Each member picks a **competition**, fixture, market, selection (4-step form) for each of their legs
+4. **Best odds only** shown per selection
+5. Everyone fills their quota **or the first submitted leg kicks off** → acca **locks** with best combined bookmaker (members under quota miss or enter partial)
+6. Members receive **email notification** when acca locks (if Resend configured)
+7. When a round settles, the next open round starts automatically (using the group's current legs-per-member setting)
 
 → [specs/competitions-and-results.md](./specs/competitions-and-results.md)
 
@@ -56,6 +57,7 @@ Platform admins (`ADMIN_EMAILS`) see an **Admin** tab in the header with `/admin
 
 ### Shipped
 - [x] Auth, groups, invite flow
+- [x] Multi-leg accas — owner sets 1 / 2 / 3 legs per member (web + mobile)
 - [x] Live odds (The Odds API) + extended markets
 - [x] Per-leg competition picker (EPL, Championship, top European leagues, World Cup)
 - [x] Leg submit, acca lock, acca bookmaker rankings
@@ -84,7 +86,7 @@ Platform admins (`ADMIN_EMAILS`) see an **Admin** tab in the header with `/admin
 - [ ] Dedicated user profile page (optional — `/performance` covers stats today)
 - [ ] FA Cup + EFL Cup competitions
 
-**Deferred:** paid subscriptions — no current plan; core loop stays free. **Multi-leg accas** (owner chooses 1 / 2 / 3 legs per player, same quota for all members; default 1) — deferred until after user validation — [specs/multi-leg-accas.md](./specs/multi-leg-accas.md).
+**Deferred:** paid subscriptions — no current plan; core loop stays free.
 
 Full priority list: [ROADMAP.md](./ROADMAP.md)
 

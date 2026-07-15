@@ -78,7 +78,7 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for GCP setup.
 - API routes: `apps/web/src/app/api/`
 - Validation: `packages/shared/src/schemas.ts`
 - Odds: `apps/web/src/lib/odds/` — live when `ODDS_API_KEY` set
-- One leg per member per round (DB unique constraint)
+- Up to `legsPerMember` legs per member per round (`legIndex` unique; default 1)
 - Build vertical slices; don't expand scope without asking
 
 ## Do not

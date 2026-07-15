@@ -1,6 +1,7 @@
 import { notifyPickReminder } from "@/lib/notifications/round-notifications";
 import { firstKickoff } from "@/lib/rounds/first-kickoff";
 import { prisma } from "@tiki-acca/database";
+import { membersMissingQuota } from "@tiki-acca/shared";
 
 const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
 
@@ -10,7 +11,7 @@ export type SendPickRemindersResult = {
 };
 
 /**
- * Remind members without a leg when first kickoff is within 2 hours.
+ * Remind members under quota when first kickoff is within 2 hours.
  * Dedup via NotificationLog prevents repeat sends if cron was late or retried.
  */
 export async function sendPickReminders(
@@ -46,21 +47,24 @@ export async function sendPickReminders(
       continue;
     }
 
-    const submittedIds = new Set(round.legs.map((l) => l.userId));
-    const pending = round.group.members.filter((m) => !submittedIds.has(m.userId));
-    if (pending.length === 0) {
+    const pendingIds = membersMissingQuota({
+      memberUserIds: round.group.members.map((m) => m.userId),
+      legs: round.legs,
+      legsPerMember: round.legsPerMember,
+    });
+    if (pendingIds.length === 0) {
       skipped++;
       continue;
     }
 
-    for (const member of pending) {
+    for (const userId of pendingIds) {
       const result = await notifyPickReminder({
-        userId: member.userId,
+        userId,
         groupId: round.group.id,
         groupName: round.group.name,
         roundId: round.id,
         deadline,
-        pendingCount: pending.length,
+        pendingCount: pendingIds.length,
       });
       if (result.email || result.push) {
         sent++;

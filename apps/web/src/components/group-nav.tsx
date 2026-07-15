@@ -3,7 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-export function GroupNav({ groupId }: { groupId: string }) {
+export function GroupNav({
+  groupId,
+  showSettings = false,
+}: {
+  groupId: string;
+  showSettings?: boolean;
+}) {
   const pathname = usePathname();
   const base = `/groups/${groupId}`;
 
@@ -24,6 +30,15 @@ export function GroupNav({ groupId }: { groupId: string }) {
       label: "Performance",
       active: pathname === `${base}/performance`,
     },
+    ...(showSettings
+      ? [
+          {
+            href: `${base}/settings`,
+            label: "Settings",
+            active: pathname === `${base}/settings`,
+          },
+        ]
+      : []),
   ];
 
   return (

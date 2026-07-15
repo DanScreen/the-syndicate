@@ -34,6 +34,8 @@ export type Fixture = {
 
 export type GroupSettings = {
   sport: "football";
+  /** Legs each member must submit per round (1–3). */
+  legsPerMember: 1 | 2 | 3;
 };
 
 export type LeaderboardEntry = {
