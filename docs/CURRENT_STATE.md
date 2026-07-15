@@ -123,7 +123,7 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 
 Example: acca @ 3.44 (legs 1.6 × 2.15) → **2.44** group pts; members **0.6** and **1.15** (not split). If that acca loses because one leg fails, the winning member still keeps `odds − 1` while the losing member gets `−1` (group still `−1`).
 
-**Stats:** `groupAccaRoundPoints()` for group totals; `memberAccaLegPoints()` for members. Leaderboard `pointsAwarded` backfilled by migration `20260712160000_member_leg_acca_points`. After the July 2026 lost-acca member scoring change, run `npm run db:maintenance -- rescore-member-legs --execute` on prod to rewrite historical `pointsAwarded` + totals.
+**Stats:** `groupAccaRoundPoints()` for group totals; `memberAccaLegPoints()` for members. Group leaderboard points on `GET /api/groups/[id]` are **recomputed live** from settled rounds (same helpers as Performance) — not stored `GroupMember.points`, which can lag scoring-rule changes. Performance charts use bet number on the X-axis (`Bet N` / `Start`); settlement date is shown in tooltips (`dateLabel`) so same-day rounds do not collide. Stored `pointsAwarded` / totals can still be rewritten with `npm run db:maintenance -- rescore-member-legs --execute` after scoring-rule changes.
 
 **Points-first UX:** Points are the **primary metric** across performance pages, leaderboards, share cards, and round history. Users convert points to money with `profitFromPoints(points, stake)` — profit = points × stake (£). UI: `StakeProfit` component (default stake £10). **Group / acca points** use `pointsTone()` (negative → red). **Individual pick rows** use `pointsToneFromOutcome()` (won → green, lost → red).
 
@@ -368,7 +368,7 @@ Member summary **best / worst leg** = highest / lowest decimal odds across the m
 | `apps/web/src/lib/stats/compute-member-stats.ts` | Member breakdown |
 | `apps/web/src/lib/stats/compute-user-stats.ts` | Cross-group user stats |
 | `apps/web/src/lib/stats/compute-member-chart.ts` | Multi-member chart series |
-| `apps/web/src/lib/stats/helpers.ts` | Shared helpers (favourites, best/worst); `CHART_ORIGIN_LABEL` (`Start`) prepended to chart series at 0 pts |
+| `apps/web/src/lib/stats/helpers.ts` | Shared helpers (favourites, best/worst, live net points); chart labels `formatBetAxisLabel` + `formatSettledDateLabel`; `CHART_ORIGIN_LABEL` (`Start`) at 0 pts |
 | `apps/web/src/components/group-stats.tsx` | Group performance UI (Recharts) |
 | `apps/web/src/components/dashboard-stats.tsx` | Cross-group performance UI (`/performance`) |
 | `apps/web/src/components/share-card.tsx` | Shareable performance image (PNG) + copy text fallback |

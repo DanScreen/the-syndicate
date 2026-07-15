@@ -9,6 +9,7 @@ import { claimAndLockRound } from "@/lib/rounds/claim-lock-round";
 import { isPastKickoffCutoff } from "@/lib/rounds/first-kickoff";
 import { lockOpenRoundsAtKickoff } from "@/lib/rounds/lock-open-rounds-at-kickoff";
 import { openRound } from "@/lib/rounds/open-round";
+import { memberNetPointsAcrossRounds } from "@/lib/stats/helpers";
 import { prisma } from "@tiki-acca/database";
 import type { AccaBookmakerRanking } from "@tiki-acca/shared";
 import {
@@ -117,12 +118,18 @@ export async function GET(_request: Request, { params }: Params) {
     }
   }
 
-  const recentSettled = await prisma.round.findMany({
-    where: { groupId: id, status: "settled" },
-    orderBy: [{ settledAt: "desc" }, { createdAt: "desc" }],
-    take: 3,
-    include: recentRoundInclude,
-  });
+  const [recentSettled, settledForLeaderboard] = await Promise.all([
+    prisma.round.findMany({
+      where: { groupId: id, status: "settled" },
+      orderBy: [{ settledAt: "desc" }, { createdAt: "desc" }],
+      take: 3,
+      include: recentRoundInclude,
+    }),
+    prisma.round.findMany({
+      where: { groupId: id, status: "settled" },
+      include: { legs: true },
+    }),
+  ]);
 
   let accaBookmakerRankings: AccaBookmakerRanking[] | null = null;
   let betslipLinks = null;
@@ -162,14 +169,18 @@ export async function GET(_request: Request, { params }: Params) {
     }
   }
 
-  const leaderboard = group.members.map((m) => ({
-    userId: m.user.id,
-    name: m.user.name,
-    points: m.points,
-    legsWon: m.legsWon,
-    legsLost: m.legsLost,
-    role: m.role,
-  }));
+  // Live points (same rules as Performance) — denormalized GroupMember.points
+  // can be stale after scoring rule changes / equal-split backfills.
+  const leaderboard = group.members
+    .map((m) => ({
+      userId: m.user.id,
+      name: m.user.name,
+      points: memberNetPointsAcrossRounds(settledForLeaderboard, m.user.id),
+      legsWon: m.legsWon,
+      legsLost: m.legsLost,
+      role: m.role,
+    }))
+    .sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
 
   const sortedActiveLegs = activeRound
     ? [...activeRound.legs].sort((a, b) => {

@@ -1,6 +1,6 @@
 import {
-  formatRoundLabel,
-  memberPointsInRound,
+  formatBetAxisLabel,
+  formatSettledDateLabel,
   roundAccaWon,
   roundGroupPoints,
   sortedSettledRounds,
@@ -26,7 +26,10 @@ export type GroupStatsSummary = {
 export type GroupStatsChartPoint = {
   roundNumber: number;
   roundId: string;
+  /** Unique X-axis category, e.g. "Bet 3" or "Start". */
   label: string;
+  /** Settlement date for tooltips; empty at origin. */
+  dateLabel: string;
   roundPoints: number;
   cumulativePoints: number;
 };
@@ -54,12 +57,14 @@ export function computeGroupStats(
 
   let cumulativePoints = 0;
   const chartPoints: GroupStatsChartPoint[] = settled.map((round, index) => {
+    const roundNumber = index + 1;
     const roundPoints = roundGroupPoints(round);
     cumulativePoints += roundPoints;
     return {
-      roundNumber: index + 1,
+      roundNumber,
       roundId: round.id,
-      label: formatRoundLabel(round, index + 1),
+      label: formatBetAxisLabel(roundNumber),
+      dateLabel: formatSettledDateLabel(round.settledAt) ?? "",
       roundPoints: Number(roundPoints.toFixed(2)),
       cumulativePoints: Number(cumulativePoints.toFixed(2)),
     };
@@ -72,6 +77,7 @@ export function computeGroupStats(
             roundNumber: 0,
             roundId: "",
             label: CHART_ORIGIN_LABEL,
+            dateLabel: "",
             roundPoints: 0,
             cumulativePoints: 0,
           },

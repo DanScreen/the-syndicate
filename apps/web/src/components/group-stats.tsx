@@ -75,6 +75,9 @@ function GroupChartTooltip({
   return (
     <div className="rounded-lg border border-border bg-card px-3 py-2 text-sm shadow-lg">
       <p className="font-medium">{point.label}</p>
+      {!isOrigin && point.dateLabel ? (
+        <p className="text-xs text-muted">{point.dateLabel}</p>
+      ) : null}
       {!isOrigin ? (
         <p className="mt-1 text-muted">Round: {formatLegPoints(point.roundPoints)} pts</p>
       ) : null}
@@ -88,19 +91,21 @@ function GroupChartTooltip({
 function MemberChartTooltip({
   active,
   payload,
-  label,
   members,
 }: {
   active?: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload?: readonly any[];
-  label?: string;
   members: MemberSeries[];
 }) {
   if (!active || !payload?.length) return null;
+  const point = payload[0]?.payload as MemberChartPoint | undefined;
   return (
     <div className="rounded-lg border border-border bg-card px-3 py-2 text-sm shadow-lg">
-      <p className="font-medium">{label}</p>
+      <p className="font-medium">{point?.label ?? "Bet"}</p>
+      {point?.dateLabel ? (
+        <p className="text-xs text-muted">{point.dateLabel}</p>
+      ) : null}
       <ul className="mt-2 space-y-1">
         {payload.map((entry) => {
           const key = String(entry.dataKey ?? "");
@@ -302,7 +307,8 @@ export function GroupStats({ groupId, groupName }: { groupId: string; groupName?
             <LineChart data={chart} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
               <CartesianGrid stroke="#1f2937" strokeDasharray="3 3" />
               <XAxis
-                dataKey="label"
+                dataKey="roundNumber"
+                tickFormatter={(n: number) => (n === 0 ? "Start" : String(n))}
                 tick={{ fill: "#94a3b8", fontSize: 11 }}
                 tickLine={false}
                 axisLine={{ stroke: "#1f2937" }}
@@ -336,7 +342,8 @@ export function GroupStats({ groupId, groupName }: { groupId: string; groupName?
             <LineChart data={memberChart} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
               <CartesianGrid stroke="#1f2937" strokeDasharray="3 3" />
               <XAxis
-                dataKey="label"
+                dataKey="roundNumber"
+                tickFormatter={(n: number) => (n === 0 ? "Start" : String(n))}
                 tick={{ fill: "#94a3b8", fontSize: 11 }}
                 tickLine={false}
                 axisLine={{ stroke: "#1f2937" }}
@@ -352,7 +359,6 @@ export function GroupStats({ groupId, groupName }: { groupId: string; groupName?
                   <MemberChartTooltip
                     active={props.active}
                     payload={props.payload}
-                    label={typeof props.label === "string" ? props.label : undefined}
                     members={members}
                   />
                 )}

@@ -1,4 +1,11 @@
-import { formatRoundLabel, memberPointsInRound, sortedSettledRounds, CHART_ORIGIN_LABEL, type RoundWithLegs } from "./helpers";
+import {
+  formatBetAxisLabel,
+  formatSettledDateLabel,
+  memberPointsInRound,
+  sortedSettledRounds,
+  CHART_ORIGIN_LABEL,
+  type RoundWithLegs,
+} from "./helpers";
 
 export type MemberSeries = {
   userId: string;
@@ -7,7 +14,10 @@ export type MemberSeries = {
 
 export type MemberChartPoint = {
   roundNumber: number;
+  /** Unique X-axis category, e.g. "Bet 3" or "Start". */
   label: string;
+  /** Settlement date for tooltips; empty at origin. */
+  dateLabel: string;
   [userId: string]: number | string;
 };
 
@@ -22,9 +32,11 @@ export function computeMemberChart(
   }
 
   const points = settled.map((round, index) => {
+    const roundNumber = index + 1;
     const point: MemberChartPoint = {
-      roundNumber: index + 1,
-      label: formatRoundLabel(round, index + 1),
+      roundNumber,
+      label: formatBetAxisLabel(roundNumber),
+      dateLabel: formatSettledDateLabel(round.settledAt) ?? "",
     };
 
     for (const member of members) {
@@ -43,6 +55,7 @@ export function computeMemberChart(
   const origin: MemberChartPoint = {
     roundNumber: 0,
     label: CHART_ORIGIN_LABEL,
+    dateLabel: "",
   };
   for (const member of members) {
     origin[member.userId] = 0;

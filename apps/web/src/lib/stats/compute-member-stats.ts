@@ -4,7 +4,8 @@ import type { LegHighlight } from "@tiki-acca/shared";
 import {
   favouriteCategory,
   bestWorstCategory,
-  formatRoundLabel,
+  formatBetAxisLabel,
+  formatSettledDateLabel,
   memberPointsInRound,
   roundAccaWon,
   roundById,
@@ -26,6 +27,7 @@ export type MemberStatsSummary = {
 export type MemberStatsChartPoint = {
   roundNumber: number;
   label: string;
+  dateLabel: string;
   roundPoints: number;
   cumulativePoints: number;
 };
@@ -64,11 +66,13 @@ export function computeMemberStats(
 
   let cumulative = 0;
   const chartPoints: MemberStatsChartPoint[] = settled.map((round, index) => {
+    const roundNumber = index + 1;
     const roundPoints = memberPointsInRound(round, userId);
     cumulative += roundPoints;
     return {
-      roundNumber: index + 1,
-      label: formatRoundLabel(round, index + 1),
+      roundNumber,
+      label: formatBetAxisLabel(roundNumber),
+      dateLabel: formatSettledDateLabel(round.settledAt) ?? "",
       roundPoints: Number(roundPoints.toFixed(2)),
       cumulativePoints: Number(cumulative.toFixed(2)),
     };
@@ -80,6 +84,7 @@ export function computeMemberStats(
           {
             roundNumber: 0,
             label: CHART_ORIGIN_LABEL,
+            dateLabel: "",
             roundPoints: 0,
             cumulativePoints: 0,
           },

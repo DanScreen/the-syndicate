@@ -1,5 +1,6 @@
 import {
-  formatRoundLabel,
+  formatBetAxisLabel,
+  formatSettledDateLabel,
   memberPointsInRound,
   roundAccaWon,
   roundSortKey,
@@ -27,6 +28,7 @@ export type UserStatsGroupBreakdown = {
 export type UserStatsChartPoint = {
   roundNumber: number;
   label: string;
+  dateLabel: string;
   roundPoints: number;
   cumulativePoints: number;
   groupId: string;
@@ -95,11 +97,13 @@ export function computeUserStats(
 
   let cumulativePoints = 0;
   const chartPoints: UserStatsChartPoint[] = userRoundEntries.map((entry, index) => {
+    const roundNumber = index + 1;
     const roundPoints = memberPointsInRound(entry.round, userId);
     cumulativePoints += roundPoints;
     return {
-      roundNumber: index + 1,
-      label: formatRoundLabel(entry.round, index + 1),
+      roundNumber,
+      label: formatBetAxisLabel(roundNumber),
+      dateLabel: formatSettledDateLabel(entry.round.settledAt) ?? "",
       roundPoints: Number(roundPoints.toFixed(2)),
       cumulativePoints: Number(cumulativePoints.toFixed(2)),
       groupId: entry.groupId,
@@ -115,6 +119,7 @@ export function computeUserStats(
           {
             roundNumber: 0,
             label: CHART_ORIGIN_LABEL,
+            dateLabel: "",
             roundPoints: 0,
             cumulativePoints: 0,
             groupId: "",
@@ -170,10 +175,12 @@ export function filterUserStatsByGroup(
 
   let cumulativePoints = 0;
   const chartPoints: UserStatsChartPoint[] = roundPoints.map((point, index) => {
+    const roundNumber = index + 1;
     cumulativePoints += point.roundPoints;
     return {
       ...point,
-      roundNumber: index + 1,
+      roundNumber,
+      label: formatBetAxisLabel(roundNumber),
       cumulativePoints: Number(cumulativePoints.toFixed(2)),
     };
   });
@@ -185,6 +192,7 @@ export function filterUserStatsByGroup(
           {
             roundNumber: 0,
             label: CHART_ORIGIN_LABEL,
+            dateLabel: "",
             roundPoints: 0,
             cumulativePoints: 0,
             groupId: "",
