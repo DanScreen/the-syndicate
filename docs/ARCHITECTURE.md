@@ -93,7 +93,7 @@ Split config: edge-safe `auth.config.ts` (middleware, no Prisma) + `auth.ts` (cr
 → [specs/platform-admin.md](./specs/platform-admin.md)
 
 ### Marketing (public)
-Homepage (`/`), about (`/about`) — public and reachable when signed in via `MarketingHeader` (session-aware). Turf Green tokens + Acca stack logo. Content in `lib/marketing-content.ts`.
+Homepage (`/`), about (`/about`), blog (`/blog`) — public and reachable when signed in via `MarketingHeader` (session-aware). Turf Green tokens + Triangle rondo logo. Copy in `lib/marketing-content.ts`. **Blog is file-based**: MDX posts in `apps/web/content/blog/` rendered statically at build (`lib/blog.ts`, next-mdx-remote) — no DB, no CMS; publishing = git push. `sitemap.ts` + `robots.ts` cover marketing + blog routes.
 
 → [BRAND.md](./BRAND.md)
 
