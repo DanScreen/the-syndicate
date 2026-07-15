@@ -195,7 +195,7 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 
 | Path | Purpose |
 |------|---------|
-| `/` | Landing — hero, value props, how it works, FAQ, CTA (signed-in: app header + Groups/Performance CTAs) |
+| `/` | Landing — hero, value props, how it works, FAQ, CTA (signed-in: marketing header + Groups/Performance CTAs) |
 | `/about` | Product story, what we are/aren’t, responsible gambling (reachable when signed in) |
 | `/sign-in`, `/sign-up` | Auth — sign-up collects **first name** + **last name** |
 | `/dashboard` | **Groups home** — list of user's groups; **group/your points**; **current betslip** legs (fixture, market, selection, odds); waiting status if you haven't picked |
