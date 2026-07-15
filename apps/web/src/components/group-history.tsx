@@ -1,5 +1,6 @@
 "use client";
 
+import { PointsText, pointsTextClass } from "@/components/points-text";
 import {
   formatLegPoints,
   formatRoundStatusBadge,
@@ -55,7 +56,7 @@ export function HistoryRoundCard({ round }: { round: HistoryRound }) {
             {formatRoundStatusBadge(round.status)}
             {settledLabel ? ` · ${settledLabel}` : ""}
           </p>
-          <p className="mt-1 text-lg font-semibold text-accent">
+          <p className={`mt-1 text-lg font-semibold tabular-nums ${pointsTextClass(roundPoints)}`}>
             {formatLegPoints(roundPoints)} pts
           </p>
         </div>
@@ -89,9 +90,12 @@ export function HistoryRoundCard({ round }: { round: HistoryRound }) {
             </p>
             <p className="mt-1 text-xs text-muted">
               {leg.competition} · {formatKickoff(leg.kickoff)}
-              {leg.pointsAwarded !== 0
-                ? ` · ${formatLegPoints(leg.pointsAwarded)} pts`
-                : ""}
+              {leg.pointsAwarded !== 0 ? (
+                <>
+                  {" · "}
+                  <PointsText points={leg.pointsAwarded} className="text-xs" />
+                </>
+              ) : null}
             </p>
           </li>
         ))}

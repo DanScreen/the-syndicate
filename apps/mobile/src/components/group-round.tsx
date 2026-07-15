@@ -28,6 +28,7 @@ import {
   bookmakerRankPlace,
   groupMarkets,
   isMarketTakenOnFixture,
+  pointsTone,
   sortQuotesByBestOdds,
   type LegOutcome,
   type MarketConflictLeg,
@@ -87,6 +88,13 @@ function outcomeColors(outcome: string) {
     bg: colors.card,
     text: colors.muted,
   };
+}
+
+function pointsStyle(value: number) {
+  const tone = pointsTone(value);
+  if (tone === "positive") return { color: colors.accent };
+  if (tone === "negative") return { color: colors.danger };
+  return { color: colors.muted };
 }
 
 export function RoundProgress({
@@ -807,7 +815,9 @@ export function Leaderboard({
               {entry.legsWon}W / {entry.legsLost}L
             </Text>
           </View>
-          <Text style={styles.odds}>{formatLegPoints(entry.points)} pts</Text>
+          <Text style={[styles.odds, pointsStyle(entry.points)]}>
+            {formatLegPoints(entry.points)} pts
+          </Text>
         </View>
       ))}
     </View>
@@ -856,7 +866,9 @@ export function RoundHistory({
                 <Text style={styles.odds}>Acca @ {round.combinedOdds}</Text>
               ) : null}
             </View>
-            <Text style={styles.odds}>{formatLegPoints(roundPoints)} pts</Text>
+            <Text style={[styles.odds, pointsStyle(roundPoints)]}>
+              {formatLegPoints(roundPoints)} pts
+            </Text>
             {round.legs.map((leg) => (
               <View key={leg.id} style={styles.historyLeg}>
                 <View style={styles.historyHeader}>
