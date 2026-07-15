@@ -2,7 +2,7 @@
 
 **Pitch:** Social groups where each member adds one leg to a shared football acca, track performance together, compete on picks.
 
-**Brand & marketing:** [BRAND.md](./BRAND.md) · Public pages: `/`, `/about`
+**Brand & marketing:** [BRAND.md](./BRAND.md) · Public pages: `/`, `/about` (still reachable when signed in; logo → home)
 
 **As-built detail:** [CURRENT_STATE.md](./CURRENT_STATE.md) · **Planned features:** [specs/](./specs/) · **Next work:** [ROADMAP.md](./ROADMAP.md)
 

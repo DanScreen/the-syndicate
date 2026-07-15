@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { auth } from "@/lib/auth";
+import { MarketingCtas } from "@/components/marketing/marketing-ctas";
 import { MarketingShell } from "@/components/marketing/marketing-shell";
 import {
   audiences,
@@ -36,7 +37,10 @@ function Icon({ name }: { name: (typeof valueProps)[number]["icon"] }) {
   );
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  const session = await auth();
+  const signedIn = Boolean(session?.user?.id);
+
   return (
     <MarketingShell path="/">
       {/* Hero */}
@@ -50,18 +54,7 @@ export default function HomePage() {
               {hero.subhead}
             </p>
             <div className="mt-10 flex flex-wrap gap-3">
-              <Link
-                href="/sign-up"
-                className="rounded-xl bg-accent px-6 py-3 font-medium text-black transition-colors hover:bg-accent-bright"
-              >
-                Sign up
-              </Link>
-              <Link
-                href="/sign-in"
-                className="rounded-xl border border-border px-6 py-3 font-medium transition-colors hover:bg-card"
-              >
-                Sign in
-              </Link>
+              <MarketingCtas signedIn={signedIn} />
             </div>
           </div>
 
@@ -180,18 +173,11 @@ export default function HomePage() {
             One leg each. Best odds locked. Bragging rights forever.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link
-              href="/sign-up"
-              className="rounded-xl bg-accent px-8 py-3.5 font-medium text-black transition-colors hover:bg-accent-bright"
-            >
-              Sign up
-            </Link>
-            <Link
-              href="/sign-in"
-              className="rounded-xl border border-border px-8 py-3.5 font-medium transition-colors hover:bg-card"
-            >
-              Sign in
-            </Link>
+            <MarketingCtas
+              signedIn={signedIn}
+              primaryClassName="rounded-xl bg-accent px-8 py-3.5 font-medium text-black transition-colors hover:bg-accent-bright"
+              secondaryClassName="rounded-xl border border-border px-8 py-3.5 font-medium transition-colors hover:bg-card"
+            />
           </div>
           <p className="mx-auto mt-6 max-w-xl text-xs text-muted">
             We&apos;re not a bookmaker — you bet with licensed UK bookmakers, we keep the score. 18+
