@@ -131,16 +131,16 @@ export function RoundProgress({
   let banner = "";
   if (status === "open") {
     if (pending.length === 0) {
-      banner = "Everyone has submitted — finishing lock…";
+      banner = "Everyone has submitted. Finishing lock…";
     } else if (firstKickoff) {
-      banner = `Waiting on ${pendingSlots} leg${pendingSlots === 1 ? "" : "s"} — acca locks at first kickoff`;
+      banner = `Waiting on ${pendingSlots} leg${pendingSlots === 1 ? "" : "s"}. Acca locks at first kickoff.`;
     } else {
       banner = `Waiting on ${pendingSlots} leg${pendingSlots === 1 ? "" : "s"}${
         legsPerMember > 1 ? ` (${legsPerMember} each)` : ""
       }`;
     }
   } else if (status === "locked") {
-    banner = "Acca locked — place your bet at the bookmaker";
+    banner = "Acca locked. Place your bet at the bookmaker.";
   } else if (status === "settled") {
     banner = "Round settled";
   }
@@ -152,8 +152,8 @@ export function RoundProgress({
           <Text style={styles.bannerText}>{banner}</Text>
           {status === "open" && firstKickoff && pending.length > 0 ? (
             <Text style={styles.bannerHint}>
-              Locks {formatKickoff(firstKickoff.toISOString())} — members who
-              haven&apos;t finished their picks will miss this acca
+              Locks {formatKickoff(firstKickoff.toISOString())}. Members who
+              haven't finished their picks will miss this acca.
             </Text>
           ) : null}
         </View>
@@ -338,11 +338,11 @@ export function AccaSummary({
         : `Open betslip${ctaBookmaker ? ` · ${ctaBookmaker}` : ""}`;
   const ctaHint =
     linkQuality === "hub"
-      ? "Opens the football section — add each pick on-site, or use Open on a pick when available."
+      ? "Opens the football section. Add each pick on-site, or use Open on a pick when available."
       : multiLeg
         ? betslipHasAllLegLinks
-          ? "Opens the first selection — use Open on each pick to add the rest."
-          : "Opens the closest selection — use Open on each pick to build the acca."
+          ? "Opens the first selection. Use Open on each pick to add the rest."
+          : "Opens the closest selection. Use Open on each pick to build the acca."
         : null;
 
   return (
@@ -365,7 +365,7 @@ export function AccaSummary({
           ) : null}
           {preview ? (
             <Text style={styles.meta}>
-              Live preview from legs so far — final bookmaker locks when the bet closes.
+              Live preview from legs so far. Final bookmaker locks when the bet closes.
             </Text>
           ) : null}
           {!singleBookmaker && !preview ? (
@@ -790,7 +790,7 @@ export function SubmitLegForm({
         variant={ready ? "primary" : "secondary"}
       />
       {onCancel ? (
-        <Button label="Cancel — keep my current pick" onPress={onCancel} variant="secondary" />
+        <Button label="Cancel. Keep my current pick" onPress={onCancel} variant="secondary" />
       ) : null}
     </Card>
   );

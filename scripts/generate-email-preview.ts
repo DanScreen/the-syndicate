@@ -128,7 +128,7 @@ const page = `<!DOCTYPE html>
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Tiki Acca — email previews</title>
+<title>Tiki Acca: email previews</title>
 <style>
   body { margin: 0; font-family: Georgia, serif; background: #e8e4dc; color: #1a1a1a; }
   header { padding: 24px 20px 8px; max-width: 960px; margin: 0 auto; }
@@ -146,8 +146,8 @@ const page = `<!DOCTYPE html>
   <p>Generated from <code>lib/notifications/templates.ts</code>. Logo inlined for local preview. Regenerate: <code>cd apps/web &amp;&amp; npx tsx ../../scripts/generate-email-preview.ts</code></p>
 </header>
 ${section("Pick reminder", reminder)}
-${section("Acca locked — everyone in", lockedFull)}
-${section("Acca locked — partial (kickoff lock)", lockedPartial)}
+${section("Acca locked (everyone in)", lockedFull)}
+${section("Acca locked (partial kickoff lock)", lockedPartial)}
 ${section("Round settled", settled)}
 </body>
 </html>

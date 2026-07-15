@@ -70,7 +70,7 @@ export default async function HomePage() {
               {[
                 { who: "Dan", pick: "Arsenal to win", odds: "1.85" },
                 { who: "Matty", pick: "Over 2.5 goals", odds: "1.72" },
-                { who: "Tom", pick: "BTTS — Yes", odds: "1.65" },
+                { who: "Tom", pick: "BTTS: Yes", odds: "1.65" },
               ].map((leg) => (
                 <div key={leg.who} className="bg-card p-5">
                   <p className="text-xs font-medium uppercase tracking-wide text-muted">
@@ -101,7 +101,7 @@ export default async function HomePage() {
             More than a group chat acca
           </h2>
           <p className="mt-4 text-lg text-muted">
-            Tiki Acca gives your group structure — live odds, automatic locking, settlement,
+            Tiki Acca gives your group structure: live odds, automatic locking, settlement,
             and stats that show who actually knows their football.
           </p>
         </div>
@@ -170,7 +170,7 @@ export default async function HomePage() {
             Ready for the next matchday?
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-muted">
-            One leg each. Best odds locked. Bragging rights forever.
+            One Leg Each. Best Odds Locked. Bragging Rights Forever.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <MarketingCtas
@@ -180,7 +180,7 @@ export default async function HomePage() {
             />
           </div>
           <p className="mx-auto mt-6 max-w-xl text-xs text-muted">
-            We&apos;re not a bookmaker — you bet with licensed UK bookmakers, we keep the score. 18+
+            We&apos;re not a bookmaker. You bet with licensed UK bookmakers; we keep the score. 18+
           </p>
         </div>
       </section>

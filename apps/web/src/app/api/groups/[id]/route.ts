@@ -287,7 +287,7 @@ export async function PATCH(request: Request, { params }: Params) {
       if (overQuota.length > 0) {
         return NextResponse.json(
           {
-            error: `Can't lower to ${nextQuota} — at least one member already has more than ${nextQuota} leg${nextQuota === 1 ? "" : "s"} on this open round.`,
+            error: `Can't lower to ${nextQuota}. At least one member already has more than ${nextQuota} leg${nextQuota === 1 ? "" : "s"} on this open round.`,
           },
           { status: 409 }
         );
@@ -319,7 +319,7 @@ export async function PATCH(request: Request, { params }: Params) {
         try {
           await claimAndLockRound(activeRound.id);
           note =
-            "Saved. Everyone was already at the new quota — the acca is locking.";
+            "Saved. Everyone was already at the new quota. The acca is locking.";
         } catch (err) {
           console.error(
             "[groups] lock after legsPerMember change failed",

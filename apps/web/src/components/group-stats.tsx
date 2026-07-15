@@ -266,7 +266,7 @@ export function GroupStats({ groupId, groupName }: { groupId: string; groupName?
   if (!data || data.summary.totalRounds === 0) {
     return (
       <div className="rounded-xl border border-dashed border-border bg-card p-6 text-sm text-muted">
-        No settled rounds yet — stats appear after your first round is settled.
+        No settled rounds yet. Stats appear after your first round is settled.
       </div>
     );
   }

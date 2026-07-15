@@ -6,7 +6,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Blog",
   description:
-    "Guides and product news from Tiki Acca — accas explained, group betting done properly, and what we're building.",
+    "Guides and product news from Tiki Acca: accas explained, group betting done properly, and what we're building.",
 };
 
 export const dynamic = "force-static";
@@ -23,14 +23,14 @@ export default function BlogIndexPage() {
             Guides &amp; news
           </h1>
           <p className="mt-4 text-lg text-muted">
-            Accas explained properly, and what we&apos;re building. No tips — ever.
+            Accas explained properly, and what we&apos;re building. No tips. Ever.
           </p>
         </div>
       </div>
 
       <div className="mx-auto max-w-3xl px-4 py-12">
         {posts.length === 0 ? (
-          <p className="text-muted">No posts yet — check back soon.</p>
+          <p className="text-muted">No posts yet. Check back soon.</p>
         ) : (
           <ul className="space-y-6">
             {posts.map((post) => (

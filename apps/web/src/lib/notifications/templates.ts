@@ -38,7 +38,7 @@ export type SettledEmailLeg = {
 function plainTextFooter(): string {
   return [
     "",
-    "We're not a bookmaker — we keep the score. You place bets with licensed UK operators. 18+. GambleAware: https://www.gambleaware.org/",
+    "We're not a bookmaker. We keep the score. You place bets with licensed UK operators. 18+. GambleAware: https://www.gambleaware.org/",
     `Manage preferences: ${notificationSettingsUrl()}`,
   ].join("\n");
 }
@@ -57,14 +57,14 @@ export function pickReminderEmail(params: {
 
   const bodyHtml = [
     paragraph(
-      `First kickoff locks the acca at <strong style="color:${EMAIL_COLORS.foreground};">${escapeHtml(time)}</strong> — and your leg is still missing.`
+      `First kickoff locks the acca at <strong style="color:${EMAIL_COLORS.foreground};">${escapeHtml(time)}</strong>, and your leg is still missing.`
     ),
     paragraph(escapeHtml(waiting)),
-    mutedNote("Pull your weight before the deadline. Every leg counts."),
+    mutedNote("Pull your weight before the deadline. Every Leg Counts."),
   ].join("");
 
   const text = [
-    `${params.groupName} — pick your leg`,
+    `${params.groupName}: pick your leg`,
     "",
     `Your group acca locks at ${time} when the first match kicks off.`,
     waiting,
@@ -107,7 +107,7 @@ export function roundLockedEmail(params: {
   const everyoneIn =
     params.missingCount === 0
       ? "Everyone's in. The acca is locked and ready to place."
-      : "Everyone's in — well, everyone who made it. The acca is locked and ready to place.";
+      : "Everyone's in. Well, everyone who made it. The acca is locked and ready to place.";
 
   const partialNote =
     params.missingCount > 0
@@ -137,7 +137,7 @@ export function roundLockedEmail(params: {
       : "";
 
   const text = [
-    `${params.groupName} — acca locked`,
+    `${params.groupName}: acca locked`,
     "",
     everyoneIn,
     `Combined odds: ${params.combinedOdds}`,
@@ -150,9 +150,9 @@ export function roundLockedEmail(params: {
 
   return {
     subject: `${params.groupName}: acca locked @ ${params.combinedOdds}`,
-    preheader: `Combined @ ${params.combinedOdds} — ready to place.`,
+    preheader: `Combined @ ${params.combinedOdds}. Ready to place.`,
     html: renderEmailLayout({
-      preheader: `Combined @ ${params.combinedOdds} — ready to place.`,
+      preheader: `Combined @ ${params.combinedOdds}. Ready to place.`,
       eyebrow: params.groupName,
       title: "Acca locked. Time to place it.",
       bodyHtml,
@@ -187,13 +187,13 @@ export function roundSettledEmail(params: {
     ? "Every leg landed."
     : params.wonCount === 0
       ? "The acca's down."
-      : "Settled — receipts are in.";
+      : "Settled. Receipts are in.";
 
   const lead = wonAll
     ? "Clean sheet. The scoreboard's going to look good."
     : params.wonCount === 0
       ? "Someone's catching banter in the group chat. Here's the proof."
-      : "Part win, part pain — see who delivered and who let the side down.";
+      : "Part win, part pain. See who delivered and who let the side down.";
 
   const legList = renderLegList(
     params.legs.map((leg) => {
@@ -212,7 +212,7 @@ export function roundSettledEmail(params: {
     paragraph(`Result ${highlightChip(record)}`),
     legList,
     mutedNote(
-      `Unit-stake P/L at £10: <strong style="color:${EMAIL_COLORS.foreground};">${escapeHtml(params.plLabel)}</strong> — convert points to whatever stake your group runs.`
+      `Unit-stake P/L at £10: <strong style="color:${EMAIL_COLORS.foreground};">${escapeHtml(params.plLabel)}</strong>. Convert points to whatever stake your group runs.`
     ),
   ].join("");
 
@@ -224,7 +224,7 @@ export function roundSettledEmail(params: {
     .join("\n");
 
   const text = [
-    `${params.groupName} — round settled`,
+    `${params.groupName}: round settled`,
     "",
     lead,
     `Result: ${record}`,
@@ -237,7 +237,7 @@ export function roundSettledEmail(params: {
   ].join("\n");
 
   return {
-    subject: `${params.groupName}: settled — ${params.wonCount}W ${params.lostCount}L`,
+    subject: `${params.groupName}: settled (${params.wonCount}W ${params.lostCount}L)`,
     preheader: `${lead} ${record}.`,
     html: renderEmailLayout({
       preheader: `${lead} ${record}.`,
@@ -258,14 +258,14 @@ export function pickReminderPush(params: {
   const time = formatNotificationDeadline(params.deadline);
   return {
     title: `${params.groupName}: pick your leg`,
-    body: `Locks at ${time}. Every leg counts.`,
+    body: `Locks at ${time}. Every Leg Counts.`,
   };
 }
 
 export function roundLockedPush(groupName: string): { title: string; body: string } {
   return {
     title: `${groupName}: acca locked`,
-    body: "Ready to place — open Tiki Acca for the best bookmaker.",
+    body: "Ready to place. Open Tiki Acca for the best bookmaker.",
   };
 }
 
@@ -276,6 +276,6 @@ export function roundSettledPush(params: {
 }): { title: string; body: string } {
   return {
     title: `${params.groupName}: settled`,
-    body: `${params.wonCount}W ${params.lostCount}L — see who delivered.`,
+    body: `${params.wonCount}W ${params.lostCount}L. See who delivered.`,
   };
 }
