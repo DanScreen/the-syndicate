@@ -215,7 +215,7 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 | `/groups/[id]/leaderboard` | Points leaderboard |
 | `/groups/[id]/performance` | Group stats (`GroupStats`) — charts, member breakdown |
 
-**Navigation:** Logo + **Social Group Betting** tagline always shown. Logo and **Home** → `/`. `AppNav` order: Home → About → Groups → Performance → Admin (admins) → Notifications → **Blog** (rightmost). Signed-in marketing pages use `AppHeader`; signed-out use `MarketingHeader` (Home / About / Blog / Sign in / Sign up). Inside a group, `GroupNav` tabs (Round / History / Leaderboard / Performance) share data via `GroupDataProvider` (fetched once in group layout; polls every 60s while acca locked).
+**Navigation:** Logo + **Social Group Betting** tagline always shown. Logo and **Home** → `/`. `AppNav` order: Home → About → Groups → Performance → Admin (admins) → Notifications → **Blog** (rightmost). Marketing pages use `SessionAwareMarketingHeader` (client `useSession`) so statically generated `/blog` still shows signed-in chrome. Signed-out: Home / About / Blog / Sign in / Sign up. Inside a group, `GroupNav` tabs (Round / History / Leaderboard / Performance) share data via `GroupDataProvider` (fetched once in group layout; polls every 60s while acca locked).
 
 **Open round UI:** provisional combined odds + **Compare bookmakers** podium (logos; 1st–3rd emphasised) from legs submitted so far.  
 **Locked round UI:** picks with per-leg outcomes as matches finish → **locked combined odds + recommended bookmaker only** (no compare list) → betslip CTA until the first result, then tracking only. Polls every 60s while locked. **History** tab lists all settled rounds.
