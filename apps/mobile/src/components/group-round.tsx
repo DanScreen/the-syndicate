@@ -115,7 +115,7 @@ export function RoundProgress({
   let banner = "";
   if (status === "open") {
     if (pending.length === 0) {
-      banner = "Everyone has submitted — locking acca...";
+      banner = "Everyone has submitted — finishing lock…";
     } else if (firstKickoff) {
       banner = `Waiting on ${pendingSlots} leg${pendingSlots === 1 ? "" : "s"} — acca locks at first kickoff`;
     } else {
