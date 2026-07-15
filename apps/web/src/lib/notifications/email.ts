@@ -1,7 +1,10 @@
+import { notificationSettingsUrl } from "@/lib/notifications/email-layout";
+
 type SendEmailParams = {
   to: string[];
   subject: string;
   html: string;
+  text?: string;
 };
 
 export async function sendEmail(params: SendEmailParams): Promise<boolean> {
@@ -15,6 +18,8 @@ export async function sendEmail(params: SendEmailParams): Promise<boolean> {
   const recipients = params.to.filter(Boolean);
   if (recipients.length === 0) return false;
 
+  const unsubscribeUrl = notificationSettingsUrl();
+
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -27,6 +32,10 @@ export async function sendEmail(params: SendEmailParams): Promise<boolean> {
         to: recipients,
         subject: params.subject,
         html: params.html,
+        ...(params.text ? { text: params.text } : {}),
+        headers: {
+          "List-Unsubscribe": `<${unsubscribeUrl}>`,
+        },
       }),
     });
 
@@ -42,6 +51,4 @@ export async function sendEmail(params: SendEmailParams): Promise<boolean> {
   }
 }
 
-export function appBaseUrl(): string {
-  return process.env.NEXTAUTH_URL ?? "https://www.tikiacca.com";
-}
+export { appBaseUrl } from "@/lib/notifications/email-layout";

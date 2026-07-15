@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Tiki Acca — email previews</title>
+<style>
+  body { margin: 0; font-family: Georgia, serif; background: #e8e4dc; color: #1a1a1a; }
+  header { padding: 24px 20px 8px; max-width: 960px; margin: 0 auto; }
+  h1 { margin: 0 0 8px; font-size: 22px; }
+  p { margin: 0 0 20px; color: #444; font-size: 14px; }
+  section { max-width: 960px; margin: 0 auto 28px; padding: 0 20px; }
+  h2 { font-size: 15px; margin: 0 0 8px; }
+  .meta { font-family: ui-monospace, monospace; font-size: 12px; color: #555; margin-bottom: 10px; white-space: pre-wrap; }
+  iframe { width: 100%; height: 720px; border: 1px solid #bbb; border-radius: 8px; background: #0b1220; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Notification email previews</h1>
+  <p>Generated from <code>lib/notifications/templates.ts</code>. Logo inlined for local preview. Regenerate: <code>cd apps/web &amp;&amp; npx tsx ../../scripts/generate-email-preview.ts</code></p>
+</header>
+<section>
+  <h2>Pick reminder</h2>
+  <div class="meta">Subject: Dog &amp; Duck FC: pick your leg before Sat 18 Jul, 15:00
+Preheader: Locks at Sat 18 Jul, 15:00. 2 of you still need a pick.</div>
+  <iframe srcdoc="<!DOCTYPE html>
+<html lang=&quot;en&quot;>
+<head>
+<meta charset=&quot;utf-8&quot;/>
+<meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;/>
+<meta name=&quot;color-scheme&quot; content=&quot;dark&quot;/>
+<meta name=&quot;supported-color-schemes&quot; content=&quot;dark&quot;/>
+<title>Tiki Acca</title>
+</head>
+<body style=&quot;margin:0;padding:0;background-color:#0b1220;&quot;>
+  <div style=&quot;display:none;max-height:0;overflow:hidden;mso-hide:all;&quot;>
+    Locks at Sat 18 Jul, 15:00. 2 of you still need a pick.
+  </div>
+  <table role=&quot;presentation&quot; width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; border=&quot;0&quot; style=&quot;background-color:#0b1220;&quot;>
+    <tr>
+      <td align=&quot;center&quot; style=&quot;padding:32px 16px;&quot;>
+        <table role=&quot;presentation&quot; width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; border=&quot;0&quot; style=&quot;max-width:560px;background-color:#111827;border:1px solid #1f2937;border-radius:12px;overflow:hidden;&quot;>
+          <tr>
+            <td style=&quot;height:4px;background-color:#22c55e;font-size:0;line-height:0;&quot;>&amp;nbsp;</td>
+          </tr>
+          <tr>
+            <td style=&quot;padding:28px 28px 8px;&quot;>
+              <table role=&quot;presentation&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; border=&quot;0&quot;>
+                <tr>
+                  <td style=&quot;vertical-align:middle;padding-right:12px;&quot;>
+                    <a href=&quot;https://www.tikiacca.com&quot; style=&quot;text-decoration:none;&quot;>
+                      <img src=&quot;data:image/png;base64,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&quot; width=&quot;40&quot; height=&quot;40&quot; alt=&quot;Tiki Acca&quot; style=&quot;display:block;border:0;border-radius:20px;&quot;/>
+                    </a>
+                  </td>
+                  <td style=&quot;vertical-align:middle;&quot;>
+                    <a href=&quot;https://www.tikiacca.com&quot; style=&quot;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;color:#f1f5f9;letter-spacing:-0.02em;&quot;>
+                      Tiki <span style=&quot;color:#22c55e;&quot;>Acca</span>
+                    </a>
+                    <div style=&quot;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#94a3b8;margin-top:2px;&quot;>
+                      Social Group Betting
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style=&quot;padding:20px 28px 8px;&quot;>
+              <p style=&quot;margin:0 0 8px;font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#4ade80;&quot;>
+                Dog &amp;amp; Duck FC
+              </p>
+              <h1 style=&quot;margin:0;font-family:Arial,Helvetica,sans-serif;font-size:24px;line-height:1.25;font-weight:700;color:#f1f5f9;&quot;>
+                Your leg is still out
+              </h1>
+            </td>
+          </tr>
+          <tr>
+            <td style=&quot;padding:16px 28px 8px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#f1f5f9;&quot;>
+              <p style=&quot;margin:0 0 14px;&quot;>First kickoff locks the acca at <strong style=&quot;color:#f1f5f9;&quot;>Sat 18 Jul, 15:00</strong> — and your leg is still missing.</p><p style=&quot;margin:0 0 14px;&quot;>2 of you still need a pick.</p><p style=&quot;margin:0 0 14px;font-size:13px;color:#94a3b8;&quot;>Pull your weight before the deadline. Every leg counts.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style=&quot;padding:20px 28px 28px;&quot; align=&quot;left&quot;>
+              <table role=&quot;presentation&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; border=&quot;0&quot;>
+                <tr>
+                  <td style=&quot;border-radius:8px;background-color:#22c55e;&quot;>
+                    <a href=&quot;https://www.tikiacca.com/groups/demo&quot; style=&quot;display:inline-block;padding:12px 22px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:700;color:#0b1220;text-decoration:none;&quot;>
+                      Submit your pick
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style=&quot;padding:20px 28px 28px;border-top:1px solid #1f2937;font-family:Arial,Helvetica,sans-serif;&quot;>
+              
+              <p style=&quot;margin:0 0 8px;font-size:12px;line-height:1.5;color:#94a3b8;&quot;>
+                We&amp;apos;re not a bookmaker — we keep the score. You place bets with licensed UK operators. 18+.
+                <a href=&quot;https://www.gambleaware.org/&quot; style=&quot;color:#4ade80;text-decoration:underline;&quot;>GambleAware</a>
+              </p>
+              <p style=&quot;margin:0;font-size:12px;line-height:1.5;color:#94a3b8;&quot;>
+                <a href=&quot;https://www.tikiacca.com/settings/notifications&quot; style=&quot;color:#4ade80;text-decoration:underline;&quot;>Manage notification preferences</a>
+                ·
+                <a href=&quot;https://www.tikiacca.com&quot; style=&quot;color:#94a3b8;text-decoration:underline;&quot;>tikiacca.com</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>"></iframe>
+</section>
+<section>
+  <h2>Acca locked — everyone in</h2>
+  <div class="meta">Subject: Dog &amp; Duck FC: acca locked @ 8.42
+Preheader: Combined @ 8.42 — ready to place.</div>
+  <iframe srcdoc="<!DOCTYPE html>
+<html lang=&quot;en&quot;>
+<head>
+<meta charset=&quot;utf-8&quot;/>
+<meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;/>
+<meta name=&quot;color-scheme&quot; content=&quot;dark&quot;/>
+<meta name=&quot;supported-color-schemes&quot; content=&quot;dark&quot;/>
+<title>Tiki Acca</title>
+</head>
+<body style=&quot;margin:0;padding:0;background-color:#0b1220;&quot;>
+  <div style=&quot;display:none;max-height:0;overflow:hidden;mso-hide:all;&quot;>
+    Combined @ 8.42 — ready to place.
+  </div>
+  <table role=&quot;presentation&quot; width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; border=&quot;0&quot; style=&quot;background-color:#0b1220;&quot;>
+    <tr>
+      <td align=&quot;center&quot; style=&quot;padding:32px 16px;&quot;>
+        <table role=&quot;presentation&quot; width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; border=&quot;0&quot; style=&quot;max-width:560px;background-color:#111827;border:1px solid #1f2937;border-radius:12px;overflow:hidden;&quot;>
+          <tr>
+            <td style=&quot;height:4px;background-color:#22c55e;font-size:0;line-height:0;&quot;>&amp;nbsp;</td>
+          </tr>
+          <tr>
+            <td style=&quot;padding:28px 28px 8px;&quot;>
+              <table role=&quot;presentation&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; border=&quot;0&quot;>
+                <tr>
+                  <td style=&quot;vertical-align:middle;padding-right:12px;&quot;>
+                    <a href=&quot;https://www.tikiacca.com&quot; style=&quot;text-decoration:none;&quot;>
+                      <img src=&quot;data:image/png;base64,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&quot; width=&quot;40&quot; height=&quot;40&quot; alt=&quot;Tiki Acca&quot; style=&quot;display:block;border:0;border-radius:20px;&quot;/>
+                    </a>
+                  </td>
+                  <td style=&quot;vertical-align:middle;&quot;>
+                    <a href=&quot;https://www.tikiacca.com&quot; style=&quot;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;color:#f1f5f9;letter-spacing:-0.02em;&quot;>
+                      Tiki <span style=&quot;color:#22c55e;&quot;>Acca</span>
+                    </a>
+                    <div style=&quot;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#94a3b8;margin-top:2px;&quot;>
+                      Social Group Betting
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style=&quot;padding:20px 28px 8px;&quot;>
+              <p style=&quot;margin:0 0 8px;font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#4ade80;&quot;>
+                Dog &amp;amp; Duck FC
+              </p>
+              <h1 style=&quot;margin:0;font-family:Arial,Helvetica,sans-serif;font-size:24px;line-height:1.25;font-weight:700;color:#f1f5f9;&quot;>
+                Acca locked. Time to place it.
+              </h1>
+            </td>
+          </tr>
+          <tr>
+            <td style=&quot;padding:16px 28px 8px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#f1f5f9;&quot;>
+              <p style=&quot;margin:0 0 14px;&quot;>Everyone's in. The acca is locked and ready to place.</p><p style=&quot;margin:0 0 14px;&quot;>Combined odds <span style=&quot;display:inline-block;padding:6px 12px;border-radius:8px;background-color:#14532d;color:#4ade80;font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;letter-spacing:-0.02em;&quot;>@ 8.42</span></p><table role=&quot;presentation&quot; width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; border=&quot;0&quot; style=&quot;margin:16px 0;border-collapse:collapse;&quot;>
+    <tr>
+        <td style=&quot;padding:12px 0;border-bottom:1px solid #1f2937;&quot;>
+          <div style=&quot;font-size:14px;font-weight:700;color:#f1f5f9;&quot;>
+            Alex<span style=&quot;display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;color:#0b1220;background-color:#22c55e;&quot;>1.85</span>
+          </div>
+          <div style=&quot;margin-top:4px;font-size:13px;color:#94a3b8;&quot;>Arsenal · Match winner @ 1.85</div>
+        </td>
+      </tr><tr>
+        <td style=&quot;padding:12px 0;border-bottom:1px solid #1f2937;&quot;>
+          <div style=&quot;font-size:14px;font-weight:700;color:#f1f5f9;&quot;>
+            Sam<span style=&quot;display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;color:#0b1220;background-color:#22c55e;&quot;>1.90</span>
+          </div>
+          <div style=&quot;margin-top:4px;font-size:13px;color:#94a3b8;&quot;>Over 2.5 · Totals @ 1.90</div>
+        </td>
+      </tr><tr>
+        <td style=&quot;padding:12px 0;&quot;>
+          <div style=&quot;font-size:14px;font-weight:700;color:#f1f5f9;&quot;>
+            Jordan<span style=&quot;display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;color:#0b1220;background-color:#22c55e;&quot;>1.72</span>
+          </div>
+          <div style=&quot;margin-top:4px;font-size:13px;color:#94a3b8;&quot;>BTTS Yes · Both teams to score @ 1.72</div>
+        </td>
+      </tr>
+  </table><p style=&quot;margin:0 0 14px;font-size:13px;color:#94a3b8;&quot;>Open the recommended bookmaker from the round page, then sweat it out together.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style=&quot;padding:20px 28px 28px;&quot; align=&quot;left&quot;>
+              <table role=&quot;presentation&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; border=&quot;0&quot;>
+                <tr>
+                  <td style=&quot;border-radius:8px;background-color:#22c55e;&quot;>
+                    <a href=&quot;https://www.tikiacca.com/groups/demo&quot; style=&quot;display:inline-block;padding:12px 22px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:700;color:#0b1220;text-decoration:none;&quot;>
+                      View locked acca
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style=&quot;padding:20px 28px 28px;border-top:1px solid #1f2937;font-family:Arial,Helvetica,sans-serif;&quot;>
+              
+              <p style=&quot;margin:0 0 8px;font-size:12px;line-height:1.5;color:#94a3b8;&quot;>
+                We&amp;apos;re not a bookmaker — we keep the score. You place bets with licensed UK operators. 18+.
+                <a href=&quot;https://www.gambleaware.org/&quot; style=&quot;color:#4ade80;text-decoration:underline;&quot;>GambleAware</a>
+              </p>
+              <p style=&quot;margin:0;font-size:12px;line-height:1.5;color:#94a3b8;&quot;>
+                <a href=&quot;https://www.tikiacca.com/settings/notifications&quot; style=&quot;color:#4ade80;text-decoration:underline;&quot;>Manage notification preferences</a>
+                ·
+                <a href=&quot;https://www.tikiacca.com&quot; style=&quot;color:#94a3b8;text-decoration:underline;&quot;>tikiacca.com</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>"></iframe>
+</section>
+<section>
+  <h2>Acca locked — partial (kickoff lock)</h2>
+  <div class="meta">Subject: Dog &amp; Duck FC: acca locked @ 8.42
+Preheader: Combined @ 8.42 — ready to place.</div>
+  <iframe srcdoc="<!DOCTYPE html>
+<html lang=&quot;en&quot;>
+<head>
+<meta charset=&quot;utf-8&quot;/>
+<meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;/>
+<meta name=&quot;color-scheme&quot; content=&quot;dark&quot;/>
+<meta name=&quot;supported-color-schemes&quot; content=&quot;dark&quot;/>
+<title>Tiki Acca</title>
+</head>
+<body style=&quot;margin:0;padding:0;background-color:#0b1220;&quot;>
+  <div style=&quot;display:none;max-height:0;overflow:hidden;mso-hide:all;&quot;>
+    Combined @ 8.42 — ready to place.
+  </div>
+  <table role=&quot;presentation&quot; width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; border=&quot;0&quot; style=&quot;background-color:#0b1220;&quot;>
+    <tr>
+      <td align=&quot;center&quot; style=&quot;padding:32px 16px;&quot;>
+        <table role=&quot;presentation&quot; width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; border=&quot;0&quot; style=&quot;max-width:560px;background-color:#111827;border:1px solid #1f2937;border-radius:12px;overflow:hidden;&quot;>
+          <tr>
+            <td style=&quot;height:4px;background-color:#22c55e;font-size:0;line-height:0;&quot;>&amp;nbsp;</td>
+          </tr>
+          <tr>
+            <td style=&quot;padding:28px 28px 8px;&quot;>
+              <table role=&quot;presentation&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; border=&quot;0&quot;>
+                <tr>
+                  <td style=&quot;vertical-align:middle;padding-right:12px;&quot;>
+                    <a href=&quot;https://www.tikiacca.com&quot; style=&quot;text-decoration:none;&quot;>
+                      <img src=&quot;data:image/png;base64,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&quot; width=&quot;40&quot; height=&quot;40&quot; alt=&quot;Tiki Acca&quot; style=&quot;display:block;border:0;border-radius:20px;&quot;/>
+                    </a>
+                  </td>
+                  <td style=&quot;vertical-align:middle;&quot;>
+                    <a href=&quot;https://www.tikiacca.com&quot; style=&quot;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;color:#f1f5f9;letter-spacing:-0.02em;&quot;>
+                      Tiki <span style=&quot;color:#22c55e;&quot;>Acca</span>
+                    </a>
+                    <div style=&quot;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#94a3b8;margin-top:2px;&quot;>
+                      Social Group Betting
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style=&quot;padding:20px 28px 8px;&quot;>
+              <p style=&quot;margin:0 0 8px;font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#4ade80;&quot;>
+                Dog &amp;amp; Duck FC
+              </p>
+              <h1 style=&quot;margin:0;font-family:Arial,Helvetica,sans-serif;font-size:24px;line-height:1.25;font-weight:700;color:#f1f5f9;&quot;>
+                Acca locked. Time to place it.
+              </h1>
+            </td>
+          </tr>
+          <tr>
+            <td style=&quot;padding:16px 28px 8px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#f1f5f9;&quot;>
+              <p style=&quot;margin:0 0 14px;&quot;>Everyone's in — well, everyone who made it. The acca is locked and ready to place.</p><p style=&quot;margin:0 0 14px;&quot;>Combined odds <span style=&quot;display:inline-block;padding:6px 12px;border-radius:8px;background-color:#14532d;color:#4ade80;font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;letter-spacing:-0.02em;&quot;>@ 8.42</span></p><table role=&quot;presentation&quot; width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; border=&quot;0&quot; style=&quot;margin:16px 0;border-collapse:collapse;&quot;>
+    <tr>
+        <td style=&quot;padding:12px 0;border-bottom:1px solid #1f2937;&quot;>
+          <div style=&quot;font-size:14px;font-weight:700;color:#f1f5f9;&quot;>
+            Alex<span style=&quot;display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;color:#0b1220;background-color:#22c55e;&quot;>1.85</span>
+          </div>
+          <div style=&quot;margin-top:4px;font-size:13px;color:#94a3b8;&quot;>Arsenal · Match winner @ 1.85</div>
+        </td>
+      </tr><tr>
+        <td style=&quot;padding:12px 0;border-bottom:1px solid #1f2937;&quot;>
+          <div style=&quot;font-size:14px;font-weight:700;color:#f1f5f9;&quot;>
+            Sam<span style=&quot;display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;color:#0b1220;background-color:#22c55e;&quot;>1.90</span>
+          </div>
+          <div style=&quot;margin-top:4px;font-size:13px;color:#94a3b8;&quot;>Over 2.5 · Totals @ 1.90</div>
+        </td>
+      </tr><tr>
+        <td style=&quot;padding:12px 0;&quot;>
+          <div style=&quot;font-size:14px;font-weight:700;color:#f1f5f9;&quot;>
+            Jordan<span style=&quot;display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;color:#0b1220;background-color:#22c55e;&quot;>1.72</span>
+          </div>
+          <div style=&quot;margin-top:4px;font-size:13px;color:#94a3b8;&quot;>BTTS Yes · Both teams to score @ 1.72</div>
+        </td>
+      </tr>
+  </table><p style=&quot;margin:0 0 14px;font-size:13px;color:#94a3b8;&quot;>1 member missed kickoff and isn't in this acca.</p><p style=&quot;margin:0 0 14px;font-size:13px;color:#94a3b8;&quot;>Open the recommended bookmaker from the round page, then sweat it out together.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style=&quot;padding:20px 28px 28px;&quot; align=&quot;left&quot;>
+              <table role=&quot;presentation&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; border=&quot;0&quot;>
+                <tr>
+                  <td style=&quot;border-radius:8px;background-color:#22c55e;&quot;>
+                    <a href=&quot;https://www.tikiacca.com/groups/demo&quot; style=&quot;display:inline-block;padding:12px 22px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:700;color:#0b1220;text-decoration:none;&quot;>
+                      View locked acca
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style=&quot;padding:20px 28px 28px;border-top:1px solid #1f2937;font-family:Arial,Helvetica,sans-serif;&quot;>
+              
+              <p style=&quot;margin:0 0 8px;font-size:12px;line-height:1.5;color:#94a3b8;&quot;>
+                We&amp;apos;re not a bookmaker — we keep the score. You place bets with licensed UK operators. 18+.
+                <a href=&quot;https://www.gambleaware.org/&quot; style=&quot;color:#4ade80;text-decoration:underline;&quot;>GambleAware</a>
+              </p>
+              <p style=&quot;margin:0;font-size:12px;line-height:1.5;color:#94a3b8;&quot;>
+                <a href=&quot;https://www.tikiacca.com/settings/notifications&quot; style=&quot;color:#4ade80;text-decoration:underline;&quot;>Manage notification preferences</a>
+                ·
+                <a href=&quot;https://www.tikiacca.com&quot; style=&quot;color:#94a3b8;text-decoration:underline;&quot;>tikiacca.com</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>"></iframe>
+</section>
+<section>
+  <h2>Round settled</h2>
+  <div class="meta">Subject: Dog &amp; Duck FC: settled — 2W 1L
+Preheader: Part win, part pain — see who delivered and who let the side down. 2W · 1L.</div>
+  <iframe srcdoc="<!DOCTYPE html>
+<html lang=&quot;en&quot;>
+<head>
+<meta charset=&quot;utf-8&quot;/>
+<meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;/>
+<meta name=&quot;color-scheme&quot; content=&quot;dark&quot;/>
+<meta name=&quot;supported-color-schemes&quot; content=&quot;dark&quot;/>
+<title>Tiki Acca</title>
+</head>
+<body style=&quot;margin:0;padding:0;background-color:#0b1220;&quot;>
+  <div style=&quot;display:none;max-height:0;overflow:hidden;mso-hide:all;&quot;>
+    Part win, part pain — see who delivered and who let the side down. 2W · 1L.
+  </div>
+  <table role=&quot;presentation&quot; width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; border=&quot;0&quot; style=&quot;background-color:#0b1220;&quot;>
+    <tr>
+      <td align=&quot;center&quot; style=&quot;padding:32px 16px;&quot;>
+        <table role=&quot;presentation&quot; width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; border=&quot;0&quot; style=&quot;max-width:560px;background-color:#111827;border:1px solid #1f2937;border-radius:12px;overflow:hidden;&quot;>
+          <tr>
+            <td style=&quot;height:4px;background-color:#22c55e;font-size:0;line-height:0;&quot;>&amp;nbsp;</td>
+          </tr>
+          <tr>
+            <td style=&quot;padding:28px 28px 8px;&quot;>
+              <table role=&quot;presentation&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; border=&quot;0&quot;>
+                <tr>
+                  <td style=&quot;vertical-align:middle;padding-right:12px;&quot;>
+                    <a href=&quot;https://www.tikiacca.com&quot; style=&quot;text-decoration:none;&quot;>
+                      <img src=&quot;data:image/png;base64,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&quot; width=&quot;40&quot; height=&quot;40&quot; alt=&quot;Tiki Acca&quot; style=&quot;display:block;border:0;border-radius:20px;&quot;/>
+                    </a>
+                  </td>
+                  <td style=&quot;vertical-align:middle;&quot;>
+                    <a href=&quot;https://www.tikiacca.com&quot; style=&quot;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;color:#f1f5f9;letter-spacing:-0.02em;&quot;>
+                      Tiki <span style=&quot;color:#22c55e;&quot;>Acca</span>
+                    </a>
+                    <div style=&quot;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#94a3b8;margin-top:2px;&quot;>
+                      Social Group Betting
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style=&quot;padding:20px 28px 8px;&quot;>
+              <p style=&quot;margin:0 0 8px;font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#4ade80;&quot;>
+                Dog &amp;amp; Duck FC
+              </p>
+              <h1 style=&quot;margin:0;font-family:Arial,Helvetica,sans-serif;font-size:24px;line-height:1.25;font-weight:700;color:#f1f5f9;&quot;>
+                Settled — receipts are in.
+              </h1>
+            </td>
+          </tr>
+          <tr>
+            <td style=&quot;padding:16px 28px 8px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#f1f5f9;&quot;>
+              <p style=&quot;margin:0 0 14px;&quot;>Part win, part pain — see who delivered and who let the side down.</p><p style=&quot;margin:0 0 14px;&quot;>Result <span style=&quot;display:inline-block;padding:6px 12px;border-radius:8px;background-color:#14532d;color:#4ade80;font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;letter-spacing:-0.02em;&quot;>2W · 1L</span></p><table role=&quot;presentation&quot; width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; border=&quot;0&quot; style=&quot;margin:16px 0;border-collapse:collapse;&quot;>
+    <tr>
+        <td style=&quot;padding:12px 0;border-bottom:1px solid #1f2937;&quot;>
+          <div style=&quot;font-size:14px;font-weight:700;color:#f1f5f9;&quot;>
+            Alex<span style=&quot;display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;color:#0b1220;background-color:#4ade80;&quot;>Won</span>
+          </div>
+          <div style=&quot;margin-top:4px;font-size:13px;color:#94a3b8;&quot;>Arsenal · 0.85 pts</div>
+        </td>
+      </tr><tr>
+        <td style=&quot;padding:12px 0;border-bottom:1px solid #1f2937;&quot;>
+          <div style=&quot;font-size:14px;font-weight:700;color:#f1f5f9;&quot;>
+            Sam<span style=&quot;display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;color:#0b1220;background-color:#4ade80;&quot;>Won</span>
+          </div>
+          <div style=&quot;margin-top:4px;font-size:13px;color:#94a3b8;&quot;>Over 2.5 · 0.9 pts</div>
+        </td>
+      </tr><tr>
+        <td style=&quot;padding:12px 0;&quot;>
+          <div style=&quot;font-size:14px;font-weight:700;color:#f1f5f9;&quot;>
+            Jordan<span style=&quot;display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;color:#0b1220;background-color:#f87171;&quot;>Lost</span>
+          </div>
+          <div style=&quot;margin-top:4px;font-size:13px;color:#94a3b8;&quot;>BTTS Yes · -1 pts</div>
+        </td>
+      </tr>
+  </table><p style=&quot;margin:0 0 14px;font-size:13px;color:#94a3b8;&quot;>Unit-stake P/L at £10: <strong style=&quot;color:#f1f5f9;&quot;>−£10.00</strong> — convert points to whatever stake your group runs.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style=&quot;padding:20px 28px 28px;&quot; align=&quot;left&quot;>
+              <table role=&quot;presentation&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; border=&quot;0&quot;>
+                <tr>
+                  <td style=&quot;border-radius:8px;background-color:#22c55e;&quot;>
+                    <a href=&quot;https://www.tikiacca.com/groups/demo&quot; style=&quot;display:inline-block;padding:12px 22px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:700;color:#0b1220;text-decoration:none;&quot;>
+                      See the leaderboard
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style=&quot;padding:20px 28px 28px;border-top:1px solid #1f2937;font-family:Arial,Helvetica,sans-serif;&quot;>
+              
+              <p style=&quot;margin:0 0 8px;font-size:12px;line-height:1.5;color:#94a3b8;&quot;>
+                We&amp;apos;re not a bookmaker — we keep the score. You place bets with licensed UK operators. 18+.
+                <a href=&quot;https://www.gambleaware.org/&quot; style=&quot;color:#4ade80;text-decoration:underline;&quot;>GambleAware</a>
+              </p>
+              <p style=&quot;margin:0;font-size:12px;line-height:1.5;color:#94a3b8;&quot;>
+                <a href=&quot;https://www.tikiacca.com/settings/notifications&quot; style=&quot;color:#4ade80;text-decoration:underline;&quot;>Manage notification preferences</a>
+                ·
+                <a href=&quot;https://www.tikiacca.com&quot; style=&quot;color:#94a3b8;text-decoration:underline;&quot;>tikiacca.com</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>"></iframe>
+</section>
+</body>
+</html>

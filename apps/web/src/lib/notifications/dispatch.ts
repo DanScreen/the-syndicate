@@ -20,7 +20,7 @@ export type DispatchNotificationInput = {
   dedupeType: string;
   groupId?: string;
   roundId?: string | null;
-  email?: { subject: string; html: string };
+  email?: { subject: string; html: string; text?: string };
   push?: {
     title: string;
     body: string;
@@ -53,7 +53,8 @@ export async function dispatchNotification(
       const sent = await sendEmailToUser(
         input.userId,
         input.email.subject,
-        input.email.html
+        input.email.html,
+        input.email.text
       );
       if (sent) {
         await recordNotificationSent({
@@ -100,7 +101,7 @@ export async function dispatchToGroupMembers(params: {
   dedupeType: string;
   roundId?: string | null;
   buildForUser: (userId: string) => {
-    email?: { subject: string; html: string };
+    email?: { subject: string; html: string; text?: string };
     push?: { title: string; body: string; data?: Record<string, string> };
   };
 }): Promise<MemberDispatchResult[]> {

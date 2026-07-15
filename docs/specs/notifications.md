@@ -153,7 +153,7 @@ Stay on **Resend** — already wired, domain verified, GCP secrets in place.
 
 | Area | Today | Target |
 |------|-------|--------|
-| Templates | Inline HTML strings | Shared templates in `lib/notifications/templates/` |
+| Templates | Plain HTML strings | Branded Turf Green shell (`templates.ts` + `email-layout.ts`); logo at `/brand/email-logo.png` |
 | Personalisation | Group broadcast | Per-recipient where needed (reminders) |
 | Preferences | None | Respect `NotificationPreference` |
 | Unsubscribe | None | Link to `/settings/notifications` (one-click email off per type) |

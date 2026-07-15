@@ -1,4 +1,4 @@
-import { appBaseUrl } from "@/lib/notifications/email";
+import { appBaseUrl } from "@/lib/notifications/email-layout";
 import {
   dispatchNotification,
   dispatchToGroupMembers,
@@ -85,23 +85,16 @@ export async function notifyRoundLocked(roundId: string): Promise<void> {
   const odds = round.combinedOdds?.toFixed(2) ?? "—";
   const missingCount = round.group.members.length - round.legs.length;
 
-  const legLines = round.legs
-    .map(
-      (leg) =>
-        `<li><strong>${leg.user.name}</strong>: ${leg.selectionLabel} (${leg.marketLabel}) @ ${leg.odds.toFixed(2)}</li>`
-    )
-    .join("");
-
-  const partialNote =
-    missingCount > 0
-      ? `<p><em>${missingCount} member${missingCount === 1 ? "" : "s"} did not submit before the first kickoff and ${missingCount === 1 ? "is" : "are"} not in this acca.</em></p>`
-      : "";
-
   const emailContent = roundLockedEmail({
     groupName: round.group.name,
     combinedOdds: odds,
-    legLines,
-    partialNote,
+    legs: round.legs.map((leg) => ({
+      memberName: leg.user.name,
+      selectionLabel: leg.selectionLabel,
+      marketLabel: leg.marketLabel,
+      odds: leg.odds,
+    })),
+    missingCount,
     groupUrl,
   });
   const pushContent = roundLockedPush(round.group.name);
@@ -157,21 +150,22 @@ export async function notifyRoundSettled(roundId: string): Promise<void> {
   const pl = round.profitLossGbp ?? 0;
   const plLabel = pl >= 0 ? `+£${pl.toFixed(2)}` : `−£${Math.abs(pl).toFixed(2)}`;
 
-  const legLines = round.legs
-    .map((leg) => {
-      const pts = formatLegPoints(leg.pointsAwarded);
-      const outcome =
-        leg.outcome === "won" ? "✓" : leg.outcome === "void" ? "—" : "✗";
-      return `<li>${outcome} <strong>${leg.user.name}</strong>: ${leg.selectionLabel} (${pts} pts)</li>`;
-    })
-    .join("");
-
   const emailContent = roundSettledEmail({
     groupName: round.group.name,
     plLabel,
     wonCount,
     lostCount,
-    legLines,
+    legs: round.legs.map((leg) => ({
+      memberName: leg.user.name,
+      selectionLabel: leg.selectionLabel,
+      outcome:
+        leg.outcome === "won" ||
+        leg.outcome === "lost" ||
+        leg.outcome === "void"
+          ? leg.outcome
+          : "pending",
+      pointsLabel: formatLegPoints(leg.pointsAwarded),
+    })),
     groupUrl,
   });
   const pushContent = roundSettledPush({

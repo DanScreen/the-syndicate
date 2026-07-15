@@ -48,7 +48,7 @@ Match sync + odds warm: Cloud Scheduler (Terraform) → `POST /api/internal/sync
 | Odds | `apps/web/src/lib/odds/` |
 | Settlement | `apps/web/src/lib/settlement/`, `apps/web/src/lib/results/` |
 | Stats | `apps/web/src/lib/stats/` |
-| Notifications | `apps/web/src/lib/notifications/` |
+| Notifications | `apps/web/src/lib/notifications/` (branded email templates + layout; logo at `public/brand/email-logo.png`) |
 | Auth | `apps/web/src/lib/auth.ts`, `apps/web/src/lib/auth.config.ts` |
 | Settlement (auto) | `apps/web/src/lib/settlement/auto-settle-round.ts` |
 | Round lifecycle | `apps/web/src/lib/rounds/open-round.ts`, `claim-lock-round.ts`, `lock-open-rounds-at-kickoff.ts`, `first-kickoff.ts` |
@@ -274,7 +274,10 @@ Members can change **their own leg** via `PATCH /api/legs/[id]` while the round 
 | `apps/web/src/lib/notifications/retry-pending-round-notifications.ts` | Retry failed lock/settle notifications |
 | `apps/web/src/lib/notifications/round-notifications.ts` | Lock / settle / reminder payloads |
 | `apps/web/src/lib/notifications/channels/` | Email + Expo push adapters |
-| `apps/web/src/lib/notifications/email.ts` | Resend client (fetch) |
+| `apps/web/src/lib/notifications/email.ts` | Resend client (HTML + plain text + `List-Unsubscribe`) |
+| `apps/web/src/lib/notifications/templates.ts` | Branded lock / settle / reminder copy + HTML |
+| `apps/web/src/lib/notifications/email-layout.ts` | Turf Green email shell, logo, CTAs |
+| `apps/web/public/brand/email-logo.png` | Triangle rondo disc for email clients |
 | `apps/web/src/components/notification-settings.tsx` | Web preferences UI |
 | `apps/mobile/src/notifications/register.ts` | Push permission + token registration |
 | `GET/PATCH /api/user/notification-preferences` | User notification toggles |

@@ -5,14 +5,15 @@ import { Prisma, prisma } from "@tiki-acca/database";
 export async function sendEmailToUser(
   userId: string,
   subject: string,
-  html: string
+  html: string,
+  text?: string
 ): Promise<boolean> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { email: true },
   });
   if (!user?.email) return false;
-  return sendEmail({ to: [user.email], subject, html });
+  return sendEmail({ to: [user.email], subject, html, text });
 }
 
 export async function hasNotificationBeenSent(params: {

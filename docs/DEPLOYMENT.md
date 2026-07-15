@@ -212,6 +212,26 @@ User preferences: `/settings/notifications` (web), mobile Notifications screen. 
 
 Omit either email variable to skip emails (no-op).
 
+Templates: Turf Green branded HTML in `apps/web/src/lib/notifications/templates.ts` + `email-layout.ts`. Logo asset: `apps/web/public/brand/email-logo.png` (served at `/brand/email-logo.png`). Local preview: `scripts/preview-notification-emails.html` (regenerate with `cd apps/web && npx tsx ../../scripts/generate-email-preview.ts`).
+
+### Deliverability (avoid junk / spam)
+
+Transactional mail still needs correct DNS and a warm reputation. Checklist:
+
+| Step | Action |
+|------|--------|
+| 1. Custom domain | Send only from `*@tikiacca.com` via Resend — **not** `*.resend.dev` / onboarding addresses. `EMAIL_FROM` must match a verified domain. |
+| 2. SPF + DKIM | In Resend → Domains → `tikiacca.com`, add the DNS records Resend shows. In Cloudflare DNS, create them as **DNS only** (grey cloud), not proxied. Wait until Resend shows the domain as **Verified**. |
+| 3. DMARC | Add a TXT record at `_dmarc.tikiacca.com`, start gentle: `v=DMARC1; p=none; rua=mailto:you@tikiacca.com`. Tighten to `p=quarantine` once SPF/DKIM are clean for a few weeks. |
+| 4. Alignment | From domain (`tikiacca.com`) must align with DKIM/SPF. Prefer `Tiki Acca <notifications@tikiacca.com>` (or `hello@` / `noreply@`) — avoid mismatched display domains. |
+| 5. Headers we send | App includes `List-Unsubscribe` → `/settings/notifications` and a plain-text part — both help Gmail/Outlook trust. |
+| 6. Inbox tests | After DNS: send yourself a lock/settle email, then check [mail-tester.com](https://www.mail-tester.com) (aim ≥8/10) and Gmail “Show original” → SPF/DKIM/DMARC **PASS**. |
+| 7. Recipient side | Ask friends to mark “Not spam” / move to Primary once; that trains their mailbox. New domains often land in junk for the first days — volume is low so warming is just: send real transactional mail, don’t blast. |
+
+**Common failure:** Cloudflare orange-cloud on Resend TXT/CNAME records (breaks SPF/DKIM verification). Keep those records DNS-only.
+
+**If still junk after PASS:** Resend dashboard → Domains → check reputation; confirm `EMAIL_FROM` on Cloud Run matches the verified domain; avoid link shorteners and tipster phrases in subjects (templates already avoid these).
+
 ## Platform admin
 
 Grant developer access to `/admin` (overview + platform leaderboards).
