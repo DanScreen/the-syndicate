@@ -39,6 +39,7 @@ The disc exists because white arrows on a transparent favicon disappear on light
 - `app/icon.svg` (SVG favicon) · `app/favicon.ico` (16/32/48) · `app/apple-icon.tsx`
 - `lib/share/render-performance-image.ts` — canvas mark on share cards
 - `apps/mobile/assets/` — `icon.png` (full-bleed 1024), `splash-icon.png`, `android-icon-{foreground,background,monochrome}.png`, `favicon.png`
+- `apps/mobile/src/components/logo.tsx` — in-app mark via react-native-svg (sign-in lockup, sign-up, dashboard header)
 
 ## Not chosen
 

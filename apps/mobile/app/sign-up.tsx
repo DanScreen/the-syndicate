@@ -1,5 +1,6 @@
 import { ApiError } from "@/api/client";
 import { useAuth } from "@/auth/AuthProvider";
+import { LogoMark } from "@/components/logo";
 import { Button, ErrorText, Field, LinkText, Screen, Subtitle, Title } from "@/components/ui";
 import { redirectAfterAuth } from "@/lib/auth-redirect";
 import { router } from "expo-router";
@@ -34,7 +35,10 @@ export default function SignUpScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <Screen>
-        <Title>Join Tiki Acca</Title>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <LogoMark size={34} />
+          <Title>Join Tiki Acca</Title>
+        </View>
         <Subtitle>Create your account</Subtitle>
         <View style={{ flexDirection: "row", gap: 8 }}>
           <View style={{ flex: 1 }}>

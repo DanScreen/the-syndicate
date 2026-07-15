@@ -9,6 +9,7 @@ import {
   yourLegStatusMessage,
 } from "@tiki-acca/shared";
 import { useAuth } from "@/auth/AuthProvider";
+import { LogoMark } from "@/components/logo";
 import { Button, Card, EmptyState, Screen, Subtitle, Title } from "@/components/ui";
 import { colors } from "@/config";
 import { copy } from "@/lib/copy";
@@ -63,9 +64,12 @@ export default function GroupsScreen() {
         contentContainerStyle={styles.scroll}
       >
         <View style={styles.header}>
-          <View>
-            <Title>Dashboard</Title>
-            <Subtitle>Welcome, {user?.firstName ?? user?.name}</Subtitle>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <LogoMark size={34} />
+            <View>
+              <Title>Dashboard</Title>
+              <Subtitle>Welcome, {user?.firstName ?? user?.name}</Subtitle>
+            </View>
           </View>
           <Pressable onPress={() => signOut().then(() => router.replace("/sign-in"))}>
             <Text style={styles.signOut}>Sign out</Text>

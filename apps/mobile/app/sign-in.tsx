@@ -1,6 +1,7 @@
 import { ApiError } from "@/api/client";
 import { useAuth } from "@/auth/AuthProvider";
-import { Button, ErrorText, Field, LinkText, Screen, Subtitle, Title } from "@/components/ui";
+import { Logo } from "@/components/logo";
+import { Button, ErrorText, Field, LinkText, Screen, Subtitle } from "@/components/ui";
 import { redirectAfterAuth } from "@/lib/auth-redirect";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -32,7 +33,7 @@ export default function SignInScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <Screen>
-        <Title>Tiki Acca</Title>
+        <Logo markSize={40} />
         <Subtitle>Sign in to your account</Subtitle>
         <Field
           placeholder="Email"
