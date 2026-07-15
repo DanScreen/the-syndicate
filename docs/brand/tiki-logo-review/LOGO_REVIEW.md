@@ -15,7 +15,7 @@ An equilateral passing triangle circulating clockwise — tiki-taka distilled:
 
 - **White pass** up the left (build-up) → **accent pass** into the green player (the killer ball) → **bright pass** back along the base (recycle). The ball never stops.
 - Three player dots at the vertices; the green one is the finisher.
-- **No wordmark, no tagline** — the mark stands alone (decision, July 2026).
+- The **mark asset contains no text**; headers render the “Tiki **Acca**” wordmark beside it (no tagline).
 
 ## Geometry (exact, symmetric by construction)
 

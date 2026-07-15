@@ -2,14 +2,15 @@ import Link from "next/link";
 
 type LogoProps = {
   className?: string;
+  showWordmark?: boolean;
   href?: string;
   size?: "sm" | "md" | "lg";
 };
 
 const sizes = {
-  sm: 28,
-  md: 36,
-  lg: 46,
+  sm: { mark: 28, text: "text-base" },
+  md: { mark: 36, text: "text-lg" },
+  lg: { mark: 46, text: "text-xl" },
 };
 
 /**
@@ -55,20 +56,32 @@ export function LogoMark({ size = 36, className }: { size?: number; className?: 
   );
 }
 
-export function Logo({ className, href = "/", size = "md" }: LogoProps) {
-  const mark = <LogoMark size={sizes[size]} className={className} />;
+export function Logo({
+  className,
+  showWordmark = true,
+  href = "/",
+  size = "md",
+}: LogoProps) {
+  const { mark, text } = sizes[size];
+
+  const content = (
+    <span className={`inline-flex items-center gap-2.5 ${className ?? ""}`}>
+      <LogoMark size={mark} />
+      {showWordmark && (
+        <span className={`${text} font-bold tracking-tight`}>
+          Tiki <span className="text-accent">Acca</span>
+        </span>
+      )}
+    </span>
+  );
 
   if (href) {
     return (
-      <Link
-        href={href}
-        aria-label="Tiki Acca home"
-        className="inline-flex transition-opacity hover:opacity-90"
-      >
-        {mark}
+      <Link href={href} aria-label="Tiki Acca home" className="transition-opacity hover:opacity-90">
+        {content}
       </Link>
     );
   }
 
-  return mark;
+  return content;
 }

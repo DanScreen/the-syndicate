@@ -31,7 +31,7 @@ We are **not** a bookmaker. Copy and UI must always make clear users place bets 
 
 **Component:** `apps/web/src/components/logo.tsx` — `LogoMark`, `Logo`.
 
-**Wordmark:** none — the mark stands alone (no “Tiki Acca” text or tagline beside the logo, per July 2026 decision). “Tiki Acca” in copy: “Acca” takes accent colour when styled.
+**Wordmark:** “Tiki **Acca**” — “Acca” in accent colour, rendered beside the mark in headers (`Logo`). No tagline beside the logo. The mark asset itself contains no text.
 
 ---
 
