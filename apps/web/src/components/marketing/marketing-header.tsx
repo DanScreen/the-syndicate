@@ -35,6 +35,12 @@ export function MarketingHeader(_props: MarketingHeaderProps = {}) {
             About
           </Link>
           <Link
+            href="/blog"
+            className="rounded-lg px-3 py-1.5 text-sm text-muted transition-colors hover:bg-card hover:text-foreground"
+          >
+            Blog
+          </Link>
+          <Link
             href="/sign-in"
             className="rounded-lg px-3 py-1.5 text-sm text-muted transition-colors hover:text-foreground"
           >
@@ -45,12 +51,6 @@ export function MarketingHeader(_props: MarketingHeaderProps = {}) {
             className="rounded-lg bg-accent px-3.5 py-1.5 text-sm font-medium text-black transition-colors hover:bg-accent-bright"
           >
             Sign up
-          </Link>
-          <Link
-            href="/blog"
-            className="rounded-lg px-3 py-1.5 text-sm text-muted transition-colors hover:bg-card hover:text-foreground"
-          >
-            Blog
           </Link>
         </nav>
       </div>
