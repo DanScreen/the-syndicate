@@ -53,7 +53,7 @@ export const audiences = [
     body: "Replace the Saturday spreadsheet with a shared acca everyone can see and contribute to.",
   },
   {
-    title: "Mate groups",
+    title: "Friend groups",
     body: "Stop arguing about whose pick lost the acca. The stats settle it.",
   },
   {
