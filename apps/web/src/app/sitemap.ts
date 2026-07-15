@@ -1,4 +1,4 @@
-import { getAllPosts } from "@/lib/blog";
+import { getAllPosts, getAllTags } from "@/lib/blog";
 import type { MetadataRoute } from "next";
 
 const BASE = "https://www.tikiacca.com";
@@ -6,9 +6,15 @@ const BASE = "https://www.tikiacca.com";
 export default function sitemap(): MetadataRoute.Sitemap {
   const posts = getAllPosts().map((post) => ({
     url: `${BASE}/blog/${post.slug}`,
-    lastModified: new Date(`${post.date}T00:00:00Z`),
+    lastModified: new Date(`${post.updated}T00:00:00Z`),
     changeFrequency: "monthly" as const,
     priority: 0.6,
+  }));
+
+  const tags = getAllTags().map((tag) => ({
+    url: `${BASE}/blog/tag/${tag}`,
+    changeFrequency: "weekly" as const,
+    priority: 0.4,
   }));
 
   return [
@@ -16,5 +22,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/about`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE}/blog`, changeFrequency: "weekly", priority: 0.7 },
     ...posts,
+    ...tags,
   ];
 }

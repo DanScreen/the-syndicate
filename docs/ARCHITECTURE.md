@@ -94,7 +94,7 @@ Split config: edge-safe `auth.config.ts` (middleware, no Prisma) + `auth.ts` (cr
 → [specs/platform-admin.md](./specs/platform-admin.md)
 
 ### Marketing (public)
-Homepage (`/`), about (`/about`), blog (`/blog`) — public; signed-in chrome via `SessionAwareMarketingHeader` (not build-time `auth()`, which would bake signed-out UI into static blog). Turf Green tokens + Triangle rondo logo. Copy in `lib/marketing-content.ts`. **Blog is file-based**: MDX posts in `apps/web/content/blog/` rendered statically at build (`lib/blog.ts`, next-mdx-remote) — no DB, no CMS; publishing = git push. Favicon URLs in `layout.tsx` use `?v=` cache-bust against Cloudflare immutable caching. `sitemap.ts` + `robots.ts` cover marketing + blog routes.
+Homepage (`/`), about (`/about`), blog (`/blog`) — public; signed-in chrome via `SessionAwareMarketingHeader` (not build-time `auth()`, which would bake signed-out UI into static blog). Turf Green tokens + Triangle rondo logo. Copy in `lib/marketing-content.ts`. **Blog is file-based**: MDX posts in `apps/web/content/blog/` rendered statically at build (`lib/blog.ts`, next-mdx-remote) — no DB, no CMS; publishing = git push. SEO is frontmatter-driven and generated uniformly per post: canonical, OpenGraph/Twitter, `BlogPosting` JSON-LD, a 1200×630 `opengraph-image.tsx` per post, and `/blog/tag/[tag]` hub pages. **Authoring standards are strict — see [BLOG.md](./BLOG.md)** before adding or editing a post. Favicon URLs in `layout.tsx` use `?v=` cache-bust against Cloudflare immutable caching. `sitemap.ts` + `robots.ts` cover marketing + blog + tag routes.
 
 → [BRAND.md](./BRAND.md)
 
