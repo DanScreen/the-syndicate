@@ -47,7 +47,6 @@ export function HistoryRoundCard({ round }: { round: HistoryRound }) {
   const outcomes = round.legs.map((l) => l.outcome as LegOutcome);
   const roundPoints = groupAccaRoundPoints(outcomes, round.combinedOdds ?? 1);
   const settledLabel = formatSettledAt(round.settledAt);
-  const accaLost = outcomes.some((o) => o === "lost");
 
   return (
     <article className="rounded-xl border border-border bg-card p-4">
@@ -72,49 +71,41 @@ export function HistoryRoundCard({ round }: { round: HistoryRound }) {
       </div>
 
       <ul className="mt-4 space-y-2">
-        {round.legs.map((leg) => {
-          const wonPickOnLostAcca =
-            accaLost && leg.outcome === "won" && leg.pointsAwarded < 0;
-
-          return (
-            <li
-              key={leg.id}
-              className={`rounded-lg border px-3 py-3 text-sm ${legOutcomeClass(leg.outcome)}`}
-            >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="font-medium text-foreground">{leg.user.name}</span>
-                <div className="flex items-center gap-2">
-                  <span className="rounded-full border border-current/20 px-2 py-0.5 text-xs font-medium">
-                    {legOutcomeLabel(leg.outcome)}
-                  </span>
-                  <span className="font-medium text-foreground/80">{leg.odds}</span>
-                </div>
+        {round.legs.map((leg) => (
+          <li
+            key={leg.id}
+            className={`rounded-lg border px-3 py-3 text-sm ${legOutcomeClass(leg.outcome)}`}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="font-medium text-foreground">{leg.user.name}</span>
+              <div className="flex items-center gap-2">
+                <span className="rounded-full border border-current/20 px-2 py-0.5 text-xs font-medium">
+                  {legOutcomeLabel(leg.outcome)}
+                </span>
+                <span className="font-medium text-foreground/80">{leg.odds}</span>
               </div>
-              <p className="mt-1 text-foreground">
-                {leg.homeTeam} vs {leg.awayTeam}
-              </p>
-              <p className="text-muted">
-                {leg.marketLabel}: {leg.selectionLabel}
-              </p>
-              <p className="mt-1 text-xs text-muted">
-                {leg.competition} · {formatKickoff(leg.kickoff)}
-                {leg.pointsAwarded !== 0 || leg.outcome !== "pending" ? (
-                  <>
-                    {" · "}
-                    <PointsText
-                      points={leg.pointsAwarded}
-                      outcome={leg.outcome}
-                      className="text-xs"
-                    />
-                    {wonPickOnLostAcca ? (
-                      <span className="text-muted"> (pick won, acca lost)</span>
-                    ) : null}
-                  </>
-                ) : null}
-              </p>
-            </li>
-          );
-        })}
+            </div>
+            <p className="mt-1 text-foreground">
+              {leg.homeTeam} vs {leg.awayTeam}
+            </p>
+            <p className="text-muted">
+              {leg.marketLabel}: {leg.selectionLabel}
+            </p>
+            <p className="mt-1 text-xs text-muted">
+              {leg.competition} · {formatKickoff(leg.kickoff)}
+              {leg.pointsAwarded !== 0 || leg.outcome !== "pending" ? (
+                <>
+                  {" · "}
+                  <PointsText
+                    points={leg.pointsAwarded}
+                    outcome={leg.outcome}
+                    className="text-xs"
+                  />
+                </>
+              ) : null}
+            </p>
+          </li>
+        ))}
       </ul>
     </article>
   );

@@ -23,14 +23,14 @@ Related: [competitions-and-results.md](./competitions-and-results.md)
 | Outcome | Group | Member |
 |---------|-------|--------|
 | **Acca won** | `combinedOdds − 1` | `odds − 1` per won leg (`0` if void) |
-| **Acca lost** | `−1` | `−1` per member |
+| **Acca lost** | `−1` | Same per-leg rule: won → `odds − 1`, lost → `−1`, void → `0` |
 | **Void leg** | Counts toward acca win; combined odds unchanged at lock | `0` |
 
 Implementation: `groupAccaRoundPoints()` and `memberAccaLegPoints()` in `packages/shared/src/scoring.ts`.
 
-Member totals on a winning acca **do not** sum to the group total (e.g. legs 1.6 + 2.15 → members 0.6 + 1.15, group 2.44).
+Member totals on a winning acca **do not** sum to the group total (e.g. legs 1.6 + 2.15 → members 0.6 + 1.15, group 2.44). On a losing acca the group is −1 while members who won their pick keep `odds − 1`.
 
-**Charts:** cumulative points after each settled round. In-progress leg outcomes on locked accas are visible on the Round tab but do not affect stats until the round settles. A losing leg settles the acca immediately (group −1; concluded legs score under the lost-acca rule); later fixtures on that round keep resolving for individual outcomes/points.
+**Charts:** cumulative points after each settled round. In-progress leg outcomes on locked accas are visible on the Round tab but do not affect stats until the round settles. A losing leg settles the acca immediately (group −1; concluded legs score per-leg); later fixtures on that round keep resolving for individual outcomes/points.
 
 **Group chart:** `combinedOdds − 1` per winning acca round, `−1` per losing acca round (one unit stake on the group acca).  
 **Separate stat:** cumulative acca £ P/L from `Round.profitLossGbp` (£10 theoretical stake).
@@ -61,7 +61,7 @@ Member totals on a winning acca **do not** sum to the group total (e.g. legs 1.6
 
 | Stat | Definition |
 |------|------------|
-| Net points | Sum of member leg points (`odds − 1` on won acca legs, `−1` on lost accas) |
+| Net points | Sum of member leg points (`odds − 1` on won legs, `−1` on lost legs — including when the group acca loses) |
 | Legs played | Count in settled rounds |
 | Win rate | Won / (won + lost) |
 | Average odds | Mean `Leg.odds` |

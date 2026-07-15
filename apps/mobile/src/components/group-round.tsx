@@ -880,10 +880,6 @@ export function RoundHistory({
             </Text>
             {round.legs.map((leg) => {
               const oc = outcomeColors(leg.outcome);
-              const wonPickOnLostAcca =
-                outcomes.some((o) => o === "lost") &&
-                leg.outcome === "won" &&
-                leg.pointsAwarded < 0;
               return (
               <View
                 key={leg.id}
@@ -916,7 +912,6 @@ export function RoundHistory({
                   {leg.pointsAwarded !== 0 || leg.outcome !== "pending" ? (
                     <Text style={outcomePointsStyle(leg.outcome)}>
                       {` · ${formatLegPoints(leg.pointsAwarded)} pts`}
-                      {wonPickOnLostAcca ? " (pick won, acca lost)" : ""}
                     </Text>
                   ) : null}
                 </Text>

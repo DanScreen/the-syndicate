@@ -1,6 +1,6 @@
 # Current state (as-built)
 
-Last updated 15 July 2026 (member pick colour vs group P/L). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
+Last updated 15 July 2026 (won legs score odds−1 on lost accas). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
 
 Production: **https://www.tikiacca.com** (apex → 301 to www via Cloudflare).
 
@@ -119,13 +119,13 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 | Outcome | Group points | Member points |
 |---------|--------------|---------------|
 | Acca won | `combinedOdds − 1` | `odds − 1` on each won leg (`0` if void) |
-| Acca lost | `−1` | `−1` per member |
+| Acca lost | `−1` | Same per-leg rule: won → `odds − 1`, lost → `−1`, void → `0` |
 
-Example: acca @ 3.44 (legs 1.6 × 2.15) → **2.44** group pts; members **0.6** and **1.15** (not split).
+Example: acca @ 3.44 (legs 1.6 × 2.15) → **2.44** group pts; members **0.6** and **1.15** (not split). If that acca loses because one leg fails, the winning member still keeps `odds − 1` while the losing member gets `−1` (group still `−1`).
 
-**Stats:** `groupAccaRoundPoints()` for group totals; `memberAccaLegPoints()` for members. Leaderboard `pointsAwarded` backfilled by migration `20260712160000_member_leg_acca_points`.
+**Stats:** `groupAccaRoundPoints()` for group totals; `memberAccaLegPoints()` for members. Leaderboard `pointsAwarded` backfilled by migration `20260712160000_member_leg_acca_points`. After the July 2026 lost-acca member scoring change, run `npm run db:maintenance -- rescore-member-legs --execute` on prod to rewrite historical `pointsAwarded` + totals.
 
-**Points-first UX:** Points are the **primary metric** across performance pages, leaderboards, share cards, and round history. Users convert points to money with `profitFromPoints(points, stake)` — profit = points × stake (£). UI: `StakeProfit` component (default stake £10). **Group / acca points** use `pointsTone()` (negative → red). **Individual pick rows** use `pointsToneFromOutcome()` so a won pick stays green even when a lost acca awards −1 pts.
+**Points-first UX:** Points are the **primary metric** across performance pages, leaderboards, share cards, and round history. Users convert points to money with `profitFromPoints(points, stake)` — profit = points × stake (£). UI: `StakeProfit` component (default stake £10). **Group / acca points** use `pointsTone()` (negative → red). **Individual pick rows** use `pointsToneFromOutcome()` (won → green, lost → red).
 
 **Acca P/L in DB:** `Round.profitLossGbp` still computed at settle (£10 default stake) for admin “successful acca” counts and settlement emails — not shown as the primary user-facing metric.
 
@@ -240,7 +240,7 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 
 Email and push notifications fire on **round locked**, **round settled**, and **pick reminders** (within 2h before first kickoff). Resend for email (`RESEND_API_KEY`, `EMAIL_FROM`); Expo Push API for mobile (`PushDevice` tokens). Per-user preferences at `/account` (web) and `(main)/account` (mobile). Deduped via `NotificationLog`; round-level `lockedNotificationSentAt` / `settledNotificationSentAt` set only when all members are satisfied (delivered or opted out). Failed lock/settle deliveries retried on `sync-matches` (5 min). Pick reminders cron: `POST /api/internal/round-reminders` every 15 min (Terraform). Notification times formatted in `Europe/London`. See [specs/notifications.md](./specs/notifications.md).
 
-**Early settle on loss.** As soon as one leg is `lost`, the round settles: group scores −1, concluded legs award member points under the lost-acca rule (−1 / void 0), and the next open round starts. Remaining legs stay `pending` until match sync (or admin) resolves them via `applyDeferredLegOutcome()` — still exactly-once (pending → outcome claim).
+**Early settle on loss.** As soon as one leg is `lost`, the round settles: group scores −1, concluded legs award member points under the per-leg rule (won → odds−1, lost → −1, void → 0), and the next open round starts. Remaining legs stay `pending` until match sync (or admin) resolves them via `applyDeferredLegOutcome()` — still exactly-once (pending → outcome claim).
 
 **Exactly-once settlement.** `applyRoundSettlement()` validates settleability, then runs in a `prisma.$transaction` with an atomic claim — `round.updateMany({ where: { status: "locked" }, data: { status: "settled" } })`. Overlapping settle attempts (e.g. two cron runs) can't double-count points: the loser matches zero rows and throws `RoundNotSettleableError`, treated as a benign `skipped` no-op.
 
