@@ -130,6 +130,7 @@ export default function GroupRoundPage() {
         <SubmitLegForm
           roundId={activeRound.id}
           onSubmitted={reload}
+          existingLegs={activeRound.legs}
           title={
             legsPerMember > 1
               ? `Submit leg ${nextSlot} of ${legsPerMember}`
@@ -173,6 +174,7 @@ export default function GroupRoundPage() {
         <SubmitLegForm
           roundId={activeRound.id}
           editLegId={editingLegId}
+          existingLegs={activeRound.legs}
           onSubmitted={() => {
             setEditingLegId(null);
             reload();

@@ -166,6 +166,7 @@ export default function GroupRoundScreen() {
           roundId={round.id}
           token={token}
           onSubmitted={reload}
+          existingLegs={round.legs}
           title={
             legsPerMember > 1
               ? `Submit leg ${nextSlot} of ${legsPerMember}`
@@ -203,6 +204,7 @@ export default function GroupRoundScreen() {
           roundId={round.id}
           token={token}
           editLegId={editingLegId}
+          existingLegs={round.legs}
           onSubmitted={() => {
             setEditingLegId(null);
             void reload();

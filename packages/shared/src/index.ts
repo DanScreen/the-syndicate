@@ -11,6 +11,7 @@ export * from "./brand";
 export * from "./bookmakers";
 export * from "./bookmaker-branding";
 export * from "./market-groups";
+export * from "./market-conflicts";
 export * from "./round-status";
 export * from "./notification-types";
 export * from "./group-summary-display";

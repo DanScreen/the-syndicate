@@ -27,8 +27,10 @@ import {
   bookmakerLogoUrl,
   bookmakerRankPlace,
   groupMarkets,
+  isMarketTakenOnFixture,
   sortQuotesByBestOdds,
   type LegOutcome,
+  type MarketConflictLeg,
 } from "@tiki-acca/shared";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -469,6 +471,7 @@ export function SubmitLegForm({
   editLegId,
   onCancel,
   title,
+  existingLegs = [],
 }: {
   roundId: string;
   token: string;
@@ -477,6 +480,8 @@ export function SubmitLegForm({
   editLegId?: string;
   onCancel?: () => void;
   title?: string;
+  /** Other legs already on this round — used to block duplicate markets on the same fixture. */
+  existingLegs?: MarketConflictLeg[];
 }) {
   const [competitions, setCompetitions] = useState<CompetitionOption[]>([]);
   const [loadingCompetitions, setLoadingCompetitions] = useState(true);
@@ -694,17 +699,27 @@ export function SubmitLegForm({
           {marketGroups.map((group) => (
             <View key={group.id}>
               <Text style={styles.groupLabel}>{group.label}</Text>
-              {group.markets.map((m) => (
-                <OptionRow
-                  key={m.type}
-                  label={m.label}
-                  selected={marketType === m.type}
-                  onPress={() => {
-                    setMarketType(m.type);
-                    setSelectionId("");
-                  }}
-                />
-              ))}
+              {group.markets.map((m) => {
+                const taken = isMarketTakenOnFixture(
+                  existingLegs,
+                  fixtureId,
+                  m.type,
+                  editLegId
+                );
+                return (
+                  <OptionRow
+                    key={m.type}
+                    label={taken ? `${m.label} (taken)` : m.label}
+                    selected={marketType === m.type}
+                    disabled={taken}
+                    onPress={() => {
+                      if (taken) return;
+                      setMarketType(m.type);
+                      setSelectionId("");
+                    }}
+                  />
+                );
+              })}
             </View>
           ))}
           {!loadingMarkets && availableTiers.some((t) => !loadedTiers.includes(t.id)) ? (

@@ -9,6 +9,8 @@ import { isPastKickoffCutoff } from "@/lib/rounds/first-kickoff";
 import { prisma } from "@tiki-acca/database";
 import {
   allMembersFilledQuota,
+  findConflictingMarketLeg,
+  formatMarketConflictError,
   getCompetitionById,
   nextLegIndexForUser,
   submitLegSchema,
@@ -93,6 +95,18 @@ export async function POST(request: Request) {
   }
 
   const { fixture, market, selection } = selectionData;
+
+  const marketConflict = findConflictingMarketLeg(round.legs, {
+    fixtureId: fixture.id,
+    marketType: market.type,
+  });
+  if (marketConflict) {
+    return NextResponse.json(
+      { error: formatMarketConflictError(marketConflict) },
+      { status: 409 }
+    );
+  }
+
   const quote = sortQuotesByBestOdds(selection.odds)[0];
   if (!quote) {
     return NextResponse.json({ error: "No odds available for this selection" }, { status: 400 });
