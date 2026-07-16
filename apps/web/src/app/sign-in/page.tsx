@@ -1,5 +1,6 @@
 "use client";
 
+import { Logo } from "@/components/logo";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
@@ -51,6 +52,7 @@ function SignInForm() {
 
   return (
     <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4">
+      <Logo className="mb-8 self-start" size="lg" />
       <h1 className="text-2xl font-bold">Sign in</h1>
       <p className="mt-2 text-sm text-muted">
         No account?{" "}

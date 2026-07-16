@@ -1,5 +1,6 @@
 "use client";
 
+import { Logo } from "@/components/logo";
 import { MIN_SIGN_UP_AGE } from "@tiki-acca/shared";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -52,6 +53,7 @@ export default function SignUpPage() {
 
   return (
     <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4">
+      <Logo className="mb-8 self-start" size="lg" />
       <h1 className="text-2xl font-bold">Create account</h1>
       <p className="mt-2 text-sm text-muted">
         Already have an account?{" "}
