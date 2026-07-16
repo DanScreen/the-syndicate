@@ -147,7 +147,7 @@ POST /api/legs                        → best retail quote; stores competitionI
 (lock) lockRoundWithAccaPricing()     → re-fetch quotes, rankAccaBookmakers(), store deeplinks on Leg
 ```
 
-At lock, `Leg.betslipUrl` stores the chosen bookmaker's **real** outcome/event deeplink (never a generic football hub); `Leg.bookmakerLinks` maps retail bookmakers → Odds API links only. **Hub URLs** (`BOOKMAKER_HUB_URLS`) are a last-resort UI fallback and are tagged `linkQuality: "hub"`. **While bet is open:** leg picker shows best odds only; **Compare bookmakers** shows a live provisional ranking + refreshed deeplinks from current quotes. **Once locked:** only the **final combined odds** and **recommended bookmaker** from lock (no compare list); primary CTA opens the best available deeplink (first pick when multi-leg) until the first result, then tracking only. Per-leg **Open** uses `bookmakerLinks[recommendedBookmaker]` when present.
+At lock, `Leg.betslipUrl` stores the chosen bookmaker's **real** outcome/event deeplink (never a generic football hub); `Leg.bookmakerLinks` maps retail bookmakers → Odds API links only. **Hub URLs** (`BOOKMAKER_HUB_URLS`) are a last-resort UI fallback and are tagged `linkQuality: "hub"`. **While bet is open:** leg picker shows best odds only; **Compare bookmakers** shows a live provisional ranking + refreshed deeplinks from current quotes. **Once locked:** **final combined odds** + the **Compare bookmakers** ranking captured at lock (so members can pick the best bookmaker when placing the bet); primary CTA opens the best available deeplink (first pick when multi-leg) until the first result, then tracking only. Per-leg **Open** uses `bookmakerLinks[recommendedBookmaker]` when present.
 
 Requires live odds (`ODDS_API_KEY`) — mock fixtures have no deeplinks. Odds are stored in **PostgreSQL** (`OddsBulkSnapshot`, `OddsEventSnapshot`) and refreshed by cron (`POST /api/internal/warm-odds-cache`). User picks read the DB; set `ODDS_DB_ONLY=true` in production to block live API calls from user traffic.
 
@@ -167,7 +167,7 @@ Full budgeting: [DEPLOYMENT.md — The Odds API](./DEPLOYMENT.md#the-odds-api--c
 
 ### Acca bookmaker rankings
 
-At lock, `rankAccaBookmakers()` in `apps/web/src/lib/odds/acca.ts` ranks all retail bookmakers by combined acca odds. Stored as `Round.accaBookmakerRankings` (JSON). Older locked rounds backfill lazily on `GET /api/groups/[id]`. **Open rounds** use a live provisional ranking for the Compare UI. **Locked rounds** surface final odds + best bookmaker from that ranking (compare list hidden). `GET /api/groups/[id]` refreshes Odds API deeplinks for the CTA and per-leg Open (odds remain frozen at lock). Multi-leg CTAs label **Open first pick** (or **Open {bookmaker}** for hubs) — UK books rarely expose a one-click full-acca URL.
+At lock, `rankAccaBookmakers()` in `apps/web/src/lib/odds/acca.ts` ranks all retail bookmakers by combined acca odds. Stored as `Round.accaBookmakerRankings` (JSON). Older locked rounds backfill lazily on `GET /api/groups/[id]`. **Open rounds** use a live provisional ranking for the Compare UI. **Locked rounds** show the ranking captured at lock (final odds + full **Compare bookmakers** list) so members can pick the best bookmaker when placing the bet. `GET /api/groups/[id]` refreshes Odds API deeplinks for the CTA and per-leg Open (odds remain frozen at lock). Multi-leg CTAs label **Open first pick** (or **Open {bookmaker}** for hubs) — UK books rarely expose a one-click full-acca URL.
 
 Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_rankings`.
 
@@ -225,7 +225,7 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 **Navigation:** Logo + **Social Group Betting** tagline always shown. Logo and **Home** → `/`. `AppNav` order: Home → About → Groups → Performance → Admin (admins) → **Blog** (rightmost). Header greeting **Hi, {firstName}** → `/account` (notifications + sign out). Legacy `/settings/notifications` redirects to `/account#notifications`. Marketing pages use `SessionAwareMarketingHeader` (client `useSession`) so statically generated `/blog` still shows signed-in chrome. Signed-out: Home / About / Blog / Sign in / Sign up. Inside a group, `GroupNav` tabs (Round / History / Leaderboard / Performance / **Settings** for owners) share data via `GroupDataProvider` (fetched once in group layout; polls every 60s while acca locked).
 
 **Open round UI:** provisional combined odds + **Compare bookmakers** podium (logos; 1st–3rd emphasised) from legs submitted so far.  
-**Locked round UI:** picks with per-leg outcomes as matches finish → **locked combined odds + recommended bookmaker only** (no compare list) → betslip CTA until the first result, then tracking only. Polls every 60s while locked. **History** tab lists all settled rounds.
+**Locked round UI:** picks with per-leg outcomes as matches finish → **locked combined odds + Compare bookmakers** podium (captured at lock) → betslip CTA until the first result, then tracking only. Polls every 60s while locked. **History** tab lists all settled rounds.
 
 ---
 

@@ -155,7 +155,10 @@ export default function GroupRoundScreen() {
             betslipLinkQuality={data.betslipLinks?.primaryLinkQuality ?? null}
             betslipHasAllLegLinks={data.betslipLinks?.primaryHasAllLegLinks ?? false}
             legCount={round?.legs.length ?? 1}
-            showBookmakerCompare={isOpen}
+            // Show the ranked best-odds-across-bookmakers list while open
+            // (provisional) and once locked (odds captured at lock) — locked is
+            // when members go place the bet, so the comparison is essential.
+            showBookmakerCompare={isOpen || isLocked}
             preview={isOpen}
           />
         );
