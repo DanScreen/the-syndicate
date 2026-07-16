@@ -45,6 +45,8 @@ export default function GroupRoundPage() {
     activeRound.legs.length > 0
       ? new Date(Math.min(...activeRound.legs.map((l) => new Date(l.kickoff).getTime())))
       : null;
+  // The bet is underway once the first fixture kicks off (betting has closed).
+  const accaStarted = Boolean(firstKickoff && Date.now() >= firstKickoff.getTime());
   const editWindowOpen =
     (isOpen || isLocked) && (!firstKickoff || Date.now() < firstKickoff.getTime());
   const lockedBookmakerName =
@@ -123,7 +125,10 @@ export default function GroupRoundPage() {
           // Show the ranked best-odds-across-bookmakers list while open
           // (provisional) and once locked (the odds captured at lock) — locked
           // is when members go place the bet, so the comparison is essential.
+          // Collapse it once the bet is underway (past first kickoff): still
+          // available, just out of the way since you can no longer place it.
           showBookmakerCompare={isOpen || isLocked}
+          compareDefaultOpen={!accaStarted}
           inProgress={isLocked}
           preview={isOpen}
         />

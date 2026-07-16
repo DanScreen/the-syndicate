@@ -306,6 +306,7 @@ export function AccaSummary({
   legCount = 1,
   preview = false,
   showBookmakerCompare = true,
+  compareDefaultOpen = true,
 }: {
   combinedOdds: number;
   bookmakerName?: string | null;
@@ -318,8 +319,10 @@ export function AccaSummary({
   legCount?: number;
   preview?: boolean;
   showBookmakerCompare?: boolean;
+  /** Initial expanded/collapsed state of the compare list (collapse once the bet is underway). */
+  compareDefaultOpen?: boolean;
 }) {
-  const [bookmakersOpen, setBookmakersOpen] = useState(true);
+  const [bookmakersOpen, setBookmakersOpen] = useState(compareDefaultOpen);
   const topBookmaker = bookmakerRankings[0];
   const showCompare = showBookmakerCompare && bookmakerRankings.length > 0;
   const ctaBookmaker = bookmakerName || topBookmaker?.bookmakerName || null;
