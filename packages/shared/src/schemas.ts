@@ -1,9 +1,24 @@
 import { z } from "zod";
 import { DEFAULT_LEGS_PER_MEMBER, LEGS_PER_MEMBER_OPTIONS } from "./constants";
+import { containsProfanity } from "./profanity";
 
 export const signUpSchema = z.object({
-  firstName: z.string().trim().min(1).max(40),
-  lastName: z.string().trim().min(1).max(40),
+  firstName: z
+    .string()
+    .trim()
+    .min(1)
+    .max(40)
+    .refine((v) => !containsProfanity(v), {
+      message: "Please choose a different first name",
+    }),
+  lastName: z
+    .string()
+    .trim()
+    .min(1)
+    .max(40)
+    .refine((v) => !containsProfanity(v), {
+      message: "Please choose a different last name",
+    }),
   email: z.string().email(),
   password: z.string().min(8).max(100),
 });
@@ -28,7 +43,13 @@ export const legsPerMemberSchema = z
   );
 
 export const createGroupSchema = z.object({
-  name: z.string().min(3).max(60),
+  name: z
+    .string()
+    .min(3)
+    .max(60)
+    .refine((v) => !containsProfanity(v), {
+      message: "Please choose a different group name",
+    }),
   legsPerMember: legsPerMemberSchema.optional().default(DEFAULT_LEGS_PER_MEMBER),
 });
 
