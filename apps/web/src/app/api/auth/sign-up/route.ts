@@ -45,12 +45,16 @@ export async function POST(request: Request) {
     const name = formatDisplayName(firstName, lastName);
     const passwordHash = await bcrypt.hash(parsed.data.password, 10);
     const role = isAdminEmail(email) ? "admin" : "user";
+    // Stored as a UTC midnight Date; the column is DATE so only the calendar day
+    // is persisted. Age was already validated (18+) by signUpSchema.
+    const dateOfBirth = new Date(`${parsed.data.dateOfBirth}T00:00:00.000Z`);
     const user = await prisma.user.create({
       data: {
         firstName,
         lastName,
         name,
         email,
+        dateOfBirth,
         passwordHash,
         role,
       },

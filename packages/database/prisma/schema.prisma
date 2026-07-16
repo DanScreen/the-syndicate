@@ -14,6 +14,9 @@ model User {
   /// Full display name (`firstName lastName`) for leaderboards, picks, emails.
   name         String
   email        String        @unique
+  /// Date of birth captured at sign-up for 18+ age verification. Nullable so
+  /// pre-existing accounts (created before this was collected) are grandfathered.
+  dateOfBirth  DateTime?     @db.Date
   passwordHash String
   role         String        @default("user")
   totalPoints  Float         @default(0)

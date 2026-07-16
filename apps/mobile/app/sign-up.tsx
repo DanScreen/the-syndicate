@@ -13,6 +13,7 @@ export default function SignUpScreen() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -20,7 +21,7 @@ export default function SignUpScreen() {
     setLoading(true);
     setError("");
     try {
-      await signUp(firstName.trim(), lastName.trim(), email.trim(), password);
+      await signUp(firstName.trim(), lastName.trim(), email.trim(), password, dateOfBirth.trim());
       redirectAfterAuth();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Sign up failed");
@@ -54,6 +55,13 @@ export default function SignUpScreen() {
           keyboardType="email-address"
           value={email}
           onChangeText={setEmail}
+        />
+        <Field
+          placeholder="Date of birth (YYYY-MM-DD)"
+          autoCapitalize="none"
+          keyboardType="numbers-and-punctuation"
+          value={dateOfBirth}
+          onChangeText={setDateOfBirth}
         />
         <Field
           placeholder="Password (min 8 chars)"

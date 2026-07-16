@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { DEFAULT_LEGS_PER_MEMBER, LEGS_PER_MEMBER_OPTIONS } from "./constants";
 import { containsProfanity } from "./profanity";
+import { isValidDateOfBirth, meetsMinimumAge, MIN_SIGN_UP_AGE } from "./age";
 
 export const signUpSchema = z.object({
   firstName: z
@@ -21,6 +22,13 @@ export const signUpSchema = z.object({
     }),
   email: z.string().email(),
   password: z.string().min(8).max(100),
+  // `YYYY-MM-DD` as produced by an HTML date input. Must be a real date and 18+.
+  dateOfBirth: z
+    .string()
+    .refine(isValidDateOfBirth, { message: "Enter a valid date of birth" })
+    .refine((v) => meetsMinimumAge(v), {
+      message: `You must be at least ${MIN_SIGN_UP_AGE} to sign up`,
+    }),
 });
 
 /** Full display name stored on User.name for groups, emails, and leaderboards. */
