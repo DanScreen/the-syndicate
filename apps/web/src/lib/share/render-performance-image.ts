@@ -52,7 +52,7 @@ function drawLogoMark(ctx: CanvasRenderingContext2D, x: number, y: number, size:
   ctx.fillStyle = "#14532d";
   ctx.fill();
 
-  // Passes: thin white line + explicit chevron head. Coordinates are the
+  // Passes: white line + explicit chevron head. Coordinates are the
   // inverted (apex-down) cut, reflected vertically about y=110 — matches
   // lib/brand/rondo-icon.tsx.
   const passes: {
@@ -64,7 +64,7 @@ function drawLogoMark(ctx: CanvasRenderingContext2D, x: number, y: number, size:
     { line: [75.22, 101.75, 94.25, 134.72], chevron: [100.25, 131.31, 100.25, 145.11, 88.3, 138.21] },
   ];
   ctx.strokeStyle = "#f1f5f9";
-  ctx.lineWidth = 6.5;
+  ctx.lineWidth = 10;
   for (const p of passes) {
     ctx.beginPath();
     ctx.moveTo(p.line[0], p.line[1]);
