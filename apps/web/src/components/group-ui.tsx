@@ -616,6 +616,7 @@ export function AccaSummary({
   inProgress = false,
   preview = false,
   showBookmakerCompare = true,
+  compareDefaultOpen = true,
 }: {
   combinedOdds: number;
   bookmakerName?: string | null;
@@ -632,8 +633,10 @@ export function AccaSummary({
   preview?: boolean;
   /** Show ranked bookmaker list. */
   showBookmakerCompare?: boolean;
+  /** Initial expanded/collapsed state of the compare list (collapse once the bet is underway). */
+  compareDefaultOpen?: boolean;
 }) {
-  const [bookmakersOpen, setBookmakersOpen] = useState(true);
+  const [bookmakersOpen, setBookmakersOpen] = useState(compareDefaultOpen);
   const topBookmaker = bookmakerRankings[0];
   const showCompare = showBookmakerCompare && bookmakerRankings.length > 0;
   const oddsLabel = inProgress

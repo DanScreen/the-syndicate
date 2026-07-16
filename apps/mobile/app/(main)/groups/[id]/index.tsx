@@ -60,6 +60,8 @@ export default function GroupRoundScreen() {
       : null;
   const editWindowOpen =
     (isOpen || isLocked) && (!firstKickoff || Date.now() < firstKickoff.getTime());
+  // The bet is underway once the first fixture kicks off (betting has closed).
+  const accaStarted = Boolean(firstKickoff && Date.now() >= firstKickoff.getTime());
   const resolvedLegs = round?.legs.filter((l) => l.outcome !== "pending").length ?? 0;
   const lockedBookmakerName =
     round?.accaBookmakerRankings?.find((r) => r.bookmakerId === round.bestBookmakerId)
@@ -155,7 +157,12 @@ export default function GroupRoundScreen() {
             betslipLinkQuality={data.betslipLinks?.primaryLinkQuality ?? null}
             betslipHasAllLegLinks={data.betslipLinks?.primaryHasAllLegLinks ?? false}
             legCount={round?.legs.length ?? 1}
-            showBookmakerCompare={isOpen}
+            // Show the ranked best-odds-across-bookmakers list while open
+            // (provisional) and once locked (odds captured at lock) — locked is
+            // when members go place the bet, so the comparison is essential.
+            // Collapse it once the bet is underway (past first kickoff).
+            showBookmakerCompare={isOpen || isLocked}
+            compareDefaultOpen={!accaStarted}
             preview={isOpen}
           />
         );
