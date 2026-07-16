@@ -456,6 +456,8 @@ One-off fixes (solo test rounds, re-settle after a bug) use `apps/web/scripts/da
 | Refresh Match scores from football-data (e.g. after 90-min fix) | `npm run db:maintenance -- resync-matches --execute` |
 | Verify `User.totalPoints` / `GroupMember.points` | `npm run db:maintenance -- reconcile-points` then `--execute` if needed |
 | Rescore member legs after scoring-rule change | `npm run db:maintenance -- rescore-member-legs` then `--execute` |
+| Preview duplicate same-fixture markets | `npm run db:maintenance -- preview-duplicate-markets` |
+| Fix historical duplicate markets (keep earliest leg) | `npm run db:maintenance -- fix-duplicate-markets --execute` |
 
 **Solo round** = every leg in the round belongs to that email (typical single-player test accas).
 

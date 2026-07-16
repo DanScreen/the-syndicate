@@ -7,13 +7,27 @@
  *   npx tsx apps/web/scripts/data-maintenance.ts preview-resettle --round-id <cuid>
  *   npx tsx apps/web/scripts/data-maintenance.ts resettle-round --round-id <cuid> --execute
  *   npx tsx apps/web/scripts/data-maintenance.ts find-rounds --teams Norway England
+ *   npx tsx apps/web/scripts/data-maintenance.ts preview-duplicate-markets
+ *   npx tsx apps/web/scripts/data-maintenance.ts fix-duplicate-markets --execute
  *   npx tsx apps/web/scripts/data-maintenance.ts reconcile-points --execute
  *   npx tsx apps/web/scripts/data-maintenance.ts rescore-member-legs --execute
  *   npx tsx apps/web/scripts/data-maintenance.ts resync-matches --execute
  */
 import { prisma } from "@tiki-acca/database";
-import type { Leg, Prisma, Round } from "@prisma/client";
-import { memberAccaLegPoints, type LegOutcome } from "@tiki-acca/shared";
+import { Prisma, type Leg, type Round } from "@prisma/client";
+import {
+  findRedundantMarketLegs,
+  memberAccaLegPoints,
+  type LegOutcome,
+} from "@tiki-acca/shared";
+
+import { deleteRedundantMarketLegs } from "../src/lib/legs/purge-duplicate-markets";
+import { lockRoundWithAccaPricing } from "../src/lib/odds/lock-round";
+import {
+  calculateGroupProfitLoss,
+  deriveCombinedOddsFromLegs,
+  pointsForMemberLeg,
+} from "../src/lib/settlement";
 import { applyRoundSettlement } from "../src/lib/settlement/apply-round-settlement";
 import { resolveRoundOutcomes } from "../src/lib/settlement/resolve-round-outcomes";
 import { openRound } from "../src/lib/rounds/open-round";
@@ -249,6 +263,186 @@ async function resettleRound(
   await reconcilePoints(true);
 }
 
+async function findRoundsWithDuplicateMarkets() {
+  const rounds = await prisma.round.findMany({
+    where: { legs: { some: {} } },
+    include: {
+      legs: { include: { user: { select: { email: true, name: true } } } },
+      group: { select: { name: true } },
+    },
+    orderBy: { createdAt: "asc" },
+  });
+
+  return rounds
+    .map((round) => ({
+      round,
+      conflicts: findRedundantMarketLegs(round.legs),
+    }))
+    .filter((row) => row.conflicts.length > 0);
+}
+
+async function previewDuplicateMarkets() {
+  const rows = await findRoundsWithDuplicateMarkets();
+  console.log(`Rounds with duplicate market families: ${rows.length}`);
+  for (const { round, conflicts } of rows) {
+    console.log(`  ${describeRound(round as RoundWithLegs)}`);
+    for (const conflict of conflicts) {
+      const kept = conflict.kept;
+      console.log(
+        `    keep ${kept.id}: ${kept.homeTeam} vs ${kept.awayTeam} · ${kept.marketLabel ?? kept.marketType} (${kept.selectionLabel ?? ""})`
+      );
+      for (const rem of conflict.removed) {
+        console.log(
+          `    remove ${rem.id}: ${rem.homeTeam} vs ${rem.awayTeam} · ${rem.marketLabel ?? rem.marketType} (${rem.selectionLabel ?? ""})`
+        );
+      }
+    }
+  }
+  console.log(
+    execute
+      ? ""
+      : "\nDry run only. Pass --execute with fix-duplicate-markets to apply."
+  );
+}
+
+async function fixDuplicateMarkets() {
+  const rows = await findRoundsWithDuplicateMarkets();
+  if (rows.length === 0) {
+    console.log("No duplicate market-family legs found.");
+    return;
+  }
+
+  console.log(
+    `${execute ? "Fixing" : "Would fix"} ${rows.length} round(s) with duplicate markets:`
+  );
+
+  for (const { round, conflicts } of rows) {
+    const removeIds = conflicts.flatMap((c) => c.removed.map((l) => l.id));
+    console.log(
+      `  [${round.id}] ${round.status} group="${round.group.name}" remove ${removeIds.length} leg(s)`
+    );
+    if (!execute) continue;
+
+    if (round.status === "open") {
+      await deleteRedundantMarketLegs(round.id);
+      continue;
+    }
+
+    if (round.status === "locked") {
+      await deleteRedundantMarketLegs(round.id);
+      const remaining = await prisma.leg.findMany({ where: { roundId: round.id } });
+      if (remaining.length === 0) {
+        await prisma.round.update({
+          where: { id: round.id },
+          data: {
+            status: "open",
+            combinedOdds: null,
+            bestBookmakerId: null,
+            accaBookmakerRankings: Prisma.DbNull,
+          },
+        });
+        await prisma.group.update({
+          where: { id: round.groupId },
+          data: { status: "open" },
+        });
+      } else {
+        await lockRoundWithAccaPricing(round.id, remaining);
+      }
+      continue;
+    }
+
+    if (round.status === "settled") {
+      // Keep status=settled: reverse awarded points, drop redundant legs, re-award
+      // from remaining outcomes (avoid flipping to locked while a newer open round exists).
+      const outcomeById = new Map(
+        round.legs.map((l) => [l.id, l.outcome as LegOutcome])
+      );
+
+      await prisma.$transaction(async (tx) => {
+        await reverseSettledRound(tx, round);
+      });
+
+      await deleteRedundantMarketLegs(round.id);
+      const remaining = await prisma.leg.findMany({ where: { roundId: round.id } });
+
+      if (remaining.length === 0) {
+        await prisma.round.update({
+          where: { id: round.id },
+          data: {
+            combinedOdds: null,
+            bestBookmakerId: null,
+            profitLossGbp: 0,
+            accaBookmakerRankings: Prisma.DbNull,
+          },
+        });
+        console.log(`    emptied settled round ${round.id}`);
+        continue;
+      }
+
+      const outcomes = remaining.map(
+        (l) => outcomeById.get(l.id) ?? ("pending" as LegOutcome)
+      );
+      const combinedOdds = deriveCombinedOddsFromLegs(remaining);
+
+      await prisma.$transaction(async (tx) => {
+        for (const leg of remaining) {
+          const outcome = outcomeById.get(leg.id) ?? ("pending" as LegOutcome);
+          const points = pointsForMemberLeg(outcomes, outcome, leg.odds);
+
+          await tx.leg.update({
+            where: { id: leg.id },
+            data: { outcome, pointsAwarded: points },
+          });
+
+          if (outcome === "pending") continue;
+
+          await tx.groupMember.update({
+            where: {
+              groupId_userId: { groupId: round.groupId, userId: leg.userId },
+            },
+            data: {
+              points: { increment: points },
+              legsWon: outcome === "won" ? { increment: 1 } : undefined,
+              legsLost: outcome === "lost" ? { increment: 1 } : undefined,
+            },
+          });
+
+          await tx.user.update({
+            where: { id: leg.userId },
+            data: {
+              totalPoints: { increment: points },
+              legsWon: outcome === "won" ? { increment: 1 } : undefined,
+              legsLost: outcome === "lost" ? { increment: 1 } : undefined,
+            },
+          });
+        }
+
+        await tx.round.update({
+          where: { id: round.id },
+          data: {
+            combinedOdds,
+            profitLossGbp: calculateGroupProfitLoss(
+              outcomes,
+              combinedOdds,
+              round.stakeGbp
+            ),
+          },
+        });
+      });
+
+      console.log(`    re-scored settled round ${round.id}`);
+    }
+  }
+
+  if (!execute) {
+    console.log("\nDry run only. Pass --execute to apply fix-duplicate-markets.");
+    return;
+  }
+
+  await reconcilePoints(true);
+  console.log("Done.");
+}
+
 async function reconcilePoints(silent = false) {
   const users = await prisma.user.findMany({ select: { id: true, email: true, totalPoints: true } });
   const members = await prisma.groupMember.findMany({
@@ -412,10 +606,16 @@ async function main() {
       );
       break;
     }
+    case "preview-duplicate-markets":
+      await previewDuplicateMarkets();
+      break;
+    case "fix-duplicate-markets":
+      await fixDuplicateMarkets();
+      break;
     default:
       console.error(`Unknown command: ${command ?? "(none)"}`);
       console.error(
-        "Commands: preview-solo-rounds, remove-solo-rounds, find-rounds, preview-resettle, resettle-round, reconcile-points, rescore-member-legs, resync-matches"
+        "Commands: preview-solo-rounds, remove-solo-rounds, find-rounds, preview-resettle, resettle-round, preview-duplicate-markets, fix-duplicate-markets, reconcile-points, rescore-member-legs, resync-matches"
       );
       process.exit(1);
   }

@@ -1,3 +1,4 @@
+import { deleteRedundantMarketLegs } from "@/lib/legs/purge-duplicate-markets";
 import {
   applyDeferredLegOutcome,
   applyRoundSettlement,
@@ -29,6 +30,10 @@ function knownOutcomesForLegs(
 }
 
 export async function tryAutoSettleRound(roundId: string): Promise<AutoSettleRoundResult> {
+  // Legacy rounds may still contain duplicate market-family legs — drop them
+  // before resolving so settlement matches the uniqueness rule.
+  await deleteRedundantMarketLegs(roundId);
+
   const round = await prisma.round.findUnique({
     where: { id: roundId },
     include: { legs: true },

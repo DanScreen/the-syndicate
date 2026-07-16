@@ -5,6 +5,7 @@ import {
   computeAccaRankingsForLegs,
   mergeLegBookmakerLinks,
 } from "@/lib/odds/lock-round";
+import { purgeDuplicateMarketsInRound } from "@/lib/legs/purge-duplicate-markets";
 import { claimAndLockRound } from "@/lib/rounds/claim-lock-round";
 import { isPastKickoffCutoff } from "@/lib/rounds/first-kickoff";
 import { lockOpenRoundsAtKickoff } from "@/lib/rounds/lock-open-rounds-at-kickoff";
@@ -115,6 +116,19 @@ export async function GET(_request: Request, { params }: Params) {
         include: recentRoundInclude,
       });
       if (refreshed) activeRound = refreshed;
+    }
+  }
+
+  // Drop duplicate market-family legs from open / pre-kickoff locked rounds
+  // that were submitted before the uniqueness rule shipped.
+  if (activeRound && activeRound.legs.length > 1) {
+    const purged = await purgeDuplicateMarketsInRound(activeRound.id);
+    if (purged.removedLegIds.length > 0) {
+      const refreshedAfterPurge = await prisma.round.findUnique({
+        where: { id: activeRound.id },
+        include: recentRoundInclude,
+      });
+      if (refreshedAfterPurge) activeRound = refreshedAfterPurge;
     }
   }
 

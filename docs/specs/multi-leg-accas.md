@@ -31,7 +31,7 @@ Groups can run accas where each member contributes more than one leg:
 - Members cannot submit more than their round quota; UI shows `submitted / quota` per member.
 - Legs use `legIndex` (1-based) with `@@unique([roundId, userId, legIndex])`.
 - Member points sum across all legs in the round (existing per-leg scoring).
-- **No duplicate markets on the same fixture** — a round cannot include two legs that share a market family on the same match (e.g. Goals O/U 0.5 and O/U 1.5). Exact same pick is therefore also blocked. Helpers: `marketFamilyKey` / `findConflictingMarketLeg` in `packages/shared/src/market-conflicts.ts`.
+- **No duplicate markets on the same fixture** — a round cannot include two legs that share a market family on the same match (e.g. Goals O/U 0.5 and O/U 1.5). Exact same pick is therefore also blocked. Helpers: `marketFamilyKey` / `findConflictingMarketLeg` / `findRedundantMarketLegs` in `packages/shared/src/market-conflicts.ts`. Historical cleanup: `purgeDuplicateMarketsInRound` + `fix-duplicate-markets` maintenance.
 
 ---
 
@@ -52,7 +52,7 @@ Groups can run accas where each member contributes more than one leg:
 - [x] Can owner change `legsPerMember` with an open round? **Yes** — open rounds update immediately; locked / past-kickoff stay put. Lowering blocked if someone already exceeds the new quota.
 - [x] Leaderboard: all legs vs primary? **All legs** (sum).
 - [ ] Combined-odds ceiling — not in v1.
-- [x] Block same fixture/market twice — **same market family on the same fixture** cannot appear twice in a round (e.g. Over 0.5 and Over 1.5 goals). Different fixtures OK. Enforced on `POST`/`PATCH` `/api/legs` + disabled in web/mobile pickers.
+- [x] Block same fixture/market twice — **same market family on the same fixture** cannot appear twice in a round (e.g. Over 0.5 and Over 1.5 goals). Different fixtures OK. Enforced on `POST`/`PATCH` `/api/legs` + disabled in web/mobile pickers. Historical/open rounds are purged automatically; settled rounds via `fix-duplicate-markets` maintenance.
 - [x] Grandfather existing groups at `legsPerMember = 1` — migration default.
 
 ---

@@ -1,4 +1,5 @@
 import { requireAdmin } from "@/lib/admin";
+import { deleteRedundantMarketLegs } from "@/lib/legs/purge-duplicate-markets";
 import {
   applyDeferredLegOutcome,
   applyRoundSettlement,
@@ -30,6 +31,9 @@ export async function POST(request: Request, { params }: Params) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
+  // Drop legacy duplicate market-family legs before validating outcomes.
+  await deleteRedundantMarketLegs(roundId);
+
   const round = await prisma.round.findUnique({
     where: { id: roundId },
     include: { legs: { select: { id: true, outcome: true } } },
@@ -39,8 +43,11 @@ export async function POST(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Round not found" }, { status: 404 });
   }
 
+  const remainingIds = new Set(round.legs.map((l) => l.id));
   const outcomeMap = new Map<string, LegOutcome>(
-    parsed.data.legOutcomes.map((o) => [o.legId, o.outcome])
+    parsed.data.legOutcomes
+      .filter((o) => remainingIds.has(o.legId))
+      .map((o) => [o.legId, o.outcome])
   );
 
   if (round.status === "settled") {
@@ -53,18 +60,12 @@ export async function POST(request: Request, { params }: Params) {
     }
 
     const pendingIds = new Set(pendingLegs.map((l) => l.id));
-    const unknownLegIds = parsed.data.legOutcomes
-      .map((o) => o.legId)
-      .filter((id) => !pendingIds.has(id));
+    const unknownLegIds = [...outcomeMap.keys()].filter((id) => !pendingIds.has(id));
     const missingLegIds = pendingLegs
       .map((l) => l.id)
       .filter((id) => !outcomeMap.has(id));
 
-    if (
-      unknownLegIds.length > 0 ||
-      missingLegIds.length > 0 ||
-      outcomeMap.size !== parsed.data.legOutcomes.length
-    ) {
+    if (unknownLegIds.length > 0 || missingLegIds.length > 0) {
       return NextResponse.json(
         {
           error: "Provide exactly one outcome for each remaining pending leg",
@@ -90,25 +91,16 @@ export async function POST(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Round is not locked" }, { status: 400 });
   }
 
-  // Outcomes must cover exactly the round's legs — no unknown ids, no
-  // duplicates, none missing — so nothing silently defaults to "lost".
-  const roundLegIds = new Set(round.legs.map((l) => l.id));
-  const unknownLegIds = parsed.data.legOutcomes
-    .map((o) => o.legId)
-    .filter((id) => !roundLegIds.has(id));
+  // Outcomes must cover exactly the round's remaining legs after duplicate purge.
   const missingLegIds = round.legs
     .map((l) => l.id)
     .filter((id) => !outcomeMap.has(id));
 
-  if (
-    unknownLegIds.length > 0 ||
-    missingLegIds.length > 0 ||
-    outcomeMap.size !== parsed.data.legOutcomes.length
-  ) {
+  if (missingLegIds.length > 0 || outcomeMap.size !== round.legs.length) {
     return NextResponse.json(
       {
         error: "Provide exactly one outcome for each leg in the round",
-        unknownLegIds,
+        unknownLegIds: [],
         missingLegIds,
       },
       { status: 400 }
