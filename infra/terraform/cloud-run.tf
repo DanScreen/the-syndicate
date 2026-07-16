@@ -3,7 +3,6 @@ resource "google_cloud_run_v2_service" "web" {
     google_project_service.required,
     google_secret_manager_secret_version.database_url,
     google_secret_manager_secret_version.auth_secret,
-    google_secret_manager_secret_version.cron_secret,
   ]
 
   name     = var.cloud_run_service_name
@@ -71,7 +70,7 @@ resource "google_cloud_run_v2_service" "web" {
         name = "CRON_SECRET"
         value_source {
           secret_key_ref {
-            secret  = google_secret_manager_secret.cron_secret.secret_id
+            secret  = data.google_secret_manager_secret.cron_secret.secret_id
             version = "latest"
           }
         }

@@ -112,7 +112,7 @@ Auto-settle reads from the `Match` table. Populate it on a schedule.
 | `warm-odds-cache` | `0 */6 * * *` | `POST /api/internal/warm-odds-cache` |
 | `round-reminders` | `*/15 * * * *` | `POST /api/internal/round-reminders` |
 
-Both jobs send `Authorization: Bearer` with the `CRON_SECRET` value from Secret Manager (created by Terraform). Override schedules or `app_base_url` via Terraform variables; see [infra/terraform/README.md](../infra/terraform/README.md).
+Both jobs send `Authorization: Bearer` with the `CRON_SECRET` value. **`CRON_SECRET` is owned by the app deploy workflow** (`deploy.yml` "Ensure CRON_SECRET" step creates/rotates it in Secret Manager so it exists before Cloud Run mounts it, independent of the Terraform workflow). Terraform *reads* it via a data source rather than managing it — this avoids the dual-ownership that previously caused `409 already exists` on `terraform apply`. The scheduler jobs get the bearer value from the `cron_secret` tfvar, not from the secret resource. `DATABASE_URL`/`AUTH_SECRET`, by contrast, are Terraform-owned. Override schedules or `app_base_url` via Terraform variables; see [infra/terraform/README.md](../infra/terraform/README.md).
 
 Requires `FOOTBALL_DATA_API_KEY` on Cloud Run (via `deploy.yml`). Response includes `sync` and `autoSettle` results.
 

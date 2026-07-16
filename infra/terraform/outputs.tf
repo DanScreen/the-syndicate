@@ -60,7 +60,7 @@ output "auth_secret_id" {
 
 output "cron_secret_id" {
   description = "Secret Manager secret ID for CRON_SECRET (internal cron routes)"
-  value       = google_secret_manager_secret.cron_secret.secret_id
+  value       = data.google_secret_manager_secret.cron_secret.secret_id
 }
 
 output "scheduler_jobs" {
