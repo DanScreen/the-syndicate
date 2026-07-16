@@ -39,9 +39,9 @@ export default function GroupSettingsPage() {
           {data.group.legsPerMember === 1 ? "" : "s"} per member
         </span>
         {openRound
-          ? ` — current open round: ${openRound.legsPerMember}`
+          ? ` (current open round: ${openRound.legsPerMember})`
           : lockedRound
-            ? ` — locked round stays at ${lockedRound.legsPerMember}`
+            ? ` (locked round stays at ${lockedRound.legsPerMember})`
             : ""}
         .
       </div>
@@ -100,7 +100,7 @@ export default function GroupSettingsPage() {
           {lockedRound && (
             <p className="mt-2 text-sm text-muted">
               Current bet is locked at {lockedRound.legsPerMember} leg
-              {lockedRound.legsPerMember === 1 ? "" : "s"} each — a new setting
+              {lockedRound.legsPerMember === 1 ? "" : "s"} each. A new setting
               starts with the next open round.
             </p>
           )}

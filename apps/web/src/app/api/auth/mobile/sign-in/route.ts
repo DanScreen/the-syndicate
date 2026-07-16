@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     const key = `mobile-sign-in:${clientIpFrom(request.headers)}`;
     if (isRateLimited(key, SIGN_IN_LIMIT, SIGN_IN_WINDOW_MS)) {
       return NextResponse.json(
-        { error: "Too many sign-in attempts — try again shortly" },
+        { error: "Too many sign-in attempts. Try again shortly." },
         { status: 429, headers: { "Retry-After": String(retryAfterSeconds(key)) } }
       );
     }

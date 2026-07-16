@@ -268,6 +268,7 @@ export function GroupStatsPanel({
         minPoints={1}
         points={chart.map((p: GroupStatsChartPoint) => ({
           label: p.label,
+          subtitle: p.dateLabel || undefined,
           roundPoints: p.roundPoints,
           cumulativePoints: p.cumulativePoints,
         }))}
@@ -279,6 +280,9 @@ export function GroupStatsPanel({
           {memberChart.map((point, i) => (
             <View key={i} style={styles.chartRow}>
               <Text style={styles.chartLabel}>{point.label}</Text>
+              {point.dateLabel ? (
+                <Text style={styles.meta}>{point.dateLabel}</Text>
+              ) : null}
               <View style={styles.memberChartValues}>
                 {members.map((m) => (
                   <Text key={m.userId} style={styles.meta}>
@@ -365,7 +369,7 @@ export function UserPerformancePanel({
         minPoints={2}
         points={chart.map((p) => ({
           label: p.label,
-          subtitle: p.groupName,
+          subtitle: [p.dateLabel, p.groupName].filter(Boolean).join(" · ") || undefined,
           roundPoints: p.roundPoints,
           cumulativePoints: p.cumulativePoints,
         }))}

@@ -2,10 +2,10 @@
 
 import type { Fixture, Market, MarketConflictLeg } from "@tiki-acca/shared";
 import {
-  formatLegPoints,
   isMarketTakenOnFixture,
   type AccaBookmakerRanking,
 } from "@tiki-acca/shared";
+import { PointsText } from "@/components/points-text";
 import {
   BookmakerLogo,
   bookmakerRankBadgeClass,
@@ -117,16 +117,16 @@ export function RoundProgress({
   let banner = "";
   if (status === "open") {
     if (pending.length === 0) {
-      banner = "Everyone has submitted — locking acca...";
+      banner = "Everyone has submitted. Finishing lock…";
     } else if (firstKickoff) {
-      banner = `Waiting on ${pendingSlots} leg${pendingSlots === 1 ? "" : "s"} — acca locks at first kickoff`;
+      banner = `Waiting on ${pendingSlots} leg${pendingSlots === 1 ? "" : "s"}. Acca locks at first kickoff.`;
     } else {
       banner = `Waiting on ${pendingSlots} leg${pendingSlots === 1 ? "" : "s"}${
         legsPerMember > 1 ? ` (${legsPerMember} each)` : ""
       }`;
     }
   } else if (status === "locked") {
-    banner = "Acca locked — place your bet at the bookmaker";
+    banner = "Acca locked. Place your bet at the bookmaker.";
   } else if (status === "settled") {
     banner = "Round settled";
   }
@@ -138,8 +138,8 @@ export function RoundProgress({
           <p>{banner}</p>
           {status === "open" && firstKickoff && pending.length > 0 ? (
             <p className="mt-1 text-xs text-accent/80">
-              Locks {formatKickoff(firstKickoff.toISOString())} — members who
-              haven&apos;t finished their picks will miss this acca
+              Locks {formatKickoff(firstKickoff.toISOString())}. Members who
+              haven&apos;t finished their picks will miss this acca.
             </p>
           ) : null}
         </div>
@@ -386,7 +386,7 @@ export function SubmitLegForm({
 
       {source === "mock" && (
         <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-          These are placeholder fixtures for local development only — not real World Cup
+          These are placeholder fixtures for local development only, not real World Cup
           matches. Add <code className="text-amber-50">ODDS_API_KEY</code> to{" "}
           <code className="text-amber-50">apps/web/.env.local</code> for live odds.
         </div>
@@ -596,7 +596,7 @@ export function SubmitLegForm({
           onClick={onCancel}
           className="w-full rounded-lg border border-border py-2 text-sm text-muted hover:bg-background"
         >
-          Cancel — keep my current pick
+          Cancel. Keep my current pick
         </button>
       )}
     </form>
@@ -667,11 +667,11 @@ export function AccaSummary({
         : `Open betslip${ctaBookmaker ? ` · ${ctaBookmaker}` : ""}`;
   const ctaHint =
     linkQuality === "hub"
-      ? "Opens the bookmaker’s football section — add each pick on-site, or use Open on a pick when a deeplink is available."
+      ? "Opens the bookmaker’s football section. Add each pick on-site, or use Open on a pick when a deeplink is available."
       : multiLeg
         ? betslipHasAllLegLinks
-          ? "Opens the first selection — use Open on each pick below to add the rest at this bookmaker."
-          : "Opens the closest available selection — use Open on each pick to build the acca."
+          ? "Opens the first selection. Use Open on each pick below to add the rest at this bookmaker."
+          : "Opens the closest available selection. Use Open on each pick to build the acca."
         : null;
 
   return (
@@ -690,7 +690,7 @@ export function AccaSummary({
           )}
           {preview ? (
             <p className="mt-1 text-xs text-muted">
-              Live preview from legs submitted so far — final bookmaker locks when the bet closes.
+              Live preview from legs submitted so far. Final bookmaker locks when the bet closes.
             </p>
           ) : null}
           {!singleBookmaker && !preview && (
@@ -937,7 +937,7 @@ export function Leaderboard({
               </p>
             </div>
           </div>
-          <span className="font-semibold text-accent">{formatLegPoints(entry.points)} pts</span>
+          <PointsText points={entry.points} className="font-semibold" />
         </li>
       ))}
     </ol>

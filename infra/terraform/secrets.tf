@@ -36,17 +36,13 @@ resource "random_password" "cron_secret" {
   special = false
 }
 
-resource "google_secret_manager_secret" "cron_secret" {
-  depends_on = [google_project_service.required]
-
+# CRON_SECRET is created/rotated imperatively by the app deploy workflow
+# (.github/workflows/deploy.yml "Ensure CRON_SECRET" step) so the value is
+# present before Cloud Run mounts it, independent of whether this Terraform
+# workflow ran. Terraform therefore *reads* it as a data source rather than
+# managing it, to avoid dual ownership (was causing 409 "already exists" on
+# apply). The scheduler jobs get the value from local.cron_secret (tfvars),
+# not from this secret, so nothing here depends on the secret's contents.
+data "google_secret_manager_secret" "cron_secret" {
   secret_id = "CRON_SECRET"
-
-  replication {
-    auto {}
-  }
-}
-
-resource "google_secret_manager_secret_version" "cron_secret" {
-  secret      = google_secret_manager_secret.cron_secret.id
-  secret_data = local.cron_secret
 }

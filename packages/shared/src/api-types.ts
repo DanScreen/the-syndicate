@@ -214,6 +214,7 @@ export type GroupStatsChartPoint = {
   roundNumber: number;
   roundId: string;
   label: string;
+  dateLabel: string;
   roundPoints: number;
   cumulativePoints: number;
 };
@@ -226,6 +227,7 @@ export type MemberSeries = {
 export type MemberChartPoint = {
   roundNumber: number;
   label: string;
+  dateLabel: string;
   [key: string]: number | string;
 };
 
@@ -256,6 +258,7 @@ export type UserStatsGroupBreakdown = {
 export type UserStatsChartPoint = {
   roundNumber: number;
   label: string;
+  dateLabel: string;
   roundPoints: number;
   cumulativePoints: number;
   groupName: string;
@@ -294,7 +297,13 @@ export type MemberStatsResponse = {
   userId: string;
   name: string;
   summary: MemberStatsSummary;
-  chart: { roundNumber: number; label: string; roundPoints: number; cumulativePoints: number }[];
+  chart: {
+    roundNumber: number;
+    label: string;
+    dateLabel: string;
+    roundPoints: number;
+    cumulativePoints: number;
+  }[];
   competition: MemberCategoryStats;
   market: MemberCategoryStats;
   team: MemberCategoryStats;

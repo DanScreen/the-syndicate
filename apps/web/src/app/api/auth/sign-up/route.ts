@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     const key = `sign-up:${clientIpFrom(request.headers)}`;
     if (isRateLimited(key, SIGN_UP_LIMIT, SIGN_UP_WINDOW_MS)) {
       return NextResponse.json(
-        { error: "Too many sign-up attempts — try again later" },
+        { error: "Too many sign-up attempts. Try again later." },
         { status: 429, headers: { "Retry-After": String(retryAfterSeconds(key)) } }
       );
     }

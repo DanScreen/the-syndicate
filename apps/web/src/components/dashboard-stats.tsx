@@ -49,6 +49,9 @@ function ChartTooltip({
   return (
     <div className="rounded-lg border border-border bg-card px-3 py-2 text-sm shadow-lg">
       <p className="font-medium">{point.label}</p>
+      {!isOrigin && point.dateLabel ? (
+        <p className="text-xs text-muted">{point.dateLabel}</p>
+      ) : null}
       {!isOrigin && point.groupName ? (
         <p className="text-xs text-muted">{point.groupName}</p>
       ) : null}
@@ -160,7 +163,8 @@ export function DashboardStats({ userName }: { userName: string }) {
               <LineChart data={chart} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
                 <CartesianGrid stroke="#1f2937" strokeDasharray="3 3" />
                 <XAxis
-                  dataKey="label"
+                  dataKey="roundNumber"
+                  tickFormatter={(n: number) => (n === 0 ? "Start" : String(n))}
                   tick={{ fill: "#94a3b8", fontSize: 11 }}
                   tickLine={false}
                   axisLine={{ stroke: "#1f2937" }}

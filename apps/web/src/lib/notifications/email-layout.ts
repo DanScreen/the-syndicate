@@ -144,7 +144,7 @@ export function renderEmailLayout(params: LayoutParams): string {
             <td style="padding:20px 28px 28px;border-top:1px solid ${c.border};font-family:Arial,Helvetica,sans-serif;">
               ${footerNote}
               <p style="margin:0 0 8px;font-size:12px;line-height:1.5;color:${c.muted};">
-                We&apos;re not a bookmaker — we keep the score. You place bets with licensed UK operators. 18+.
+                We&apos;re not a bookmaker. We keep the score. You place bets with licensed UK operators. 18+.
                 <a href="https://www.gambleaware.org/" style="color:${c.accentBright};text-decoration:underline;">GambleAware</a>
               </p>
               <p style="margin:0;font-size:12px;line-height:1.5;color:${c.muted};">

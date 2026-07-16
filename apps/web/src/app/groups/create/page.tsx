@@ -42,7 +42,7 @@ export default function CreateGroupPage() {
       <main className="mx-auto max-w-md px-4 py-8">
         <h1 className="text-2xl font-bold">Create a group</h1>
         <p className="mt-2 text-sm text-muted">
-          Anyone with the invite link can join — no member cap.
+          Anyone with the invite link can join. No member cap.
         </p>
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>

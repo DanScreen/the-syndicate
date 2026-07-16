@@ -28,6 +28,8 @@ import {
   bookmakerRankPlace,
   groupMarkets,
   isMarketTakenOnFixture,
+  pointsTone,
+  pointsToneFromOutcome,
   sortQuotesByBestOdds,
   type LegOutcome,
   type MarketConflictLeg,
@@ -89,6 +91,20 @@ function outcomeColors(outcome: string) {
   };
 }
 
+function pointsStyle(value: number) {
+  const tone = pointsTone(value);
+  if (tone === "positive") return { color: colors.accent };
+  if (tone === "negative") return { color: colors.danger };
+  return { color: colors.muted };
+}
+
+function outcomePointsStyle(outcome: string) {
+  const tone = pointsToneFromOutcome(outcome);
+  if (tone === "positive") return { color: colors.accent };
+  if (tone === "negative") return { color: colors.danger };
+  return { color: colors.muted };
+}
+
 export function RoundProgress({
   members,
   legs,
@@ -115,16 +131,16 @@ export function RoundProgress({
   let banner = "";
   if (status === "open") {
     if (pending.length === 0) {
-      banner = "Everyone has submitted — locking acca...";
+      banner = "Everyone has submitted. Finishing lock…";
     } else if (firstKickoff) {
-      banner = `Waiting on ${pendingSlots} leg${pendingSlots === 1 ? "" : "s"} — acca locks at first kickoff`;
+      banner = `Waiting on ${pendingSlots} leg${pendingSlots === 1 ? "" : "s"}. Acca locks at first kickoff.`;
     } else {
       banner = `Waiting on ${pendingSlots} leg${pendingSlots === 1 ? "" : "s"}${
         legsPerMember > 1 ? ` (${legsPerMember} each)` : ""
       }`;
     }
   } else if (status === "locked") {
-    banner = "Acca locked — place your bet at the bookmaker";
+    banner = "Acca locked. Place your bet at the bookmaker.";
   } else if (status === "settled") {
     banner = "Round settled";
   }
@@ -136,8 +152,8 @@ export function RoundProgress({
           <Text style={styles.bannerText}>{banner}</Text>
           {status === "open" && firstKickoff && pending.length > 0 ? (
             <Text style={styles.bannerHint}>
-              Locks {formatKickoff(firstKickoff.toISOString())} — members who
-              haven&apos;t finished their picks will miss this acca
+              Locks {formatKickoff(firstKickoff.toISOString())}. Members who
+              haven't finished their picks will miss this acca.
             </Text>
           ) : null}
         </View>
@@ -322,11 +338,11 @@ export function AccaSummary({
         : `Open betslip${ctaBookmaker ? ` · ${ctaBookmaker}` : ""}`;
   const ctaHint =
     linkQuality === "hub"
-      ? "Opens the football section — add each pick on-site, or use Open on a pick when available."
+      ? "Opens the football section. Add each pick on-site, or use Open on a pick when available."
       : multiLeg
         ? betslipHasAllLegLinks
-          ? "Opens the first selection — use Open on each pick to add the rest."
-          : "Opens the closest selection — use Open on each pick to build the acca."
+          ? "Opens the first selection. Use Open on each pick to add the rest."
+          : "Opens the closest selection. Use Open on each pick to build the acca."
         : null;
 
   return (
@@ -349,7 +365,7 @@ export function AccaSummary({
           ) : null}
           {preview ? (
             <Text style={styles.meta}>
-              Live preview from legs so far — final bookmaker locks when the bet closes.
+              Live preview from legs so far. Final bookmaker locks when the bet closes.
             </Text>
           ) : null}
           {!singleBookmaker && !preview ? (
@@ -774,7 +790,7 @@ export function SubmitLegForm({
         variant={ready ? "primary" : "secondary"}
       />
       {onCancel ? (
-        <Button label="Cancel — keep my current pick" onPress={onCancel} variant="secondary" />
+        <Button label="Cancel. Keep my current pick" onPress={onCancel} variant="secondary" />
       ) : null}
     </Card>
   );
@@ -807,7 +823,9 @@ export function Leaderboard({
               {entry.legsWon}W / {entry.legsLost}L
             </Text>
           </View>
-          <Text style={styles.odds}>{formatLegPoints(entry.points)} pts</Text>
+          <Text style={[styles.odds, pointsStyle(entry.points)]}>
+            {formatLegPoints(entry.points)} pts
+          </Text>
         </View>
       ))}
     </View>
@@ -856,12 +874,23 @@ export function RoundHistory({
                 <Text style={styles.odds}>Acca @ {round.combinedOdds}</Text>
               ) : null}
             </View>
-            <Text style={styles.odds}>{formatLegPoints(roundPoints)} pts</Text>
-            {round.legs.map((leg) => (
-              <View key={leg.id} style={styles.historyLeg}>
+            <Text style={styles.meta}>Group</Text>
+            <Text style={[styles.odds, pointsStyle(roundPoints)]}>
+              {formatLegPoints(roundPoints)} pts
+            </Text>
+            {round.legs.map((leg) => {
+              const oc = outcomeColors(leg.outcome);
+              return (
+              <View
+                key={leg.id}
+                style={[
+                  styles.historyLeg,
+                  { borderColor: oc.border, backgroundColor: oc.bg },
+                ]}
+              >
                 <View style={styles.historyHeader}>
                   <Text style={styles.legUser}>{leg.user.name}</Text>
-                  <Text style={styles.odds}>
+                  <Text style={{ color: oc.text, fontWeight: "600", fontSize: 13 }}>
                     {legOutcomeLabel(leg.outcome)} · {leg.odds}
                   </Text>
                 </View>
@@ -880,9 +909,15 @@ export function RoundHistory({
                     hour: "2-digit",
                     minute: "2-digit",
                   })}
+                  {leg.pointsAwarded !== 0 || leg.outcome !== "pending" ? (
+                    <Text style={outcomePointsStyle(leg.outcome)}>
+                      {` · ${formatLegPoints(leg.pointsAwarded)} pts`}
+                    </Text>
+                  ) : null}
                 </Text>
               </View>
-            ))}
+              );
+            })}
           </View>
         );
       })}

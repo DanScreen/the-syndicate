@@ -37,13 +37,13 @@ export default async function AboutPage() {
           <p className="mt-4 leading-relaxed text-muted">
             If your group already builds a Saturday acca, you know the drill: a betslip
             screenshot in the chat, a spreadsheet nobody updates, and a debate about whose pick
-            let everyone down. We built Tiki Acca to give that a proper home — structured
+            let everyone down. We built Tiki Acca to give that a proper home: structured
             rounds, live odds, automatic settlement, and leaderboards that keep the score. And if
             you&apos;ve never built one together, there&apos;s no better way to start: one leg
             each, live odds, and the score kept for you.
           </p>
 
-          <h2 className="mt-12 font-display text-2xl font-bold">What we are — and what we&apos;re not</h2>
+          <h2 className="mt-12 font-display text-2xl font-bold">What we are, and what we&apos;re not</h2>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="rounded-xl border border-accent/30 bg-accent-muted/10 p-5">
               <h3 className="font-semibold text-accent">We are</h3>
@@ -81,7 +81,7 @@ export default async function AboutPage() {
             Members earn <strong className="text-foreground">unit-stake points</strong> on each
             leg: a win at 2.50 odds scores +1.50 points, a loss costs −1.00, and voids score zero.
             Leaderboards rank members across rounds so you can see who consistently lands winners.
-            Groups can mix competitions — one member might pick from the Premier League while
+            Groups can mix competitions. One member might pick from the Premier League while
             another picks from the Championship or World Cup.
           </p>
 

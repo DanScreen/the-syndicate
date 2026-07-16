@@ -17,7 +17,7 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.tikiacca.com"),
   title: {
-    default: "Tiki Acca — Social Group Accas",
+    default: "Tiki Acca: Social Group Accas",
     template: "%s · Tiki Acca",
   },
   description:
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     apple: "/apple-icon?v=2",
   },
   openGraph: {
-    title: "Tiki Acca — Social Group Accas",
+    title: "Tiki Acca: Social Group Accas",
     description:
       "Build accas with your mates. Each member picks a leg, track combined odds, and compete on the leaderboard.",
     url: "https://www.tikiacca.com",
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tiki Acca — Social Group Accas",
+    title: "Tiki Acca: Social Group Accas",
     description:
       "Build accas with your mates. Each member picks a leg and competes on the leaderboard.",
   },

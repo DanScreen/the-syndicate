@@ -52,11 +52,11 @@ export default function GroupRoundPage() {
       (r) => r.bookmakerId === activeRound.bestBookmakerId
     )?.bookmakerName ?? activeRound.legs[0]?.bookmakerName;
 
-  let lockedBanner = "Acca locked — place your bet at the bookmaker";
+  let lockedBanner = "Acca locked. Place your bet at the bookmaker.";
   if (resolvedLegs > 0 && resolvedLegs < activeRound.legs.length) {
-    lockedBanner = `Acca in progress — ${resolvedLegs} of ${activeRound.legs.length} legs settled`;
+    lockedBanner = `Acca in progress: ${resolvedLegs} of ${activeRound.legs.length} legs settled`;
   } else if (resolvedLegs === activeRound.legs.length && activeRound.legs.length > 0) {
-    lockedBanner = "All legs settled — acca will finalize shortly";
+    lockedBanner = "All legs settled. Acca will finalize shortly.";
   }
 
   const rankings = activeRound.accaBookmakerRankings ?? [];
@@ -144,7 +144,7 @@ export default function GroupRoundPage() {
           <p className="text-sm font-medium">Your picks</p>
           <p className="text-sm text-muted">
             You can change them until the first kickoff
-            {firstKickoff ? ` — ${formatCutoff(firstKickoff)}` : ""}.
+            {firstKickoff ? ` (${formatCutoff(firstKickoff)})` : ""}.
             {isLocked && " Changing a pick reprices the whole acca at current odds."}
           </p>
           <ul className="mt-2 space-y-2">

@@ -1,6 +1,6 @@
 # Current state (as-built)
 
-Last updated 15 July 2026 (repair historical duplicate markets). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
+Last updated 16 July 2026 (repair historical duplicate markets). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
 
 Production: **https://www.tikiacca.com** (apex → 301 to www via Cloudflare).
 
@@ -56,7 +56,7 @@ Match sync + odds warm: Cloud Scheduler (Terraform) → `POST /api/internal/sync
 | Group UI | `apps/web/src/components/group-ui.tsx`, `group-stats.tsx` |
 | App navigation | `apps/web/src/components/app-nav.tsx`, `group-nav.tsx`, `header.tsx` |
 | Logo & marketing | `apps/web/src/components/logo.tsx`, `components/marketing/` (`marketing-shell.tsx`, `session-aware-marketing-header.tsx`, `marketing-header.tsx`, `marketing-ctas.tsx`), `lib/marketing-content.ts` |
-| Blog | `apps/web/content/blog/*.mdx` (posts), `apps/web/src/lib/blog.ts`, `app/blog/` — publish = git push; `draft: true` hides in prod |
+| Blog | `apps/web/content/blog/*.mdx` (posts), `apps/web/src/lib/blog.ts`, `app/blog/` — publish = git push; `draft: true` hides in prod. SEO frontmatter-driven (canonical, OG image, `BlogPosting` JSON-LD, tag hubs). Strict authoring standards: [BLOG.md](./BLOG.md) |
 | SEO | `apps/web/src/app/sitemap.ts`, `robots.ts` |
 | Favicon / app icons | `apps/web/src/app/icon.svg`, `favicon.ico` (16/32/48), `apple-icon.tsx` (`lib/brand/rondo-icon.tsx`) — Triangle rondo disc; glyph source in `logo.tsx`. Metadata URLs use `?v=` cache-bust (`layout.tsx`) — bump when the mark changes |
 | Brand archive | `apps/web/src/lib/brand/archive.ts`, `logo-alternatives.tsx` (unused alternatives) |
@@ -119,13 +119,13 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 | Outcome | Group points | Member points |
 |---------|--------------|---------------|
 | Acca won | `combinedOdds − 1` | `odds − 1` on each won leg (`0` if void) |
-| Acca lost | `−1` | `−1` per member |
+| Acca lost | `−1` | Same per-leg rule: won → `odds − 1`, lost → `−1`, void → `0` |
 
-Example: acca @ 3.44 (legs 1.6 × 2.15) → **2.44** group pts; members **0.6** and **1.15** (not split).
+Example: acca @ 3.44 (legs 1.6 × 2.15) → **2.44** group pts; members **0.6** and **1.15** (not split). If that acca loses because one leg fails, the winning member still keeps `odds − 1` while the losing member gets `−1` (group still `−1`).
 
-**Stats:** `groupAccaRoundPoints()` for group totals; `memberAccaLegPoints()` for members. Leaderboard `pointsAwarded` backfilled by migration `20260712160000_member_leg_acca_points`.
+**Stats:** `groupAccaRoundPoints()` for group totals; `memberAccaLegPoints()` for members. Dashboard “Your points” (`GET /api/groups`) and group leaderboard (`GET /api/groups/[id]`) **recompute live** from settled rounds (same helpers as Performance) — not stored `GroupMember.points`, which can lag scoring-rule changes. Performance charts use bet number on the X-axis (`Bet N` / `Start`); settlement date is shown in tooltips (`dateLabel`) so same-day rounds do not collide. Stored `pointsAwarded` / totals can still be rewritten with `npm run db:maintenance -- rescore-member-legs --execute` after scoring-rule changes.
 
-**Points-first UX:** Points are the **primary metric** across performance pages, leaderboards, share cards, and round history. Users convert points to money with `profitFromPoints(points, stake)` — profit = points × stake (£). UI: `StakeProfit` component (default stake £10).
+**Points-first UX:** Points are the **primary metric** across performance pages, leaderboards, share cards, and round history. Users convert points to money with `profitFromPoints(points, stake)` — profit = points × stake (£). UI: `StakeProfit` component (default stake £10). **Group / acca points** use `pointsTone()` (negative → red). **Individual pick rows** use `pointsToneFromOutcome()` (won → green, lost → red).
 
 **Acca P/L in DB:** `Round.profitLossGbp` still computed at settle (£10 default stake) for admin “successful acca” counts and settlement emails — not shown as the primary user-facing metric.
 
@@ -240,11 +240,11 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 
 Email and push notifications fire on **round locked**, **round settled**, and **pick reminders** (within 2h before first kickoff). Resend for email (`RESEND_API_KEY`, `EMAIL_FROM`); Expo Push API for mobile (`PushDevice` tokens). Per-user preferences at `/account` (web) and `(main)/account` (mobile). Deduped via `NotificationLog`; round-level `lockedNotificationSentAt` / `settledNotificationSentAt` set only when all members are satisfied (delivered or opted out). Failed lock/settle deliveries retried on `sync-matches` (5 min). Pick reminders cron: `POST /api/internal/round-reminders` every 15 min (Terraform). Notification times formatted in `Europe/London`. See [specs/notifications.md](./specs/notifications.md).
 
-**Early settle on loss.** As soon as one leg is `lost`, the round settles: group scores −1, concluded legs award member points under the lost-acca rule (−1 / void 0), and the next open round starts. Remaining legs stay `pending` until match sync (or admin) resolves them via `applyDeferredLegOutcome()` — still exactly-once (pending → outcome claim).
+**Early settle on loss.** As soon as one leg is `lost`, the round settles: group scores −1, concluded legs award member points under the per-leg rule (won → odds−1, lost → −1, void → 0), and the next open round starts. Remaining legs stay `pending` until match sync (or admin) resolves them via `applyDeferredLegOutcome()` — still exactly-once (pending → outcome claim).
 
 **Exactly-once settlement.** `applyRoundSettlement()` validates settleability, then runs in a `prisma.$transaction` with an atomic claim — `round.updateMany({ where: { status: "locked" }, data: { status: "settled" } })`. Overlapping settle attempts (e.g. two cron runs) can't double-count points: the loser matches zero rows and throws `RoundNotSettleableError`, treated as a benign `skipped` no-op.
 
-**Lock triggers.** A round moves `open → locked` when **every member has submitted `Round.legsPerMember` legs** or when the **earliest submitted leg kicks off** (partial accas — members under quota are excluded). `claimAndLockRound()` in `claim-lock-round.ts` atomically claims via `updateMany`, reprices, and emails; repricing failures revert to `open`. Kickoff locks run on each match-sync cron (5 min) and when loading `GET /api/groups/[id]`. See [specs/round-deadline-lock.md](./specs/round-deadline-lock.md) and [specs/multi-leg-accas.md](./specs/multi-leg-accas.md).
+**Lock triggers.** A round moves `open → locked` when **every member has submitted `Round.legsPerMember` legs** or when the **earliest submitted leg kicks off** (partial accas — members under quota are excluded). `claimAndLockRound()` in `claim-lock-round.ts` atomically claims via `updateMany`, reprices, and emails; repricing failures revert to `open`. Kickoff locks run on each match-sync cron (5 min) and when loading `GET /api/groups/[id]`. **Reprice falls back to each leg’s stored odds** when live quotes are missing (fixture already kicked off / warmed cache miss) so kickoff locks don’t flap open↔locked. Loading a group with a full quota also retries lock. See [specs/round-deadline-lock.md](./specs/round-deadline-lock.md) and [specs/multi-leg-accas.md](./specs/multi-leg-accas.md).
 
 **Lock is likewise atomic.** When two members submit the final legs at once, only one request reprices the acca (Odds API credits) and sends the lock email; repricing failures revert the round to `open`.
 
@@ -368,7 +368,7 @@ Member summary **best / worst leg** = highest / lowest decimal odds across the m
 | `apps/web/src/lib/stats/compute-member-stats.ts` | Member breakdown |
 | `apps/web/src/lib/stats/compute-user-stats.ts` | Cross-group user stats |
 | `apps/web/src/lib/stats/compute-member-chart.ts` | Multi-member chart series |
-| `apps/web/src/lib/stats/helpers.ts` | Shared helpers (favourites, best/worst); `CHART_ORIGIN_LABEL` (`Start`) prepended to chart series at 0 pts |
+| `apps/web/src/lib/stats/helpers.ts` | Shared helpers (favourites, best/worst, live net points); chart labels `formatBetAxisLabel` + `formatSettledDateLabel`; `CHART_ORIGIN_LABEL` (`Start`) at 0 pts |
 | `apps/web/src/components/group-stats.tsx` | Group performance UI (Recharts) |
 | `apps/web/src/components/dashboard-stats.tsx` | Cross-group performance UI (`/performance`) |
 | `apps/web/src/components/share-card.tsx` | Shareable performance image (PNG) + copy text fallback |

@@ -1,5 +1,6 @@
 "use client";
 
+import { PointsText, pointsTextClass } from "@/components/points-text";
 import {
   formatLegPoints,
   formatRoundStatusBadge,
@@ -55,7 +56,10 @@ export function HistoryRoundCard({ round }: { round: HistoryRound }) {
             {formatRoundStatusBadge(round.status)}
             {settledLabel ? ` · ${settledLabel}` : ""}
           </p>
-          <p className="mt-1 text-lg font-semibold text-accent">
+          <p className="mt-1 text-xs font-medium uppercase tracking-wide text-muted">
+            Group
+          </p>
+          <p className={`text-lg font-semibold tabular-nums ${pointsTextClass(roundPoints)}`}>
             {formatLegPoints(roundPoints)} pts
           </p>
         </div>
@@ -78,7 +82,7 @@ export function HistoryRoundCard({ round }: { round: HistoryRound }) {
                 <span className="rounded-full border border-current/20 px-2 py-0.5 text-xs font-medium">
                   {legOutcomeLabel(leg.outcome)}
                 </span>
-                <span className="font-medium text-accent">{leg.odds}</span>
+                <span className="font-medium text-foreground/80">{leg.odds}</span>
               </div>
             </div>
             <p className="mt-1 text-foreground">
@@ -89,9 +93,16 @@ export function HistoryRoundCard({ round }: { round: HistoryRound }) {
             </p>
             <p className="mt-1 text-xs text-muted">
               {leg.competition} · {formatKickoff(leg.kickoff)}
-              {leg.pointsAwarded !== 0
-                ? ` · ${formatLegPoints(leg.pointsAwarded)} pts`
-                : ""}
+              {leg.pointsAwarded !== 0 || leg.outcome !== "pending" ? (
+                <>
+                  {" · "}
+                  <PointsText
+                    points={leg.pointsAwarded}
+                    outcome={leg.outcome}
+                    className="text-xs"
+                  />
+                </>
+              ) : null}
             </p>
           </li>
         ))}

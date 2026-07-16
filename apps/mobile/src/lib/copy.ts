@@ -1,4 +1,4 @@
-/** User-facing copy — align with web where noted. */
+/** User-facing copy. Align with web where noted. */
 export const copy = {
   dashboard: {
     emptyTitle: "No groups yet.",
@@ -29,7 +29,7 @@ export const copy = {
   },
   stats: {
     noGroupRounds:
-      "No settled rounds yet — stats appear after your first round is settled.",
+      "No settled rounds yet. Stats appear after your first round is settled.",
     noUserLegs: "No settled legs yet. Stats appear after your first round settles.",
     loadFailed: "Failed to load stats",
   },

@@ -38,7 +38,7 @@ const ROWS: { title: string; channel: "email" | "push"; items: PrefRow[] }[] = [
       {
         key: "pushPickReminder",
         label: "Pick reminders",
-        description: "Same as email — best for last-minute nudges on your phone.",
+        description: "Same as email. Best for last-minute nudges on your phone.",
       },
       {
         key: "pushRoundLocked",
@@ -109,11 +109,11 @@ export function NotificationSettings() {
       });
       if (!res.ok) {
         setPrefs(prefs);
-        setMessage("Could not save — try again.");
+        setMessage("Could not save. Try again.");
       }
     } catch {
       setPrefs(prefs);
-      setMessage("Could not save — try again.");
+      setMessage("Could not save. Try again.");
     } finally {
       setSaving(false);
     }

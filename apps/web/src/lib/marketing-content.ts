@@ -1,20 +1,20 @@
 export const tagline = "Social group accas";
 
 export const hero = {
-  headline: "Your mates. One acca. Every leg counts.",
+  headline: "Your Mates. One Acca. Every Leg Counts.",
   subhead:
-    "Tiki-taka is football's great passing game: everyone touches the ball. In a group acca, everyone touches the bet. Each member picks one leg and Tiki Acca handles the rest — locking in the best odds from UK bookmakers, tracking every result, and keeping score of who consistently delivers, and who lets the acca down. It's free for your whole group.",
+    "Tiki-taka is football's great passing game: everyone touches the ball. In a group acca, everyone touches the bet. Each member picks one leg and Tiki Acca handles the rest: locking in the best odds from UK bookmakers, tracking every result, and keeping score of who consistently delivers, and who lets the acca down. It's free for your whole group.",
 };
 
 export const valueProps = [
   {
     title: "Built for friend groups",
-    body: "Pub groups, WhatsApp groups, five-a-side teams — create a private group, share an invite link, and everyone contributes one selection.",
+    body: "Pub groups, WhatsApp groups, five-a-side teams. Create a private group, share an invite link, and everyone contributes one selection.",
     icon: "users",
   },
   {
     title: "Track who’s actually good",
-    body: "Leaderboards, performance charts, and leg-by-leg stats — see who consistently finds winners and how your group performs over time.",
+    body: "Leaderboards, performance charts, and leg-by-leg stats. See who consistently finds winners and how your group performs over time.",
     icon: "trophy",
   },
   {
@@ -53,8 +53,8 @@ export const audiences = [
     body: "Replace the Saturday spreadsheet with a shared acca everyone can see and contribute to.",
   },
   {
-    title: "Mate groups",
-    body: "Stop arguing about whose pick lost the acca — the stats settle it.",
+    title: "Friend groups",
+    body: "Stop arguing about whose pick lost the acca. The stats settle it.",
   },
   {
     title: "Office leagues",
@@ -73,7 +73,7 @@ export const faqs = [
   },
   {
     q: "Can we mix competitions?",
-    a: "Yes. Each member picks their own competition — Premier League, Championship, World Cup, and more — in the same acca.",
+    a: "Yes. Each member picks their own competition (Premier League, Championship, World Cup, and more) in the same acca.",
   },
   {
     q: "Is it free?",
@@ -81,6 +81,6 @@ export const faqs = [
   },
   {
     q: "Do we have to bet real money?",
-    a: "No. Plenty of groups play for points and pride alone — the leaderboard works exactly the same whether or not anyone places a bet.",
+    a: "No. Plenty of groups play for points and pride alone. The leaderboard works exactly the same whether or not anyone places a bet.",
   },
 ] as const;

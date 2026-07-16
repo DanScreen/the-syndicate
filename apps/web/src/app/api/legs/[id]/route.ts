@@ -49,7 +49,7 @@ export async function PATCH(request: Request, { params }: Params) {
   const cutoff = firstKickoff(round.legs);
   if (cutoff && new Date() >= cutoff) {
     return NextResponse.json(
-      { error: "Editing is closed — the first match in this acca has kicked off" },
+      { error: "Editing is closed. The first match in this acca has kicked off." },
       { status: 403 }
     );
   }
@@ -163,7 +163,7 @@ export async function PATCH(request: Request, { params }: Params) {
       await prisma.leg.update({ where: { id: leg.id }, data: previous });
       console.error("[legs] reprice after edit failed", err);
       return NextResponse.json(
-        { error: "Could not reprice the acca with that pick — please try a different selection" },
+        { error: "Could not reprice the acca with that pick. Please try a different selection." },
         { status: 502 }
       );
     }

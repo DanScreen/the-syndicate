@@ -71,14 +71,40 @@ export function sortedSettledRounds(rounds: RoundWithLegs[]): RoundWithLegs[] {
 /** X-axis label for the zero baseline prepended to performance chart series. */
 export const CHART_ORIGIN_LABEL = "Start";
 
+/** Axis / list label for performance charts — unique per bet (avoids same-day collisions). */
+export function formatBetAxisLabel(roundNumber: number): string {
+  if (roundNumber === 0) return CHART_ORIGIN_LABEL;
+  return `Bet ${roundNumber}`;
+}
+
+/** Settlement date for chart tooltips (not used as the X-axis category). */
+export function formatSettledDateLabel(
+  settledAt: Date | string | null | undefined
+): string | null {
+  if (!settledAt) return null;
+  return new Date(settledAt).toLocaleDateString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+/** @deprecated Prefer formatBetAxisLabel + formatSettledDateLabel for charts. */
 export function formatRoundLabel(round: Round, roundNumber: number): string {
-  if (round.settledAt) {
-    return new Date(round.settledAt).toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "short",
-    });
-  }
-  return `Round ${roundNumber}`;
+  return formatBetAxisLabel(roundNumber);
+}
+
+/** Sum of recomputed member points across settled rounds (matches Performance UI). */
+export function memberNetPointsAcrossRounds(
+  rounds: RoundWithLegs[],
+  userId: string
+): number {
+  const total = sortedSettledRounds(rounds).reduce(
+    (sum, round) => sum + memberPointsInRound(round, userId),
+    0
+  );
+  return Number(total.toFixed(2));
 }
 
 export function teamForLeg(leg: Leg): string | null {

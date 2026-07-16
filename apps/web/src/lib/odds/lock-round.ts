@@ -4,22 +4,54 @@ import { buildRoundBetslipLinks, isBookmakerHubUrl } from "@/lib/odds/betslip-li
 import { sortQuotesByBestOdds } from "@/lib/odds/bookmakers";
 import { bookmakerLinksFromQuotes } from "@/lib/odds/quotes";
 import { prisma } from "@tiki-acca/database";
-import type { AccaBookmakerRanking } from "@tiki-acca/shared";
+import type { AccaBookmakerRanking, BookmakerQuote } from "@tiki-acca/shared";
 import type { Leg } from "@prisma/client";
+
+/** Quotes from the leg row when live odds are gone (e.g. fixture already kicked off). */
+function quotesFromStoredLeg(leg: Leg): BookmakerQuote[] {
+  if (!leg.bookmakerId || !(leg.odds > 0)) return [];
+  return [
+    {
+      bookmakerId: leg.bookmakerId,
+      bookmakerName: leg.bookmakerName,
+      odds: leg.odds,
+      link: leg.betslipUrl ?? undefined,
+    },
+  ];
+}
+
+function storedBookmakerLinks(leg: Leg): Record<string, string> {
+  if (leg.bookmakerLinks && typeof leg.bookmakerLinks === "object") {
+    return leg.bookmakerLinks as Record<string, string>;
+  }
+  return {};
+}
 
 export async function lockRoundWithAccaPricing(roundId: string, legs: Leg[]) {
   const legQuotes = await Promise.all(
     legs.map(async (leg) => {
-      const selection = await findSelection(
-        leg.fixtureId,
-        leg.marketType,
-        leg.selectionId,
-        leg.competitionId
-      );
-      return {
-        leg,
-        quotes: selection?.selection.odds ?? [],
-      };
+      let liveQuotes: BookmakerQuote[] = [];
+      try {
+        const selection = await findSelection(
+          leg.fixtureId,
+          leg.marketType,
+          leg.selectionId,
+          leg.competitionId
+        );
+        liveQuotes = selection?.selection.odds ?? [];
+      } catch (err) {
+        console.warn("[lock] live quote lookup failed; using stored odds", leg.id, err);
+      }
+
+      const usedStored = liveQuotes.length === 0;
+      const quotes = usedStored ? quotesFromStoredLeg(leg) : liveQuotes;
+      if (usedStored) {
+        console.info(
+          `[lock] using stored odds for leg=${leg.id} fixture=${leg.fixtureId} market=${leg.marketType}`
+        );
+      }
+
+      return { leg, quotes, usedStored };
     })
   );
 
@@ -31,8 +63,10 @@ export async function lockRoundWithAccaPricing(roundId: string, legs: Leg[]) {
     throw new Error("Unable to price acca");
   }
 
-  for (const { leg, quotes } of legQuotes) {
-    const bookmakerLinks = bookmakerLinksFromQuotes(quotes);
+  for (const { leg, quotes, usedStored } of legQuotes) {
+    const liveLinks = bookmakerLinksFromQuotes(quotes);
+    const bookmakerLinks =
+      Object.keys(liveLinks).length > 0 ? liveLinks : storedBookmakerLinks(leg);
     const quote = acca.singleBookmaker
       ? quoteForBookmaker(quotes, acca.bookmakerId)
       : sortQuotesByBestOdds(quotes)[0];
@@ -47,8 +81,14 @@ export async function lockRoundWithAccaPricing(roundId: string, legs: Leg[]) {
           betslipUrl:
             (quote.link && !isBookmakerHubUrl(quote.link) ? quote.link : null) ??
             bookmakerLinks[quote.bookmakerId] ??
+            leg.betslipUrl ??
             null,
-          bookmakerLinks,
+          // Keep existing links when we only have stored single-bookmaker quotes.
+          ...(Object.keys(bookmakerLinks).length > 0
+            ? { bookmakerLinks }
+            : usedStored
+              ? {}
+              : { bookmakerLinks: {} }),
         },
       });
     }
@@ -102,13 +142,21 @@ export type AccaRankingsResult = {
 export async function computeAccaRankingsForLegs(legs: Leg[]): Promise<AccaRankingsResult> {
   const legQuotes = await Promise.all(
     legs.map(async (leg) => {
-      const selection = await findSelection(
-        leg.fixtureId,
-        leg.marketType,
-        leg.selectionId,
-        leg.competitionId
-      );
-      const quotes = selection?.selection.odds ?? [];
+      let quotes: BookmakerQuote[] = [];
+      try {
+        const selection = await findSelection(
+          leg.fixtureId,
+          leg.marketType,
+          leg.selectionId,
+          leg.competitionId
+        );
+        quotes = selection?.selection.odds ?? [];
+      } catch {
+        quotes = [];
+      }
+      if (quotes.length === 0) {
+        quotes = quotesFromStoredLeg(leg);
+      }
       return {
         legId: leg.id,
         quotes,

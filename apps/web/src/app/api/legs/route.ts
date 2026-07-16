@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       console.error("[legs] kickoff lock on submit failed", round.id, err);
     }
     return NextResponse.json(
-      { error: "This acca locked at the first kickoff — you missed this round" },
+      { error: "This acca locked at the first kickoff. You missed this round." },
       { status: 403 }
     );
   }

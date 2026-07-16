@@ -10,6 +10,7 @@ import { claimAndLockRound } from "@/lib/rounds/claim-lock-round";
 import { isPastKickoffCutoff } from "@/lib/rounds/first-kickoff";
 import { lockOpenRoundsAtKickoff } from "@/lib/rounds/lock-open-rounds-at-kickoff";
 import { openRound } from "@/lib/rounds/open-round";
+import { memberNetPointsAcrossRounds } from "@/lib/stats/helpers";
 import { prisma } from "@tiki-acca/database";
 import type { AccaBookmakerRanking } from "@tiki-acca/shared";
 import {
@@ -89,19 +90,28 @@ export async function GET(_request: Request, { params }: Params) {
     group.status = "open";
   } else if (activeRound.status === "open") {
     await lockOpenRoundsAtKickoff();
-    const refreshed = await prisma.round.findUnique({
+    let refreshed = await prisma.round.findUnique({
       where: { id: activeRound.id },
       include: recentRoundInclude,
     });
     if (refreshed) activeRound = refreshed;
-  }
 
-  // Drop duplicate market-family legs from open / pre-kickoff locked rounds
-  // that were submitted before the uniqueness rule shipped.
-  if (activeRound && activeRound.legs.length > 1) {
-    const purged = await purgeDuplicateMarketsInRound(activeRound.id);
-    if (purged.removedLegIds.length > 0) {
-      const refreshed = await prisma.round.findUnique({
+    // Final-submit lock can fail if live odds vanished (fixture kicked off /
+    // feed gap). Retry here so the round doesn't sit on "locking…" forever.
+    if (
+      activeRound.status === "open" &&
+      allMembersFilledQuota({
+        memberUserIds: group.members.map((m) => m.userId),
+        legs: activeRound.legs,
+        legsPerMember: activeRound.legsPerMember,
+      })
+    ) {
+      try {
+        await claimAndLockRound(activeRound.id);
+      } catch (err) {
+        console.error("[groups] retry lock on load failed", activeRound.id, err);
+      }
+      refreshed = await prisma.round.findUnique({
         where: { id: activeRound.id },
         include: recentRoundInclude,
       });
@@ -109,12 +119,31 @@ export async function GET(_request: Request, { params }: Params) {
     }
   }
 
-  const recentSettled = await prisma.round.findMany({
-    where: { groupId: id, status: "settled" },
-    orderBy: [{ settledAt: "desc" }, { createdAt: "desc" }],
-    take: 3,
-    include: recentRoundInclude,
-  });
+  // Drop duplicate market-family legs from open / pre-kickoff locked rounds
+  // that were submitted before the uniqueness rule shipped.
+  if (activeRound && activeRound.legs.length > 1) {
+    const purged = await purgeDuplicateMarketsInRound(activeRound.id);
+    if (purged.removedLegIds.length > 0) {
+      const refreshedAfterPurge = await prisma.round.findUnique({
+        where: { id: activeRound.id },
+        include: recentRoundInclude,
+      });
+      if (refreshedAfterPurge) activeRound = refreshedAfterPurge;
+    }
+  }
+
+  const [recentSettled, settledForLeaderboard] = await Promise.all([
+    prisma.round.findMany({
+      where: { groupId: id, status: "settled" },
+      orderBy: [{ settledAt: "desc" }, { createdAt: "desc" }],
+      take: 3,
+      include: recentRoundInclude,
+    }),
+    prisma.round.findMany({
+      where: { groupId: id, status: "settled" },
+      include: { legs: true },
+    }),
+  ]);
 
   let accaBookmakerRankings: AccaBookmakerRanking[] | null = null;
   let betslipLinks = null;
@@ -154,14 +183,18 @@ export async function GET(_request: Request, { params }: Params) {
     }
   }
 
-  const leaderboard = group.members.map((m) => ({
-    userId: m.user.id,
-    name: m.user.name,
-    points: m.points,
-    legsWon: m.legsWon,
-    legsLost: m.legsLost,
-    role: m.role,
-  }));
+  // Live points (same rules as Performance) — denormalized GroupMember.points
+  // can be stale after scoring rule changes / equal-split backfills.
+  const leaderboard = group.members
+    .map((m) => ({
+      userId: m.user.id,
+      name: m.user.name,
+      points: memberNetPointsAcrossRounds(settledForLeaderboard, m.user.id),
+      legsWon: m.legsWon,
+      legsLost: m.legsLost,
+      role: m.role,
+    }))
+    .sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
 
   const sortedActiveLegs = activeRound
     ? [...activeRound.legs].sort((a, b) => {
@@ -268,7 +301,7 @@ export async function PATCH(request: Request, { params }: Params) {
       if (overQuota.length > 0) {
         return NextResponse.json(
           {
-            error: `Can't lower to ${nextQuota} — at least one member already has more than ${nextQuota} leg${nextQuota === 1 ? "" : "s"} on this open round.`,
+            error: `Can't lower to ${nextQuota}. At least one member already has more than ${nextQuota} leg${nextQuota === 1 ? "" : "s"} on this open round.`,
           },
           { status: 409 }
         );
@@ -300,7 +333,7 @@ export async function PATCH(request: Request, { params }: Params) {
         try {
           await claimAndLockRound(activeRound.id);
           note =
-            "Saved. Everyone was already at the new quota — the acca is locking.";
+            "Saved. Everyone was already at the new quota. The acca is locking.";
         } catch (err) {
           console.error(
             "[groups] lock after legsPerMember change failed",

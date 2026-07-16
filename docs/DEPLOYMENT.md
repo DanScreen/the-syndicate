@@ -112,7 +112,7 @@ Auto-settle reads from the `Match` table. Populate it on a schedule.
 | `warm-odds-cache` | `0 */6 * * *` | `POST /api/internal/warm-odds-cache` |
 | `round-reminders` | `*/15 * * * *` | `POST /api/internal/round-reminders` |
 
-Both jobs send `Authorization: Bearer` with the `CRON_SECRET` value from Secret Manager (created by Terraform). Override schedules or `app_base_url` via Terraform variables; see [infra/terraform/README.md](../infra/terraform/README.md).
+Both jobs send `Authorization: Bearer` with the `CRON_SECRET` value. **`CRON_SECRET` is owned by the app deploy workflow** (`deploy.yml` "Ensure CRON_SECRET" step creates/rotates it in Secret Manager so it exists before Cloud Run mounts it, independent of the Terraform workflow). Terraform *reads* it via a data source rather than managing it — this avoids the dual-ownership that previously caused `409 already exists` on `terraform apply`. The scheduler jobs get the bearer value from the `cron_secret` tfvar, not from the secret resource. `DATABASE_URL`/`AUTH_SECRET`, by contrast, are Terraform-owned. Override schedules or `app_base_url` via Terraform variables; see [infra/terraform/README.md](../infra/terraform/README.md).
 
 Requires `FOOTBALL_DATA_API_KEY` on Cloud Run (via `deploy.yml`). Response includes `sync` and `autoSettle` results.
 
@@ -455,6 +455,7 @@ One-off fixes (solo test rounds, re-settle after a bug) use `apps/web/scripts/da
 | Re-settle a settled round | `npm run db:maintenance -- resettle-round --round-id <id> --execute` |
 | Refresh Match scores from football-data (e.g. after 90-min fix) | `npm run db:maintenance -- resync-matches --execute` |
 | Verify `User.totalPoints` / `GroupMember.points` | `npm run db:maintenance -- reconcile-points` then `--execute` if needed |
+| Rescore member legs after scoring-rule change | `npm run db:maintenance -- rescore-member-legs` then `--execute` |
 | Preview duplicate same-fixture markets | `npm run db:maintenance -- preview-duplicate-markets` |
 | Fix historical duplicate markets (keep earliest leg) | `npm run db:maintenance -- fix-duplicate-markets --execute` |
 

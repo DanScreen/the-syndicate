@@ -19,7 +19,7 @@ Visual identity for Tiki Acca.
 | **Tone** | Confident, social, data-forward — mates first, not a tipster |
 | **Tagline** | Social group accas (SEO/meta descriptor) |
 | **Header descriptor** | Social Group Betting (marketing top bar, right of wordmark) |
-| **Headline** | Your mates. One acca. Every leg counts. |
+| **Headline** | Your Mates. One Acca. Every Leg Counts. |
 
 We are **not** a bookmaker. Copy and UI must always make clear users place bets with licensed operators.
 
