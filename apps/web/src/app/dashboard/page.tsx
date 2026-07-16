@@ -19,7 +19,7 @@ export default async function DashboardPage() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { firstName: true, name: true, totalPoints: true },
+    select: { firstName: true, name: true },
   });
 
   const memberships = await prisma.groupMember.findMany({
@@ -45,6 +45,19 @@ export default async function DashboardPage() {
 
   const isNewUser = memberships.length === 0;
 
+  // Your live points tally across all groups (same rule as each group card and
+  // Performance). User.totalPoints is denormalized and can be stale, so sum the
+  // recomputed per-group member points instead.
+  const yourTotalPoints = Number(
+    memberships
+      .reduce(
+        (sum, m) =>
+          sum + memberNetPointsAcrossRounds(m.group.rounds, session.user.id),
+        0
+      )
+      .toFixed(2)
+  );
+
   return (
     <div className="min-h-screen">
       <PageView path="/dashboard" userId={session.user.id} />
@@ -55,7 +68,7 @@ export default async function DashboardPage() {
             <h1 className="text-2xl font-bold">Your groups</h1>
             <p className="mt-1 text-sm text-muted">
               {memberships.length} group{memberships.length === 1 ? "" : "s"} ·{" "}
-              {formatLegPoints(user?.totalPoints ?? 0)} pts total ·{" "}
+              {formatLegPoints(yourTotalPoints)} pts total ·{" "}
               <Link href="/performance" className="text-accent hover:underline">
                 View performance
               </Link>
