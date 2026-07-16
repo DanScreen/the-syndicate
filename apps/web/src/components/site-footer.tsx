@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 export function GamblingFooter() {
@@ -23,6 +24,17 @@ export function GamblingFooter() {
           </a>{" "}
           or call the National Gambling Helpline on <strong>0808 8020 133</strong>.
         </p>
+        <nav className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs">
+          <Link href="/about" className="hover:text-foreground hover:underline">
+            About
+          </Link>
+          <Link href="/privacy" className="hover:text-foreground hover:underline">
+            Privacy
+          </Link>
+          <Link href="/cookies" className="hover:text-foreground hover:underline">
+            Cookies
+          </Link>
+        </nav>
         <p className="mt-4 text-xs">© {new Date().getFullYear()} Tiki Acca</p>
       </div>
     </footer>

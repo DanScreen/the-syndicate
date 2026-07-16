@@ -1,7 +1,7 @@
 import { ApiError, api } from "@/api/client";
 import { useAuth } from "@/auth/AuthProvider";
 import { Button, Card, ErrorText } from "@/components/ui";
-import { colors } from "@/config";
+import { colors, WEB_URL } from "@/config";
 import { copy } from "@/lib/copy";
 import type { NotificationPreferences } from "@tiki-acca/shared";
 import { registerForPushNotifications } from "@/notifications/register";
@@ -9,6 +9,8 @@ import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Linking,
+  Pressable,
   ScrollView,
   StyleSheet,
   Switch,
@@ -181,6 +183,20 @@ export default function AccountScreen() {
       ) : null}
 
       <Card>
+        <Text style={styles.cardTitle}>Legal</Text>
+        <Text style={styles.hint}>
+          We only use essential cookies to keep you signed in, and never sell your
+          data.
+        </Text>
+        <Pressable onPress={() => Linking.openURL(`${WEB_URL}/privacy`)}>
+          <Text style={styles.link}>Privacy Notice</Text>
+        </Pressable>
+        <Pressable onPress={() => Linking.openURL(`${WEB_URL}/cookies`)}>
+          <Text style={styles.link}>Cookie Notice</Text>
+        </Pressable>
+      </Card>
+
+      <Card>
         <Text style={styles.cardTitle}>Session</Text>
         <Text style={styles.hint}>Sign out on this device.</Text>
         <Button
@@ -259,5 +275,10 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 14,
     fontWeight: "500",
+  },
+  link: {
+    color: colors.accent,
+    fontSize: 14,
+    paddingVertical: 6,
   },
 });
