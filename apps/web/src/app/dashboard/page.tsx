@@ -5,7 +5,7 @@ import { PointsText } from "@/components/points-text";
 import { yourLegStatusMessage } from "@tiki-acca/shared";
 import { activeLegsInRound, yourLegInRound } from "@/lib/groups/your-leg-summary";
 import { openRound } from "@/lib/rounds/open-round";
-import { groupNetPoints } from "@/lib/stats/helpers";
+import { groupNetPoints, memberNetPointsAcrossRounds } from "@/lib/stats/helpers";
 import { formatLegPoints, formatRoundStatusBadge } from "@tiki-acca/shared";
 import { auth } from "@/lib/auth";
 import { greetingFirstName } from "@/lib/user-display";
@@ -136,6 +136,13 @@ export default async function DashboardPage() {
                   }
                   const legs = activeRoundRow?.legs ?? [];
                   const groupPoints = groupNetPoints(allRounds);
+                  // Live member points (same rule as leaderboard / Performance).
+                  // GroupMember.points is denormalized and can be stale after
+                  // scoring-rule changes, so never render it directly.
+                  const yourPoints = memberNetPointsAcrossRounds(
+                    allRounds,
+                    session.user.id
+                  );
                   const yourLeg = yourLegInRound(legs, session.user.id);
                   const yourLegCount = legs.filter(
                     (l) => l.userId === session.user.id
@@ -148,6 +155,7 @@ export default async function DashboardPage() {
                     membership: m,
                     activeRound,
                     groupPoints,
+                    yourPoints,
                     yourLeg,
                     yourLegCount,
                     legsPerMember,
@@ -160,6 +168,7 @@ export default async function DashboardPage() {
                   membership: m,
                   activeRound,
                   groupPoints,
+                  yourPoints,
                   yourLeg,
                   yourLegCount,
                   legsPerMember,
@@ -182,7 +191,7 @@ export default async function DashboardPage() {
                     </p>
                     <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
                       <PointsText points={groupPoints} label="Group points" />
-                      <PointsText points={m.points} label="Your points" />
+                      <PointsText points={yourPoints} label="Your points" />
                     </div>
                     <ActiveBetslipSummary
                       legs={activeLegs}
