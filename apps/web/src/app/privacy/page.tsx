@@ -27,15 +27,7 @@ export default function PrivacyPage() {
       </div>
 
       <article className="mx-auto max-w-3xl px-4 py-16">
-        {/* TODO: Remove this draft banner and fill in all bracketed placeholders
-            after legal review before this page goes live in production. */}
-        <div className="mb-10 rounded-xl border border-danger/40 bg-danger/10 p-4 text-sm text-muted">
-          <strong className="text-foreground">Draft — pending legal review.</strong>{" "}
-          Items in [brackets] must be completed before launch.
-        </div>
-
         <section className="prose prose-invert max-w-none">
-          <p className="text-sm text-muted">Last updated: [DATE]</p>
           <p className="mt-4 leading-relaxed text-muted">
             Tiki Acca (&ldquo;Tiki Acca&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;)
             is a social tool that helps groups coordinate accumulator
@@ -44,12 +36,12 @@ export default function PrivacyPage() {
             bets directly with licensed bookmakers.
           </p>
           <p className="mt-4 leading-relaxed text-muted">
-            The data controller is [LEGAL ENTITY NAME], [REGISTERED ADDRESS]. For
-            any privacy query, contact us at{" "}
-            <a href="mailto:privacy@tikiacca.com" className="text-accent hover:underline">
-              privacy@tikiacca.com
+            Tiki Acca is the controller of your personal data. For any privacy
+            query, contact us at{" "}
+            <a href="mailto:tikiacca@outlook.com" className="text-accent hover:underline">
+              tikiacca@outlook.com
             </a>
-            . [ICO registration number: [ICO REG NO].]
+            .
           </p>
 
           <h2 className="mt-12 font-display text-2xl font-bold">
@@ -107,12 +99,12 @@ export default function PrivacyPage() {
           </h2>
           <p className="mt-4 leading-relaxed text-muted">
             We share personal data only with service providers who help us run Tiki
-            Acca and act on our instructions — [hosting/database provider],
-            [transactional email provider], and [push notification provider]. We may
-            also disclose data where required by law. If any provider processes data
-            outside the UK/EEA, we rely on appropriate safeguards such as the UK
-            International Data Transfer Agreement or EU Standard Contractual Clauses.
-            [Confirm your sub-processors and transfer mechanisms.]
+            Acca and act on our instructions — such as our hosting and infrastructure
+            providers, our email provider, and, for the mobile app, push-notification
+            delivery. We may also disclose data where required by law. Where any of
+            these providers process data outside the UK/EEA, we rely on appropriate
+            safeguards such as the UK International Data Transfer Agreement or EU
+            Standard Contractual Clauses.
           </p>
 
           <h2 className="mt-12 font-display text-2xl font-bold">
@@ -120,9 +112,9 @@ export default function PrivacyPage() {
           </h2>
           <p className="mt-4 leading-relaxed text-muted">
             We keep your account data for as long as your account is active. If you
-            delete your account, we delete or anonymise your personal data within
-            [RETENTION PERIOD], except where we must retain limited records to meet a
-            legal obligation.
+            delete your account, we delete or anonymise your personal data within a
+            reasonable period afterwards, except where we must retain limited records
+            to meet a legal obligation.
           </p>
 
           <h2 className="mt-12 font-display text-2xl font-bold">Your rights</h2>
@@ -130,8 +122,8 @@ export default function PrivacyPage() {
             Under UK/EU GDPR you have the right to access, correct, delete, or port
             your data, to object to or restrict certain processing, and to withdraw
             consent where we rely on it. To exercise any of these, contact{" "}
-            <a href="mailto:privacy@tikiacca.com" className="text-accent hover:underline">
-              privacy@tikiacca.com
+            <a href="mailto:tikiacca@outlook.com" className="text-accent hover:underline">
+              tikiacca@outlook.com
             </a>
             . You can also complain to the UK Information Commissioner&rsquo;s Office
             (
@@ -151,8 +143,8 @@ export default function PrivacyPage() {
             Tiki Acca is strictly for adults aged 18 and over. We collect date of
             birth at sign-up and block anyone under 18. If you believe someone under
             18 has created an account, contact{" "}
-            <a href="mailto:privacy@tikiacca.com" className="text-accent hover:underline">
-              privacy@tikiacca.com
+            <a href="mailto:tikiacca@outlook.com" className="text-accent hover:underline">
+              tikiacca@outlook.com
             </a>{" "}
             and we will remove it.
           </p>
@@ -171,8 +163,7 @@ export default function PrivacyPage() {
           </h2>
           <p className="mt-4 leading-relaxed text-muted">
             We may update this notice from time to time. Material changes will be
-            highlighted in the app or by email. The &ldquo;Last updated&rdquo; date
-            above shows the current version.
+            highlighted in the app or by email.
           </p>
         </section>
       </article>

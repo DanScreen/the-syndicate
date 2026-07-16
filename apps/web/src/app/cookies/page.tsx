@@ -51,15 +51,7 @@ export default function CookiesPage() {
       </div>
 
       <article className="mx-auto max-w-3xl px-4 py-16">
-        {/* TODO: Confirm the live cookie names in browser dev tools (Auth.js adds
-            a __Secure-/__Host- prefix over HTTPS) and set the Last updated date. */}
-        <div className="mb-10 rounded-xl border border-danger/40 bg-danger/10 p-4 text-sm text-muted">
-          <strong className="text-foreground">Draft — pending legal review.</strong>{" "}
-          Confirm live cookie names and the date before launch.
-        </div>
-
         <section className="prose prose-invert max-w-none">
-          <p className="text-sm text-muted">Last updated: [DATE]</p>
           <p className="mt-4 leading-relaxed text-muted">
             We use a small number of{" "}
             <strong className="text-foreground">strictly necessary cookies</strong>.

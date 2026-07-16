@@ -1,14 +1,12 @@
-# Cookie & Privacy Notice (DRAFT)
+# Cookie & Privacy Notice
 
-> **Status: draft for legal review.** This document was drafted to reflect what
-> the Tiki Acca application actually stores and processes as of the date below.
-> It is not legal advice. Have a qualified data-protection adviser review and
-> approve it before publishing, and fill in every `[PLACEHOLDER]`.
+> **Note:** This document reflects what the Tiki Acca application actually stores
+> and processes. It is not legal advice — a qualified data-protection adviser
+> should review it before it is relied on as the final published policy. The live
+> pages are at `/privacy` and `/cookies`.
 
-**Last updated:** [DATE]
-**Data controller:** [LEGAL ENTITY NAME], [REGISTERED ADDRESS]
-**Contact for privacy queries:** [privacy@yourdomain]
-**ICO registration number:** [ICO REG NO — register at ico.org.uk if not already]
+**Data controller:** Tiki Acca
+**Contact for privacy queries:** tikiacca@outlook.com
 
 Tiki Acca ("Tiki Acca", "we", "us") is a social tool that helps groups
 coordinate accumulator ("acca") ideas. **We do not take bets, hold funds, or act
@@ -35,7 +33,7 @@ cookies, and we do not share cookie data with third parties for those purposes.
 
 > These cookies are set by our authentication library (Auth.js / NextAuth). Exact
 > names carry the `__Secure-`/`__Host-` prefix when served over HTTPS. Verify the
-> live names in your browser's dev tools before publishing this table.
+> live names in your browser's dev tools.
 
 ### Managing cookies
 
@@ -82,43 +80,34 @@ basis: legitimate interests in maintaining and improving the service.
 ### 2.3 Who we share data with
 
 We share personal data only with service providers who help us run Tiki Acca
-(processors acting on our instructions), for example:
+(processors acting on our instructions) — such as our hosting and infrastructure
+providers, our email provider, and, for the mobile app, push-notification
+delivery. We may also disclose data where required by law. Where any of these
+providers process data outside the UK/EEA, we rely on appropriate safeguards such
+as the UK International Data Transfer Agreement or EU Standard Contractual Clauses.
 
-- **Hosting / database infrastructure:** [PROVIDER, e.g. your cloud host]
-- **Transactional email delivery:** [PROVIDER, if any]
-- **Mobile push notifications:** [PROVIDER, e.g. Expo / APNs / FCM, if used]
-
-We may also disclose data where required by law. Update this list to match your
-actual sub-processors.
-
-### 2.4 International transfers
-
-If any provider processes data outside the UK/EEA, we rely on appropriate
-safeguards (e.g. UK International Data Transfer Agreement / EU Standard
-Contractual Clauses). [Confirm and list transfer mechanisms, or state that all
-processing stays in the UK/EEA.]
-
-### 2.5 How long we keep it
+### 2.4 How long we keep it
 
 We keep your account data for as long as your account is active. If you delete
-your account, we delete or anonymise your personal data within [RETENTION PERIOD]
-, except where we must retain limited records to meet a legal obligation.
+your account, we delete or anonymise your personal data within a reasonable period
+afterwards, except where we must retain limited records to meet a legal
+obligation.
 
-### 2.6 Your rights
+### 2.5 Your rights
 
 Under UK/EU GDPR you have the right to access, correct, delete, or port your
 data, to object to or restrict certain processing, and to withdraw consent where
-we rely on it. To exercise any of these, contact [privacy@yourdomain]. You also
+we rely on it. To exercise any of these, contact tikiacca@outlook.com. You also
 have the right to complain to the UK Information Commissioner's Office
 (ico.org.uk) or your local supervisory authority.
 
-### 2.7 Children
+### 2.6 Children
 
 Tiki Acca is strictly for adults aged 18 and over. We collect date of birth at
 sign-up and block anyone under 18. If you believe someone under 18 has created an
-account, contact [privacy@yourdomain] and we will remove it.
+account, contact tikiacca@outlook.com and we will remove it.
 
-### 2.8 Changes to this notice
+### 2.7 Changes to this notice
 
 We may update this notice from time to time. Material changes will be highlighted
-in the app or by email. The "Last updated" date above shows the current version.
+in the app or by email.
