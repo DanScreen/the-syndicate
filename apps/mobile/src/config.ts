@@ -3,6 +3,10 @@ import { BRAND_COLORS } from "@tiki-acca/shared";
 export const API_URL =
   process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
 
+/** Public marketing site, used for legal pages (privacy, cookies) linked from the app. */
+export const WEB_URL =
+  process.env.EXPO_PUBLIC_WEB_URL ?? "https://www.tikiacca.com";
+
 /** Turf Green — sourced from @tiki-acca/shared (matches web globals.css) */
 export const colors = {
   bg: BRAND_COLORS.background,
