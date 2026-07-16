@@ -24,7 +24,8 @@ type AuthContextValue = {
     firstName: string,
     lastName: string,
     email: string,
-    password: string
+    password: string,
+    dateOfBirth: string
   ) => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -81,11 +82,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       firstName: string,
       lastName: string,
       email: string,
-      password: string
+      password: string,
+      dateOfBirth: string
     ) => {
       await api("/api/auth/sign-up", {
         method: "POST",
-        body: JSON.stringify({ firstName, lastName, email, password }),
+        body: JSON.stringify({ firstName, lastName, email, password, dateOfBirth }),
       });
       await signIn(email, password);
     },

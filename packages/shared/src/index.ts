@@ -1,6 +1,7 @@
 export * from "./fixtures";
 export * from "./schemas";
 export * from "./profanity";
+export * from "./age";
 export * from "./constants";
 export * from "./types";
 export * from "./competitions";

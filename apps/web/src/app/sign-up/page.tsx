@@ -1,5 +1,6 @@
 "use client";
 
+import { MIN_SIGN_UP_AGE } from "@tiki-acca/shared";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -10,8 +11,16 @@ export default function SignUpPage() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Latest date allowed in the picker: today minus the minimum sign-up age.
+  const maxDateOfBirth = (() => {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() - MIN_SIGN_UP_AGE);
+    return d.toISOString().slice(0, 10);
+  })();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -21,7 +30,7 @@ export default function SignUpPage() {
     const res = await fetch("/api/auth/sign-up", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ firstName, lastName, email, password }),
+      body: JSON.stringify({ firstName, lastName, email, password, dateOfBirth }),
     });
 
     const data = await res.json();
@@ -31,6 +40,7 @@ export default function SignUpPage() {
       const fieldError =
         data.error?.fieldErrors?.firstName?.[0] ??
         data.error?.fieldErrors?.lastName?.[0] ??
+        data.error?.fieldErrors?.dateOfBirth?.[0] ??
         data.error?.fieldErrors?.email?.[0] ??
         data.error?.fieldErrors?.password?.[0];
       setError(fieldError ?? data.error?.formErrors?.[0] ?? data.error ?? "Sign up failed");
@@ -85,6 +95,19 @@ export default function SignUpPage() {
             className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2"
             required
           />
+        </div>
+        <div>
+          <label className="text-sm text-muted">Date of birth</label>
+          <input
+            type="date"
+            value={dateOfBirth}
+            onChange={(e) => setDateOfBirth(e.target.value)}
+            autoComplete="bday"
+            max={maxDateOfBirth}
+            className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2"
+            required
+          />
+          <p className="mt-1 text-xs text-muted">You must be {MIN_SIGN_UP_AGE} or over to play.</p>
         </div>
         <div>
           <label className="text-sm text-muted">Password (min 8 chars)</label>
