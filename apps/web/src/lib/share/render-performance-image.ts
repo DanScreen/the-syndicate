@@ -52,19 +52,20 @@ function drawLogoMark(ctx: CanvasRenderingContext2D, x: number, y: number, size:
   ctx.fillStyle = "#14532d";
   ctx.fill();
 
-  // Passes: line + explicit chevron head, circulating clockwise
+  // Passes: thin white line + explicit chevron head. Coordinates are the
+  // inverted (apex-down) cut, reflected vertically about y=110 — matches
+  // lib/brand/rondo-icon.tsx.
   const passes: {
-    color: string;
     line: [number, number, number, number];
     chevron: [number, number, number, number, number, number];
   }[] = [
-    { color: "#22c55e", line: [120.25, 75.75, 139.28, 108.72], chevron: [133.33, 112.21, 145.28, 119.11, 145.28, 105.31] },
-    { color: "#4ade80", line: [134.53, 136, 96.47, 136], chevron: [96.42, 129.1, 84.47, 136, 96.42, 142.9] },
-    { color: "#f1f5f9", line: [75.22, 118.25, 94.25, 85.28], chevron: [100.25, 88.69, 100.25, 74.89, 88.3, 81.79] },
+    { line: [120.25, 144.25, 139.28, 111.28], chevron: [133.33, 107.79, 145.28, 100.89, 145.28, 114.69] },
+    { line: [134.53, 84, 96.47, 84], chevron: [96.42, 90.9, 84.47, 84, 96.42, 77.1] },
+    { line: [75.22, 101.75, 94.25, 134.72], chevron: [100.25, 131.31, 100.25, 145.11, 88.3, 138.21] },
   ];
+  ctx.strokeStyle = "#f1f5f9";
+  ctx.lineWidth = 6.5;
   for (const p of passes) {
-    ctx.strokeStyle = p.color;
-    ctx.lineWidth = 10;
     ctx.beginPath();
     ctx.moveTo(p.line[0], p.line[1]);
     ctx.lineTo(p.line[2], p.line[3]);
@@ -76,18 +77,24 @@ function drawLogoMark(ctx: CanvasRenderingContext2D, x: number, y: number, size:
     ctx.stroke();
   }
 
-  // Players
-  const dots: [number, number, string][] = [
-    [110, 58, "#f1f5f9"],
-    [155.03, 136, "#22c55e"],
-    [64.97, 136, "#f1f5f9"],
+  // Triangle players (white)
+  const dots: [number, number][] = [
+    [110, 162],
+    [155.03, 84],
+    [64.97, 84],
   ];
-  for (const [dx, dy, color] of dots) {
+  ctx.fillStyle = "#f1f5f9";
+  for (const [dx, dy] of dots) {
     ctx.beginPath();
     ctx.arc(dx, dy, 14.5, 0, Math.PI * 2);
-    ctx.fillStyle = color;
     ctx.fill();
   }
+
+  // Centre player being passed around (green)
+  ctx.beginPath();
+  ctx.arc(110, 110, 13.5, 0, Math.PI * 2);
+  ctx.fillStyle = "#22c55e";
+  ctx.fill();
 
   ctx.restore();
 }

@@ -24,12 +24,12 @@ export const metadata: Metadata = {
     "Create social betting groups, contribute legs to shared football accumulators, and compete on the leaderboard.",
   icons: {
     // Query cache-bust — /icon.svg is served with long-lived immutable CDN cache.
-    // Bump when the mark changes (Triangle rondo = v2, July 2026).
+    // Bump when the mark changes (inverted rondo + centre player = v3, July 2026).
     icon: [
-      { url: "/icon.svg?v=2", type: "image/svg+xml" },
-      { url: "/favicon.ico?v=2", sizes: "48x48" },
+      { url: "/icon.svg?v=3", type: "image/svg+xml" },
+      { url: "/favicon.ico?v=3", sizes: "48x48" },
     ],
-    apple: "/apple-icon?v=2",
+    apple: "/apple-icon?v=3",
   },
   openGraph: {
     title: "Tiki Acca: Social Group Accas",
