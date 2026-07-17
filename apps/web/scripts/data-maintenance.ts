@@ -12,6 +12,8 @@
  *   npx tsx apps/web/scripts/data-maintenance.ts reconcile-points --execute
  *   npx tsx apps/web/scripts/data-maintenance.ts rescore-member-legs --execute
  *   npx tsx apps/web/scripts/data-maintenance.ts resync-matches --execute
+ *   npx tsx apps/web/scripts/data-maintenance.ts preview-leg-announcements
+ *   npx tsx apps/web/scripts/data-maintenance.ts backfill-leg-announcements --execute
  */
 import { prisma } from "@tiki-acca/database";
 import { Prisma, type Leg, type Round } from "@prisma/client";
@@ -31,6 +33,7 @@ import {
 import { applyRoundSettlement } from "../src/lib/settlement/apply-round-settlement";
 import { resolveRoundOutcomes } from "../src/lib/settlement/resolve-round-outcomes";
 import { openRound } from "../src/lib/rounds/open-round";
+import { formatLegSubmittedBody } from "../src/lib/chat/system-messages";
 
 type RoundWithLegs = Round & {
   legs: (Leg & { user: { email: string; name: string } })[];
@@ -557,6 +560,91 @@ async function rescoreMemberLegs() {
   console.log("Rescored legs and reconciled user/member totals.");
 }
 
+/** Legs with no pick announcement — betslip reactions have nothing to attach to. */
+async function findLegsMissingAnnouncements() {
+  const announced = await prisma.roundMessage.findMany({
+    where: {
+      legId: { not: null },
+      eventType: { in: ["leg_submitted", "leg_changed"] },
+    },
+    select: { legId: true },
+    distinct: ["legId"],
+  });
+  const announcedIds = new Set(
+    announced.map((row) => row.legId).filter((id): id is string => Boolean(id))
+  );
+
+  const legs = await prisma.leg.findMany({
+    include: {
+      user: { select: { name: true } },
+      round: {
+        select: {
+          id: true,
+          status: true,
+          group: { select: { name: true } },
+        },
+      },
+    },
+    orderBy: { createdAt: "asc" },
+  });
+
+  return legs.filter((leg) => !announcedIds.has(leg.id));
+}
+
+async function previewLegAnnouncements() {
+  const missing = await findLegsMissingAnnouncements();
+  console.log(`Legs missing pick announcements: ${missing.length}`);
+  const byStatus = new Map<string, number>();
+  for (const leg of missing) {
+    byStatus.set(leg.round.status, (byStatus.get(leg.round.status) ?? 0) + 1);
+    console.log(
+      `  [${leg.id}] group="${leg.round.group.name}" round=${leg.round.status} ${leg.user.name}: ${leg.selectionLabel} (${leg.homeTeam} v ${leg.awayTeam})`
+    );
+  }
+  if (byStatus.size > 0) {
+    console.log("\nBy round status:");
+    for (const [status, count] of [...byStatus.entries()].sort()) {
+      console.log(`  ${status}: ${count}`);
+    }
+  }
+  console.log(
+    execute
+      ? ""
+      : "\nPass --execute with backfill-leg-announcements to create leg_submitted messages (createdAt = leg.createdAt)."
+  );
+}
+
+async function backfillLegAnnouncements() {
+  const missing = await findLegsMissingAnnouncements();
+  console.log(`Legs missing pick announcements: ${missing.length}`);
+  if (!execute) {
+    console.log("Dry run only. Pass --execute with backfill-leg-announcements to apply.");
+    return;
+  }
+  if (missing.length === 0) {
+    console.log("Nothing to backfill.");
+    return;
+  }
+
+  const chunkSize = 200;
+  let created = 0;
+  for (let i = 0; i < missing.length; i += chunkSize) {
+    const chunk = missing.slice(i, i + chunkSize);
+    const result = await prisma.roundMessage.createMany({
+      data: chunk.map((leg) => ({
+        roundId: leg.roundId,
+        kind: "system",
+        eventType: "leg_submitted",
+        legId: leg.id,
+        body: formatLegSubmittedBody(leg.user.name, leg),
+        createdAt: leg.createdAt,
+      })),
+    });
+    created += result.count;
+  }
+  console.log(`Created ${created} leg_submitted announcements.`);
+}
+
 async function main() {
   if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL is required");
@@ -612,10 +700,16 @@ async function main() {
     case "fix-duplicate-markets":
       await fixDuplicateMarkets();
       break;
+    case "preview-leg-announcements":
+      await previewLegAnnouncements();
+      break;
+    case "backfill-leg-announcements":
+      await backfillLegAnnouncements();
+      break;
     default:
       console.error(`Unknown command: ${command ?? "(none)"}`);
       console.error(
-        "Commands: preview-solo-rounds, remove-solo-rounds, find-rounds, preview-resettle, resettle-round, preview-duplicate-markets, fix-duplicate-markets, reconcile-points, rescore-member-legs, resync-matches"
+        "Commands: preview-solo-rounds, remove-solo-rounds, find-rounds, preview-resettle, resettle-round, preview-duplicate-markets, fix-duplicate-markets, reconcile-points, rescore-member-legs, resync-matches, preview-leg-announcements, backfill-leg-announcements"
       );
       process.exit(1);
   }

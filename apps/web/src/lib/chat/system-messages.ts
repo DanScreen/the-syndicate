@@ -36,7 +36,13 @@ async function displayName(db: Db, userId: string): Promise<string> {
 
 async function createSystemMessage(
   db: Db,
-  data: { roundId: string; eventType: string; body: string; legId?: string }
+  data: {
+    roundId: string;
+    eventType: string;
+    body: string;
+    legId?: string;
+    createdAt?: Date;
+  }
 ): Promise<void> {
   await db.roundMessage.create({
     data: {
@@ -45,22 +51,32 @@ async function createSystemMessage(
       eventType: data.eventType,
       body: data.body,
       legId: data.legId,
+      ...(data.createdAt ? { createdAt: data.createdAt } : {}),
     },
   });
+}
+
+export function formatLegSubmittedBody(
+  name: string,
+  leg: Pick<AnnouncedLeg, "selectionLabel" | "homeTeam" | "awayTeam" | "odds">
+): string {
+  return `${name} locked in ${leg.selectionLabel} (${leg.homeTeam} v ${leg.awayTeam}) @ ${formatOdds(leg.odds)} 🔒`;
 }
 
 /** "Dan locked in BTTS (Spain v France) @ 1.80 🔒" */
 export async function postLegSubmittedMessage(
   db: Db,
   leg: AnnouncedLeg,
-  userName?: string
+  userName?: string,
+  options?: { createdAt?: Date }
 ): Promise<void> {
   const name = userName ?? (await displayName(db, leg.userId));
   await createSystemMessage(db, {
     roundId: leg.roundId,
     eventType: "leg_submitted",
     legId: leg.id,
-    body: `${name} locked in ${leg.selectionLabel} (${leg.homeTeam} v ${leg.awayTeam}) @ ${formatOdds(leg.odds)} 🔒`,
+    body: formatLegSubmittedBody(name, leg),
+    createdAt: options?.createdAt,
   });
 }
 

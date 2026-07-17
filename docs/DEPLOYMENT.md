@@ -458,6 +458,8 @@ One-off fixes (solo test rounds, re-settle after a bug) use `apps/web/scripts/da
 | Rescore member legs after scoring-rule change | `npm run db:maintenance -- rescore-member-legs` then `--execute` |
 | Preview duplicate same-fixture markets | `npm run db:maintenance -- preview-duplicate-markets` |
 | Fix historical duplicate markets (keep earliest leg) | `npm run db:maintenance -- fix-duplicate-markets --execute` |
+| Preview legs missing pick announcements (no betslip reactions) | `npm run db:maintenance -- preview-leg-announcements` |
+| Backfill `leg_submitted` messages for those legs | `npm run db:maintenance -- backfill-leg-announcements --execute` |
 
 **Solo round** = every leg in the round belongs to that email (typical single-player test accas).
 
