@@ -418,7 +418,7 @@ Env vars on Cloud Run: `NEXTAUTH_URL`, `EMAIL_FROM`, `ADMIN_EMAILS` (from GitHub
 
 Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `AnalyticsEvent`, `CompetitionSetting`, `RoundMessage`, `MessageReaction`.
 
-- `RoundMessage` — round-scoped chat thread: user banter (`kind: "user"`) + append-only system messages (`kind: "system"`, `eventType`: `leg_submitted | leg_changed | round_locked | leg_result | round_settled`; `legId` set on pick announcements so the betslip row can mirror reactions). Written at event time by lifecycle code — see [Settlement](#settlement).
+- `RoundMessage` — round-scoped chat thread: user banter (`kind: "user"`) + append-only system messages (`kind: "system"`, `eventType`: `leg_submitted | leg_changed | round_locked | leg_result | round_settled`; `legId` set on pick announcements so the betslip row can mirror reactions). User posts run through shared `containsProfanity` (same list as names/groups). Written at event time by lifecycle code — see [Settlement](#settlement).
 - `MessageReaction` — emoji reactions on messages, unique per `(messageId, userId, emoji)`. `REACTION_EMOJIS` provides six one-tap defaults; `+` opens a broad emoji grid on web/mobile, while the API validates any single Unicode emoji. Pick rows mirror the latest `leg_submitted` / `leg_changed` message for their `legId`.
 - `GroupMember.lastReadMessageAt` — group-wide unread cursor; dashboard cards and Round tabs show unread counts.
 - `NotificationPreference.pushChat` — chat push opt-in (default on). User messages notify other members at most once per ten-minute group bucket; active 20-second thread polling suppresses foreground pushes.
@@ -464,7 +464,7 @@ Recent migrations include `20260717150000_group_chat_messages` and `202607171700
 | `GET /api/groups/[id]/members/[userId]/stats` | Member | Member breakdown + favourites |
 | `GET /api/user/stats` | Session | Cross-group performance stats |
 | `GET/PATCH /api/user/notification-preferences` | Session | Notification toggles |
-| `GET/POST /api/rounds/[id]/messages` | Member | Cursor-paginated thread (`before`/`after`, latest pick announcements included) / post to an active round (500 chars, 10/min) |
+| `GET/POST /api/rounds/[id]/messages` | Member | Cursor-paginated thread (`before`/`after`, latest pick announcements included) / post to an active round (500 chars, profanity filter, 10/min) |
 | `DELETE /api/messages/[id]` | Author or group owner | Soft-delete an active-round user message (body becomes `Message deleted`) |
 | `POST /api/messages/[id]/reactions` | Member | Toggle one validated Unicode emoji reaction |
 | `POST/DELETE /api/user/push-token` | Session / mobile JWT | Expo push token |

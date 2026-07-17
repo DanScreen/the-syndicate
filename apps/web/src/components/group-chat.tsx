@@ -157,7 +157,17 @@ export function RoundThread({
         setError("You're posting too fast. Slow down a moment.");
         return;
       }
-      if (!res.ok) throw new Error("Failed to post");
+      if (!res.ok) {
+        const json = (await res.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        setError(
+          typeof json?.error === "string"
+            ? json.error
+            : "Couldn't send that message."
+        );
+        return;
+      }
       const json = (await res.json()) as { message: RoundMessageDto };
       lastIdRef.current = json.message.id;
       setMessages((prev) => mergeMessages(prev, [json.message]));

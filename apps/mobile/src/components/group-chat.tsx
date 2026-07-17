@@ -147,8 +147,10 @@ export function RoundThread({
       setInput("");
     } catch (caught) {
       setError(
-        caught instanceof ApiError && caught.status === 429
-          ? "You're posting too fast. Slow down a moment."
+        caught instanceof ApiError
+          ? caught.status === 429
+            ? "You're posting too fast. Slow down a moment."
+            : caught.message
           : "Couldn't send that message."
       );
     } finally {

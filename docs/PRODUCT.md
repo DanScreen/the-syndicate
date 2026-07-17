@@ -31,7 +31,7 @@ Owner creates group (name only) → invite code + link. Anyone with the link ope
 5. Everyone fills their quota **or the first submitted leg kicks off** → acca **locks** with best combined bookmaker (members under quota miss or enter partial)
 6. Members receive **email notification** when acca locks (if Resend configured)
 7. When a round settles, the next open round starts automatically (using the group's current legs-per-member setting)
-8. Each round has a web/mobile **Banter** thread. Pick submissions, changes, lock, results, and settlement appear as system messages; members can post text and react using six one-tap defaults or the broad emoji picker opened by `+`. Pick rows mirror reactions from their latest announcement.
+8. Each round has a web/mobile **Banter** thread. Pick submissions, changes, lock, results, and settlement appear as system messages; members can post text (profanity-filtered) and react using six one-tap defaults or the broad emoji picker opened by `+`. Pick rows mirror reactions from their latest announcement.
 
 → [specs/competitions-and-results.md](./specs/competitions-and-results.md)
 

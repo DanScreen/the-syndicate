@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { containsProfanity } from "./profanity";
 
 /** Round chat message kinds — user banter vs. lifecycle system messages. */
 export const MESSAGE_KINDS = ["user", "system"] as const;
@@ -56,7 +57,10 @@ export const postMessageSchema = z.object({
     .trim()
     .min(1)
     .max(MAX_MESSAGE_LENGTH)
-    .refine((body) => body !== DELETED_MESSAGE_BODY, "Reserved message text"),
+    .refine((body) => body !== DELETED_MESSAGE_BODY, "Reserved message text")
+    .refine((body) => !containsProfanity(body), {
+      message: "Please keep it clean — that message isn't allowed",
+    }),
 });
 
 /** Query params for the paginated thread — `after` is a message id cursor. */

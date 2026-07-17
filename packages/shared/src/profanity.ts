@@ -1,9 +1,9 @@
 /**
  * Lightweight, dependency-free profanity filter shared by web + mobile.
  *
- * Used to reject offensive sign-up names and group names. It runs in both the
- * Next.js server and the React Native runtime, so it must stay pure TS with no
- * external dependencies.
+ * Used to reject offensive sign-up names, group names, and chat messages. It
+ * runs in both the Next.js server and the React Native runtime, so it must
+ * stay pure TS with no external dependencies.
  *
  * Design notes:
  * - We normalise common leetspeak (e.g. "sh1t", "@ss") before matching so the

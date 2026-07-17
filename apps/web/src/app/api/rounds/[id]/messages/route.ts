@@ -213,7 +213,10 @@ export async function POST(request: Request, { params }: Params) {
   const raw = await request.json().catch(() => null);
   const parsed = postMessageSchema.safeParse(raw);
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    const flat = parsed.error.flatten();
+    const message =
+      flat.fieldErrors.body?.[0] ?? flat.formErrors[0] ?? "Invalid message";
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 
   const message = await prisma.roundMessage.create({
