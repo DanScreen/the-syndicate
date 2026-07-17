@@ -1,6 +1,6 @@
 # Current state (as-built)
 
-Last updated 17 July 2026 (mobile nav: Account link + equal Sign in/up). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
+Last updated 17 July 2026 (invite join signed-out UX). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
 
 Production: **https://www.tikiacca.com** (apex → 301 to www via Cloudflare).
 
@@ -199,14 +199,14 @@ Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_
 
 ## Web pages
 
-Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/groups/*`, `/performance`, `/admin`. Middleware uses edge-safe `auth.config.ts` only (no Prisma); credentials + DB live in `auth.ts`. Middleware also runs on all non-static routes for the **origin-auth check** (`ORIGIN_AUTH_SECRET` + Cloudflare `x-origin-auth` header — blocks direct `*.run.app` traffic; `/api/health` and `/api/internal/*` exempt). Auth endpoints are **rate-limited** per IP (`lib/rate-limit.ts`): sign-in 10/5min, sign-up 5/hour. See [DEPLOYMENT.md](./DEPLOYMENT.md#ddos--abuse-protection).
+Protected routes enforced in `apps/web/src/middleware.ts` / `auth.config.ts`: `/dashboard`, `/groups/*` (**except** `/groups/join`), `/performance`, `/admin`, `/account`, `/settings`. `/groups/join` is public so invite links work signed-out — the page prompts Sign in / Sign up with `callbackUrl` back to the invite (`lib/callback-url.ts`). Middleware uses edge-safe `auth.config.ts` only (no Prisma); credentials + DB live in `auth.ts`. Middleware also runs on all non-static routes for the **origin-auth check** (`ORIGIN_AUTH_SECRET` + Cloudflare `x-origin-auth` header — blocks direct `*.run.app` traffic; `/api/health` and `/api/internal/*` exempt). Auth endpoints are **rate-limited** per IP (`lib/rate-limit.ts`): sign-in 10/5min, sign-up 5/hour. See [DEPLOYMENT.md](./DEPLOYMENT.md#ddos--abuse-protection).
 
 | Path | Purpose |
 |------|---------|
 | `/` | Landing — hero, value props, how it works, FAQ, CTA (signed-in: app header + Groups/Performance CTAs) |
 | `/about` | Product story, what we are/aren’t, responsible gambling (reachable when signed in) |
 | `/blog`, `/blog/[slug]` | File-based MDX blog (static; drafts hidden in prod) |
-| `/sign-in`, `/sign-up` | Auth — sign-up collects **first name** + **last name** |
+| `/sign-in`, `/sign-up` | Auth — sign-up collects **first name** + **last name**; both preserve `callbackUrl` (e.g. invite return) |
 | `/account` | Account — profile, notification prefs, sign out (via header greeting) |
 | `/settings/notifications` | Redirect → `/account#notifications` (legacy / List-Unsubscribe) |
 | `/dashboard` | **Groups home** — list of user's groups; **group/your points**; **current betslip** legs (fixture, market, selection, odds); waiting status if you haven't picked |
@@ -216,7 +216,8 @@ Protected routes enforced in `apps/web/src/middleware.ts`: `/dashboard`, `/group
 | `/admin/leaderboards` | **Admin** — group & player rankings by points |
 | `/admin/competitions` | **Admin** — enable/disable competitions in leg picker |
 | `/admin/odds` | **Admin** — Odds API diagnostics (fixture pipeline) |
-| `/groups/create`, `/groups/join` | Create / join group (create: legs-per-member picker) |
+| `/groups/create` | Create group (auth required; legs-per-member picker) |
+| `/groups/join` | Join group — **public**; signed-out shows Sign in / Sign up (keeps `?code=`); signed-in auto-joins when `?code=` present |
 | `/groups/[id]` | **Round** tab — active round, multi-leg picker, picks, lock, settle |
 | `/groups/[id]/history` | **History** tab — every settled acca with fixtures, markets, outcomes |
 | `/groups/[id]/leaderboard` | Points leaderboard |

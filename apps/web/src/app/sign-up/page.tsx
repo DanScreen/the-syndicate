@@ -1,13 +1,18 @@
 "use client";
 
 import { Logo } from "@/components/logo";
+import { safeCallbackUrl, withCallbackUrl } from "@/lib/callback-url";
 import { MIN_SIGN_UP_AGE } from "@tiki-acca/shared";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 
-export default function SignUpPage() {
+function SignUpForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = safeCallbackUrl(searchParams.get("callbackUrl"));
+  const joiningGroup = callbackUrl.startsWith("/groups/join");
+
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -48,16 +53,22 @@ export default function SignUpPage() {
       return;
     }
 
-    router.push("/sign-in?registered=1");
+    const signInHref = withCallbackUrl("/sign-in", callbackUrl);
+    const separator = signInHref.includes("?") ? "&" : "?";
+    router.push(`${signInHref}${separator}registered=1`);
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4">
-      <Logo className="mb-8 self-start" size="lg" />
+    <>
       <h1 className="text-2xl font-bold">Create account</h1>
       <p className="mt-2 text-sm text-muted">
-        Already have an account?{" "}
-        <Link href="/sign-in" className="text-accent hover:underline">
+        {joiningGroup
+          ? "Create an account to join the group you were invited to. Already have one? "
+          : "Already have an account? "}
+        <Link
+          href={withCallbackUrl("/sign-in", callbackUrl)}
+          className="text-accent hover:underline"
+        >
           Sign in
         </Link>
       </p>
@@ -132,6 +143,17 @@ export default function SignUpPage() {
           {loading ? "Creating..." : "Create account"}
         </button>
       </form>
+    </>
+  );
+}
+
+export default function SignUpPage() {
+  return (
+    <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4">
+      <Logo className="mb-8 self-start" size="lg" />
+      <Suspense>
+        <SignUpForm />
+      </Suspense>
     </div>
   );
 }

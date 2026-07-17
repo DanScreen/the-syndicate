@@ -31,7 +31,10 @@ export async function POST(request: Request) {
   });
 
   if (existing) {
-    return NextResponse.json({ error: "Already a member" }, { status: 409 });
+    return NextResponse.json(
+      { error: "Already a member", groupId: group.id },
+      { status: 409 }
+    );
   }
 
   await prisma.groupMember.create({

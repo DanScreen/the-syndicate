@@ -1,24 +1,11 @@
 "use client";
 
 import { Logo } from "@/components/logo";
+import { safeCallbackUrl, withCallbackUrl } from "@/lib/callback-url";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
-
-function safeCallbackUrl(raw: string | null): string {
-  if (!raw) return "/dashboard";
-  if (raw.startsWith("/") && !raw.startsWith("//")) return raw;
-  try {
-    const parsed = new URL(raw);
-    if (typeof window !== "undefined" && parsed.origin === window.location.origin) {
-      return `${parsed.pathname}${parsed.search}`;
-    }
-  } catch {
-    /* ignore malformed URLs */
-  }
-  return "/dashboard";
-}
 
 function SignInForm() {
   const searchParams = useSearchParams();
@@ -27,6 +14,8 @@ function SignInForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const joiningGroup = callbackUrl.startsWith("/groups/join");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -54,15 +43,21 @@ function SignInForm() {
     <>
       <h1 className="text-2xl font-bold">Sign in</h1>
       <p className="mt-2 text-sm text-muted">
-        No account?{" "}
-        <Link href="/sign-up" className="text-accent hover:underline">
+        {joiningGroup
+          ? "Sign in to join the group you were invited to."
+          : "No account?"}{" "}
+        <Link
+          href={withCallbackUrl("/sign-up", callbackUrl)}
+          className="text-accent hover:underline"
+        >
           Sign up
         </Link>
+        {joiningGroup ? " if you need an account." : null}
       </p>
 
       {searchParams.get("registered") === "1" && (
         <p className="mt-4 rounded-lg border border-accent/30 bg-accent-muted/20 px-3 py-2 text-sm text-accent">
-          Account created — sign in below.
+          Account created — sign in below to continue.
         </p>
       )}
 
