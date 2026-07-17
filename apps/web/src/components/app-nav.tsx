@@ -12,7 +12,13 @@ function navLinkClass(active: boolean) {
   }`;
 }
 
-export function AppNav() {
+export type AppNavItem = {
+  href: string;
+  label: string;
+  active: boolean;
+};
+
+export function useAppNavItems(): AppNavItem[] {
   const pathname = usePathname();
   const { data: session } = useSession();
   const isAdmin = session?.user?.role === "admin";
@@ -28,28 +34,32 @@ export function AppNav() {
   const performanceActive = pathname === "/performance";
   const adminActive = pathname.startsWith("/admin");
 
+  const items: AppNavItem[] = [
+    { href: "/", label: "Home", active: homeActive },
+    { href: "/about", label: "About", active: aboutActive },
+    { href: "/dashboard", label: "Groups", active: groupsActive },
+    { href: "/performance", label: "Performance", active: performanceActive },
+  ];
+
+  if (isAdmin) {
+    items.push({ href: "/admin", label: "Admin", active: adminActive });
+  }
+
+  items.push({ href: "/blog", label: "Blog", active: blogActive });
+  return items;
+}
+
+/** Desktop inline nav — hidden below `md`. */
+export function AppNav() {
+  const items = useAppNavItems();
+
   return (
-    <nav className="flex flex-wrap items-center gap-1">
-      <Link href="/" className={navLinkClass(homeActive)}>
-        Home
-      </Link>
-      <Link href="/about" className={navLinkClass(aboutActive)}>
-        About
-      </Link>
-      <Link href="/dashboard" className={navLinkClass(groupsActive)}>
-        Groups
-      </Link>
-      <Link href="/performance" className={navLinkClass(performanceActive)}>
-        Performance
-      </Link>
-      {isAdmin && (
-        <Link href="/admin" className={navLinkClass(adminActive)}>
-          Admin
+    <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
+      {items.map((item) => (
+        <Link key={item.href} href={item.href} className={navLinkClass(item.active)}>
+          {item.label}
         </Link>
-      )}
-      <Link href="/blog" className={navLinkClass(blogActive)}>
-        Blog
-      </Link>
+      ))}
     </nav>
   );
 }
