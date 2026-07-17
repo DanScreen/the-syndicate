@@ -20,7 +20,8 @@ function desktopLinkClass(active: boolean) {
 /**
  * Signed-out marketing chrome for `/`, `/about`, and blog.
  * Signed-in users see `AppHeader` (logo + tagline + Home/About before Groups).
- * Below `md`, links collapse into a menu; Sign up stays visible as the primary CTA.
+ * Below `md`, links (including Sign up) collapse into a hamburger menu so the
+ * top bar stays a single compact row on phones.
  */
 export function MarketingHeader(_props: MarketingHeaderProps = {}) {
   const pathname = usePathname();
@@ -30,9 +31,14 @@ export function MarketingHeader(_props: MarketingHeaderProps = {}) {
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/80 bg-background/80 backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 md:gap-4 md:py-4">
+      <div className="relative mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 md:gap-4 md:py-4">
         <div className="flex min-w-0 items-center gap-2.5">
-          <Logo href="/" size="md" />
+          <span className="md:hidden">
+            <Logo href="/" size="sm" />
+          </span>
+          <span className="hidden md:inline">
+            <Logo href="/" size="md" />
+          </span>
           <span className="relative -top-[3px] hidden text-sm text-muted md:inline">
             Social Group Betting
           </span>
@@ -69,15 +75,8 @@ export function MarketingHeader(_props: MarketingHeaderProps = {}) {
             { href: "/about", label: "About", active: aboutActive },
             { href: "/blog", label: "Blog", active: blogActive },
             { href: "/sign-in", label: "Sign in" },
+            { href: "/sign-up", label: "Sign up", emphasis: "accent" },
           ]}
-          trailing={
-            <Link
-              href="/sign-up"
-              className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-black transition-colors hover:bg-accent-bright"
-            >
-              Sign up
-            </Link>
-          }
         />
       </div>
     </header>

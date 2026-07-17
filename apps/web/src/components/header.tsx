@@ -50,10 +50,15 @@ export function AppHeader({ userName }: { userName: string }) {
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/80 bg-background/80 backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 md:gap-4 md:py-4">
+      <div className="relative mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 md:gap-4 md:py-4">
         <div className="flex min-w-0 items-center gap-x-6">
           <div className="flex shrink-0 items-center gap-2.5">
-            <Logo href="/" size="md" />
+            <span className="md:hidden">
+              <Logo href="/" size="sm" />
+            </span>
+            <span className="hidden md:inline">
+              <Logo href="/" size="md" />
+            </span>
             <span className="relative -top-[3px] hidden text-sm text-muted md:inline">
               Social Group Betting
             </span>

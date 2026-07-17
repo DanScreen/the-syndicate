@@ -74,11 +74,11 @@ export function MobileNav({ links, footer, trailing }: MobileNavProps) {
   }, [open, close]);
 
   return (
-    <div ref={rootRef} className="relative flex items-center gap-2 md:hidden">
+    <div ref={rootRef} className="flex items-center gap-2.5 md:hidden">
       {trailing}
       <button
         type="button"
-        className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-card"
+        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-card"
         aria-expanded={open}
         aria-controls={panelId}
         aria-label={open ? "Close menu" : "Open menu"}
@@ -93,9 +93,9 @@ export function MobileNav({ links, footer, trailing }: MobileNavProps) {
           id={panelId}
           role="navigation"
           aria-label="Site"
-          className="absolute right-0 top-full z-50 mt-2 w-[min(18rem,calc(100vw-2rem))] rounded-xl border border-border bg-card/95 p-2 shadow-lg backdrop-blur-md"
+          className="absolute inset-x-0 top-full z-50 border-b border-border bg-card/95 px-4 py-3 shadow-lg backdrop-blur-md"
         >
-          <ul className="flex flex-col gap-0.5">
+          <ul className="mx-auto flex max-w-6xl flex-col gap-0.5">
             {links.map((link) => (
               <li key={`${link.href}-${link.label}`}>
                 <Link
@@ -109,7 +109,9 @@ export function MobileNav({ links, footer, trailing }: MobileNavProps) {
             ))}
           </ul>
           {footer ? (
-            <div className="mt-1 border-t border-border pt-1">{footer}</div>
+            <div className="mx-auto mt-1 max-w-6xl border-t border-border pt-1">
+              {footer}
+            </div>
           ) : null}
         </div>
       ) : null}
