@@ -90,13 +90,15 @@ Through the existing dispatcher ([notifications.md](./notifications.md)) — **p
 ## Build phases
 
 ### Phase 1 — thread + system messages (core)
-- [ ] `RoundMessage` migration (incl. `legId`) + APIs; rate limiting
-- [ ] System message writes from lifecycle code paths (pick locked in / changed, round locked, leg results, settled)
+- [x] `RoundMessage` + `MessageReaction` migration (incl. `legId`) — `20260717150000_group_chat_messages`
+- [x] Shared chat types/schemas — `packages/shared/src/chat.ts` (event types, emoji set, message/reaction Zod schemas, DTOs)
+- [x] System message writes from lifecycle code paths (pick locked in / changed, round locked, leg results, settled) — `apps/web/src/lib/chat/system-messages.ts`; writes gated on the settlement/lock/leg atomic claims; exactly-once race tests in `apps/web/src/lib/chat/exactly-once.test.ts` (`npm test --workspace=@tiki-acca/web`)
+- [ ] Message APIs (`GET`/`POST` messages, `DELETE`) + rate limiting
 - [ ] Round tab thread UI (web), History read-only view
 - [ ] Mobile thread UI
 
 ### Phase 2 — reactions + unread + push
-- [ ] `MessageReaction` migration + toggle API
+- [ ] Reaction toggle API (`MessageReaction` table already migrated in Phase 1)
 - [ ] Reaction bar on chat messages + mirrored on betslip pick rows (web + mobile)
 - [ ] Unread tracking + dashboard badges
 - [ ] Batched `chat_message` push + preference toggle

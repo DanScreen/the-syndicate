@@ -31,6 +31,8 @@ model User {
   pushDevices     PushDevice[]
   notificationPreference NotificationPreference?
   notificationLogs NotificationLog[]
+  roundMessages    RoundMessage[]
+  messageReactions MessageReaction[]
 }
 
 model Group {
@@ -84,6 +86,7 @@ model Round {
   updatedAt       DateTime @updatedAt
   group           Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
   legs            Leg[]
+  messages        RoundMessage[]
 }
 
 model Leg {
@@ -115,6 +118,7 @@ model Leg {
   round         Round    @relation(fields: [roundId], references: [id], onDelete: Cascade)
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   match         Match?   @relation(fields: [matchId], references: [id])
+  messages      RoundMessage[]
 
   @@unique([roundId, userId, legIndex])
 }
@@ -204,6 +208,38 @@ model NotificationPreference {
   pushRoundLocked    Boolean @default(true)
   pushRoundSettled   Boolean @default(true)
   updatedAt          DateTime @updatedAt
+}
+
+/// Round-scoped chat thread — user banter plus append-only system messages
+/// written at event time by the round lifecycle (see specs/group-chat.md).
+model RoundMessage {
+  id        String   @id @default(cuid())
+  roundId   String
+  round     Round    @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  userId    String?  // null for system messages
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  kind      String   // "user" | "system"
+  body      String   // user text (max 500 chars) or system event copy
+  eventType String?  // system only: leg_submitted | leg_changed | round_locked | leg_result | round_settled
+  legId     String?  // system pick events: the announced leg — lets the betslip row find its message
+  leg       Leg?     @relation(fields: [legId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  reactions MessageReaction[]
+
+  @@index([roundId, createdAt])
+  @@index([legId])
+}
+
+model MessageReaction {
+  id        String       @id @default(cuid())
+  messageId String
+  message   RoundMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emoji     String // constrained set — see REACTION_EMOJIS in packages/shared
+  createdAt DateTime     @default(now())
+
+  @@unique([messageId, userId, emoji])
 }
 
 model NotificationLog {

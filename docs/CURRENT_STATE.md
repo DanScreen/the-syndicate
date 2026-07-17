@@ -1,6 +1,6 @@
 # Current state (as-built)
 
-Last updated 17 July 2026 (personal performance insights). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
+Last updated 17 July 2026 (group chat Step 1 — schema + lifecycle system messages). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
 
 Production: **https://www.tikiacca.com** (apex → 301 to www via Cloudflare).
 
@@ -49,6 +49,7 @@ Match sync + odds warm: Cloud Scheduler (Terraform) → `POST /api/internal/sync
 | Odds | `apps/web/src/lib/odds/` |
 | Settlement | `apps/web/src/lib/settlement/`, `apps/web/src/lib/results/` |
 | Stats | `apps/web/src/lib/stats/` |
+| Round chat system messages | `apps/web/src/lib/chat/system-messages.ts` (+ exactly-once tests `exactly-once.test.ts`; shared types `packages/shared/src/chat.ts`) |
 | Notifications | `apps/web/src/lib/notifications/` (branded email templates + layout; logo at `public/brand/email-logo.png`) |
 | Auth | `apps/web/src/lib/auth.ts`, `apps/web/src/lib/auth.config.ts` |
 | Settlement (auto) | `apps/web/src/lib/settlement/auto-settle-round.ts` |
@@ -246,6 +247,8 @@ Email and push notifications fire on **round locked**, **round settled**, and **
 
 **Exactly-once settlement.** `applyRoundSettlement()` validates settleability, then runs in a `prisma.$transaction` with an atomic claim — `round.updateMany({ where: { status: "locked" }, data: { status: "settled" } })`. Overlapping settle attempts (e.g. two cron runs) can't double-count points: the loser matches zero rows and throws `RoundNotSettleableError`, treated as a benign `skipped` no-op.
 
+**System chat messages (group chat Step 1).** Round lifecycle events append `RoundMessage` system messages to the round thread ([specs/group-chat.md](./specs/group-chat.md)): leg submitted/changed (`/api/legs` routes, best-effort after write), round locked (`claimAndLockRound`, after the `open → locked` claim + successful pricing), leg results (`persistResolvableLegOutcomes` / `applyDeferredLegOutcome`, inside a `pending → outcome` claim transaction), and round settled (`applyRoundSettlement`, inside the settle transaction after the `locked → settled` claim). Message writes are gated on the same atomic claims as the events themselves, so retried or overlapping lock/settle runs never double-post — proven by race tests in `apps/web/src/lib/chat/exactly-once.test.ts` (`npm test --workspace=@tiki-acca/web`; requires local PostgreSQL).
+
 **Lock triggers.** A round moves `open → locked` when **every member has submitted `Round.legsPerMember` legs** or when the **earliest submitted leg kicks off** (partial accas — members under quota are excluded). `claimAndLockRound()` in `claim-lock-round.ts` atomically claims via `updateMany`, reprices, and emails; repricing failures revert to `open`. Kickoff locks run on each match-sync cron (5 min) and when loading `GET /api/groups/[id]`. **Reprice falls back to each leg’s stored odds** when live quotes are missing (fixture already kicked off / warmed cache miss) so kickoff locks don’t flap open↔locked. Loading a group with a full quota also retries lock. See [specs/round-deadline-lock.md](./specs/round-deadline-lock.md) and [specs/multi-leg-accas.md](./specs/multi-leg-accas.md).
 
 **Lock is likewise atomic.** When two members submit the final legs at once, only one request reprices the acca (Odds API credits) and sends the lock email; repricing failures revert the round to `open`.
@@ -411,7 +414,10 @@ Env vars on Cloud Run: `NEXTAUTH_URL`, `EMAIL_FROM`, `ADMIN_EMAILS` (from GitHub
 
 ## Database (Prisma)
 
-Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `AnalyticsEvent`, `CompetitionSetting`.
+Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `AnalyticsEvent`, `CompetitionSetting`, `RoundMessage`, `MessageReaction`.
+
+- `RoundMessage` — round-scoped chat thread: user banter (`kind: "user"`) + append-only system messages (`kind: "system"`, `eventType`: `leg_submitted | leg_changed | round_locked | leg_result | round_settled`; `legId` set on pick announcements so the betslip row can mirror reactions). Written at event time by lifecycle code — see [Settlement](#settlement).
+- `MessageReaction` — emoji reactions on messages, unique per `(messageId, userId, emoji)`; constrained set in `packages/shared/src/chat.ts` (`REACTION_EMOJIS`). Toggle API ships in group-chat Phase 2.
 
 - `User.firstName` / `User.lastName` — collected at sign-up; header greeting uses first name only (`lib/user-display.ts`).
 - `User.name` — full display name (`firstName lastName`) for leaderboards, picks, emails.
@@ -430,7 +436,7 @@ Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `Analytics
 
 Schema: `packages/database/prisma/schema.prisma`
 
-Recent migrations include `20260715120000_multi_leg_per_member`.
+Recent migrations include `20260715120000_multi_leg_per_member` and `20260717150000_group_chat_messages`.
 
 ---
 

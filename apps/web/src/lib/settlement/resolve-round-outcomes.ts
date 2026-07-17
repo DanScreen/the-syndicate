@@ -1,3 +1,4 @@
+import { postLegResultMessage } from "@/lib/chat/system-messages";
 import { getMatchResultForLegFromDb } from "@/lib/results/match-store";
 import { resolveLegOutcome } from "@/lib/results/resolve-leg";
 import { prisma } from "@tiki-acca/database";
@@ -73,13 +74,22 @@ export async function persistResolvableLegOutcomes(
 
   for (const leg of legs) {
     const outcome = outcomeMap.get(leg.id);
-    if (!outcome || leg.outcome !== "pending") continue;
+    if (!outcome || outcome === "pending" || leg.outcome !== "pending") continue;
 
-    await prisma.leg.update({
-      where: { id: leg.id },
-      data: { outcome },
+    // Atomic pending → outcome claim: overlapping cron runs (or a concurrent
+    // settlement) match zero rows, so the leg_result chat message posts
+    // exactly once, in the same transaction as the claim.
+    const claimed = await prisma.$transaction(async (tx) => {
+      const claim = await tx.leg.updateMany({
+        where: { id: leg.id, outcome: "pending" },
+        data: { outcome },
+      });
+      if (claim.count === 0) return false;
+      await postLegResultMessage(tx, leg, outcome);
+      return true;
     });
-    updated++;
+
+    if (claimed) updated++;
   }
 
   return updated;

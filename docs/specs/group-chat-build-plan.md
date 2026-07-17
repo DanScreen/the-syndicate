@@ -11,7 +11,7 @@ Companion to [group-chat.md](./group-chat.md) — the execution sequence, which 
 
 | Step | Model | Scope | Status |
 |------|-------|-------|--------|
-| 1 | **Fable 5** | Schema, shared types, lifecycle system-message writes + tests | ☐ |
+| 1 | **Fable 5** | Schema, shared types, lifecycle system-message writes + tests | ✅ |
 | 2 | **Opus 4.8** | Message APIs + web thread UI + History view | ☐ |
 | 3 | **Opus 4.8** | Mobile parity | ☐ |
 | 4 | **Opus 4.8** | Phase 2: reactions, unread, push | ☐ |

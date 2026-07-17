@@ -1,3 +1,7 @@
+import {
+  postLegResultMessage,
+  postRoundSettledMessage,
+} from "@/lib/chat/system-messages";
 import { calculateGroupProfitLoss, pointsForMemberLeg } from "@/lib/settlement";
 import { notifyRoundSettled } from "@/lib/notifications/round-notifications";
 import { openRound } from "@/lib/rounds/open-round";
@@ -76,10 +80,22 @@ export async function applyRoundSettlement(
       const outcome = mergeLegOutcome(leg, outcomeMap);
       const points = pointsForMemberLeg(outcomes, outcome, leg.odds);
 
-      await tx.leg.update({
-        where: { id: leg.id },
+      // Claim pending → outcome so the leg_result chat message posts exactly
+      // once even when a concurrent cron persisted this leg's outcome (and
+      // posted its message) after our transaction read the round.
+      const freshlyResolved = await tx.leg.updateMany({
+        where: { id: leg.id, outcome: "pending" },
         data: { outcome, pointsAwarded: points },
       });
+
+      if (freshlyResolved.count === 0) {
+        await tx.leg.update({
+          where: { id: leg.id },
+          data: { outcome, pointsAwarded: points },
+        });
+      } else if (outcome !== "pending") {
+        await postLegResultMessage(tx, leg, outcome);
+      }
 
       // Pending legs on a busted acca keep monitoring; points land when they resolve.
       if (outcome === "pending") continue;
@@ -115,6 +131,10 @@ export async function applyRoundSettlement(
       where: { id: roundId },
       data: { profitLossGbp: profitLoss },
     });
+
+    // Inside the settle transaction, gated on the locked → settled claim
+    // above — a retried or overlapping settle can never double-post.
+    await postRoundSettledMessage(tx, roundId, outcomes, round.combinedOdds);
 
     await openRound(round.groupId, tx);
 
@@ -167,6 +187,9 @@ export async function applyDeferredLegOutcome(
     if (claim.count === 0) {
       return { awarded: false, points: 0 };
     }
+
+    // Same pending → outcome claim as above guarantees exactly one message.
+    await postLegResultMessage(tx, leg, outcome);
 
     await tx.groupMember.update({
       where: {

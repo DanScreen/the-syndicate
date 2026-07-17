@@ -1,3 +1,4 @@
+import { postRoundLockedMessage, tryPostSystemMessage } from "@/lib/chat/system-messages";
 import { deleteRedundantMarketLegs } from "@/lib/legs/purge-duplicate-markets";
 import { lockRoundWithAccaPricing } from "@/lib/odds/lock-round";
 import { notifyRoundLocked } from "@/lib/notifications/round-notifications";
@@ -51,6 +52,13 @@ export async function claimAndLockRound(roundId: string): Promise<ClaimLockResul
     where: { id: round.groupId },
     data: { status: "locked" },
   });
+
+  // Only the winner of the open → locked claim reaches this point, and a
+  // failed pricing attempt reverts to open before posting — so the thread
+  // gets exactly one locked announcement per lock.
+  await tryPostSystemMessage("round_locked", () =>
+    postRoundLockedMessage(prisma, roundId)
+  );
 
   void notifyRoundLocked(roundId);
   return { ok: true };

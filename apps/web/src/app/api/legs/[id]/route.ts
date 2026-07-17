@@ -1,4 +1,5 @@
 import { requireSession } from "@/lib/api-auth";
+import { postLegChangedMessage, tryPostSystemMessage } from "@/lib/chat/system-messages";
 import { isBookmakerHubUrl } from "@/lib/odds/betslip-links";
 import { sortQuotesByBestOdds } from "@/lib/odds/bookmakers";
 import { lockRoundWithAccaPricing } from "@/lib/odds/lock-round";
@@ -168,6 +169,13 @@ export async function PATCH(request: Request, { params }: Params) {
       );
     }
   }
+
+  // Announce only after a possible reprice has succeeded — a rolled-back
+  // edit must not be announced. The new message supersedes the old
+  // announcement for betslip reaction mirroring (found via legId, latest wins).
+  await tryPostSystemMessage("leg_changed", () =>
+    postLegChangedMessage(prisma, updatedLeg, updatedLeg.user.name)
+  );
 
   return NextResponse.json({ leg: updatedLeg, repriced });
 }

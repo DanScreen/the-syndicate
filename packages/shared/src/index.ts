@@ -16,5 +16,6 @@ export * from "./market-groups";
 export * from "./market-conflicts";
 export * from "./round-status";
 export * from "./notification-types";
+export * from "./chat";
 export * from "./group-summary-display";
 export * from "./legs-quota";

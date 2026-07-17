@@ -1,0 +1,65 @@
+import { z } from "zod";
+
+/** Round chat message kinds — user banter vs. lifecycle system messages. */
+export const MESSAGE_KINDS = ["user", "system"] as const;
+
+export type MessageKind = (typeof MESSAGE_KINDS)[number];
+
+/**
+ * System-message events written at event time by the round lifecycle
+ * (see docs/specs/group-chat.md). `leg_submitted` / `leg_changed` carry a
+ * `legId` so the betslip row can mirror reactions on its announcement.
+ */
+export const SYSTEM_MESSAGE_EVENT_TYPES = [
+  "leg_submitted",
+  "leg_changed",
+  "round_locked",
+  "leg_result",
+  "round_settled",
+] as const;
+
+export type SystemMessageEventType = (typeof SYSTEM_MESSAGE_EVENT_TYPES)[number];
+
+/** Constrained reaction set (v1) — simpler UI and aggregation than free-text emoji. */
+export const REACTION_EMOJIS = ["🔥", "😂", "💀", "👀", "🫡", "🍀"] as const;
+
+export type ReactionEmoji = (typeof REACTION_EMOJIS)[number];
+
+export const MAX_MESSAGE_LENGTH = 500;
+
+export const postMessageSchema = z.object({
+  body: z.string().trim().min(1).max(MAX_MESSAGE_LENGTH),
+});
+
+export const toggleReactionSchema = z.object({
+  emoji: z.enum(REACTION_EMOJIS),
+});
+
+export type PostMessageInput = z.infer<typeof postMessageSchema>;
+export type ToggleReactionInput = z.infer<typeof toggleReactionSchema>;
+
+/** One message in a round thread, as served by GET /api/rounds/[id]/messages. */
+export type RoundMessageDto = {
+  id: string;
+  roundId: string;
+  kind: MessageKind;
+  body: string;
+  /** Null for user messages. */
+  eventType: SystemMessageEventType | null;
+  /** Set on leg announcement system messages (leg_submitted / leg_changed). */
+  legId: string | null;
+  /** Null for system messages. */
+  user: { id: string; name: string } | null;
+  createdAt: string;
+  reactions: MessageReactionSummary[];
+};
+
+/** Aggregated reactions for one emoji on one message. */
+export type MessageReactionSummary = {
+  emoji: ReactionEmoji;
+  count: number;
+  /** Display names, for who-reacted on hover / long-press. */
+  userNames: string[];
+  /** Whether the requesting user has this reaction on. */
+  reacted: boolean;
+};
