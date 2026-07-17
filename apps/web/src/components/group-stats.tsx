@@ -128,21 +128,38 @@ function CategoryRow({
 }: {
   label: string;
   favourite: string | null;
-  bestWorst: { best: string; worst: string } | null;
+  bestWorst: {
+    best: { key: string; avgPoints: number; legs: number };
+    worst: { key: string; avgPoints: number; legs: number };
+  } | null;
 }) {
   return (
     <div className="rounded-lg border border-border bg-background/50 px-3 py-2 text-sm">
       <p className="text-xs font-medium uppercase tracking-wide text-muted">{label}</p>
       <p className="mt-1">
-        Favourite: <span className="text-foreground">{favourite ?? "—"}</span>
+        Most picked: <span className="text-foreground">{favourite ?? "—"}</span>
       </p>
       {bestWorst ? (
-        <p className="mt-1 text-muted">
-          Best: <span className="text-accent">{bestWorst.best}</span> · Worst:{" "}
-          <span className="text-red-400">{bestWorst.worst}</span>
-        </p>
+        <div className="mt-2 space-y-1 text-muted">
+          <p>
+            Best:{" "}
+            <span className="text-accent">{bestWorst.best.key}</span>
+            {" · "}
+            {formatLegPoints(bestWorst.best.avgPoints)} avg / leg
+            <span className="text-muted/80"> ({bestWorst.best.legs})</span>
+          </p>
+          <p>
+            Worst:{" "}
+            <span className="text-red-400">{bestWorst.worst.key}</span>
+            {" · "}
+            {formatLegPoints(bestWorst.worst.avgPoints)} avg / leg
+            <span className="text-muted/80"> ({bestWorst.worst.legs})</span>
+          </p>
+        </div>
       ) : (
-        <p className="mt-1 text-xs text-muted">Best/worst after 3+ legs</p>
+        <p className="mt-1 text-xs text-muted">
+          Best/worst needs 3+ legs in two different categories
+        </p>
       )}
     </div>
   );
@@ -185,10 +202,19 @@ function MemberBreakdown({
       <h4 className="font-medium">{data.name}</h4>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <StatCard label="Net points" value={formatLegPoints(data.summary.netPoints)} />
+        <StatCard
+          label="Avg pts / leg"
+          value={
+            data.summary.averagePointsPerLeg != null
+              ? formatLegPoints(data.summary.averagePointsPerLeg)
+              : "—"
+          }
+        />
         <StatCard label="Legs" value={String(data.summary.legsPlayed)} />
         <StatCard
-          label="Win rate"
+          label="Pick win rate"
           value={data.summary.winRate != null ? `${data.summary.winRate}%` : "—"}
+          detail="Your legs only — ignores whether the group acca won"
         />
         <StatCard
           label="Avg odds"
@@ -203,6 +229,10 @@ function MemberBreakdown({
           {...legHighlightStat(data.summary.worstLeg)}
         />
       </div>
+      <p className="text-xs text-muted">
+        Insights use average points per individual pick (won = odds − 1, lost = −1), not
+        group acca results. Best/worst need 3+ settled legs in at least two categories.
+      </p>
       <div className="grid gap-3 sm:grid-cols-3">
         <CategoryRow
           label="Competition"
@@ -210,7 +240,7 @@ function MemberBreakdown({
           bestWorst={data.competition.bestWorst}
         />
         <CategoryRow
-          label="Market"
+          label="Bet type"
           favourite={data.market.favourite}
           bestWorst={data.market.bestWorst}
         />

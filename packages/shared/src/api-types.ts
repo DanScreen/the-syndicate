@@ -243,8 +243,22 @@ export type UserStatsSummary = {
   settledRounds: number;
   legsPlayed: number;
   netPoints: number;
+  averagePointsPerLeg: number | null;
   winRate: number | null;
+  averageOdds: number | null;
   netAccaPlGbp: number;
+};
+
+export type CategoryInsight = {
+  key: string;
+  avgPoints: number;
+  legs: number;
+  netPoints: number;
+};
+
+export type UserCategoryStats = {
+  favourite: string | null;
+  bestWorst: { best: CategoryInsight; worst: CategoryInsight } | null;
 };
 
 export type UserStatsGroupBreakdown = {
@@ -253,6 +267,12 @@ export type UserStatsGroupBreakdown = {
   netPoints: number;
   legsPlayed: number;
   settledRounds: number;
+  averagePointsPerLeg: number | null;
+  winRate: number | null;
+  averageOdds: number | null;
+  competition: UserCategoryStats;
+  market: UserCategoryStats;
+  team: UserCategoryStats;
 };
 
 export type UserStatsChartPoint = {
@@ -268,6 +288,9 @@ export type UserStatsResponse = {
   summary: UserStatsSummary;
   chart: UserStatsChartPoint[];
   groups: UserStatsGroupBreakdown[];
+  competition: UserCategoryStats;
+  market: UserCategoryStats;
+  team: UserCategoryStats;
 };
 
 export type LegHighlight = {
@@ -281,6 +304,7 @@ export type LegHighlight = {
 
 export type MemberStatsSummary = {
   netPoints: number;
+  averagePointsPerLeg: number | null;
   legsPlayed: number;
   winRate: number | null;
   averageOdds: number | null;
@@ -290,7 +314,7 @@ export type MemberStatsSummary = {
 
 export type MemberCategoryStats = {
   favourite: string | null;
-  bestWorst: { best: string; worst: string } | null;
+  bestWorst: { best: CategoryInsight; worst: CategoryInsight } | null;
 };
 
 export type MemberStatsResponse = {

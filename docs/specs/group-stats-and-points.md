@@ -110,7 +110,8 @@ Key files: `apps/web/src/lib/stats/` — see [CURRENT_STATE.md](../CURRENT_STATE
 ### Phase 3 — Member breakdowns ✅
 
 - [x] Multi-member chart
-- [x] Favourites / best-worst (uses `competitionId`)
+- [x] Favourites / best-worst by **average points per individual leg** (competition, bet type, team; min 3 legs × 2 categories)
+- [x] Pick win rate on own legs (not group acca)
 
 ### Phase 4 — Polish ✅
 

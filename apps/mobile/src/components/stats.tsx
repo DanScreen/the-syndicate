@@ -108,21 +108,29 @@ function CategoryRow({
 }: {
   label: string;
   favourite: string | null;
-  bestWorst: { best: string; worst: string } | null;
+  bestWorst: MemberStatsResponse["competition"]["bestWorst"];
 }) {
   return (
     <View style={styles.categoryCard}>
       <Text style={styles.statLabel}>{label}</Text>
       <Text style={styles.meta}>
-        Favourite: <Text style={styles.text}>{favourite ?? "—"}</Text>
+        Most picked: <Text style={styles.text}>{favourite ?? "—"}</Text>
       </Text>
       {bestWorst ? (
-        <Text style={styles.meta}>
-          Best: <Text style={styles.odds}>{bestWorst.best}</Text> · Worst:{" "}
-          <Text style={styles.lossText}>{bestWorst.worst}</Text>
-        </Text>
+        <>
+          <Text style={styles.meta}>
+            Best: <Text style={styles.odds}>{bestWorst.best.key}</Text>
+            {" · "}
+            {formatLegPoints(bestWorst.best.avgPoints)} avg ({bestWorst.best.legs})
+          </Text>
+          <Text style={styles.meta}>
+            Worst: <Text style={styles.lossText}>{bestWorst.worst.key}</Text>
+            {" · "}
+            {formatLegPoints(bestWorst.worst.avgPoints)} avg ({bestWorst.worst.legs})
+          </Text>
+        </>
       ) : (
-        <Text style={styles.meta}>Best/worst after 3+ legs</Text>
+        <Text style={styles.meta}>Best/worst needs 3+ legs in two categories</Text>
       )}
     </View>
   );
@@ -163,9 +171,17 @@ function MemberBreakdown({
       <Text style={styles.blockTitle}>{data.name}</Text>
       <View style={styles.statGrid}>
         <StatCard label="Net points" value={formatLegPoints(data.summary.netPoints)} />
+        <StatCard
+          label="Avg pts / leg"
+          value={
+            data.summary.averagePointsPerLeg != null
+              ? formatLegPoints(data.summary.averagePointsPerLeg)
+              : "—"
+          }
+        />
         <StatCard label="Legs" value={String(data.summary.legsPlayed)} />
         <StatCard
-          label="Win rate"
+          label="Pick win rate"
           value={data.summary.winRate != null ? `${data.summary.winRate}%` : "—"}
         />
         <StatCard
@@ -181,13 +197,17 @@ function MemberBreakdown({
           {...legHighlightStat(data.summary.worstLeg)}
         />
       </View>
+      <Text style={styles.meta}>
+        Based on your individual picks (not group acca results). Best/worst need 3+ legs in
+        two categories.
+      </Text>
       <CategoryRow
         label="Competition"
         favourite={data.competition.favourite}
         bestWorst={data.competition.bestWorst}
       />
       <CategoryRow
-        label="Market"
+        label="Bet type"
         favourite={data.market.favourite}
         bestWorst={data.market.bestWorst}
       />
@@ -356,11 +376,40 @@ export function UserPerformancePanel({
         <StatCard label="Rounds" value={String(summary.settledRounds)} />
         <StatCard label="Legs" value={String(summary.legsPlayed)} />
         <StatCard
-          label="Win rate"
+          label="Avg pts / leg"
+          value={
+            summary.averagePointsPerLeg != null
+              ? formatLegPoints(summary.averagePointsPerLeg)
+              : "—"
+          }
+        />
+        <StatCard
+          label="Pick win rate"
           value={summary.winRate != null ? `${summary.winRate}%` : "—"}
         />
         <StatCard label="Net points" value={formatLegPoints(summary.netPoints)} />
       </View>
+
+      <Text style={styles.meta}>
+        Based on your individual picks across groups (not group acca results). Best/worst need
+        3+ legs in two categories.
+      </Text>
+
+      <CategoryRow
+        label="Competition"
+        favourite={data.competition.favourite}
+        bestWorst={data.competition.bestWorst}
+      />
+      <CategoryRow
+        label="Bet type"
+        favourite={data.market.favourite}
+        bestWorst={data.market.bestWorst}
+      />
+      <CategoryRow
+        label="Team"
+        favourite={data.team.favourite}
+        bestWorst={data.team.bestWorst}
+      />
 
       <StakeProfit points={summary.netPoints} />
 
@@ -376,7 +425,7 @@ export function UserPerformancePanel({
       />
 
       <Card>
-        <Text style={styles.blockTitle}>{userName}&apos;s group stats</Text>
+        <Text style={styles.blockTitle}>{userName}&apos;s performance</Text>
         <Text style={styles.meta}>
           {formatLegPoints(summary.netPoints)} pts · {summary.legsPlayed} legs across{" "}
           {summary.groupCount} group{summary.groupCount === 1 ? "" : "s"}
@@ -395,6 +444,7 @@ export function UserPerformancePanel({
               <Text style={styles.text}>{g.groupName}</Text>
               <Text style={styles.meta}>
                 {formatLegPoints(g.netPoints)} pts · {g.legsPlayed} legs
+                {g.winRate != null ? ` · ${g.winRate}% picks` : ""}
               </Text>
             </Pressable>
           ))}
