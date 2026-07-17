@@ -15,9 +15,12 @@ export const authConfig = {
     authorized({ auth, request }) {
       const isLoggedIn = !!auth?.user;
       const path = request.nextUrl.pathname;
+      // Invite links must be viewable signed-out so we can prompt sign-in/up
+      // while preserving `?code=` (see `/groups/join`).
+      const isJoinInvite = path === "/groups/join";
       const isProtected =
         path.startsWith("/dashboard") ||
-        path.startsWith("/groups") ||
+        (path.startsWith("/groups") && !isJoinInvite) ||
         path.startsWith("/admin") ||
         path.startsWith("/settings") ||
         path.startsWith("/account") ||

@@ -21,7 +21,7 @@
 Sign up (first + last name) → **Groups** home (`/dashboard`) listing groups. Cross-group stats on **Performance** (`/performance`). Header greets with first name only — tap **Hi, {name}** for **Account** (`/account`: notifications + sign out).
 
 ### 2. Create / join group
-Owner creates group (name only) → invite code + link. Anyone with the link can join via code or `/groups/join?code=`.
+Owner creates group (name only) → invite code + link. Anyone with the link opens `/groups/join?code=`. If signed out, the page prompts **Sign in** or **Sign up** (invite preserved via `callbackUrl`); after auth they return and join.
 
 ### 3. Build the acca
 1. Each group has an always-open round on the **Round** tab — no manual start step
