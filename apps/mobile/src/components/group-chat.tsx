@@ -224,7 +224,7 @@ export function RoundThread({
     <View style={styles.card}>
       <View style={styles.header}>
         <Text style={styles.title}>Banter</Text>
-        <Text style={styles.hint}>Chat and round updates</Text>
+        <Text style={styles.hint}>Picks, accas, and trash talk</Text>
       </View>
       <ScrollView
         ref={scrollRef}

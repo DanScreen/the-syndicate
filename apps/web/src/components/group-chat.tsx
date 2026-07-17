@@ -246,7 +246,7 @@ export function RoundThread({
       <div className="border-b border-border px-4 py-3">
         <h2 className="text-lg font-semibold">Banter</h2>
         <p className="text-xs text-muted">
-          Trash talk, groans, and lifecycle updates for this round.
+          React to picks, roast the acca, keep the banter going.
         </p>
       </div>
 
