@@ -17,6 +17,7 @@ import {
   type FormEvent,
   type KeyboardEvent,
 } from "react";
+import { createPortal } from "react-dom";
 
 const POLL_MS = 20_000;
 
@@ -400,6 +401,16 @@ export function ReactionBar({
 }) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const byEmoji = new Map(message.reactions.map((reaction) => [reaction.emoji, reaction]));
+
+  useEffect(() => {
+    if (!pickerOpen) return;
+    function closeOnEscape(event: globalThis.KeyboardEvent) {
+      if (event.key === "Escape") setPickerOpen(false);
+    }
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [pickerOpen]);
+
   if (readOnly && message.reactions.length === 0) return null;
   const baseEmoji = new Set<string>(REACTION_EMOJIS);
   const options = readOnly
@@ -434,7 +445,7 @@ export function ReactionBar({
         );
       })}
       {!readOnly ? (
-        <div className="relative">
+        <>
           <button
             type="button"
             onClick={() => setPickerOpen((open) => !open)}
@@ -443,38 +454,55 @@ export function ReactionBar({
           >
             +
           </button>
-          {pickerOpen ? (
-            <div className="absolute bottom-full left-1/2 z-20 mb-2 w-72 -translate-x-1/2 rounded-xl border border-border bg-card p-3 shadow-xl">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-medium text-foreground">Choose an emoji</p>
-                <button
-                  type="button"
-                  onClick={() => setPickerOpen(false)}
-                  aria-label="Close emoji picker"
-                  className="text-xs text-muted hover:text-foreground"
+          {pickerOpen
+            ? createPortal(
+                <div
+                  className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+                  role="presentation"
+                  onMouseDown={() => setPickerOpen(false)}
                 >
-                  Close
-                </button>
-              </div>
-              <div className="mt-2 grid max-h-56 grid-cols-8 gap-1 overflow-y-auto">
-                {REACTION_PICKER_EMOJIS.map((emoji) => (
-                  <button
-                    key={emoji}
-                    type="button"
-                    onClick={() => {
-                      onReact(message.id, emoji);
-                      setPickerOpen(false);
-                    }}
-                    title={`React ${emoji}`}
-                    className="rounded-lg p-1 text-lg hover:bg-background"
+                  <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Choose an emoji"
+                    className="w-full max-w-md rounded-xl border border-border bg-card p-4 shadow-2xl"
+                    onMouseDown={(event) => event.stopPropagation()}
                   >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : null}
-        </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-foreground">
+                        Choose an emoji
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setPickerOpen(false)}
+                        aria-label="Close emoji picker"
+                        className="text-sm text-muted hover:text-foreground"
+                      >
+                        Close
+                      </button>
+                    </div>
+                    <div className="mt-3 grid max-h-[min(60vh,24rem)] grid-cols-8 gap-1 overflow-y-auto sm:grid-cols-10">
+                      {REACTION_PICKER_EMOJIS.map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => {
+                            onReact(message.id, emoji);
+                            setPickerOpen(false);
+                          }}
+                          title={`React ${emoji}`}
+                          className="rounded-lg p-1.5 text-xl hover:bg-background"
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>,
+                document.body
+              )
+            : null}
+        </>
       ) : null}
     </div>
   );

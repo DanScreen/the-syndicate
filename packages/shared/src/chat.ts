@@ -59,7 +59,7 @@ export const postMessageSchema = z.object({
     .max(MAX_MESSAGE_LENGTH)
     .refine((body) => body !== DELETED_MESSAGE_BODY, "Reserved message text")
     .refine((body) => !containsProfanity(body), {
-      message: "Please keep it clean — that message isn't allowed",
+      message: "Naughty naughty — profanity not allowed",
     }),
 });
 

@@ -110,7 +110,7 @@ Through the existing dispatcher ([notifications.md](./notifications.md)) — **p
 | Group-scoped vs round-scoped thread? | **Round-scoped** — self-archiving, matches product rhythm; group-level feed can aggregate later |
 | Profanity filtering? | **Yes** — reuse shared `containsProfanity` on user posts (same list as names/groups); owner-delete remains for anything that slips through |
 | Realtime (WebSocket/SSE)? | Defer — polling piggybacks existing infra; revisit if chat takes off |
-| Emoji choice? | Keep 🔥 😂 💀 👀 🫡 🍀 as one-tap defaults; `+` opens a broad emoji grid (popover on web, modal on mobile). The API accepts any single Unicode emoji. |
+| Emoji choice? | Keep 🔥 😂 💀 👀 🫡 🍀 as one-tap defaults; `+` opens a broad emoji grid in a viewport-level modal on web/mobile, so it is never clipped by the chat scroller. The API accepts any single Unicode emoji. |
 
 ## Related docs
 
