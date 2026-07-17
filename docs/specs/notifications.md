@@ -296,6 +296,8 @@ Default: all transactional notifications **on**. Copy: *"Remind me to pick befor
 
 ### Phase 3 — Richer alerts (optional)
 
+> Per-leg results + acca-won celebration are now fully specced in [live-matchday.md](./live-matchday.md) — follow that spec; the checklist below is superseded for those two items.
+
 - [ ] Per-leg result push while acca in progress
 - [ ] Acca won celebration
 - [ ] Owner nudge: "3 members still haven't picked"

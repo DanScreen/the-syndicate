@@ -44,16 +44,19 @@ Core loop and MVP polish are **shipped**:
 
 | # | Feature | Type | Notes |
 |---|---------|------|-------|
-| 1 | **Validate with real users** | Product | Run 2–3 friend groups through full loop on prod |
-| 2 | **Affiliate links** | Code + ops | Bookmaker affiliate programmes — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md) Phase A |
-| 3 | **Better betslip deeplinks** | Code | Remaining: acca-builder patterns + link-quality audit — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md) Phase B (hubs/per-leg/CTA honesty shipped) |
-| 4 | **FA Cup + EFL Cup** | Code | Phase 1b — `packages/shared/src/competitions.ts` |
-| 5 | **GCP cost reduction** | Ops/infra | Cloud SQL ~90% of spend; see [DEPLOYMENT.md](./DEPLOYMENT.md#cost-optimization) |
-| 6 | **Public platform leaderboards** | Code | Admin version shipped; open to all users when ready |
-| 7 | ~~User profile page~~ | Code | **Done** — `/account` (greeting entry); stats remain on `/performance` |
-| 8 | **Mobile — friend testing** | Product | You: [DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md); mates: APK / later TestFlight |
-| 9 | **Expo push setup** | Mobile ops | See checklist below — required for mobile push notifications |
-| 10 | Terraform CI GCS permissions fix | Infra | App deploy unaffected |
+| 1 | **Group chat & reactions** | Code | **Current build priority** — round banter thread + pick lock-in system messages + reactions (one mechanism, mirrored on betslip) — [specs/group-chat.md](./specs/group-chat.md) · build steps + session prompts: [specs/group-chat-build-plan.md](./specs/group-chat-build-plan.md) |
+| 2 | **Validate with real users** | Product | Run 2–3 friend groups through full loop on prod |
+| 3 | **Season readiness (2026–27)** | Mostly ops | Leagues can be enabled via `/admin/competitions` when ready; remaining code: cups + quiet-period empty states — [specs/season-readiness.md](./specs/season-readiness.md) (absorbs old "FA Cup + EFL Cup" item) |
+| 4 | **Live matchday** | Code | Per-leg result push + acca-won push + live round view — [specs/live-matchday.md](./specs/live-matchday.md) |
+| 5 | **Settle-day recap share card** | Code | Auto recap image per settled round; invite loop — [specs/settle-recap-share.md](./specs/settle-recap-share.md) |
+| 6 | **Affiliate links** | Code + ops | Bookmaker affiliate programmes (start applications early — approval takes weeks) — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md) Phase A |
+| 7 | **Better betslip deeplinks** | Code | Remaining: acca-builder patterns + link-quality audit — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md) Phase B (hubs/per-leg/CTA honesty shipped) |
+| 8 | **Seasons + public leaderboards** | Code | Season windows, `/leaderboards`, monthly awards — [specs/seasons-and-public-leaderboards.md](./specs/seasons-and-public-leaderboards.md) (supersedes old "public platform leaderboards" item) |
+| 9 | **Streaks & badges** | Code | Light gamification; needs chat for thread moments — [specs/streaks-and-badges.md](./specs/streaks-and-badges.md) |
+| 10 | **GCP cost reduction** | Ops/infra | Cloud SQL ~90% of spend; see [DEPLOYMENT.md](./DEPLOYMENT.md#cost-optimization) |
+| 11 | **Mobile — friend testing → stores** | Product | You: [DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md); mates: APK / TestFlight. Store distribution unblocks the invite loop — prioritise fees once validated |
+| 12 | **Expo push setup** | Mobile ops | See checklist below — required for mobile push (prereq for chat + live matchday push) |
+| 13 | Terraform CI GCS permissions fix | Infra | App deploy unaffected |
 
 ---
 
@@ -67,7 +70,7 @@ Core loop and MVP polish are **shipped**:
 
 ## Post-MVP
 
-Chat/feed, stake pooling, social sign-in, more sports. Multi-leg admin ceilings — [specs/multi-leg-accas.md](./specs/multi-leg-accas.md). Notification Phase 3 (per-leg results, quiet hours) — [specs/notifications.md](./specs/notifications.md).
+Group-vs-group challenges (needs user density), copy-a-pick between your own groups, stake pooling, social sign-in, more sports, end-of-season "wrapped" recap ([specs/seasons-and-public-leaderboards.md](./specs/seasons-and-public-leaderboards.md) Phase 3), light responsible-gambling tooling (e.g. monthly stake reality check — points-first branding is a deliberate differentiator). Multi-leg admin ceilings — [specs/multi-leg-accas.md](./specs/multi-leg-accas.md). Notification Phase 3 is now specced as [specs/live-matchday.md](./specs/live-matchday.md); chat/feed as [specs/group-chat.md](./specs/group-chat.md).
 
 ---
 

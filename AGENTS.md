@@ -14,7 +14,7 @@ Social group football acca platform. **Read [docs/README.md](docs/README.md) fir
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Stack & data model |
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | GCP deploy, cron, **cost optimization** |
 
-**Current priorities (July 2026):** Validate with real users → FA Cup + EFL Cup → GCP cost reduction. See [docs/ROADMAP.md](docs/ROADMAP.md).
+**Current priorities (July 2026):** Group chat & reactions (build) → validate with real users → season readiness (mostly admin ops). See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 After shipping: follow **Documentation maintenance** below.
 

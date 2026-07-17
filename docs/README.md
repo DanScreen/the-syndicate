@@ -53,14 +53,14 @@ Specs are **design contracts**. [CURRENT_STATE.md](./CURRENT_STATE.md) is **as-b
 
 | # | Backlog item | Notes |
 |---|--------------|-------|
-| 1 | Validate with real users | Success metric — full loop on prod |
-| 2 | Affiliate links | Tracked bookmaker deeplinks + disclosure — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md) |
-| 3 | Better betslip deeplinks | Acca-builder URLs, fewer hub fallbacks |
-| 4 | FA Cup + EFL Cup | Quick win — `competitions.ts` |
-| 5 | GCP cost reduction | Cloud SQL is ~90% of forecast; see [DEPLOYMENT.md](./DEPLOYMENT.md#cost-optimization) |
-| 6 | Mobile apps (iOS + Android) | Parity with web — [specs/mobile-apps.md](./specs/mobile-apps.md) |
+| 1 | Group chat & reactions | **Current build priority** — [specs/group-chat.md](./specs/group-chat.md) |
+| 2 | Validate with real users | Success metric — full loop on prod |
+| 3 | Season readiness (2026–27) | Mostly ops — enable leagues via `/admin/competitions`; cups + empty states — [specs/season-readiness.md](./specs/season-readiness.md) |
+| 4 | Live matchday | Per-leg push + live round view — [specs/live-matchday.md](./specs/live-matchday.md) |
+| 5 | Settle-day recap share card | Invite loop — [specs/settle-recap-share.md](./specs/settle-recap-share.md) |
+| 6 | Affiliate links | Tracked bookmaker deeplinks + disclosure — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md) |
 
-Full list: [ROADMAP.md](./ROADMAP.md).
+Full list: [ROADMAP.md](./ROADMAP.md) — seasons/leaderboards, streaks & badges, deeplinks, GCP costs, mobile stores.
 
 ---
 
@@ -83,7 +83,14 @@ docs/
     ├── round-deadline-lock.md        ← Lock at first kickoff + pick reminders (Phase 1 shipped)
     ├── notifications.md              ← Email + push notification plan (planned)
     ├── multi-leg-accas.md            ← Owner 1–3 legs per member (shipped Phases 1–3)
-    └── mobile-apps.md                ← iOS + Android strategy, parity plan, anti-divergence (spec)
+    ├── mobile-apps.md                ← iOS + Android strategy, parity plan, anti-divergence (spec)
+    ├── season-readiness.md           ← World Cup → 2026–27 season transition + cups (backlog, urgent)
+    ├── group-chat.md                 ← Round banter thread + reactions + system messages (build priority)
+    ├── group-chat-build-plan.md      ← Execution steps, model per step, session prompts
+    ├── live-matchday.md              ← Per-leg result push + live round view (backlog)
+    ├── seasons-and-public-leaderboards.md ← Season windows, /leaderboards, monthly awards (backlog)
+    ├── settle-recap-share.md         ← Settle-day recap share card / invite loop (backlog)
+    └── streaks-and-badges.md         ← Pick streaks + badge catalogue (backlog)
 ```
 
 ---

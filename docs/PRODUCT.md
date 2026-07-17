@@ -81,10 +81,13 @@ Platform admins (`ADMIN_EMAILS`) see an **Admin** tab in the header with `/admin
 - [x] 5-minute match sync cron
 
 ### Backlog
+- [ ] Season readiness — World Cup → 2026–27 leagues + FA Cup/EFL Cup — [specs/season-readiness.md](./specs/season-readiness.md)
+- [ ] Group chat & reactions — [specs/group-chat.md](./specs/group-chat.md)
+- [ ] Live matchday (per-leg push + live round view) — [specs/live-matchday.md](./specs/live-matchday.md)
+- [ ] Settle-day recap share card — [specs/settle-recap-share.md](./specs/settle-recap-share.md)
 - [ ] Affiliate links + improved betslip deeplinks — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md)
-- [ ] Public platform leaderboards (admin version exists)
-- [ ] Dedicated user profile page (optional — `/performance` covers stats today)
-- [ ] FA Cup + EFL Cup competitions
+- [ ] Seasons + public leaderboards + monthly awards — [specs/seasons-and-public-leaderboards.md](./specs/seasons-and-public-leaderboards.md)
+- [ ] Streaks & badges — [specs/streaks-and-badges.md](./specs/streaks-and-badges.md) competitions
 
 **Deferred:** paid subscriptions — no current plan; core loop stays free.
 
