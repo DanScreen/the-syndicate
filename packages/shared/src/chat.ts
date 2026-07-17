@@ -20,10 +20,10 @@ export const SYSTEM_MESSAGE_EVENT_TYPES = [
 
 export type SystemMessageEventType = (typeof SYSTEM_MESSAGE_EVENT_TYPES)[number];
 
-/** Constrained reaction set (v1) — simpler UI and aggregation than free-text emoji. */
+/** One-tap defaults. Users can also add any single emoji through the + picker. */
 export const REACTION_EMOJIS = ["🔥", "😂", "💀", "👀", "🫡", "🍀"] as const;
 
-export type ReactionEmoji = (typeof REACTION_EMOJIS)[number];
+export type ReactionEmoji = string;
 
 export const MAX_MESSAGE_LENGTH = 500;
 
@@ -51,8 +51,21 @@ export const messagesQuerySchema = z.object({
   message: "Use either after or before, not both",
 });
 
+const emojiCodePointPattern =
+  /(?:\p{Extended_Pictographic}|\p{Emoji_Presentation}|\p{Regional_Indicator}|[#*0-9]\uFE0F?\u20E3)/u;
+
+/** Accept one displayed emoji, including flags, skin tones and ZWJ families. */
+export function isSingleEmoji(value: string): boolean {
+  const emoji = value.trim();
+  if (!emoji || emoji.length > 32 || !emojiCodePointPattern.test(emoji)) return false;
+  const segments = [
+    ...new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(emoji),
+  ];
+  return segments.length === 1 && segments[0]?.segment === emoji;
+}
+
 export const toggleReactionSchema = z.object({
-  emoji: z.enum(REACTION_EMOJIS),
+  emoji: z.string().trim().refine(isSingleEmoji, "Choose one emoji"),
 });
 
 export type PostMessageInput = z.infer<typeof postMessageSchema>;

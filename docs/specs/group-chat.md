@@ -50,7 +50,7 @@ model MessageReaction {
   message   RoundMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
   userId    String
   user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  emoji     String   // constrained set: 🔥 😂 💀 👀 🫡 🍀
+  emoji     String   // one Unicode emoji; defaults: 🔥 😂 💀 👀 🫡 🍀
   createdAt DateTime @default(now())
 
   @@unique([messageId, userId, emoji])
@@ -110,7 +110,7 @@ Through the existing dispatcher ([notifications.md](./notifications.md)) — **p
 | Group-scoped vs round-scoped thread? | **Round-scoped** — self-archiving, matches product rhythm; group-level feed can aggregate later |
 | Profanity filtering? | No — private friend groups; owner-delete is the escape hatch |
 | Realtime (WebSocket/SSE)? | Defer — polling piggybacks existing infra; revisit if chat takes off |
-| Free-text emoji? | Constrained set v1 — simpler UI + aggregation |
+| Emoji choice? | Keep 🔥 😂 💀 👀 🫡 🍀 as one-tap defaults; `+` accepts any single Unicode emoji (web + mobile). |
 
 ## Related docs
 

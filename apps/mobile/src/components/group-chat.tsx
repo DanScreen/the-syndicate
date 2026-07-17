@@ -2,6 +2,7 @@ import { api, ApiError } from "@/api/client";
 import { colors } from "@/config";
 import {
   DELETED_MESSAGE_BODY,
+  isSingleEmoji,
   MAX_MESSAGE_LENGTH,
   REACTION_EMOJIS,
   type ReactionEmoji,
@@ -352,13 +353,38 @@ export function ReactionBar({
   readOnly?: boolean;
   onReact: (messageId: string, emoji: ReactionEmoji) => void;
 }) {
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [customEmoji, setCustomEmoji] = useState("");
+  const [pickerError, setPickerError] = useState("");
   const byEmoji = new Map(message.reactions.map((reaction) => [reaction.emoji, reaction]));
   if (readOnly && message.reactions.length === 0) return null;
+  const baseEmoji = new Set<string>(REACTION_EMOJIS);
+  const options = readOnly
+    ? message.reactions.map((reaction) => reaction.emoji)
+    : [
+        ...REACTION_EMOJIS,
+        ...message.reactions
+          .map((reaction) => reaction.emoji)
+          .filter((emoji) => !baseEmoji.has(emoji)),
+      ];
+
+  function addCustomEmoji() {
+    const emoji = customEmoji.trim();
+    if (!isSingleEmoji(emoji)) {
+      setPickerError("Choose one emoji");
+      return;
+    }
+    onReact(message.id, emoji);
+    setCustomEmoji("");
+    setPickerError("");
+    setPickerOpen(false);
+  }
+
   return (
-    <View style={styles.reactions}>
-      {REACTION_EMOJIS.map((emoji) => {
+    <View>
+      <View style={styles.reactions}>
+      {options.map((emoji) => {
         const reaction = byEmoji.get(emoji);
-        if (readOnly && !reaction) return null;
         return (
           <Pressable
             key={emoji}
@@ -378,6 +404,41 @@ export function ReactionBar({
           </Pressable>
         );
       })}
+      {!readOnly ? (
+        <Pressable
+          onPress={() => setPickerOpen((open) => !open)}
+          accessibilityLabel="Add reaction"
+          style={styles.reaction}
+        >
+          <Text style={styles.reactionText}>+</Text>
+        </Pressable>
+      ) : null}
+      </View>
+      {pickerOpen ? (
+        <View style={styles.emojiPicker}>
+          <Text style={styles.emojiPickerLabel}>Choose any emoji</Text>
+          <View style={styles.emojiPickerRow}>
+            <TextInput
+              value={customEmoji}
+              onChangeText={(value) => {
+                setCustomEmoji(value);
+                setPickerError("");
+              }}
+              autoFocus
+              maxLength={32}
+              placeholder="⚽"
+              placeholderTextColor={colors.muted}
+              style={styles.emojiInput}
+            />
+            <Pressable onPress={addCustomEmoji} style={styles.emojiAdd}>
+              <Text style={styles.emojiAddText}>Add</Text>
+            </Pressable>
+          </View>
+          <Text style={pickerError ? styles.emojiError : styles.emojiHint}>
+            {pickerError || "Open your emoji keyboard, then choose one."}
+          </Text>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -421,6 +482,36 @@ const styles = StyleSheet.create({
   },
   reacted: { borderColor: colors.accent, backgroundColor: "rgba(34,197,94,0.12)" },
   reactionText: { color: colors.text, fontSize: 11 },
+  emojiPicker: {
+    marginTop: 6,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+    backgroundColor: colors.card,
+    padding: 10,
+  },
+  emojiPickerLabel: { color: colors.text, fontSize: 12, fontWeight: "600" },
+  emojiPickerRow: { flexDirection: "row", gap: 8, marginTop: 8 },
+  emojiInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    color: colors.text,
+    fontSize: 20,
+    textAlign: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+  },
+  emojiAdd: {
+    justifyContent: "center",
+    borderRadius: 8,
+    backgroundColor: colors.accent,
+    paddingHorizontal: 14,
+  },
+  emojiAddText: { color: "#000", fontSize: 12, fontWeight: "600" },
+  emojiHint: { color: colors.muted, fontSize: 11, marginTop: 5 },
+  emojiError: { color: colors.danger, fontSize: 11, marginTop: 5 },
   composer: {
     borderTopWidth: 1,
     borderTopColor: colors.border,

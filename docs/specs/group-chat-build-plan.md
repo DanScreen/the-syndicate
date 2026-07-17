@@ -33,7 +33,7 @@ Scope (and nothing beyond it):
 1. Prisma migration for RoundMessage (including the optional legId link) and
    MessageReaction, per the spec's data-model section.
 2. Shared Zod schemas/types in packages/shared for messages, reactions, the
-   system-message eventType union, and the constrained emoji set.
+   system-message eventType union, and the default emoji set.
 3. System-message writes from the existing lifecycle code paths: leg submitted
    ("locked in") and leg changed (POST/PATCH /api/legs), round locked
    (claimAndLockRound), leg results (persistResolvableLegOutcomes), round
@@ -108,7 +108,7 @@ Read docs/CURRENT_STATE.md first, then the spec in full. Steps 1–3 are
 committed.
 
 Scope:
-1. POST /api/messages/[id]/reactions — toggle semantics, constrained emoji
+1. POST /api/messages/[id]/reactions — toggle semantics, validated single emoji
    set, member-only.
 2. Reaction bar on chat messages (user + system) AND mirrored on betslip pick
    rows: the pick row displays/toggles reactions on the pick's LATEST

@@ -2,6 +2,7 @@
 
 import {
   DELETED_MESSAGE_BODY,
+  isSingleEmoji,
   MAX_MESSAGE_LENGTH,
   REACTION_EMOJIS,
   type ReactionEmoji,
@@ -387,14 +388,38 @@ export function ReactionBar({
   onReact: (id: string, emoji: ReactionEmoji) => void;
   readOnly?: boolean;
 }) {
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [customEmoji, setCustomEmoji] = useState("");
+  const [pickerError, setPickerError] = useState("");
   const byEmoji = new Map(message.reactions.map((reaction) => [reaction.emoji, reaction]));
   if (readOnly && message.reactions.length === 0) return null;
+  const baseEmoji = new Set<string>(REACTION_EMOJIS);
+  const options = readOnly
+    ? message.reactions.map((reaction) => reaction.emoji)
+    : [
+        ...REACTION_EMOJIS,
+        ...message.reactions
+          .map((reaction) => reaction.emoji)
+          .filter((emoji) => !baseEmoji.has(emoji)),
+      ];
+
+  function submitCustomEmoji(event: FormEvent) {
+    event.preventDefault();
+    const emoji = customEmoji.trim();
+    if (!isSingleEmoji(emoji)) {
+      setPickerError("Choose one emoji");
+      return;
+    }
+    onReact(message.id, emoji);
+    setCustomEmoji("");
+    setPickerError("");
+    setPickerOpen(false);
+  }
 
   return (
-    <div className="mt-1 flex flex-wrap justify-center gap-1">
-      {REACTION_EMOJIS.map((emoji) => {
+    <div className="relative mt-1 flex flex-wrap items-center justify-center gap-1">
+      {options.map((emoji) => {
         const reaction = byEmoji.get(emoji);
-        if (readOnly && !reaction) return null;
         return (
           <button
             key={emoji}
@@ -413,6 +438,51 @@ export function ReactionBar({
           </button>
         );
       })}
+      {!readOnly ? (
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setPickerOpen((open) => !open)}
+            aria-label="Add reaction"
+            className="rounded-full border border-border px-1.5 py-0.5 text-xs text-muted hover:border-accent/60"
+          >
+            +
+          </button>
+          {pickerOpen ? (
+            <div className="absolute bottom-full left-1/2 z-20 mb-2 w-56 -translate-x-1/2 rounded-xl border border-border bg-card p-3 shadow-lg">
+              <form onSubmit={submitCustomEmoji}>
+                <label className="text-xs font-medium text-foreground">
+                  Choose any emoji
+                </label>
+                <div className="mt-2 flex gap-2">
+                  <input
+                    value={customEmoji}
+                    onChange={(event) => {
+                      setCustomEmoji(event.target.value);
+                      setPickerError("");
+                    }}
+                    autoFocus
+                    inputMode="text"
+                    maxLength={32}
+                    placeholder="⚽"
+                    aria-label="Custom reaction emoji"
+                    className="min-w-0 flex-1 rounded-lg border border-border bg-background px-2 py-1.5 text-center text-lg outline-none focus:border-accent"
+                  />
+                  <button
+                    type="submit"
+                    className="rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-black"
+                  >
+                    Add
+                  </button>
+                </div>
+                <p className={`mt-1 text-xs ${pickerError ? "text-red-400" : "text-muted"}`}>
+                  {pickerError || "Open your device emoji keyboard, then choose one."}
+                </p>
+              </form>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }
