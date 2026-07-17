@@ -2,9 +2,9 @@
 
 import {
   DELETED_MESSAGE_BODY,
-  isSingleEmoji,
   MAX_MESSAGE_LENGTH,
   REACTION_EMOJIS,
+  REACTION_PICKER_EMOJIS,
   type ReactionEmoji,
   type RoundMessageDto,
   type RoundMessagesResponse,
@@ -389,8 +389,6 @@ export function ReactionBar({
   readOnly?: boolean;
 }) {
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [customEmoji, setCustomEmoji] = useState("");
-  const [pickerError, setPickerError] = useState("");
   const byEmoji = new Map(message.reactions.map((reaction) => [reaction.emoji, reaction]));
   if (readOnly && message.reactions.length === 0) return null;
   const baseEmoji = new Set<string>(REACTION_EMOJIS);
@@ -402,19 +400,6 @@ export function ReactionBar({
           .map((reaction) => reaction.emoji)
           .filter((emoji) => !baseEmoji.has(emoji)),
       ];
-
-  function submitCustomEmoji(event: FormEvent) {
-    event.preventDefault();
-    const emoji = customEmoji.trim();
-    if (!isSingleEmoji(emoji)) {
-      setPickerError("Choose one emoji");
-      return;
-    }
-    onReact(message.id, emoji);
-    setCustomEmoji("");
-    setPickerError("");
-    setPickerOpen(false);
-  }
 
   return (
     <div className="relative mt-1 flex flex-wrap items-center justify-center gap-1">
@@ -449,36 +434,34 @@ export function ReactionBar({
             +
           </button>
           {pickerOpen ? (
-            <div className="absolute bottom-full left-1/2 z-20 mb-2 w-56 -translate-x-1/2 rounded-xl border border-border bg-card p-3 shadow-lg">
-              <form onSubmit={submitCustomEmoji}>
-                <label className="text-xs font-medium text-foreground">
-                  Choose any emoji
-                </label>
-                <div className="mt-2 flex gap-2">
-                  <input
-                    value={customEmoji}
-                    onChange={(event) => {
-                      setCustomEmoji(event.target.value);
-                      setPickerError("");
-                    }}
-                    autoFocus
-                    inputMode="text"
-                    maxLength={32}
-                    placeholder="⚽"
-                    aria-label="Custom reaction emoji"
-                    className="min-w-0 flex-1 rounded-lg border border-border bg-background px-2 py-1.5 text-center text-lg outline-none focus:border-accent"
-                  />
+            <div className="absolute bottom-full left-1/2 z-20 mb-2 w-72 -translate-x-1/2 rounded-xl border border-border bg-card p-3 shadow-xl">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-medium text-foreground">Choose an emoji</p>
+                <button
+                  type="button"
+                  onClick={() => setPickerOpen(false)}
+                  aria-label="Close emoji picker"
+                  className="text-xs text-muted hover:text-foreground"
+                >
+                  Close
+                </button>
+              </div>
+              <div className="mt-2 grid max-h-56 grid-cols-8 gap-1 overflow-y-auto">
+                {REACTION_PICKER_EMOJIS.map((emoji) => (
                   <button
-                    type="submit"
-                    className="rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-black"
+                    key={emoji}
+                    type="button"
+                    onClick={() => {
+                      onReact(message.id, emoji);
+                      setPickerOpen(false);
+                    }}
+                    title={`React ${emoji}`}
+                    className="rounded-lg p-1 text-lg hover:bg-background"
                   >
-                    Add
+                    {emoji}
                   </button>
-                </div>
-                <p className={`mt-1 text-xs ${pickerError ? "text-red-400" : "text-muted"}`}>
-                  {pickerError || "Open your device emoji keyboard, then choose one."}
-                </p>
-              </form>
+                ))}
+              </div>
             </div>
           ) : null}
         </div>

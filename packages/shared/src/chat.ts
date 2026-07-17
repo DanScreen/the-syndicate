@@ -23,6 +23,23 @@ export type SystemMessageEventType = (typeof SYSTEM_MESSAGE_EVENT_TYPES)[number]
 /** One-tap defaults. Users can also add any single emoji through the + picker. */
 export const REACTION_EMOJIS = ["🔥", "😂", "💀", "👀", "🫡", "🍀"] as const;
 
+/** Broad picker shown by the + control. Keep defaults first for familiarity. */
+export const REACTION_PICKER_EMOJIS = [
+  ...REACTION_EMOJIS,
+  "👍", "👎", "👏", "🙌", "🤝", "💪", "🙏", "🤞",
+  "💯", "❤️", "💔", "💚", "💙", "💜", "🖤", "🤍",
+  "😀", "😃", "😄", "😁", "😆", "🥹", "😊", "😇",
+  "🙂", "🙃", "😉", "😍", "🥰", "😘", "😋", "😜",
+  "🤪", "🤨", "🧐", "🤓", "😎", "🥳", "🤩", "🤯",
+  "😤", "😡", "🤬", "😭", "😢", "😬", "🫠", "🫣",
+  "🤔", "🤷", "🤦", "🙄", "😴", "🤢", "🤮", "🤡",
+  "😈", "👻", "👽", "🤖", "💩", "💥", "✨", "⚡",
+  "🚀", "🎉", "🎊", "🎯", "🏆", "🥇", "🥈", "🥉",
+  "⚽", "🏀", "🏈", "🎾", "🏏", "⛳", "🥊", "🏎️",
+  "🍻", "🍺", "🥂", "🍾", "🍕", "🌶️", "🧂", "🐐",
+  "🐍", "🦁", "🐓", "🦆", "🌈", "☀️", "🌧️", "❄️",
+] as const;
+
 export type ReactionEmoji = string;
 
 export const MAX_MESSAGE_LENGTH = 500;

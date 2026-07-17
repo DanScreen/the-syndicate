@@ -2,9 +2,9 @@ import { api, ApiError } from "@/api/client";
 import { colors } from "@/config";
 import {
   DELETED_MESSAGE_BODY,
-  isSingleEmoji,
   MAX_MESSAGE_LENGTH,
   REACTION_EMOJIS,
+  REACTION_PICKER_EMOJIS,
   type ReactionEmoji,
   type RoundMessageDto,
   type RoundMessagesResponse,
@@ -14,6 +14,7 @@ import {
   ActivityIndicator,
   Alert,
   AppState,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -354,8 +355,6 @@ export function ReactionBar({
   onReact: (messageId: string, emoji: ReactionEmoji) => void;
 }) {
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [customEmoji, setCustomEmoji] = useState("");
-  const [pickerError, setPickerError] = useState("");
   const byEmoji = new Map(message.reactions.map((reaction) => [reaction.emoji, reaction]));
   if (readOnly && message.reactions.length === 0) return null;
   const baseEmoji = new Set<string>(REACTION_EMOJIS);
@@ -367,18 +366,6 @@ export function ReactionBar({
           .map((reaction) => reaction.emoji)
           .filter((emoji) => !baseEmoji.has(emoji)),
       ];
-
-  function addCustomEmoji() {
-    const emoji = customEmoji.trim();
-    if (!isSingleEmoji(emoji)) {
-      setPickerError("Choose one emoji");
-      return;
-    }
-    onReact(message.id, emoji);
-    setCustomEmoji("");
-    setPickerError("");
-    setPickerOpen(false);
-  }
 
   return (
     <View>
@@ -414,31 +401,40 @@ export function ReactionBar({
         </Pressable>
       ) : null}
       </View>
-      {pickerOpen ? (
-        <View style={styles.emojiPicker}>
-          <Text style={styles.emojiPickerLabel}>Choose any emoji</Text>
-          <View style={styles.emojiPickerRow}>
-            <TextInput
-              value={customEmoji}
-              onChangeText={(value) => {
-                setCustomEmoji(value);
-                setPickerError("");
-              }}
-              autoFocus
-              maxLength={32}
-              placeholder="⚽"
-              placeholderTextColor={colors.muted}
-              style={styles.emojiInput}
-            />
-            <Pressable onPress={addCustomEmoji} style={styles.emojiAdd}>
-              <Text style={styles.emojiAddText}>Add</Text>
-            </Pressable>
+      <Modal
+        visible={pickerOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPickerOpen(false)}
+      >
+        <View style={styles.emojiModalBackdrop}>
+          <View style={styles.emojiPicker}>
+            <View style={styles.emojiPickerHeader}>
+              <Text style={styles.emojiPickerLabel}>Choose an emoji</Text>
+              <Pressable onPress={() => setPickerOpen(false)}>
+                <Text style={styles.emojiPickerClose}>Close</Text>
+              </Pressable>
+            </View>
+            <ScrollView contentContainerStyle={styles.emojiGrid}>
+              {REACTION_PICKER_EMOJIS.map((emoji) => (
+                <Pressable
+                  key={emoji}
+                  onPress={() => {
+                    onReact(message.id, emoji);
+                    setPickerOpen(false);
+                  }}
+                  style={({ pressed }) => [
+                    styles.emojiOption,
+                    pressed && styles.pressed,
+                  ]}
+                >
+                  <Text style={styles.emojiOptionText}>{emoji}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
           </View>
-          <Text style={pickerError ? styles.emojiError : styles.emojiHint}>
-            {pickerError || "Open your emoji keyboard, then choose one."}
-          </Text>
         </View>
-      ) : null}
+      </Modal>
     </View>
   );
 }
@@ -482,36 +478,43 @@ const styles = StyleSheet.create({
   },
   reacted: { borderColor: colors.accent, backgroundColor: "rgba(34,197,94,0.12)" },
   reactionText: { color: colors.text, fontSize: 11 },
-  emojiPicker: {
-    marginTop: 6,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
-    backgroundColor: colors.card,
-    padding: 10,
-  },
-  emojiPickerLabel: { color: colors.text, fontSize: 12, fontWeight: "600" },
-  emojiPickerRow: { flexDirection: "row", gap: 8, marginTop: 8 },
-  emojiInput: {
+  emojiModalBackdrop: {
     flex: 1,
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.65)",
+    padding: 24,
+  },
+  emojiPicker: {
+    maxHeight: "70%",
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 8,
-    color: colors.text,
-    fontSize: 20,
-    textAlign: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 5,
+    borderRadius: 16,
+    backgroundColor: colors.card,
+    padding: 14,
   },
-  emojiAdd: {
+  emojiPickerHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  emojiPickerLabel: { color: colors.text, fontSize: 16, fontWeight: "600" },
+  emojiPickerClose: { color: colors.accent, fontSize: 13, fontWeight: "600" },
+  emojiGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 4,
+    paddingBottom: 4,
+  },
+  emojiOption: {
+    width: 38,
+    height: 38,
+    alignItems: "center",
     justifyContent: "center",
     borderRadius: 8,
-    backgroundColor: colors.accent,
-    paddingHorizontal: 14,
   },
-  emojiAddText: { color: "#000", fontSize: 12, fontWeight: "600" },
-  emojiHint: { color: colors.muted, fontSize: 11, marginTop: 5 },
-  emojiError: { color: colors.danger, fontSize: 11, marginTop: 5 },
+  emojiOptionText: { fontSize: 22 },
   composer: {
     borderTopWidth: 1,
     borderTopColor: colors.border,
