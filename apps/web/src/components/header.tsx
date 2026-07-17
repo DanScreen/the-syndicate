@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Logo } from "@/components/logo";
 import { AppNav, useAppNavItems } from "./app-nav";
 import { MobileNav } from "./mobile-nav";
@@ -25,10 +26,7 @@ export function SiteHeader() {
           <Link href="/sign-in" className="text-muted hover:text-foreground">
             Sign in
           </Link>
-          <Link
-            href="/sign-up"
-            className="rounded-lg bg-accent px-3 py-1.5 font-medium text-black hover:bg-accent-bright"
-          >
+          <Link href="/sign-up" className="text-muted hover:text-foreground">
             Sign up
           </Link>
         </nav>
@@ -37,7 +35,7 @@ export function SiteHeader() {
             { href: "/", label: "Home" },
             { href: "/about", label: "About" },
             { href: "/sign-in", label: "Sign in" },
-            { href: "/sign-up", label: "Sign up", emphasis: "accent" },
+            { href: "/sign-up", label: "Sign up" },
           ]}
         />
       </div>
@@ -46,7 +44,10 @@ export function SiteHeader() {
 }
 
 export function AppHeader({ userName }: { userName: string }) {
+  const pathname = usePathname();
   const navItems = useAppNavItems();
+  const accountActive = pathname === "/account";
+  const accountLabel = userName ? `Account · ${userName}` : "Account";
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/80 bg-background/80 backdrop-blur-md">
@@ -73,16 +74,14 @@ export function AppHeader({ userName }: { userName: string }) {
           Hi, {userName}
         </Link>
         <MobileNav
-          links={navItems}
-          footer={
-            <Link
-              href="/account"
-              className="block rounded-lg px-3 py-2.5 text-sm text-muted transition-colors hover:bg-accent-muted/30 hover:text-foreground"
-              title="Account & settings"
-            >
-              Hi, {userName}
-            </Link>
-          }
+          links={[
+            ...navItems,
+            {
+              href: "/account",
+              label: accountLabel,
+              active: accountActive,
+            },
+          ]}
         />
       </div>
     </header>

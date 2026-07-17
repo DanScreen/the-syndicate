@@ -11,7 +11,7 @@ type MarketingHeaderProps = {
   userName?: string;
 };
 
-function desktopLinkClass(active: boolean) {
+function linkClass(active: boolean) {
   return `rounded-lg px-3 py-1.5 text-sm transition-colors hover:bg-card hover:text-foreground ${
     active ? "bg-accent-muted/40 text-accent" : "text-muted"
   }`;
@@ -20,8 +20,8 @@ function desktopLinkClass(active: boolean) {
 /**
  * Signed-out marketing chrome for `/`, `/about`, and blog.
  * Signed-in users see `AppHeader` (logo + tagline + Home/About before Groups).
- * Below `md`, links (including Sign up) collapse into a hamburger menu so the
- * top bar stays a single compact row on phones.
+ * Below `md`, links collapse into a hamburger menu so the top bar stays a
+ * single compact row on phones. Sign in and Sign up are peer links.
  */
 export function MarketingHeader(_props: MarketingHeaderProps = {}) {
   const pathname = usePathname();
@@ -47,25 +47,19 @@ export function MarketingHeader(_props: MarketingHeaderProps = {}) {
           className="hidden items-center gap-1 sm:gap-2 md:flex"
           aria-label="Primary"
         >
-          <Link href="/" className={desktopLinkClass(homeActive)}>
+          <Link href="/" className={linkClass(homeActive)}>
             Home
           </Link>
-          <Link href="/about" className={desktopLinkClass(aboutActive)}>
+          <Link href="/about" className={linkClass(aboutActive)}>
             About
           </Link>
-          <Link href="/blog" className={desktopLinkClass(blogActive)}>
+          <Link href="/blog" className={linkClass(blogActive)}>
             Blog
           </Link>
-          <Link
-            href="/sign-in"
-            className="rounded-lg px-3 py-1.5 text-sm text-muted transition-colors hover:text-foreground"
-          >
+          <Link href="/sign-in" className={linkClass(pathname === "/sign-in")}>
             Sign in
           </Link>
-          <Link
-            href="/sign-up"
-            className="rounded-lg bg-accent px-3.5 py-1.5 text-sm font-medium text-black transition-colors hover:bg-accent-bright"
-          >
+          <Link href="/sign-up" className={linkClass(pathname === "/sign-up")}>
             Sign up
           </Link>
         </nav>
@@ -74,8 +68,8 @@ export function MarketingHeader(_props: MarketingHeaderProps = {}) {
             { href: "/", label: "Home", active: homeActive },
             { href: "/about", label: "About", active: aboutActive },
             { href: "/blog", label: "Blog", active: blogActive },
-            { href: "/sign-in", label: "Sign in" },
-            { href: "/sign-up", label: "Sign up", emphasis: "accent" },
+            { href: "/sign-in", label: "Sign in", active: pathname === "/sign-in" },
+            { href: "/sign-up", label: "Sign up", active: pathname === "/sign-up" },
           ]}
         />
       </div>

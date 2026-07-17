@@ -15,21 +15,17 @@ type MobileNavLink = {
   href: string;
   label: string;
   active?: boolean;
-  emphasis?: "accent" | "muted";
 };
 
 type MobileNavProps = {
   links: MobileNavLink[];
-  /** Optional trailing block inside the panel (e.g. account link). */
+  /** Optional trailing block inside the panel. */
   footer?: ReactNode;
-  /** Always-visible compact actions beside the menu button (e.g. Sign up). */
+  /** Always-visible compact actions beside the menu button. */
   trailing?: ReactNode;
 };
 
-function linkClass(active: boolean, emphasis?: MobileNavLink["emphasis"]) {
-  if (emphasis === "accent") {
-    return "block rounded-lg bg-accent px-3 py-2.5 text-sm font-medium text-black hover:bg-accent-bright";
-  }
+function linkClass(active: boolean) {
   return `block rounded-lg px-3 py-2.5 text-sm transition-colors ${
     active
       ? "bg-accent-muted/40 text-accent"
@@ -100,7 +96,7 @@ export function MobileNav({ links, footer, trailing }: MobileNavProps) {
               <li key={`${link.href}-${link.label}`}>
                 <Link
                   href={link.href}
-                  className={linkClass(Boolean(link.active), link.emphasis)}
+                  className={linkClass(Boolean(link.active))}
                   onClick={close}
                 >
                   {link.label}
