@@ -53,7 +53,7 @@ const ROWS: { title: string; channel: "email" | "push"; items: PrefRow[] }[] = [
       {
         key: "pushChat",
         label: "Group chat",
-        description: "Batched alerts when your group starts the banter.",
+        description: "Batched alerts when your group starts chatting.",
       },
     ],
   },

@@ -223,7 +223,7 @@ export function RoundThread({
   return (
     <View style={styles.card}>
       <View style={styles.header}>
-        <Text style={styles.title}>Banter</Text>
+        <Text style={styles.title}>Group Chat</Text>
         <Text style={styles.hint}>Picks, accas, and trash talk</Text>
       </View>
       <ScrollView
@@ -251,7 +251,7 @@ export function RoundThread({
         {loading ? (
           <ActivityIndicator color={colors.accent} />
         ) : messages.length === 0 ? (
-          <Text style={styles.empty}>No messages yet. Start the banter.</Text>
+          <Text style={styles.empty}>No messages yet. Start the chat.</Text>
         ) : (
           messages.map((message) => (
             <Message

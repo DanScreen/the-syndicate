@@ -115,7 +115,7 @@ export function HistoryRoundCard({ round }: { round: HistoryRound }) {
         onClick={() => setShowChat((shown) => !shown)}
         className="mt-4 text-sm font-medium text-accent hover:underline"
       >
-        {showChat ? "Hide banter" : "Relive the banter"}
+        {showChat ? "Hide group chat" : "Relive the group chat"}
       </button>
       {showChat ? (
         <div className="mt-3">

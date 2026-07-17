@@ -965,7 +965,7 @@ function HistoryChat({ roundId, token }: { roundId: string; token: string }) {
     <View>
       <Pressable onPress={() => setShown((current) => !current)}>
         <Text style={styles.viewAll}>
-          {shown ? "Hide banter" : "Relive the banter"}
+          {shown ? "Hide group chat" : "Relive the group chat"}
         </Text>
       </Pressable>
       {shown ? (

@@ -244,7 +244,7 @@ export function RoundThread({
   return (
     <section className="rounded-xl border border-border bg-card">
       <div className="border-b border-border px-4 py-3">
-        <h2 className="text-lg font-semibold">Banter</h2>
+        <h2 className="text-lg font-semibold">Group Chat</h2>
         <p className="text-xs text-muted">
           React to picks, roast the acca, keep the banter going.
         </p>
@@ -269,7 +269,7 @@ export function RoundThread({
           <p className="text-sm text-muted">Loading chat…</p>
         ) : messages.length === 0 ? (
           <p className="py-6 text-center text-sm text-muted">
-            No messages yet. Start the banter.
+            No messages yet. Start the chat.
           </p>
         ) : (
           messages.map((m) => (

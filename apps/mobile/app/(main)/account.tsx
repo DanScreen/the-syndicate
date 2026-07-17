@@ -65,7 +65,7 @@ const SECTIONS: {
       {
         key: "pushChat",
         label: "Group chat",
-        hint: "Batched alerts for new banter",
+        hint: "Batched alerts for new group chat",
       },
     ],
   },
