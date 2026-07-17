@@ -204,6 +204,20 @@ export async function GET(_request: Request, { params }: Params) {
         return a.legIndex - b.legIndex;
       })
     : [];
+  const unreadSince =
+    membership.lastReadMessageAt && membership.lastReadMessageAt > membership.joinedAt
+      ? membership.lastReadMessageAt
+      : membership.joinedAt;
+  const unreadMessageCount = await prisma.roundMessage.count({
+    where: {
+      round: { groupId: id },
+      createdAt: { gt: unreadSince },
+      OR: [
+        { userId: null },
+        { userId: { not: session!.user!.id } },
+      ],
+    },
+  });
 
   return NextResponse.json({
     group: {
@@ -214,6 +228,7 @@ export async function GET(_request: Request, { params }: Params) {
       legsPerMember: group.legsPerMember,
       owner: group.owner,
       memberCount: group.members.length,
+      unreadMessageCount,
       members: group.members.map((m) => ({
         id: m.user.id,
         name: m.user.name,

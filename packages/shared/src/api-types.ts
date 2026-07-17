@@ -62,6 +62,7 @@ export type GroupSummary = {
   yourLeg: GroupSummaryYourLeg | null;
   /** How many legs this member has submitted in the active round. */
   yourLegCount: number;
+  unreadMessageCount: number;
 };
 
 export type GroupsListResponse = {
@@ -153,6 +154,7 @@ export type GroupDetailResponse = {
     legsPerMember: number;
     owner: { id: string; name: string };
     memberCount: number;
+    unreadMessageCount: number;
     members: GroupMember[];
   };
   leaderboard: GroupLeaderboardEntry[];

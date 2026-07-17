@@ -1,4 +1,5 @@
 import { requireSession } from "@/lib/api-auth";
+import { postLegSubmittedMessage, tryPostSystemMessage } from "@/lib/chat/system-messages";
 import { isBookmakerHubUrl } from "@/lib/odds/betslip-links";
 import { sortQuotesByBestOdds } from "@/lib/odds/bookmakers";
 import { findSelection } from "@/lib/odds/provider";
@@ -141,6 +142,10 @@ export async function POST(request: Request) {
     },
     include: { user: { select: { name: true } } },
   });
+
+  await tryPostSystemMessage("leg_submitted", () =>
+    postLegSubmittedMessage(prisma, leg, leg.user.name)
+  );
 
   const updatedRound = await prisma.round.findUnique({
     where: { id: round.id },

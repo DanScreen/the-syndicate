@@ -107,7 +107,14 @@ export default function GroupsScreen() {
                 <Card>
                   <View style={styles.row}>
                     <Text style={styles.groupName}>{g.name}</Text>
-                    <Text style={styles.badge}>{formatRoundStatusBadge(g.status)}</Text>
+                    <View style={styles.badgeRow}>
+                      {g.unreadMessageCount > 0 ? (
+                        <Text style={styles.unreadBadge}>
+                          {g.unreadMessageCount} new
+                        </Text>
+                      ) : null}
+                      <Text style={styles.badge}>{formatRoundStatusBadge(g.status)}</Text>
+                    </View>
                   </View>
                   <Text style={styles.meta}>
                     {g.memberCount} members · Owner: {g.ownerName}
@@ -254,6 +261,20 @@ const styles = StyleSheet.create({
   groupName: {
     color: colors.text,
     fontSize: 17,
+    fontWeight: "600",
+  },
+  badgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  unreadBadge: {
+    color: "#fff",
+    backgroundColor: colors.danger,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    fontSize: 11,
     fontWeight: "600",
   },
   badge: {

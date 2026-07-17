@@ -161,6 +161,20 @@ export default async function DashboardPage() {
                     (l) => l.userId === session.user.id
                   ).length;
                   const activeLegs = activeLegsInRound(legs, session.user.id);
+                  const unreadSince =
+                    m.lastReadMessageAt && m.lastReadMessageAt > m.joinedAt
+                      ? m.lastReadMessageAt
+                      : m.joinedAt;
+                  const unreadMessageCount = await prisma.roundMessage.count({
+                    where: {
+                      round: { groupId: m.group.id },
+                      createdAt: { gt: unreadSince },
+                      OR: [
+                        { userId: null },
+                        { userId: { not: session.user.id } },
+                      ],
+                    },
+                  });
                   const roundStatus = activeRound?.status ?? "open";
                   const legsPerMember =
                     activeRound?.legsPerMember ?? m.group.legsPerMember ?? 1;
@@ -174,6 +188,7 @@ export default async function DashboardPage() {
                     legsPerMember,
                     activeLegs,
                     roundStatus,
+                    unreadMessageCount,
                   };
                 })
               )).map(
@@ -187,6 +202,7 @@ export default async function DashboardPage() {
                   legsPerMember,
                   activeLegs,
                   roundStatus,
+                  unreadMessageCount,
                 }) => (
                   <Link
                     key={m.group.id}
@@ -195,9 +211,16 @@ export default async function DashboardPage() {
                   >
                     <div className="flex items-start justify-between">
                       <h3 className="font-semibold">{m.group.name}</h3>
-                      <span className="rounded-full bg-accent-muted px-2 py-0.5 text-xs text-accent">
-                        {formatRoundStatusBadge(activeRound?.status ?? "open")}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        {unreadMessageCount > 0 ? (
+                          <span className="rounded-full bg-red-500 px-2 py-0.5 text-xs font-medium text-white">
+                            {unreadMessageCount} new
+                          </span>
+                        ) : null}
+                        <span className="rounded-full bg-accent-muted px-2 py-0.5 text-xs text-accent">
+                          {formatRoundStatusBadge(activeRound?.status ?? "open")}
+                        </span>
+                      </div>
                     </div>
                     <p className="mt-2 text-sm text-muted">
                       {m.group._count.members} members · Owner: {m.group.owner.name}

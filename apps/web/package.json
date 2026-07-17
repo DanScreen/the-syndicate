@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "node --env-file-if-exists=.env.local --import tsx --test --test-force-exit src/lib/chat/exactly-once.test.ts",
     "db:maintenance": "npx tsx scripts/data-maintenance.ts"
   },
   "dependencies": {

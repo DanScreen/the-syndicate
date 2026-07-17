@@ -17,6 +17,7 @@ type GroupDataContextValue = {
   loading: boolean;
   error: string;
   reload: () => Promise<void>;
+  markChatRead: () => void;
 };
 
 const GroupDataContext = createContext<GroupDataContextValue | null>(null);
@@ -40,6 +41,17 @@ export function GroupDataProvider({
     setError("");
   }, [token, groupId]);
 
+  const markChatRead = useCallback(() => {
+    setData((current) =>
+      current
+        ? {
+            ...current,
+            group: { ...current.group, unreadMessageCount: 0 },
+          }
+        : current
+    );
+  }, []);
+
   useEffect(() => {
     setLoading(true);
     reload()
@@ -58,8 +70,8 @@ export function GroupDataProvider({
   }, [data?.activeRound?.status, data?.activeRound?.id, reload]);
 
   const value = useMemo(
-    () => ({ data, loading, error, reload }),
-    [data, loading, error, reload]
+    () => ({ data, loading, error, reload, markChatRead }),
+    [data, loading, error, reload, markChatRead]
   );
 
   return (

@@ -6,6 +6,8 @@ import {
   RoundProgress,
   SubmitLegForm,
 } from "@/components/group-round";
+import { RoundThread } from "@/components/group-chat";
+import type { RoundMessageDto } from "@tiki-acca/shared";
 import { Button, Card, ErrorText } from "@/components/ui";
 import { colors } from "@/config";
 import { useGroupData } from "@/context/group-data";
@@ -33,9 +35,11 @@ function formatCutoff(date: Date) {
 export default function GroupRoundScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { token, user } = useAuth();
-  const { data, error, reload } = useGroupData();
+  const { data, error, reload, markChatRead } = useGroupData();
   const [refreshing, setRefreshing] = useState(false);
   const [editingLegId, setEditingLegId] = useState<string | null>(null);
+  const [roundMessages, setRoundMessages] = useState<RoundMessageDto[]>([]);
+  const [chatRefreshKey, setChatRefreshKey] = useState(0);
 
   if (!data) {
     return (
@@ -86,6 +90,15 @@ export default function GroupRoundScreen() {
   }
 
   const nextSlot = myLegs.length + 1;
+  const announcementByLegId = new Map<string, RoundMessageDto>();
+  for (const message of roundMessages) {
+    if (
+      message.legId &&
+      (message.eventType === "leg_submitted" || message.eventType === "leg_changed")
+    ) {
+      announcementByLegId.set(message.legId, message);
+    }
+  }
 
   return (
     <ScrollView
@@ -125,6 +138,16 @@ export default function GroupRoundScreen() {
             showOpenLinks={isLocked && resolvedLegs === 0}
             inProgress={isLocked}
             showLegIndex={legsPerMember > 1}
+            announcementByLegId={announcementByLegId}
+            token={token ?? undefined}
+            onAnnouncementChanged={(updated) => {
+              setRoundMessages((current) =>
+                current.map((message) =>
+                  message.id === updated.id ? updated : message
+                )
+              );
+              setChatRefreshKey((key) => key + 1);
+            }}
           />
         </View>
       ) : null}
@@ -227,11 +250,24 @@ export default function GroupRoundScreen() {
         />
       ) : null}
 
+      {round && token ? (
+        <RoundThread
+          roundId={round.id}
+          token={token}
+          currentUserId={user?.id}
+          isOwner={data.isOwner}
+          onMessagesChange={setRoundMessages}
+          onRead={markChatRead}
+          refreshKey={chatRefreshKey}
+        />
+      ) : null}
+
       {data.recentRounds && data.recentRounds.length > 0 ? (
         <View style={styles.section}>
           <RoundHistory
             rounds={data.recentRounds}
             onViewAll={() => router.push(`/(main)/groups/${id}/history`)}
+            token={token ?? undefined}
           />
         </View>
       ) : null}

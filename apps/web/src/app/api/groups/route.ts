@@ -64,6 +64,17 @@ export async function GET() {
 
       const legs = activeRoundRow?.legs ?? [];
       const yourLegCount = legs.filter((l) => l.userId === userId).length;
+      const unreadSince =
+        m.lastReadMessageAt && m.lastReadMessageAt > m.joinedAt
+          ? m.lastReadMessageAt
+          : m.joinedAt;
+      const unreadMessageCount = await prisma.roundMessage.count({
+        where: {
+          round: { groupId: m.group.id },
+          createdAt: { gt: unreadSince },
+          OR: [{ userId: null }, { userId: { not: userId } }],
+        },
+      });
 
       return {
         id: m.group.id,
@@ -81,6 +92,7 @@ export async function GET() {
         activeLegs: activeLegsInRound(legs, userId),
         yourLeg: yourLegInRound(legs, userId),
         yourLegCount,
+        unreadMessageCount,
       };
     })
   );

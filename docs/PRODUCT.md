@@ -31,6 +31,7 @@ Owner creates group (name only) → invite code + link. Anyone with the link ope
 5. Everyone fills their quota **or the first submitted leg kicks off** → acca **locks** with best combined bookmaker (members under quota miss or enter partial)
 6. Members receive **email notification** when acca locks (if Resend configured)
 7. When a round settles, the next open round starts automatically (using the group's current legs-per-member setting)
+8. Each round has a web/mobile **Banter** thread. Pick submissions, changes, lock, results, and settlement appear as system messages; members can post text (profanity-filtered) and react using six one-tap defaults or the broad emoji picker opened by `+`. Pick rows mirror reactions from their latest announcement.
 
 → [specs/competitions-and-results.md](./specs/competitions-and-results.md)
 
@@ -79,12 +80,15 @@ Platform admins (`ADMIN_EMAILS`) see an **Admin** tab in the header with `/admin
 - [x] Locked round UX: in-progress leg results, locked odds only
 - [x] Progressive auto-settle (leg outcomes before full acca settles)
 - [x] 5-minute match sync cron
+- [x] Group chat, lifecycle messages, reactions, unread badges, and batched chat push (web + mobile)
 
 ### Backlog
+- [ ] Season readiness — World Cup → 2026–27 leagues + FA Cup/EFL Cup — [specs/season-readiness.md](./specs/season-readiness.md)
+- [ ] Live matchday (per-leg push + live round view) — [specs/live-matchday.md](./specs/live-matchday.md)
+- [ ] Settle-day recap share card — [specs/settle-recap-share.md](./specs/settle-recap-share.md)
 - [ ] Affiliate links + improved betslip deeplinks — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md)
-- [ ] Public platform leaderboards (admin version exists)
-- [ ] Dedicated user profile page (optional — `/performance` covers stats today)
-- [ ] FA Cup + EFL Cup competitions
+- [ ] Seasons + public leaderboards + monthly awards — [specs/seasons-and-public-leaderboards.md](./specs/seasons-and-public-leaderboards.md)
+- [ ] Streaks & badges — [specs/streaks-and-badges.md](./specs/streaks-and-badges.md) competitions
 
 **Deferred:** paid subscriptions — no current plan; core loop stays free.
 

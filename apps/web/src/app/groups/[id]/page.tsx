@@ -6,10 +6,12 @@ import {
   RoundProgress,
   SubmitLegForm,
 } from "@/components/group-ui";
+import { RoundThread } from "@/components/group-chat";
 import { RoundHistory } from "@/components/group-history";
 import { useGroupData } from "@/context/group-data";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
+import type { RoundMessageDto } from "@tiki-acca/shared";
 
 function formatCutoff(date: Date) {
   return date.toLocaleString("en-GB", {
@@ -23,8 +25,10 @@ function formatCutoff(date: Date) {
 
 export default function GroupRoundPage() {
   const { data: session } = useSession();
-  const { data, reload } = useGroupData();
+  const { data, reload, markChatRead } = useGroupData();
   const [editingLegId, setEditingLegId] = useState<string | null>(null);
+  const [roundMessages, setRoundMessages] = useState<RoundMessageDto[]>([]);
+  const [chatRefreshKey, setChatRefreshKey] = useState(0);
 
   if (!data?.activeRound) return null;
 
@@ -74,6 +78,15 @@ export default function GroupRoundPage() {
     (isLocked || (isOpen && activeRound.legs.length > 0 && rankings.length > 0));
 
   const nextSlot = userLegs.length + 1;
+  const announcementByLegId = new Map<string, RoundMessageDto>();
+  for (const message of roundMessages) {
+    if (
+      message.legId &&
+      (message.eventType === "leg_submitted" || message.eventType === "leg_changed")
+    ) {
+      announcementByLegId.set(message.legId, message);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -107,6 +120,15 @@ export default function GroupRoundPage() {
             showOpenLinks={isLocked && resolvedLegs === 0}
             inProgress={isLocked}
             showLegIndex={legsPerMember > 1}
+            announcementByLegId={announcementByLegId}
+            onAnnouncementChanged={(updated) => {
+              setRoundMessages((current) =>
+                current.map((message) =>
+                  message.id === updated.id ? updated : message
+                )
+              );
+              setChatRefreshKey((key) => key + 1);
+            }}
           />
         </div>
       </section>
@@ -197,6 +219,15 @@ export default function GroupRoundPage() {
           }
         />
       )}
+
+      <RoundThread
+        roundId={activeRound.id}
+        currentUserId={userId}
+        isOwner={data.isOwner}
+        onRead={markChatRead}
+        onMessagesChange={setRoundMessages}
+        refreshKey={chatRefreshKey}
+      />
 
       <RoundHistory rounds={data.recentRounds} groupId={group.id} />
     </div>
