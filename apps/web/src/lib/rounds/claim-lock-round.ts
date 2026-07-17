@@ -60,6 +60,8 @@ export async function claimAndLockRound(roundId: string): Promise<ClaimLockResul
     postRoundLockedMessage(prisma, roundId)
   );
 
-  void notifyRoundLocked(roundId);
+  void notifyRoundLocked(roundId).catch((err) => {
+    console.error("[notifications] round locked delivery failed", roundId, err);
+  });
   return { ok: true };
 }

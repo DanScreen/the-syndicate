@@ -2,6 +2,7 @@ export const NOTIFICATION_TYPES = [
   "pick_reminder",
   "round_locked",
   "round_settled",
+  "chat_message",
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
@@ -15,6 +16,7 @@ export type NotificationPreferences = {
   pushPickReminder: boolean;
   pushRoundLocked: boolean;
   pushRoundSettled: boolean;
+  pushChat: boolean;
 };
 
 export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
@@ -24,11 +26,12 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
   pushPickReminder: true,
   pushRoundLocked: true,
   pushRoundSettled: true,
+  pushChat: true,
 };
 
 export function emailPrefKey(
   type: NotificationType
-): keyof NotificationPreferences {
+): keyof NotificationPreferences | null {
   switch (type) {
     case "pick_reminder":
       return "emailPickReminder";
@@ -36,6 +39,8 @@ export function emailPrefKey(
       return "emailRoundLocked";
     case "round_settled":
       return "emailRoundSettled";
+    case "chat_message":
+      return null;
   }
 }
 
@@ -49,5 +54,7 @@ export function pushPrefKey(
       return "pushRoundLocked";
     case "round_settled":
       return "pushRoundSettled";
+    case "chat_message":
+      return "pushChat";
   }
 }

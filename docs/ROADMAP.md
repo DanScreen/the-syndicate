@@ -37,6 +37,7 @@ Core loop and MVP polish are **shipped**:
 - Deploy: Cloud Run + Cloud SQL + GitHub Actions; Cloud Scheduler match sync (every 5 min UTC)
 - **Multi-leg accas** — owner sets 1 / 2 / 3 legs per member; web + mobile — [specs/multi-leg-accas.md](./specs/multi-leg-accas.md)
 - **Account page** — greeting → `/account` (notifications + sign out); Notifications removed from app nav
+- **Group chat & reactions** — round-scoped web/mobile threads, lifecycle messages, pick-mirrored reactions, unread badges, batched push — [spec](./specs/group-chat.md)
 
 ---
 
@@ -44,19 +45,18 @@ Core loop and MVP polish are **shipped**:
 
 | # | Feature | Type | Notes |
 |---|---------|------|-------|
-| 1 | **Group chat & reactions** | Code | **Current build priority** — round banter thread + pick lock-in system messages + reactions (one mechanism, mirrored on betslip) — [specs/group-chat.md](./specs/group-chat.md) · build steps + session prompts: [specs/group-chat-build-plan.md](./specs/group-chat-build-plan.md) |
-| 2 | **Validate with real users** | Product | Run 2–3 friend groups through full loop on prod |
-| 3 | **Season readiness (2026–27)** | Mostly ops | Leagues can be enabled via `/admin/competitions` when ready; remaining code: cups + quiet-period empty states — [specs/season-readiness.md](./specs/season-readiness.md) (absorbs old "FA Cup + EFL Cup" item) |
-| 4 | **Live matchday** | Code | Per-leg result push + acca-won push + live round view — [specs/live-matchday.md](./specs/live-matchday.md) |
-| 5 | **Settle-day recap share card** | Code | Auto recap image per settled round; invite loop — [specs/settle-recap-share.md](./specs/settle-recap-share.md) |
-| 6 | **Affiliate links** | Code + ops | Bookmaker affiliate programmes (start applications early — approval takes weeks) — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md) Phase A |
-| 7 | **Better betslip deeplinks** | Code | Remaining: acca-builder patterns + link-quality audit — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md) Phase B (hubs/per-leg/CTA honesty shipped) |
-| 8 | **Seasons + public leaderboards** | Code | Season windows, `/leaderboards`, monthly awards — [specs/seasons-and-public-leaderboards.md](./specs/seasons-and-public-leaderboards.md) (supersedes old "public platform leaderboards" item) |
-| 9 | **Streaks & badges** | Code | Light gamification; needs chat for thread moments — [specs/streaks-and-badges.md](./specs/streaks-and-badges.md) |
-| 10 | **GCP cost reduction** | Ops/infra | Cloud SQL ~90% of spend; see [DEPLOYMENT.md](./DEPLOYMENT.md#cost-optimization) |
-| 11 | **Mobile — friend testing → stores** | Product | You: [DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md); mates: APK / TestFlight. Store distribution unblocks the invite loop — prioritise fees once validated |
-| 12 | **Expo push setup** | Mobile ops | See checklist below — required for mobile push (prereq for chat + live matchday push) |
-| 13 | Terraform CI GCS permissions fix | Infra | App deploy unaffected |
+| 1 | **Validate with real users** | Product | Run 2–3 friend groups through full loop on prod |
+| 2 | **Season readiness (2026–27)** | Mostly ops | Leagues can be enabled via `/admin/competitions` when ready; remaining code: cups + quiet-period empty states — [specs/season-readiness.md](./specs/season-readiness.md) (absorbs old "FA Cup + EFL Cup" item) |
+| 3 | **Live matchday** | Code | Per-leg result push + acca-won push + live round view — [specs/live-matchday.md](./specs/live-matchday.md) |
+| 4 | **Settle-day recap share card** | Code | Auto recap image per settled round; invite loop — [specs/settle-recap-share.md](./specs/settle-recap-share.md) |
+| 5 | **Affiliate links** | Code + ops | Bookmaker affiliate programmes (start applications early — approval takes weeks) — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md) Phase A |
+| 6 | **Better betslip deeplinks** | Code | Remaining: acca-builder patterns + link-quality audit — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md) Phase B (hubs/per-leg/CTA honesty shipped) |
+| 7 | **Seasons + public leaderboards** | Code | Season windows, `/leaderboards`, monthly awards — [specs/seasons-and-public-leaderboards.md](./specs/seasons-and-public-leaderboards.md) (supersedes old "public platform leaderboards" item) |
+| 8 | **Streaks & badges** | Code | Light gamification; needs chat for thread moments — [specs/streaks-and-badges.md](./specs/streaks-and-badges.md) |
+| 9 | **GCP cost reduction** | Ops/infra | Cloud SQL ~90% of spend; see [DEPLOYMENT.md](./DEPLOYMENT.md#cost-optimization) |
+| 10 | **Mobile — friend testing → stores** | Product | You: [DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md); mates: APK / TestFlight. Store distribution unblocks the invite loop — prioritise fees once validated |
+| 11 | **Expo push setup** | Mobile ops | See checklist below — required for mobile push (prereq for chat + live matchday push) |
+| 12 | Terraform CI GCS permissions fix | Infra | App deploy unaffected |
 
 ---
 

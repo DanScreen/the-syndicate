@@ -53,18 +53,20 @@ model Group {
 }
 
 model GroupMember {
-  id        String   @id @default(cuid())
-  groupId   String
-  userId    String
-  role      String   @default("member")
-  points    Float    @default(0)
-  legsWon   Int      @default(0)
-  legsLost  Int      @default(0)
-  joinedAt  DateTime @default(now())
-  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String    @id @default(cuid())
+  groupId           String
+  userId            String
+  role              String    @default("member")
+  points            Float     @default(0)
+  legsWon           Int       @default(0)
+  legsLost          Int       @default(0)
+  joinedAt          DateTime  @default(now())
+  lastReadMessageAt DateTime?
+  group             Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([groupId, userId])
+  @@index([groupId, lastReadMessageAt])
 }
 
 model Round {
@@ -207,6 +209,7 @@ model NotificationPreference {
   pushPickReminder   Boolean @default(true)
   pushRoundLocked    Boolean @default(true)
   pushRoundSettled   Boolean @default(true)
+  pushChat           Boolean @default(true)
   updatedAt          DateTime @updatedAt
 }
 

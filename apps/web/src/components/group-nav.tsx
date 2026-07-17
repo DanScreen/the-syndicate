@@ -6,15 +6,21 @@ import { usePathname } from "next/navigation";
 export function GroupNav({
   groupId,
   showSettings = false,
+  unreadMessageCount = 0,
 }: {
   groupId: string;
   showSettings?: boolean;
+  unreadMessageCount?: number;
 }) {
   const pathname = usePathname();
   const base = `/groups/${groupId}`;
 
   const tabs = [
-    { href: base, label: "Round", active: pathname === base },
+    {
+      href: base,
+      label: unreadMessageCount > 0 ? `Round (${unreadMessageCount})` : "Round",
+      active: pathname === base,
+    },
     {
       href: `${base}/history`,
       label: "History",

@@ -113,6 +113,7 @@ export const notificationPreferencesSchema = z.object({
   pushPickReminder: z.boolean().optional(),
   pushRoundLocked: z.boolean().optional(),
   pushRoundSettled: z.boolean().optional(),
+  pushChat: z.boolean().optional(),
 });
 
 export type SignUpInput = z.infer<typeof signUpSchema>;

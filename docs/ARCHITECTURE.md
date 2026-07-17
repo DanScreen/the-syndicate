@@ -41,11 +41,13 @@ flowchart TB
 |--------|---------|
 | **User** | Account; `firstName` / `lastName` / `name` (full display); `role` (`user` \| `admin`); aggregate `totalPoints` |
 | **Group** | Name, invite code, owner, status, `legsPerMember` (1–3, default 1) |
-| **GroupMember** | Membership, group role (`owner` \| `member`), group-scoped points |
+| **GroupMember** | Membership, group role, group-scoped points, chat `lastReadMessageAt` |
 | **Round** | Acca cycle: open → locked → settled; `legsPerMember` snapshot; `accaBookmakerRankings` JSON at lock |
 | **Leg** | Pick slot (`legIndex` 1..quota) per member: fixture, `competitionId`, market, odds, outcome |
 | **Match** | Canonical fixture result (football-data.org sync); reused for auto-settle |
 | **AnalyticsEvent** | Product analytics: `sign_up`, `login`, `page_view` |
+| **RoundMessage** | Round-scoped user/system chat message; optional `legId` for pick announcements |
+| **MessageReaction** | Constrained emoji reaction, unique per message/user/emoji |
 
 Schema: `packages/database/prisma/schema.prisma`
 
@@ -75,6 +77,11 @@ Members edit their own leg via `PATCH /api/legs/[id]` while the round is `open` 
 Computed on read from settled rounds. Group + member + **cross-group user** APIs; Recharts on group Performance tab and `/performance` page. Share cards for copy/Web Share.
 
 → `apps/web/src/lib/stats/`
+
+### Group chat
+Round-scoped polling threads share one REST contract across web and mobile. Lifecycle system messages are persisted at event time and gated by the lock/settlement atomic claims. Reactions attach to messages; pick rows mirror the latest announcement selected by `legId`. `GroupMember.lastReadMessageAt` drives unread badges. Chat push is push-only, sender-suppressed, foreground-suppressed from active polling, and limited to one delivery per user/group ten-minute bucket.
+
+→ `apps/web/src/lib/chat/` · `apps/web/src/components/group-chat.tsx` · `apps/mobile/src/components/group-chat.tsx` · [spec](./specs/group-chat.md)
 
 ### Web UI layout
 - **Header:** Logo + “Social Group Betting” tagline; `AppNav` — Home → About → Groups → Performance → Admin (admins) → Blog (rightmost); greeting **Hi, {name}** → `/account`; logo + Home → `/`
@@ -112,7 +119,7 @@ Production URL: **https://www.tikiacca.com** (Cloudflare → Cloud Run, `europe-
 
 ## Mobile
 
-Expo app in `apps/mobile/` — **implementation paused**; Expo scaffold exists (auth, basic groups).
+Expo app in `apps/mobile/` — member-facing parity includes the round lifecycle, stats, history, notifications, and group chat.
 
 **Target:** functional parity with the website for member-facing flows. **Strategy:** [specs/mobile-apps.md](./specs/mobile-apps.md) — API-first, shared `packages/shared` contracts, EAS release for iOS + Android.
 

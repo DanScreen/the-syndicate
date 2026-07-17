@@ -12,9 +12,9 @@ Companion to [group-chat.md](./group-chat.md) — the execution sequence, which 
 | Step | Model | Scope | Status |
 |------|-------|-------|--------|
 | 1 | **Fable 5** | Schema, shared types, lifecycle system-message writes + tests | ✅ |
-| 2 | **Opus 4.8** | Message APIs + web thread UI + History view | ☐ |
-| 3 | **Opus 4.8** | Mobile parity | ☐ |
-| 4 | **Opus 4.8** | Phase 2: reactions, unread, push | ☐ |
+| 2 | **Opus 4.8** | Message APIs + web thread UI + History view | ✅ |
+| 3 | **Opus 4.8** | Mobile parity | ✅ |
+| 4 | **Opus 4.8** | Phase 2: reactions, unread, push | ✅ |
 | 5 | **Fable 5** | Review + end-to-end verification | ☐ |
 
 Why this split: Fable 5 builds the load-bearing skeleton (schema, transactional invariants) and reviews the finished diff; Opus 4.8 fills in the well-specified surface area at half the token price. Reviewing with a different model than the one that built each slice is deliberate.

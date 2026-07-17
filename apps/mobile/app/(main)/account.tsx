@@ -62,6 +62,11 @@ const SECTIONS: {
         label: "Round settled",
         hint: "When results are in",
       },
+      {
+        key: "pushChat",
+        label: "Group chat",
+        hint: "Batched alerts for new banter",
+      },
     ],
   },
 ];

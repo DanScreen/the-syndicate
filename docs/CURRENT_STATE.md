@@ -1,6 +1,6 @@
 # Current state (as-built)
 
-Last updated 17 July 2026 (group chat Step 1 — schema + lifecycle system messages). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
+Last updated 17 July 2026 (group chat and reactions shipped on web + mobile). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
 
 Production: **https://www.tikiacca.com** (apex → 301 to www via Cloudflare).
 
@@ -49,7 +49,7 @@ Match sync + odds warm: Cloud Scheduler (Terraform) → `POST /api/internal/sync
 | Odds | `apps/web/src/lib/odds/` |
 | Settlement | `apps/web/src/lib/settlement/`, `apps/web/src/lib/results/` |
 | Stats | `apps/web/src/lib/stats/` |
-| Round chat system messages | `apps/web/src/lib/chat/system-messages.ts` (+ exactly-once tests `exactly-once.test.ts`; shared types `packages/shared/src/chat.ts`) |
+| Group chat | `apps/web/src/components/group-chat.tsx`, `apps/mobile/src/components/group-chat.tsx`, APIs under `api/rounds/[id]/messages` + `api/messages/[id]`, lifecycle writers/tests in `apps/web/src/lib/chat/`, shared contract `packages/shared/src/chat.ts` |
 | Notifications | `apps/web/src/lib/notifications/` (branded email templates + layout; logo at `public/brand/email-logo.png`) |
 | Auth | `apps/web/src/lib/auth.ts`, `apps/web/src/lib/auth.config.ts` |
 | Settlement (auto) | `apps/web/src/lib/settlement/auto-settle-round.ts` |
@@ -108,6 +108,8 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 | Locked round UX: picks first, locked odds, bookmaker comparison until first result, in-progress leg results | ✅ |
 | Round history, progress UI, landing/SEO | ✅ |
 | Blog (file-based MDX, static, `/blog`) + sitemap.xml + robots.txt | ✅ |
+| Round-scoped group chat + lifecycle messages + reactions (web + mobile) | ✅ |
+| Chat unread badges + batched push preference | ✅ |
 
 \*Asian handicap only from exchange bookmakers in current World Cup UK feed — filtered out; handicap UI empty for those fixtures.
 
@@ -417,7 +419,9 @@ Env vars on Cloud Run: `NEXTAUTH_URL`, `EMAIL_FROM`, `ADMIN_EMAILS` (from GitHub
 Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `AnalyticsEvent`, `CompetitionSetting`, `RoundMessage`, `MessageReaction`.
 
 - `RoundMessage` — round-scoped chat thread: user banter (`kind: "user"`) + append-only system messages (`kind: "system"`, `eventType`: `leg_submitted | leg_changed | round_locked | leg_result | round_settled`; `legId` set on pick announcements so the betslip row can mirror reactions). Written at event time by lifecycle code — see [Settlement](#settlement).
-- `MessageReaction` — emoji reactions on messages, unique per `(messageId, userId, emoji)`; constrained set in `packages/shared/src/chat.ts` (`REACTION_EMOJIS`). Toggle API ships in group-chat Phase 2.
+- `MessageReaction` — emoji reactions on messages, unique per `(messageId, userId, emoji)`; constrained set in `packages/shared/src/chat.ts` (`REACTION_EMOJIS`). Pick rows mirror the latest `leg_submitted` / `leg_changed` message for their `legId`.
+- `GroupMember.lastReadMessageAt` — group-wide unread cursor; dashboard cards and Round tabs show unread counts.
+- `NotificationPreference.pushChat` — chat push opt-in (default on). User messages notify other members at most once per ten-minute group bucket; active 20-second thread polling suppresses foreground pushes.
 
 - `User.firstName` / `User.lastName` — collected at sign-up; header greeting uses first name only (`lib/user-display.ts`).
 - `User.name` — full display name (`firstName lastName`) for leaderboards, picks, emails.
@@ -436,7 +440,7 @@ Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `Analytics
 
 Schema: `packages/database/prisma/schema.prisma`
 
-Recent migrations include `20260715120000_multi_leg_per_member` and `20260717150000_group_chat_messages`.
+Recent migrations include `20260717150000_group_chat_messages` and `20260717170000_group_chat_phase2`.
 
 ---
 
@@ -449,17 +453,20 @@ Recent migrations include `20260715120000_multi_leg_per_member` and `20260717150
 | `GET /api/fixtures/[id]/markets` | Session | Extended markets (`?competition=` required) |
 | `POST /api/legs` | Session | Submit leg (rejects same market family on same fixture — 409) |
 | `PATCH /api/legs/[id]` | Leg owner | Edit own pick until first kickoff (locked rounds reprice; same market-family rule) |
-| `GET /api/groups` | Session | Groups list + current betslip `activeLegs` + yourLeg / yourLegCount |
+| `GET /api/groups` | Session | Groups list + current betslip `activeLegs` + yourLeg / yourLegCount + chat unread count |
 | `POST /api/groups` | Session | Create group (`name`, optional `legsPerMember` 1–3) |
 | `PATCH /api/groups/[id]` | Owner | Update `legsPerMember` (open round immediately; locked left alone) |
 | `POST /api/internal/sync-matches` | `CRON_SECRET` | Sync football-data.org → `Match` |
 | `POST /api/internal/warm-odds-cache` | `CRON_SECRET` | Refresh odds DB snapshots |
-| `GET /api/groups/[id]` | Member | Group + active round (`legsPerMember`) + recent settled bets + betslip deeplinks |
+| `GET /api/groups/[id]` | Member | Group + active round + recent settled bets + betslip deeplinks + chat unread count |
 | `GET /api/groups/[id]/history` | Member | Full settled bet history (fixtures, markets, outcomes) |
 | `GET /api/groups/[id]/stats` | Member | Group summary stats + chart series |
 | `GET /api/groups/[id]/members/[userId]/stats` | Member | Member breakdown + favourites |
 | `GET /api/user/stats` | Session | Cross-group performance stats |
 | `GET/PATCH /api/user/notification-preferences` | Session | Notification toggles |
+| `GET/POST /api/rounds/[id]/messages` | Member | Cursor-paginated thread (`before`/`after`, latest pick announcements included) / post to an active round (500 chars, 10/min) |
+| `DELETE /api/messages/[id]` | Author or group owner | Soft-delete an active-round user message (body becomes `Message deleted`) |
+| `POST /api/messages/[id]/reactions` | Member | Toggle one constrained emoji reaction |
 | `POST/DELETE /api/user/push-token` | Session / mobile JWT | Expo push token |
 | `POST /api/internal/round-reminders` | Cron | Pick reminder dispatch |
 | `GET /api/admin/stats` | Admin | Platform summary metrics |
@@ -485,6 +492,7 @@ Recent migrations include `20260715120000_multi_leg_per_member` and `20260717150
 9. **Odds snapshots in PostgreSQL** — shared across Cloud Run instances; refreshed by `POST /api/internal/warm-odds-cache` (Cloud Scheduler job in Terraform). Set `ODDS_DB_ONLY=true` so users never burn API credits. In-memory cache remains for quota block/snapshot and football-data only.
 10. **Mobile app** — Native app code complete. **You:** test via Expo Go or `expo run:ios --device` ([DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md)). **Mates:** Android APK; iPhone TestFlight after store fees. [FRIEND_TESTING.md](../apps/mobile/FRIEND_TESTING.md). Leg-edit parity shipped (same "Change my pick" flow as web). Admin pages are web-only by design.
 11. **Auth JWT** — middleware uses edge-safe `auth.config.ts` (no Prisma); `auth.ts` refreshes `role` from DB on each session update.
+12. **Chat realtime** — threads poll every 20 seconds while visible; no WebSocket/SSE, typing indicators, read receipts, media, or reaction notifications in v1. Chat push needs Expo/APNs/FCM setup on a physical device.
 
 ## Production checklist (operators)
 

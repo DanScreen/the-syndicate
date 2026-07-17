@@ -18,6 +18,7 @@ export type GroupData = {
     status: string;
     legsPerMember: number;
     memberCount: number;
+    unreadMessageCount?: number;
     members: { id: string; name: string; role: string }[];
     owner: { id: string; name: string };
   };
@@ -107,6 +108,7 @@ type GroupDataContextValue = {
   data: GroupData | null;
   loading: boolean;
   reload: () => Promise<void>;
+  markChatRead: () => void;
 };
 
 const GroupDataContext = createContext<GroupDataContextValue | null>(null);
@@ -133,6 +135,17 @@ export function GroupDataProvider({
     setLoading(false);
   }, [groupId, router]);
 
+  const markChatRead = useCallback(() => {
+    setData((current) =>
+      current
+        ? {
+            ...current,
+            group: { ...current.group, unreadMessageCount: 0 },
+          }
+        : current
+    );
+  }, []);
+
   useEffect(() => {
     setLoading(true);
     reload();
@@ -148,7 +161,7 @@ export function GroupDataProvider({
   }, [data?.activeRound?.status, data?.activeRound?.id, reload]);
 
   return (
-    <GroupDataContext.Provider value={{ data, loading, reload }}>
+    <GroupDataContext.Provider value={{ data, loading, reload, markChatRead }}>
       {children}
     </GroupDataContext.Provider>
   );

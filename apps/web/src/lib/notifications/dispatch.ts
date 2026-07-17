@@ -41,8 +41,9 @@ export async function dispatchNotification(
   const prefs = await getNotificationPreferences(input.userId);
   const roundId = input.roundId ?? null;
   const result: DispatchResult = { email: false, push: false };
+  const emailKey = emailPrefKey(input.type);
 
-  if (input.email && prefs[emailPrefKey(input.type)]) {
+  if (input.email && emailKey && prefs[emailKey]) {
     const already = await hasNotificationBeenSent({
       userId: input.userId,
       type: input.dedupeType,
@@ -140,8 +141,10 @@ export async function isRoundNotificationComplete(params: {
       prisma.pushDevice.count({ where: { userId: member.userId } }),
     ]);
 
-    const wantsEmail =
-      prefs[emailPrefKey(params.type)] && Boolean(user?.email);
+    const emailKey = emailPrefKey(params.type);
+    const wantsEmail = Boolean(
+      emailKey && prefs[emailKey] && user?.email
+    );
     const wantsPush =
       prefs[pushPrefKey(params.type)] && pushCount > 0;
 

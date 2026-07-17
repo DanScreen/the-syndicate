@@ -58,7 +58,11 @@ function GroupShell({ groupId, children }: { groupId: string; children: React.Re
           </div>
         </div>
 
-        <GroupNav groupId={groupId} showSettings={data.isOwner} />
+        <GroupNav
+          groupId={groupId}
+          showSettings={data.isOwner}
+          unreadMessageCount={data.group.unreadMessageCount}
+        />
         <div className="mt-8">{children}</div>
       </main>
     </div>

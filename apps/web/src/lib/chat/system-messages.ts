@@ -92,7 +92,7 @@ export async function postRoundLockedMessage(db: Db, roundId: string): Promise<v
   await createSystemMessage(db, {
     roundId,
     eventType: "round_locked",
-    body: `Acca locked — ${legsPart}${oddsPart}. Good luck! 🔐`,
+    body: `Acca locked. ${legsPart}${oddsPart}. Good luck! 🔐`,
   });
 }
 
@@ -125,7 +125,7 @@ export async function postRoundSettledMessage(
   const points = groupAccaRoundPoints(outcomes, combinedOdds ?? 1);
   const body = won
     ? `Acca won! +${points} group pts 🎉`
-    : `Acca lost — ${points} group pt. On to the next one 💀`;
+    : `Acca lost. ${points} group pt. On to the next one 💀`;
   await createSystemMessage(db, { roundId, eventType: "round_settled", body });
 }
 

@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | Backlog — **current build priority** (July 2026) |
+| **Status** | Shipped (July 2026) |
 | **Depends on** | Groups, rounds lifecycle, notifications dispatcher, mobile app |
 | **As-built reference** | [../CURRENT_STATE.md](../CURRENT_STATE.md) |
 | **Build plan** | [group-chat-build-plan.md](./group-chat-build-plan.md) — step sequence, model per step, session prompts |
@@ -93,15 +93,15 @@ Through the existing dispatcher ([notifications.md](./notifications.md)) — **p
 - [x] `RoundMessage` + `MessageReaction` migration (incl. `legId`) — `20260717150000_group_chat_messages`
 - [x] Shared chat types/schemas — `packages/shared/src/chat.ts` (event types, emoji set, message/reaction Zod schemas, DTOs)
 - [x] System message writes from lifecycle code paths (pick locked in / changed, round locked, leg results, settled) — `apps/web/src/lib/chat/system-messages.ts`; writes gated on the settlement/lock/leg atomic claims; exactly-once race tests in `apps/web/src/lib/chat/exactly-once.test.ts` (`npm test --workspace=@tiki-acca/web`)
-- [ ] Message APIs (`GET`/`POST` messages, `DELETE`) + rate limiting
-- [ ] Round tab thread UI (web), History read-only view
-- [ ] Mobile thread UI
+- [x] Message APIs (`GET`/`POST` messages, `DELETE`) + rate limiting
+- [x] Round tab thread UI (web), History read-only view
+- [x] Mobile thread UI
 
 ### Phase 2 — reactions + unread + push
-- [ ] Reaction toggle API (`MessageReaction` table already migrated in Phase 1)
-- [ ] Reaction bar on chat messages + mirrored on betslip pick rows (web + mobile)
-- [ ] Unread tracking + dashboard badges
-- [ ] Batched `chat_message` push + preference toggle
+- [x] Reaction toggle API (`MessageReaction` table already migrated in Phase 1)
+- [x] Reaction bar on chat messages + mirrored on betslip pick rows (web + mobile)
+- [x] Unread tracking + dashboard badges
+- [x] Batched `chat_message` push + preference toggle
 
 ## Open questions
 

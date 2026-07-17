@@ -18,6 +18,7 @@ export async function getNotificationPreferences(
     pushPickReminder: row.pushPickReminder,
     pushRoundLocked: row.pushRoundLocked,
     pushRoundSettled: row.pushRoundSettled,
+    pushChat: row.pushChat,
   };
 }
 
@@ -37,5 +38,6 @@ export async function upsertNotificationPreferences(
     pushPickReminder: row.pushPickReminder,
     pushRoundLocked: row.pushRoundLocked,
     pushRoundSettled: row.pushRoundSettled,
+    pushChat: row.pushChat,
   };
 }

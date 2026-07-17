@@ -1,11 +1,18 @@
 "use client";
 
-import type { Fixture, Market, MarketConflictLeg } from "@tiki-acca/shared";
+import type {
+  Fixture,
+  Market,
+  MarketConflictLeg,
+  ReactionEmoji,
+  RoundMessageDto,
+} from "@tiki-acca/shared";
 import {
   isMarketTakenOnFixture,
   type AccaBookmakerRanking,
 } from "@tiki-acca/shared";
 import { PointsText } from "@/components/points-text";
+import { ReactionBar } from "@/components/group-chat";
 import {
   BookmakerLogo,
   bookmakerRankBadgeClass,
@@ -826,6 +833,8 @@ export function LegsList({
   showOpenLinks = false,
   inProgress = false,
   showLegIndex = false,
+  announcementByLegId,
+  onAnnouncementChanged,
 }: {
   legs: Leg[];
   legLinks?: { legId: string; url: string | null }[];
@@ -833,6 +842,8 @@ export function LegsList({
   /** Locked acca awaiting results — show outcomes and frozen leg odds. */
   inProgress?: boolean;
   showLegIndex?: boolean;
+  announcementByLegId?: Map<string, RoundMessageDto>;
+  onAnnouncementChanged?: (message: RoundMessageDto) => void;
 }) {
   if (legs.length === 0) {
     return <p className="text-sm text-muted">No legs submitted yet.</p>;
@@ -841,6 +852,17 @@ export function LegsList({
   const linkByLegId = new Map(
     (legLinks ?? []).filter((l) => l.url).map((l) => [l.legId, l.url!])
   );
+
+  async function react(messageId: string, emoji: ReactionEmoji) {
+    const res = await fetch(`/api/messages/${messageId}/reactions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ emoji }),
+    });
+    if (!res.ok) return;
+    const json = (await res.json()) as { message: RoundMessageDto };
+    onAnnouncementChanged?.(json.message);
+  }
 
   return (
     <ul className="space-y-2">
@@ -888,6 +910,12 @@ export function LegsList({
                     <span> · Locked at {leg.bookmakerName}</span>
                   )}
                 </p>
+                {announcementByLegId?.get(leg.id) ? (
+                  <ReactionBar
+                    message={announcementByLegId.get(leg.id)!}
+                    onReact={react}
+                  />
+                ) : null}
               </div>
               {openUrl && (
                 <a

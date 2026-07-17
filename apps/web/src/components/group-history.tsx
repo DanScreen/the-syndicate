@@ -1,6 +1,7 @@
 "use client";
 
 import { PointsText, pointsTextClass } from "@/components/points-text";
+import { RoundThread } from "@/components/group-chat";
 import {
   formatLegPoints,
   formatRoundStatusBadge,
@@ -9,6 +10,7 @@ import {
   type LegOutcome,
 } from "@tiki-acca/shared";
 import Link from "next/link";
+import { useState } from "react";
 
 function legOutcomeLabel(outcome: string): string {
   if (outcome === "won") return "Won";
@@ -44,6 +46,7 @@ function formatSettledAt(iso: string | null) {
 }
 
 export function HistoryRoundCard({ round }: { round: HistoryRound }) {
+  const [showChat, setShowChat] = useState(false);
   const outcomes = round.legs.map((l) => l.outcome as LegOutcome);
   const roundPoints = groupAccaRoundPoints(outcomes, round.combinedOdds ?? 1);
   const settledLabel = formatSettledAt(round.settledAt);
@@ -107,6 +110,18 @@ export function HistoryRoundCard({ round }: { round: HistoryRound }) {
           </li>
         ))}
       </ul>
+      <button
+        type="button"
+        onClick={() => setShowChat((shown) => !shown)}
+        className="mt-4 text-sm font-medium text-accent hover:underline"
+      >
+        {showChat ? "Hide banter" : "Relive the banter"}
+      </button>
+      {showChat ? (
+        <div className="mt-3">
+          <RoundThread roundId={round.id} readOnly />
+        </div>
+      ) : null}
     </article>
   );
 }

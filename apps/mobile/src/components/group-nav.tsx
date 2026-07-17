@@ -39,7 +39,9 @@ export function GroupNav() {
             style={[styles.tab, active && styles.tabActive]}
           >
             <Text style={[styles.tabText, active && styles.tabTextActive]}>
-              {tab.label}
+              {tab.segment === "index" && (data?.group.unreadMessageCount ?? 0) > 0
+                ? `${tab.label} (${data!.group.unreadMessageCount})`
+                : tab.label}
             </Text>
           </Pressable>
         );

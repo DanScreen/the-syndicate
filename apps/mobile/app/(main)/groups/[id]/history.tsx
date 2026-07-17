@@ -75,7 +75,7 @@ export default function GroupHistoryScreen() {
           No settled bets yet. History appears after your first round is settled.
         </Text>
       ) : (
-        <RoundHistory rounds={rounds} title="All settled bets" />
+        <RoundHistory rounds={rounds} title="All settled bets" token={token ?? undefined} />
       )}
     </ScrollView>
   );

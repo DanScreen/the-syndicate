@@ -27,8 +27,28 @@ export type ReactionEmoji = (typeof REACTION_EMOJIS)[number];
 
 export const MAX_MESSAGE_LENGTH = 500;
 
+/** How many messages GET /api/rounds/[id]/messages returns per page. */
+export const MESSAGE_PAGE_SIZE = 50;
+
+/** Body a message is overwritten with on soft delete (author or group owner). */
+export const DELETED_MESSAGE_BODY = "Message deleted";
+
 export const postMessageSchema = z.object({
-  body: z.string().trim().min(1).max(MAX_MESSAGE_LENGTH),
+  body: z
+    .string()
+    .trim()
+    .min(1)
+    .max(MAX_MESSAGE_LENGTH)
+    .refine((body) => body !== DELETED_MESSAGE_BODY, "Reserved message text"),
+});
+
+/** Query params for the paginated thread — `after` is a message id cursor. */
+export const messagesQuerySchema = z.object({
+  after: z.string().min(1).optional(),
+  before: z.string().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+}).refine((query) => !(query.after && query.before), {
+  message: "Use either after or before, not both",
 });
 
 export const toggleReactionSchema = z.object({
@@ -36,6 +56,7 @@ export const toggleReactionSchema = z.object({
 });
 
 export type PostMessageInput = z.infer<typeof postMessageSchema>;
+export type MessagesQuery = z.infer<typeof messagesQuerySchema>;
 export type ToggleReactionInput = z.infer<typeof toggleReactionSchema>;
 
 /** One message in a round thread, as served by GET /api/rounds/[id]/messages. */
@@ -62,4 +83,12 @@ export type MessageReactionSummary = {
   userNames: string[];
   /** Whether the requesting user has this reaction on. */
   reacted: boolean;
+};
+
+/** GET /api/rounds/[id]/messages response — ordered oldest-first (newest last). */
+export type RoundMessagesResponse = {
+  messages: RoundMessageDto[];
+  hasMore?: boolean;
+  /** Latest pick announcement per leg, for betslip reaction mirroring. */
+  legAnnouncements?: RoundMessageDto[];
 };

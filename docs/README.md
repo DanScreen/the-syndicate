@@ -53,12 +53,11 @@ Specs are **design contracts**. [CURRENT_STATE.md](./CURRENT_STATE.md) is **as-b
 
 | # | Backlog item | Notes |
 |---|--------------|-------|
-| 1 | Group chat & reactions | **Current build priority** — [specs/group-chat.md](./specs/group-chat.md) |
-| 2 | Validate with real users | Success metric — full loop on prod |
-| 3 | Season readiness (2026–27) | Mostly ops — enable leagues via `/admin/competitions`; cups + empty states — [specs/season-readiness.md](./specs/season-readiness.md) |
-| 4 | Live matchday | Per-leg push + live round view — [specs/live-matchday.md](./specs/live-matchday.md) |
-| 5 | Settle-day recap share card | Invite loop — [specs/settle-recap-share.md](./specs/settle-recap-share.md) |
-| 6 | Affiliate links | Tracked bookmaker deeplinks + disclosure — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md) |
+| 1 | Validate with real users | **Current priority** — full loop on prod |
+| 2 | Season readiness (2026–27) | Mostly ops — enable leagues via `/admin/competitions`; cups + empty states — [specs/season-readiness.md](./specs/season-readiness.md) |
+| 3 | Live matchday | Per-leg push + live round view — [specs/live-matchday.md](./specs/live-matchday.md) |
+| 4 | Settle-day recap share card | Invite loop — [specs/settle-recap-share.md](./specs/settle-recap-share.md) |
+| 5 | Affiliate links | Tracked bookmaker deeplinks + disclosure — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md) |
 
 Full list: [ROADMAP.md](./ROADMAP.md) — seasons/leaderboards, streaks & badges, deeplinks, GCP costs, mobile stores.
 

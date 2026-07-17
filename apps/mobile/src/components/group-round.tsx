@@ -1,5 +1,6 @@
 import { ApiError, api } from "@/api/client";
 import { BetslipDisclosure } from "@/components/compliance";
+import { ReactionBar, RoundThread } from "@/components/group-chat";
 import { Button, Card, ErrorText, OptionRow } from "@/components/ui";
 import { colors } from "@/config";
 import { copy } from "@/lib/copy";
@@ -18,6 +19,8 @@ import type {
   Market,
   MarketTierOption,
   SubmitLegInput,
+  ReactionEmoji,
+  RoundMessageDto,
 } from "@tiki-acca/shared";
 import {
   groupAccaRoundPoints,
@@ -187,12 +190,18 @@ export function LegsList({
   showOpenLinks = false,
   inProgress = false,
   showLegIndex = false,
+  announcementByLegId,
+  token,
+  onAnnouncementChanged,
 }: {
   legs: GroupLeg[];
   legLinks?: BetslipLinks["legLinks"];
   showOpenLinks?: boolean;
   inProgress?: boolean;
   showLegIndex?: boolean;
+  announcementByLegId?: Map<string, RoundMessageDto>;
+  token?: string;
+  onAnnouncementChanged?: (message: RoundMessageDto) => void;
 }) {
   if (legs.length === 0) {
     return <Text style={styles.meta}>No legs submitted yet.</Text>;
@@ -201,6 +210,19 @@ export function LegsList({
   const linkByLegId = new Map(
     (legLinks ?? []).filter((l) => l.url).map((l) => [l.legId, l.url!])
   );
+
+  async function react(messageId: string, emoji: ReactionEmoji) {
+    if (!token) return;
+    try {
+      const response = await api<{ message: RoundMessageDto }>(
+        `/api/messages/${messageId}/reactions`,
+        { method: "POST", token, body: JSON.stringify({ emoji }) }
+      );
+      onAnnouncementChanged?.(response.message);
+    } catch {
+      // The thread will reconcile the reaction on its next poll.
+    }
+  }
 
   return (
     <View style={styles.stack}>
@@ -253,6 +275,12 @@ export function LegsList({
               {leg.competition ?? ""}
               {inProgress ? ` · Locked at ${leg.bookmakerName}` : ""}
             </Text>
+            {announcementByLegId?.get(leg.id) ? (
+              <ReactionBar
+                message={announcementByLegId.get(leg.id)!}
+                onReact={react}
+              />
+            ) : null}
             {openUrl ? (
               <Pressable onPress={() => Linking.openURL(openUrl)} style={styles.openLink}>
                 <Text style={styles.openLinkText}>Open leg</Text>
@@ -839,10 +867,12 @@ export function RoundHistory({
   rounds,
   onViewAll,
   title = "Recent settled bets",
+  token,
 }: {
   rounds: HistoryRound[];
   onViewAll?: () => void;
   title?: string;
+  token?: string;
 }) {
   if (rounds.length === 0) return null;
 
@@ -921,9 +951,28 @@ export function RoundHistory({
               </View>
               );
             })}
+            {token ? <HistoryChat roundId={round.id} token={token} /> : null}
           </View>
         );
       })}
+    </View>
+  );
+}
+
+function HistoryChat({ roundId, token }: { roundId: string; token: string }) {
+  const [shown, setShown] = useState(false);
+  return (
+    <View>
+      <Pressable onPress={() => setShown((current) => !current)}>
+        <Text style={styles.viewAll}>
+          {shown ? "Hide banter" : "Relive the banter"}
+        </Text>
+      </Pressable>
+      {shown ? (
+        <View style={{ marginTop: 10 }}>
+          <RoundThread roundId={roundId} token={token} readOnly />
+        </View>
+      ) : null}
     </View>
   );
 }
