@@ -1,9 +1,12 @@
 import { useAuth } from "@/auth/AuthProvider";
 import { colors } from "@/config";
-import { peekPendingInviteCode } from "@/lib/pending-invite";
 import { Redirect } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
 
+/**
+ * Entry route for `/` only. Primary app screens live under `/(main)/home` etc.
+ * so tab navigation never lands here (that used to flash auth screens).
+ */
 export default function Index() {
   const { user, loading } = useAuth();
 
@@ -23,13 +26,7 @@ export default function Index() {
   }
 
   if (user) {
-    const pending = peekPendingInviteCode();
-    if (pending) {
-      return (
-        <Redirect href={`/(main)/join-group?code=${encodeURIComponent(pending)}`} />
-      );
-    }
-    return <Redirect href="/(main)" />;
+    return <Redirect href="/(main)/home" />;
   }
 
   return <Redirect href="/sign-in" />;

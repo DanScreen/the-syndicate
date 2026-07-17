@@ -21,7 +21,7 @@ export default function DeepLinkGroupScreen() {
   }
 
   if (!id) {
-    return <Redirect href="/(main)" />;
+    return <Redirect href="/(main)/home" />;
   }
 
   return <Redirect href={`/(main)/groups/${id}`} />;

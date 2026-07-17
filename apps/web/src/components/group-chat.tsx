@@ -412,35 +412,30 @@ export function ReactionBar({
   }, [pickerOpen]);
 
   if (readOnly && message.reactions.length === 0) return null;
-  const baseEmoji = new Set<string>(REACTION_EMOJIS);
-  const options = readOnly
-    ? message.reactions.map((reaction) => reaction.emoji)
-    : [
-        ...REACTION_EMOJIS,
-        ...message.reactions
-          .map((reaction) => reaction.emoji)
-          .filter((emoji) => !baseEmoji.has(emoji)),
-      ];
+
+  const usedEmojis = message.reactions.map((reaction) => reaction.emoji);
+  const quickSet = new Set<string>(REACTION_EMOJIS);
+  const moreEmojis = REACTION_PICKER_EMOJIS.filter((emoji) => !quickSet.has(emoji));
+  const hasReactions = usedEmojis.length > 0;
 
   return (
     <div className="relative mt-1 flex flex-wrap items-center justify-center gap-1">
-      {options.map((emoji) => {
-        const reaction = byEmoji.get(emoji);
+      {usedEmojis.map((emoji) => {
+        const reaction = byEmoji.get(emoji)!;
         return (
           <button
             key={emoji}
             type="button"
             disabled={readOnly}
             onClick={() => onReact(message.id, emoji)}
-            title={reaction?.userNames.join(", ") || `React ${emoji}`}
+            title={reaction.userNames.join(", ")}
             className={`rounded-full border px-1.5 py-0.5 text-xs ${
-              reaction?.reacted
+              reaction.reacted
                 ? "border-accent bg-accent-muted text-foreground"
                 : "border-border text-muted hover:border-accent/60"
             } disabled:cursor-default`}
           >
-            {emoji}
-            {reaction ? ` ${reaction.count}` : ""}
+            {emoji} {reaction.count}
           </button>
         );
       })}
@@ -450,9 +445,10 @@ export function ReactionBar({
             type="button"
             onClick={() => setPickerOpen((open) => !open)}
             aria-label="Add reaction"
-            className="rounded-full border border-border px-1.5 py-0.5 text-xs text-muted hover:border-accent/60"
+            title="Add reaction"
+            className="rounded-full border border-border px-2 py-0.5 text-xs text-muted hover:border-accent/60 hover:text-foreground"
           >
-            +
+            {hasReactions ? "+" : "React"}
           </button>
           {pickerOpen
             ? createPortal(
@@ -470,7 +466,7 @@ export function ReactionBar({
                   >
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium text-foreground">
-                        Choose an emoji
+                        Add a reaction
                       </p>
                       <button
                         type="button"
@@ -481,8 +477,30 @@ export function ReactionBar({
                         Close
                       </button>
                     </div>
-                    <div className="mt-3 grid max-h-[min(60vh,24rem)] grid-cols-8 gap-1 overflow-y-auto sm:grid-cols-10">
-                      {REACTION_PICKER_EMOJIS.map((emoji) => (
+                    <p className="mt-3 text-xs font-medium uppercase tracking-wide text-muted">
+                      Quick reactions
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {REACTION_EMOJIS.map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => {
+                            onReact(message.id, emoji);
+                            setPickerOpen(false);
+                          }}
+                          title={`React ${emoji}`}
+                          className="rounded-lg border border-border px-2.5 py-1.5 text-xl hover:border-accent/60 hover:bg-background"
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="mt-4 text-xs font-medium uppercase tracking-wide text-muted">
+                      More
+                    </p>
+                    <div className="mt-2 grid max-h-[min(50vh,18rem)] grid-cols-8 gap-1 overflow-y-auto sm:grid-cols-10">
+                      {moreEmojis.map((emoji) => (
                         <button
                           key={emoji}
                           type="button"

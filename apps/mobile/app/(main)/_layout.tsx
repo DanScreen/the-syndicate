@@ -1,11 +1,19 @@
 import { useAuth } from "@/auth/AuthProvider";
+import { AppHeader } from "@/components/app-header";
+import { AppTabBar } from "@/components/app-tab-bar";
 import { colors } from "@/config";
+import { consumePendingInviteCode } from "@/lib/pending-invite";
 import {
   addNotificationResponseListener,
   registerForPushNotifications,
 } from "@/notifications/register";
-import { Redirect, Stack, useRouter } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { useEffect } from "react";
+import { StyleSheet, View } from "react-native";
+
+export const unstable_settings = {
+  initialRouteName: "home",
+};
 
 export default function MainLayout() {
   const { user, loading, token } = useAuth();
@@ -20,24 +28,46 @@ export default function MainLayout() {
     return () => subscription.remove();
   }, [token, router]);
 
-  if (!loading && !user) return <Redirect href="/sign-in" />;
+  useEffect(() => {
+    if (!user) return;
+    const pending = consumePendingInviteCode();
+    if (pending) {
+      router.replace(
+        `/(main)/join-group?code=${encodeURIComponent(pending)}`
+      );
+    }
+  }, [user, router]);
+
+  if (loading || !user) {
+    return <View style={styles.root} />;
+  }
 
   return (
-    <Stack
-      screenOptions={{
-        headerStyle: { backgroundColor: colors.bg },
-        headerTintColor: colors.text,
-        headerTitleStyle: { fontWeight: "600" },
-        contentStyle: { backgroundColor: colors.bg },
-      }}
-    >
-      <Stack.Screen name="index" options={{ title: "Your groups" }} />
-      <Stack.Screen name="performance" options={{ title: "Performance" }} />
-      <Stack.Screen name="create-group" options={{ title: "Create group" }} />
-      <Stack.Screen name="join-group" options={{ title: "Join group" }} />
-      <Stack.Screen name="account" options={{ title: "Account" }} />
-      <Stack.Screen name="notifications" options={{ title: "Notifications" }} />
-      <Stack.Screen name="groups/[id]" options={{ headerShown: false }} />
-    </Stack>
+    <View style={styles.root}>
+      <AppHeader />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.bg },
+          animation: "none",
+        }}
+      >
+        <Stack.Screen name="home" />
+        <Stack.Screen name="performance" />
+        <Stack.Screen name="account" />
+        <Stack.Screen name="create-group" />
+        <Stack.Screen name="join-group" />
+        <Stack.Screen name="notifications" />
+        <Stack.Screen name="groups/[id]" />
+      </Stack>
+      <AppTabBar />
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: colors.bg,
+  },
+});

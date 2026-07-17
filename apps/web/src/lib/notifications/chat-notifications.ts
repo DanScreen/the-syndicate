@@ -61,7 +61,7 @@ export async function notifyChatMessage(params: {
         // batching is group-scoped, so use the group id rather than the round.
         roundId: round.group.id,
         push: {
-          title: "Tiki Acca group chat",
+          title: "Tiki Acca Group Chat",
           body,
           data: {
             groupId: round.group.id,

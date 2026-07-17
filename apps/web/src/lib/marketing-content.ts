@@ -1,7 +1,9 @@
-export const tagline = "Social group accas";
+import { BRAND_HEADLINE, BRAND_TAGLINE } from "@tiki-acca/shared";
+
+export const tagline = BRAND_TAGLINE;
 
 export const hero = {
-  headline: "Your Mates. One Acca. Every Leg Counts.",
+  headline: BRAND_HEADLINE,
   subhead:
     "Tiki-taka is football's great passing game: everyone touches the ball. In a group acca, everyone touches the bet. Each member picks one leg and Tiki Acca handles the rest: locking in the best odds from UK bookmakers, tracking every result, and keeping score of who consistently delivers, and who lets the acca down. It's free for your whole group.",
 };

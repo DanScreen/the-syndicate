@@ -78,14 +78,14 @@ Group-vs-group challenges (needs user density), copy-a-pick between your own gro
 
 Native **iPhone** and **Android** apps via Expo (`apps/mobile/`), targeting **functional parity** with the member-facing website.
 
-**Status:** Developer native testing (Expo Go / device build). Friend distribution: Android APK; iPhone TestFlight after store fees.
+**Status:** EAS project linked at `@the-syndicate/tiki-acca`; developer native testing (Expo Go / device build). Friend distribution: Android APK; iPhone TestFlight after store fees.
 
 **Next:** You validate on device ([DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md)), then 2–3 friend groups ([FRIEND_TESTING.md](../apps/mobile/FRIEND_TESTING.md)).
 
 **Expo push — operator checklist:**
 
-- [ ] `eas login` + `eas init` in `apps/mobile`
-- [ ] Set `EAS_PROJECT_ID` in `apps/mobile/.env` (from `eas init` output)
+- [x] `eas login` + `eas init` in `apps/mobile`
+- [x] Set `EAS_PROJECT_ID` in `apps/mobile/.env` (with committed fallback in `app.config.ts`)
 - [ ] Enable push on a **physical device** via Notifications screen in the app
 - [ ] EAS production build with APNs (iOS) + FCM (Android) credentials for reliable prod push
 - [ ] Test pick reminder + lock/settle push on device

@@ -64,7 +64,7 @@ export function pickReminderEmail(params: {
   ].join("");
 
   const text = [
-    `${params.groupName}: pick your leg`,
+    `${params.groupName}: Pick Your Leg`,
     "",
     `Your group acca locks at ${time} when the first match kicks off.`,
     waiting,
@@ -74,12 +74,12 @@ export function pickReminderEmail(params: {
   ].join("\n");
 
   return {
-    subject: `${params.groupName}: pick your leg before ${time}`,
+    subject: `${params.groupName}: Pick Your Leg Before ${time}`,
     preheader: `Locks at ${time}. ${waiting}`,
     html: renderEmailLayout({
       preheader: `Locks at ${time}. ${waiting}`,
       eyebrow: params.groupName,
-      title: "Your leg is still out",
+      title: "You Still Need To Pick A Leg",
       bodyHtml,
       ctaLabel: "Submit your pick",
       ctaUrl: params.groupUrl,
@@ -137,7 +137,7 @@ export function roundLockedEmail(params: {
       : "";
 
   const text = [
-    `${params.groupName}: acca locked`,
+    `${params.groupName}: Acca Locked`,
     "",
     everyoneIn,
     `Combined odds: ${params.combinedOdds}`,
@@ -149,12 +149,12 @@ export function roundLockedEmail(params: {
   ].join("\n");
 
   return {
-    subject: `${params.groupName}: acca locked @ ${params.combinedOdds}`,
+    subject: `${params.groupName}: Acca Locked @ ${params.combinedOdds}`,
     preheader: `Combined @ ${params.combinedOdds}. Ready to place.`,
     html: renderEmailLayout({
       preheader: `Combined @ ${params.combinedOdds}. Ready to place.`,
       eyebrow: params.groupName,
-      title: "Acca locked. Time to place it.",
+      title: "Acca Locked. Time To Place It.",
       bodyHtml,
       ctaLabel: "View locked acca",
       ctaUrl: params.groupUrl,
@@ -184,10 +184,10 @@ export function roundSettledEmail(params: {
   const record = `${params.wonCount}W · ${params.lostCount}L`;
   const wonAll = params.lostCount === 0 && params.wonCount > 0;
   const title = wonAll
-    ? "Every leg landed."
+    ? "Every Leg Landed."
     : params.wonCount === 0
-      ? "The acca's down."
-      : "Settled. Receipts are in.";
+      ? "The Acca's Down."
+      : "Settled. Receipts Are In.";
 
   const lead = wonAll
     ? "Clean sheet. The scoreboard's going to look good."
@@ -224,7 +224,7 @@ export function roundSettledEmail(params: {
     .join("\n");
 
   const text = [
-    `${params.groupName}: round settled`,
+    `${params.groupName}: Round Settled`,
     "",
     lead,
     `Result: ${record}`,
@@ -237,7 +237,7 @@ export function roundSettledEmail(params: {
   ].join("\n");
 
   return {
-    subject: `${params.groupName}: settled (${params.wonCount}W ${params.lostCount}L)`,
+    subject: `${params.groupName}: Settled (${params.wonCount}W ${params.lostCount}L)`,
     preheader: `${lead} ${record}.`,
     html: renderEmailLayout({
       preheader: `${lead} ${record}.`,
@@ -257,14 +257,14 @@ export function pickReminderPush(params: {
 }): { title: string; body: string } {
   const time = formatNotificationDeadline(params.deadline);
   return {
-    title: `${params.groupName}: pick your leg`,
+    title: `${params.groupName}: Pick Your Leg`,
     body: `Locks at ${time}. Every Leg Counts.`,
   };
 }
 
 export function roundLockedPush(groupName: string): { title: string; body: string } {
   return {
-    title: `${groupName}: acca locked`,
+    title: `${groupName}: Acca Locked`,
     body: "Ready to place. Open Tiki Acca for the best bookmaker.",
   };
 }
@@ -275,7 +275,7 @@ export function roundSettledPush(params: {
   lostCount: number;
 }): { title: string; body: string } {
   return {
-    title: `${params.groupName}: settled`,
+    title: `${params.groupName}: Settled`,
     body: `${params.wonCount}W ${params.lostCount}L. See who delivered.`,
   };
 }

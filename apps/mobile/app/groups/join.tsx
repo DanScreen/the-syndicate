@@ -28,7 +28,7 @@ export default function DeepLinkJoinScreen() {
 
   const href = code
     ? (`/(main)/join-group?code=${encodeURIComponent(code)}` as const)
-    : "/(main)/join-group";
+    : ("/(main)/home" as const);
 
   return <Redirect href={href} />;
 }

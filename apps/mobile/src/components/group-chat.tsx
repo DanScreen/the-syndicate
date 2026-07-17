@@ -359,49 +359,44 @@ export function ReactionBar({
   const [pickerOpen, setPickerOpen] = useState(false);
   const byEmoji = new Map(message.reactions.map((reaction) => [reaction.emoji, reaction]));
   if (readOnly && message.reactions.length === 0) return null;
-  const baseEmoji = new Set<string>(REACTION_EMOJIS);
-  const options = readOnly
-    ? message.reactions.map((reaction) => reaction.emoji)
-    : [
-        ...REACTION_EMOJIS,
-        ...message.reactions
-          .map((reaction) => reaction.emoji)
-          .filter((emoji) => !baseEmoji.has(emoji)),
-      ];
+
+  const usedEmojis = message.reactions.map((reaction) => reaction.emoji);
+  const quickSet = new Set<string>(REACTION_EMOJIS);
+  const moreEmojis = REACTION_PICKER_EMOJIS.filter((emoji) => !quickSet.has(emoji));
+  const hasReactions = usedEmojis.length > 0;
 
   return (
     <View>
       <View style={styles.reactions}>
-      {options.map((emoji) => {
-        const reaction = byEmoji.get(emoji);
-        return (
-          <Pressable
-            key={emoji}
-            disabled={readOnly}
-            onPress={() => onReact(message.id, emoji)}
-            onLongPress={() => {
-              if (reaction) {
+        {usedEmojis.map((emoji) => {
+          const reaction = byEmoji.get(emoji)!;
+          return (
+            <Pressable
+              key={emoji}
+              disabled={readOnly}
+              onPress={() => onReact(message.id, emoji)}
+              onLongPress={() => {
                 Alert.alert(`${emoji} reactions`, reaction.userNames.join(", "));
-              }
-            }}
-            style={[styles.reaction, reaction?.reacted && styles.reacted]}
+              }}
+              style={[styles.reaction, reaction.reacted && styles.reacted]}
+            >
+              <Text style={styles.reactionText}>
+                {emoji} {reaction.count}
+              </Text>
+            </Pressable>
+          );
+        })}
+        {!readOnly ? (
+          <Pressable
+            onPress={() => setPickerOpen((open) => !open)}
+            accessibilityLabel="Add reaction"
+            style={styles.reaction}
           >
-            <Text style={styles.reactionText}>
-              {emoji}
-              {reaction ? ` ${reaction.count}` : ""}
+            <Text style={styles.reactTriggerText}>
+              {hasReactions ? "+" : "React"}
             </Text>
           </Pressable>
-        );
-      })}
-      {!readOnly ? (
-        <Pressable
-          onPress={() => setPickerOpen((open) => !open)}
-          accessibilityLabel="Add reaction"
-          style={styles.reaction}
-        >
-          <Text style={styles.reactionText}>+</Text>
-        </Pressable>
-      ) : null}
+        ) : null}
       </View>
       <Modal
         visible={pickerOpen}
@@ -412,27 +407,48 @@ export function ReactionBar({
         <View style={styles.emojiModalBackdrop}>
           <View style={styles.emojiPicker}>
             <View style={styles.emojiPickerHeader}>
-              <Text style={styles.emojiPickerLabel}>Choose an emoji</Text>
+              <Text style={styles.emojiPickerLabel}>Add a reaction</Text>
               <Pressable onPress={() => setPickerOpen(false)}>
                 <Text style={styles.emojiPickerClose}>Close</Text>
               </Pressable>
             </View>
-            <ScrollView contentContainerStyle={styles.emojiGrid}>
-              {REACTION_PICKER_EMOJIS.map((emoji) => (
-                <Pressable
-                  key={emoji}
-                  onPress={() => {
-                    onReact(message.id, emoji);
-                    setPickerOpen(false);
-                  }}
-                  style={({ pressed }) => [
-                    styles.emojiOption,
-                    pressed && styles.pressed,
-                  ]}
-                >
-                  <Text style={styles.emojiOptionText}>{emoji}</Text>
-                </Pressable>
-              ))}
+            <ScrollView>
+              <Text style={styles.emojiSectionLabel}>Quick reactions</Text>
+              <View style={styles.quickRow}>
+                {REACTION_EMOJIS.map((emoji) => (
+                  <Pressable
+                    key={emoji}
+                    onPress={() => {
+                      onReact(message.id, emoji);
+                      setPickerOpen(false);
+                    }}
+                    style={({ pressed }) => [
+                      styles.quickOption,
+                      pressed && styles.pressed,
+                    ]}
+                  >
+                    <Text style={styles.emojiOptionText}>{emoji}</Text>
+                  </Pressable>
+                ))}
+              </View>
+              <Text style={styles.emojiSectionLabel}>More</Text>
+              <View style={styles.emojiGrid}>
+                {moreEmojis.map((emoji) => (
+                  <Pressable
+                    key={emoji}
+                    onPress={() => {
+                      onReact(message.id, emoji);
+                      setPickerOpen(false);
+                    }}
+                    style={({ pressed }) => [
+                      styles.emojiOption,
+                      pressed && styles.pressed,
+                    ]}
+                  >
+                    <Text style={styles.emojiOptionText}>{emoji}</Text>
+                  </Pressable>
+                ))}
+              </View>
             </ScrollView>
           </View>
         </View>
@@ -480,6 +496,29 @@ const styles = StyleSheet.create({
   },
   reacted: { borderColor: colors.accent, backgroundColor: "rgba(34,197,94,0.12)" },
   reactionText: { color: colors.text, fontSize: 11 },
+  reactTriggerText: { color: colors.muted, fontSize: 11, fontWeight: "600" },
+  emojiSectionLabel: {
+    color: colors.muted,
+    fontSize: 11,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+    marginBottom: 8,
+    marginTop: 4,
+  },
+  quickRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginBottom: 12,
+  },
+  quickOption: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
   emojiModalBackdrop: {
     flex: 1,
     justifyContent: "center",

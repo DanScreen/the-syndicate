@@ -1,6 +1,7 @@
 {
   "expo": {
     "name": "Tiki Acca",
+    "owner": "the-syndicate",
     "slug": "tiki-acca",
     "version": "1.0.0",
     "orientation": "portrait",

@@ -33,6 +33,21 @@ model User {
   notificationLogs NotificationLog[]
   roundMessages    RoundMessage[]
   messageReactions MessageReaction[]
+  mobileSessions   MobileSession[]
+}
+
+/// Revocable, non-expiring device session for the native app.
+/// Only a SHA-256 hash of the bearer token is stored.
+model MobileSession {
+  id         String    @id @default(cuid())
+  tokenHash  String    @unique
+  userId     String
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime  @default(now())
+  revokedAt  DateTime?
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
 }
 
 model Group {

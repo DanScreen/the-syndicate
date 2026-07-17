@@ -60,11 +60,13 @@ flowchart TB
 | Piece | Location |
 |-------|----------|
 | Mobile sign-in | `POST /api/auth/mobile/sign-in` |
-| JWT creation / verify | `apps/web/src/lib/mobile-token.ts` |
+| Legacy-session upgrade | `POST /api/auth/mobile/refresh` |
+| Persistent session creation / verify / revoke | `apps/web/src/lib/mobile-token.ts`, `MobileSession` |
+| Mobile sign-out | `POST /api/auth/mobile/sign-out` |
 | API auth (cookie or Bearer) | `apps/web/src/lib/api-auth.ts` → `requireSession()` |
 | Token storage | `apps/mobile/src/auth/AuthProvider.tsx` (Expo SecureStore) |
 
-Web uses Auth.js cookies; mobile uses **Bearer JWT** on every API call.
+Web uses Auth.js cookies; mobile uses a random **Bearer session token** on every API call. Only its SHA-256 hash is stored. Sessions do not expire automatically and are revoked server-side when that device signs out. Legacy 30-day JWTs remain accepted during rollout.
 
 ### Rejected approaches
 
@@ -83,7 +85,7 @@ Web uses Auth.js cookies; mobile uses **Bearer JWT** on every API call.
 | Area | Web | Mobile (`apps/mobile/`) |
 |------|-----|-------------------------|
 | Auth | Auth.js | Sign-in / sign-up + JWT |
-| Groups list | `/dashboard` | `app/(main)/index.tsx` |
+| Groups list | `/dashboard` | `app/(main)/home.tsx` |
 | Create / join | `/groups/create`, `/groups/join` | `create-group.tsx`, `join-group.tsx` |
 | Group round | `group-ui.tsx` (full) | `groups/[id].tsx` + `components/group-round.tsx` |
 | Leg picker | 4-step + competition + market tiers | `SubmitLegForm` — competition, tiers (core + load more), grouped markets |
@@ -130,7 +132,7 @@ Checklist for implementation. Web route → API → mobile screen.
 |----------|----------|----------------------|
 | Sign up | `POST /api/auth/sign-up` | `app/sign-up.tsx` |
 | Sign in | `POST /api/auth/mobile/sign-in` | `app/sign-in.tsx` |
-| Dashboard | `GET /api/groups` | `app/(main)/index.tsx` |
+| Dashboard | `GET /api/groups` | `app/(main)/home.tsx` |
 | Create group | `POST /api/groups` | `app/(main)/create-group.tsx` |
 | Join group | `POST /api/groups/join` | `app/(main)/join-group.tsx` |
 | Group round | `GET /api/groups/[id]` | `app/(main)/groups/[id].tsx` |
@@ -180,6 +182,7 @@ Checklist for implementation. Web route → API → mobile screen.
 
 ### Phase 3 — Stats and navigation
 
+- [x] Persistent member navigation: bottom tabs for Groups / Performance / Account; compact logo-only top header
 - [x] Group tabs: Round / Leaderboard / Performance (`group-nav.tsx`, nested routes)
 - [x] Cross-group performance screen (`GET /api/user/stats` → `(main)/performance.tsx`)
 - [x] Round / bet history (`RoundHistory` + History tab via `GET /api/groups/[id]/history`)
@@ -198,7 +201,8 @@ Checklist for implementation. Web route → API → mobile screen.
 - [x] CI workflow (`.github/workflows/eas.yml`) — `EXPO_TOKEN`, tag `mobile-v*`
 - [x] Store listing copy ([apps/mobile/STORE_LISTING.md](../../apps/mobile/STORE_LISTING.md))
 - [x] Splash screen + universal link config in `app.json` (icons in `assets/` — re-export from Acca stack when rebranding)
-- [ ] **Operator:** `eas init`, Apple/Google developer accounts, TestFlight / Play internal → production submit — **deferred** until friend validation ([FRIEND_TESTING.md](../../apps/mobile/FRIEND_TESTING.md))
+- [x] **Operator:** `eas login` + `eas init` — linked to `@the-syndicate/tiki-acca`
+- [ ] **Operator:** Apple/Google developer accounts, TestFlight / Play internal → production submit — **deferred** until friend validation ([FRIEND_TESTING.md](../../apps/mobile/FRIEND_TESTING.md))
 
 ---
 

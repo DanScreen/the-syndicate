@@ -8,7 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { api } from "@/api/client";
+import { ApiError, api } from "@/api/client";
 import { unregisterPushNotifications } from "@/notifications/register";
 import type { AuthUser } from "@tiki-acca/shared";
 
@@ -47,6 +47,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (storedToken && storedUser) {
           setToken(storedToken);
           setUser(JSON.parse(storedUser) as AuthUser);
+
+          // Upgrade legacy 30-day JWTs to persistent sessions after rollout.
+          // This is background/best-effort so offline startup still works.
+          void api<{ token: string }>("/api/auth/mobile/refresh", {
+            method: "POST",
+            token: storedToken,
+          })
+            .then(async ({ token: refreshedToken }) => {
+              const currentToken = await SecureStore.getItemAsync(TOKEN_KEY);
+              if (currentToken !== storedToken || refreshedToken === storedToken) return;
+              await SecureStore.setItemAsync(TOKEN_KEY, refreshedToken);
+              setToken(refreshedToken);
+            })
+            .catch(async (error) => {
+              // A definitive 401 means the legacy token has already expired.
+              // Missing endpoint/network errors during deployment leave it alone.
+              if (!(error instanceof ApiError) || error.status !== 401) return;
+              const currentToken = await SecureStore.getItemAsync(TOKEN_KEY);
+              if (currentToken !== storedToken) return;
+              await Promise.all([
+                SecureStore.deleteItemAsync(TOKEN_KEY),
+                SecureStore.deleteItemAsync(USER_KEY),
+              ]);
+              setToken(null);
+              setUser(null);
+            });
         }
       } finally {
         setLoading(false);
@@ -96,6 +122,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     await unregisterPushNotifications(token);
+    if (token) {
+      try {
+        await api("/api/auth/mobile/sign-out", {
+          method: "POST",
+          token,
+        });
+      } catch {
+        // Always clear this device even if the server is temporarily offline.
+      }
+    }
     await Promise.all([
       SecureStore.deleteItemAsync(TOKEN_KEY),
       SecureStore.deleteItemAsync(USER_KEY),

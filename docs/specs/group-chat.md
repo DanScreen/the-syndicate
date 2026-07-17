@@ -76,7 +76,7 @@ System messages are **written at event time** by the existing lifecycle code pat
 |---------|-----------|
 | Round tab (web + mobile) | Thread below picks; input pinned at bottom; polls with the existing 60s group poll (tighten to 20s while thread visible) |
 | Betslip pick rows | Reaction bar mirroring the pick's announcement message (tap to toggle; counts + who on long-press/hover) |
-| Chat messages | Same reaction bar on every message (user + system) |
+| Chat messages | Same reaction bar on every message (user + system) — **only used emoji chips** plus a quiet **React** / **+** control; defaults live in the picker |
 | History tab | Read-only thread per settled round ("relive the carnage") |
 | Unread indicator | `GroupMember.lastReadMessageAt`; badge on group card on `/dashboard` and group tab |
 
@@ -110,7 +110,7 @@ Through the existing dispatcher ([notifications.md](./notifications.md)) — **p
 | Group-scoped vs round-scoped thread? | **Round-scoped** — self-archiving, matches product rhythm; group-level feed can aggregate later |
 | Profanity filtering? | **Yes** — reuse shared `containsProfanity` on user posts (same list as names/groups); owner-delete remains for anything that slips through |
 | Realtime (WebSocket/SSE)? | Defer — polling piggybacks existing infra; revisit if chat takes off |
-| Emoji choice? | Keep 🔥 😂 💀 👀 🫡 🍀 as one-tap defaults; `+` opens a broad emoji grid in a viewport-level modal on web/mobile, so it is never clipped by the chat scroller. The API accepts any single Unicode emoji. |
+| Emoji choice? | Keep 🔥 😂 💀 👀 🫡 🍀 as **quick picks inside the picker**; the message row only shows emojis already used, plus a muted **React** / **+** control. The API accepts any single Unicode emoji. |
 
 ## Related docs
 

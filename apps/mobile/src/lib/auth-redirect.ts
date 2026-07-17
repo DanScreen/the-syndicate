@@ -8,5 +8,5 @@ export function redirectAfterAuth() {
     router.replace(`/(main)/join-group?code=${encodeURIComponent(code)}`);
     return;
   }
-  router.replace("/(main)");
+  router.replace("/(main)/home");
 }

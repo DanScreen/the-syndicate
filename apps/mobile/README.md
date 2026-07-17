@@ -25,14 +25,17 @@ Friend distribution (APK / later TestFlight): [FRIEND_TESTING.md](./FRIEND_TESTI
 - **Apple Developer Program** — only when ready for TestFlight / App Store
 - **Google Play Console** — only when listing on Play Store (APK sideload skips this)
 
-## First-time EAS setup
+## EAS project
+
+Linked to [`@the-syndicate/tiki-acca`](https://expo.dev/accounts/the-syndicate/projects/tiki-acca). The project ID is committed as the fallback in `app.config.ts`; local `EAS_PROJECT_ID` can override it.
 
 From repo root:
 
 ```bash
 npm install
 cd apps/mobile
-eas init          # links project; writes projectId to app.json
+eas whoami
+eas project:info
 ```
 
 Store `EXPO_TOKEN` in GitHub secrets for CI (expo.dev → Access tokens).

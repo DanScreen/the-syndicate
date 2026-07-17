@@ -50,8 +50,9 @@ export function PointsLineChart({
 
     const polyline = coords.map((c) => `${c.x},${c.y}`).join(" ");
 
+    // Top → bottom: matches SVG (higher values nearer PADDING.top).
     const yTicks = [
-      ...new Set([minY, minY + yRange / 2, maxY].map((v) => Math.round(v))),
+      ...new Set([maxY, minY + yRange / 2, minY].map((v) => Math.round(v))),
     ];
 
     return { coords, polyline, yTicks, minY, maxY };

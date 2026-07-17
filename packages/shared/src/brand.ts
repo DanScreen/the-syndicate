@@ -10,3 +10,9 @@ export const BRAND_COLORS = {
   border: "#1f2937",
   danger: "#f87171",
 } as const;
+
+/** Shared marketing copy used by web and native entry screens. */
+export const BRAND_TAGLINE = "Social group accas";
+export const BRAND_HEADLINE = "Your Mates. One Acca. Every Leg Counts.";
+export const BRAND_MOBILE_SUBHEAD =
+  "Tiki-taka is football's great passing game: everyone touches the ball. In a group acca, everyone touches the bet. Everyone picks one leg. We lock the best odds, track every result, and keep score.";

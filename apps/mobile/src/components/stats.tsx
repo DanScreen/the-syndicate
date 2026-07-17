@@ -335,6 +335,25 @@ export function GroupStatsPanel({
   );
 }
 
+let cachedUserStats: { token: string; data: UserStatsResponse } | null = null;
+
+function PerformanceSkeleton() {
+  return (
+    <View style={styles.stack}>
+      <View style={styles.statGrid}>
+        {Array.from({ length: 6 }).map((_, i) => (
+          <View key={i} style={[styles.statCard, styles.skeletonBlock]} />
+        ))}
+      </View>
+      <View style={[styles.skeletonBlock, { height: 72 }]} />
+      <View style={[styles.skeletonBlock, { height: 72 }]} />
+      <View style={[styles.skeletonBlock, { height: 72 }]} />
+      <View style={[styles.skeletonBlock, { height: 120 }]} />
+      <View style={[styles.skeletonBlock, { height: 160 }]} />
+    </View>
+  );
+}
+
 export function UserPerformancePanel({
   token,
   userName,
@@ -342,24 +361,41 @@ export function UserPerformancePanel({
   token: string;
   userName: string;
 }) {
-  const [data, setData] = useState<UserStatsResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<UserStatsResponse | null>(() =>
+    cachedUserStats?.token === token ? cachedUserStats.data : null
+  );
+  const [loading, setLoading] = useState(!data);
   const [error, setError] = useState("");
 
   useEffect(() => {
+    let cancelled = false;
+    if (!data) setLoading(true);
     api<UserStatsResponse>("/api/user/stats", { token })
-      .then(setData)
-      .catch((e) =>
-        setError(e instanceof ApiError ? e.message : copy.stats.loadFailed)
-      )
-      .finally(() => setLoading(false));
+      .then((next) => {
+        if (cancelled) return;
+        cachedUserStats = { token, data: next };
+        setData(next);
+        setError("");
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        setError(e instanceof ApiError ? e.message : copy.stats.loadFailed);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // Re-fetch when token changes; keep cached data on remount for stable layout
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  if (loading) {
-    return <ActivityIndicator color={colors.accent} style={{ marginTop: 24 }} />;
+  if (loading && !data) {
+    return <PerformanceSkeleton />;
   }
 
-  if (error) {
+  if (error && !data) {
     return <ErrorText message={error} />;
   }
 
@@ -470,6 +506,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderRadius: 8,
     padding: 10,
+    minHeight: 64,
+  },
+  skeletonBlock: {
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    minHeight: 64,
   },
   statLabel: {
     color: colors.muted,

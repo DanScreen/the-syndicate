@@ -6,7 +6,7 @@ Production: **https://www.tikiacca.com** (apex → 301 to www via Cloudflare).
 
 > **Rebrand (July 2026):** The Syndicate → **Tiki Acca** ([spec](./specs/rename-tiki-acca.md)). Groups are called "groups". **Legacy internal names kept on purpose** — GCP resources (Cloud SQL `the_syndicate`, Cloud Run `the-syndicate-web`, artifact repo), mobile SecureStore keys (`syndicate_token`/`syndicate_user`), GitHub repo name. Do not rename these.
 
-Mobile (`apps/mobile/`) — v1 parity shipped. **Developer testing:** Expo Go / device build ([DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md)); friend APK/TestFlight deferred.
+Mobile (`apps/mobile/`) — v1 parity shipped and EAS project linked at `@the-syndicate/tiki-acca` (`0ad18d34-5681-4e1c-a208-e45064b0515c`). The non-scrolling sign-in screen doubles as a compact brand landing page using shared copy from `packages/shared/src/brand.ts`. Mobile auth uses a revocable, non-expiring `MobileSession` bearer token stored in SecureStore, so users remain signed in until explicit logout; legacy 30-day JWTs remain valid during rollout. Logged-in chrome: brand-only `AppHeader` (not a home link) + bottom `AppTabBar`. Groups list lives at `/(main)/home` (not `/`) so tab switches never hit the auth stack; its first load is held behind a full-page loading state to prevent layout shift. Root `Stack.Protected` gates sign-in/sign-up. **Developer testing:** Expo Go / device build ([DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md)); friend APK/TestFlight deferred.
 
 ---
 
@@ -390,7 +390,7 @@ Member summary **best / worst leg** = highest / lowest decimal odds across the m
 | Variable | Required | Purpose |
 |----------|----------|---------|
 | `DATABASE_URL` | Yes | PostgreSQL |
-| `AUTH_SECRET` | Yes | Auth.js + mobile JWT |
+| `AUTH_SECRET` | Yes | Auth.js + verification of legacy mobile JWTs during rollout |
 | `NEXTAUTH_URL` | Yes | e.g. `http://localhost:3000` |
 | `ODDS_API_KEY` | No | Live odds; omit = mock |
 | `ODDS_API_SPORT` | No | Default `soccer_fifa_world_cup` (fallback only) |
@@ -419,7 +419,7 @@ Env vars on Cloud Run: `NEXTAUTH_URL`, `EMAIL_FROM`, `ADMIN_EMAILS` (from GitHub
 Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `AnalyticsEvent`, `CompetitionSetting`, `RoundMessage`, `MessageReaction`.
 
 - `RoundMessage` — round-scoped chat thread: user banter (`kind: "user"`) + append-only system messages (`kind: "system"`, `eventType`: `leg_submitted | leg_changed | round_locked | leg_result | round_settled`; `legId` set on pick announcements so the betslip row can mirror reactions). User posts run through shared `containsProfanity` (same list as names/groups). Written at event time by lifecycle code — see [Settlement](#settlement). Legs submitted before group chat shipped may lack announcements; backfill with `npm run db:maintenance -- backfill-leg-announcements --execute` (preview first).
-- `MessageReaction` — emoji reactions on messages, unique per `(messageId, userId, emoji)`. `REACTION_EMOJIS` provides six one-tap defaults; `+` opens a viewport-level emoji modal on web/mobile so the picker is not clipped by the chat scroller, while the API validates any single Unicode emoji. Pick rows mirror the latest `leg_submitted` / `leg_changed` message for their `legId`.
+- `MessageReaction` — emoji reactions on messages, unique per `(messageId, userId, emoji)`. The bar shows **only used emoji chips**; a muted **React** / **+** opens a viewport-level picker (quick picks 🔥😂💀👀🫡🍀, then more). The API validates any single Unicode emoji. Pick rows mirror the latest `leg_submitted` / `leg_changed` message for their `legId`.
 - `GroupMember.lastReadMessageAt` — group-wide unread cursor; dashboard cards and Round tabs show unread counts.
 - `NotificationPreference.pushChat` — chat push opt-in (default on). User messages notify other members at most once per ten-minute group bucket; active 20-second thread polling suppresses foreground pushes.
 
@@ -464,10 +464,13 @@ Recent migrations include `20260717150000_group_chat_messages` and `202607171700
 | `GET /api/groups/[id]/members/[userId]/stats` | Member | Member breakdown + favourites |
 | `GET /api/user/stats` | Session | Cross-group performance stats |
 | `GET/PATCH /api/user/notification-preferences` | Session | Notification toggles |
+| `POST /api/auth/mobile/sign-in` | Public (rate-limited) | Create revocable persistent mobile session |
+| `POST /api/auth/mobile/refresh` | Mobile bearer | Upgrade a valid legacy JWT to a persistent session (persistent tokens pass through) |
+| `POST /api/auth/mobile/sign-out` | Mobile bearer | Revoke the current device session |
 | `GET/POST /api/rounds/[id]/messages` | Member | Cursor-paginated thread (`before`/`after`, latest pick announcements included) / post to an active round (500 chars, profanity filter, 10/min) |
 | `DELETE /api/messages/[id]` | Author or group owner | Soft-delete an active-round user message (body becomes `Message deleted`) |
 | `POST /api/messages/[id]/reactions` | Member | Toggle one validated Unicode emoji reaction |
-| `POST/DELETE /api/user/push-token` | Session / mobile JWT | Expo push token |
+| `POST/DELETE /api/user/push-token` | Session / mobile bearer | Expo push token |
 | `POST /api/internal/round-reminders` | Cron | Pick reminder dispatch |
 | `GET /api/admin/stats` | Admin | Platform summary metrics |
 | `GET /api/admin/leaderboards` | Admin | Group + player point rankings |

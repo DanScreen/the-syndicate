@@ -98,7 +98,7 @@ Full priority list: [ROADMAP.md](./ROADMAP.md)
 
 ## Mobile apps
 
-Native **iPhone** and **Android** apps (`apps/mobile/`) match member-facing web. **Developer testing** uses Expo Go or a device build (no store fee). **Friend distribution:** Android APK now; iPhone TestFlight after validation.
+Native **iPhone** and **Android** apps (`apps/mobile/`) match member-facing web. The initial sign-in screen doubles as a compact, non-scrolling brand landing screen using the shared Tiki Acca headline and tagline. **Developer testing** uses Expo Go or a device build (no store fee). **Friend distribution:** Android APK now; iPhone TestFlight after validation.
 
 Full strategy: [specs/mobile-apps.md](./specs/mobile-apps.md) · [DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md) · [FRIEND_TESTING.md](../apps/mobile/FRIEND_TESTING.md)
 

@@ -163,7 +163,7 @@ Stay on **Resend** — already wired, domain verified, GCP secrets in place.
 
 **Trigger:** cron finds open rounds with ≥1 leg where `firstKickoff` is within **2 hours** and member has no leg.
 
-**Subject:** `{groupName} — pick your leg (locks {time})`
+**Subject:** `{groupName}: Pick Your Leg Before {time}`
 
 **Body:** deadline, count waiting, CTA button → group round tab.
 

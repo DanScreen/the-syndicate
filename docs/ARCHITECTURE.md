@@ -40,6 +40,7 @@ flowchart TB
 | Entity | Purpose |
 |--------|---------|
 | **User** | Account; `firstName` / `lastName` / `name` (full display); `role` (`user` \| `admin`); aggregate `totalPoints` |
+| **MobileSession** | Revocable native-device login; SHA-256 token hash, user, created/last-used/revoked timestamps |
 | **Group** | Name, invite code, owner, status, `legsPerMember` (1–3, default 1) |
 | **GroupMember** | Membership, group role, group-scoped points, chat `lastReadMessageAt` |
 | **Round** | Acca cycle: open → locked → settled; `legsPerMember` snapshot; `accaBookmakerRankings` JSON at lock |
@@ -93,7 +94,7 @@ Round-scoped polling threads share one REST contract across web and mobile. Life
 → [CURRENT_STATE.md](./CURRENT_STATE.md#web-pages)
 
 ### Auth
-Split config: edge-safe `auth.config.ts` (middleware, no Prisma) + `auth.ts` (credentials, DB). Session includes `user.role`; role refreshed from DB on each JWT update via `getSessionUserRole()`. Bearer JWT for mobile (`/api/auth/mobile/sign-in`).
+Split config: edge-safe `auth.config.ts` (middleware, no Prisma) + `auth.ts` (credentials, DB). Web sessions include `user.role`; role is refreshed from DB on each JWT update via `getSessionUserRole()`. Mobile sign-in creates a random, non-expiring bearer token; only its SHA-256 hash is stored in `MobileSession`. Explicit mobile sign-out revokes that device session. `requireSession()` accepts either a mobile bearer session or an Auth.js cookie; legacy 30-day mobile JWTs remain accepted during rollout.
 
 ### Platform admin
 `ADMIN_EMAILS` env promotes users to `role: admin`. Admin tab in `AppNav`; pages at `/admin/*`; APIs at `/api/admin/*`. Session role refreshed from DB on each request — no re-login after adding an email. Lightweight `AnalyticsEvent` logging.
@@ -123,6 +124,6 @@ Expo app in `apps/mobile/` — member-facing parity includes the round lifecycle
 
 **Target:** functional parity with the website for member-facing flows. **Strategy:** [specs/mobile-apps.md](./specs/mobile-apps.md) — API-first, shared `packages/shared` contracts, EAS release for iOS + Android.
 
-**Auth:** `POST /api/auth/mobile/sign-in` → Bearer JWT; `requireSession()` accepts Bearer or Auth.js cookie.
+**Auth:** `POST /api/auth/mobile/sign-in` → revocable bearer session; `POST /api/auth/mobile/sign-out` revokes it; `requireSession()` accepts Bearer or Auth.js cookie.
 
 **Resume when:** web validated with real users (foundation / shared-contract work can start in parallel). See [ROADMAP.md](./ROADMAP.md).

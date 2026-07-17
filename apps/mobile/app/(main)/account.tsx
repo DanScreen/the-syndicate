@@ -1,6 +1,6 @@
 import { ApiError, api } from "@/api/client";
 import { useAuth } from "@/auth/AuthProvider";
-import { Button, Card, ErrorText } from "@/components/ui";
+import { Button, Card, ErrorText, Title } from "@/components/ui";
 import { colors, WEB_URL } from "@/config";
 import { copy } from "@/lib/copy";
 import type { NotificationPreferences } from "@tiki-acca/shared";
@@ -8,7 +8,6 @@ import { registerForPushNotifications } from "@/notifications/register";
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Linking,
   Pressable,
   ScrollView,
@@ -71,22 +70,43 @@ const SECTIONS: {
   },
 ];
 
+let cachedPrefs: { token: string; data: NotificationPreferences } | null = null;
+
+function NotificationsSkeleton() {
+  return (
+    <View style={styles.notificationsBlock}>
+      <View style={[styles.skeletonCard, { height: 128 }]} />
+      <Text style={styles.sectionTitle}>Email</Text>
+      <View style={styles.skeletonRow} />
+      <View style={styles.skeletonRow} />
+      <View style={styles.skeletonRow} />
+      <Text style={styles.sectionTitle}>Push</Text>
+      <View style={styles.skeletonRow} />
+      <View style={styles.skeletonRow} />
+      <View style={styles.skeletonRow} />
+      <View style={styles.skeletonRow} />
+    </View>
+  );
+}
+
 export default function AccountScreen() {
   const { token, user, signOut } = useAuth();
-  const [prefs, setPrefs] = useState<NotificationPreferences | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [prefs, setPrefs] = useState<NotificationPreferences | null>(() =>
+    token && cachedPrefs?.token === token ? cachedPrefs.data : null
+  );
+  const [loading, setLoading] = useState(!prefs);
   const [error, setError] = useState("");
   const [pushStatus, setPushStatus] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!token) return;
-    setLoading(true);
     setError("");
     try {
       const data = await api<NotificationPreferences>(
         "/api/user/notification-preferences",
         { token }
       );
+      cachedPrefs = { token, data };
       setPrefs(data);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : copy.stats.loadFailed);
@@ -112,6 +132,7 @@ export default function AccountScreen() {
           body: JSON.stringify({ [key]: value }),
         }
       );
+      cachedPrefs = { token, data };
       setPrefs(data);
     } catch {
       setPrefs(prev);
@@ -136,6 +157,7 @@ export default function AccountScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <Title>Account</Title>
       <Card>
         <Text style={styles.cardTitle}>Profile</Text>
         <Text style={styles.profileName}>
@@ -149,12 +171,12 @@ export default function AccountScreen() {
         Get reminded to pick before kickoff, and when accas lock or settle.
       </Text>
 
-      {loading ? (
-        <ActivityIndicator color={colors.accent} style={styles.centered} />
+      {loading && !prefs ? (
+        <NotificationsSkeleton />
       ) : error && !prefs ? (
         <ErrorText message={error} />
       ) : prefs ? (
-        <>
+        <View style={styles.notificationsBlock}>
           <Card>
             <Text style={styles.cardTitle}>This device</Text>
             <Text style={styles.hint}>
@@ -184,7 +206,7 @@ export default function AccountScreen() {
             </View>
           ))}
           {error ? <ErrorText message={error} /> : null}
-        </>
+        </View>
       ) : null}
 
       <Card>
@@ -220,8 +242,21 @@ const styles = StyleSheet.create({
     gap: 16,
     paddingBottom: 40,
   },
-  centered: {
-    marginTop: 16,
+  notificationsBlock: {
+    gap: 16,
+  },
+  skeletonCard: {
+    borderRadius: 12,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  skeletonRow: {
+    height: 72,
+    borderRadius: 10,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   sectionHeading: {
     color: colors.text,

@@ -9,12 +9,11 @@ import {
   yourLegStatusMessage,
 } from "@tiki-acca/shared";
 import { useAuth } from "@/auth/AuthProvider";
-import { LogoMark } from "@/components/logo";
-import { Button, Card, EmptyState, Screen, Subtitle, Title } from "@/components/ui";
+import { Button, Card, EmptyState, Screen } from "@/components/ui";
 import { colors } from "@/config";
 import { copy } from "@/lib/copy";
 import { router, useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -30,6 +29,7 @@ export default function GroupsScreen() {
   const [groups, setGroups] = useState<GroupSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const hasLoadedRef = useRef(false);
 
   const load = useCallback(async () => {
     if (!token) return;
@@ -39,10 +39,21 @@ export default function GroupsScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      setLoading(true);
+      let cancelled = false;
+      if (!hasLoadedRef.current) setLoading(true);
       load()
-        .catch(() => setGroups([]))
-        .finally(() => setLoading(false));
+        .catch(() => {
+          if (!cancelled && !hasLoadedRef.current) setGroups([]);
+        })
+        .finally(() => {
+          if (!cancelled) {
+            hasLoadedRef.current = true;
+            setLoading(false);
+          }
+        });
+      return () => {
+        cancelled = true;
+      };
     }, [load])
   );
 
@@ -55,6 +66,17 @@ export default function GroupsScreen() {
     }
   }
 
+  if (loading && !hasLoadedRef.current) {
+    return (
+      <Screen>
+        <View style={styles.loadingHold}>
+          <ActivityIndicator color={colors.accent} size="large" />
+          <Text style={styles.loadingText}>Loading your groups…</Text>
+        </View>
+      </Screen>
+    );
+  }
+
   return (
     <Screen>
       <ScrollView
@@ -63,29 +85,8 @@ export default function GroupsScreen() {
         }
         contentContainerStyle={styles.scroll}
       >
-        <View style={styles.header}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-            <LogoMark size={34} />
-            <View>
-              <Title>Dashboard</Title>
-              <Subtitle>Your groups</Subtitle>
-            </View>
-          </View>
-          <Pressable
-            onPress={() => router.push("/(main)/account")}
-            style={styles.accountHit}
-          >
-            <Text style={styles.accountLabel}>
-              Hi, {user?.firstName ?? user?.name ?? "there"}
-            </Text>
-            <Text style={styles.accountHint}>Account</Text>
-          </Pressable>
-        </View>
-
         <Text style={styles.sectionLabel}>Your groups</Text>
-        {loading ? (
-          <ActivityIndicator color={colors.accent} style={styles.loader} />
-        ) : groups.length === 0 ? (
+        {groups.length === 0 ? (
           <EmptyState
             title={copy.dashboard.emptyTitle}
             message={copy.dashboard.emptyBody}
@@ -192,11 +193,6 @@ export default function GroupsScreen() {
             variant="secondary"
             onPress={() => router.push("/(main)/join-group")}
           />
-          <Button
-            label="Your performance"
-            variant="secondary"
-            onPress={() => router.push("/(main)/performance")}
-          />
         </View>
       </ScrollView>
     </Screen>
@@ -214,27 +210,15 @@ const styles = StyleSheet.create({
   scroll: {
     paddingBottom: 32,
   },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 8,
+  loadingHold: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
   },
-  accountHit: {
-    alignItems: "flex-end",
-    marginTop: 4,
-    paddingVertical: 4,
-    paddingHorizontal: 4,
-  },
-  accountLabel: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  accountHint: {
+  loadingText: {
     color: colors.muted,
-    fontSize: 12,
-    marginTop: 2,
+    fontSize: 14,
   },
   sectionLabel: {
     color: colors.muted,
@@ -242,15 +226,12 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textTransform: "uppercase",
     letterSpacing: 0.5,
-    marginTop: 8,
+    marginTop: 4,
     marginBottom: 12,
-  },
-  loader: {
-    marginVertical: 24,
   },
   actions: {
     gap: 8,
-    marginTop: 24,
+    marginTop: 20,
   },
   row: {
     flexDirection: "row",

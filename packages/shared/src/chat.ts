@@ -21,7 +21,7 @@ export const SYSTEM_MESSAGE_EVENT_TYPES = [
 
 export type SystemMessageEventType = (typeof SYSTEM_MESSAGE_EVENT_TYPES)[number];
 
-/** One-tap defaults. Users can also add any single emoji through the + picker. */
+/** Quick picks shown at the top of the reaction picker (not inline on every message). */
 export const REACTION_EMOJIS = ["🔥", "😂", "💀", "👀", "🫡", "🍀"] as const;
 
 /** Broad picker shown by the + control. Keep defaults first for familiarity. */

@@ -6,23 +6,17 @@ import { formatRoundStatusBadge } from "@tiki-acca/shared";
 import { GroupDataProvider, useGroupData } from "@/context/group-data";
 import { router, Slot, useLocalSearchParams } from "expo-router";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 function goBackToGroups() {
-  if (router.canGoBack()) {
-    router.back();
-  } else {
-    router.replace("/(main)");
-  }
+  router.navigate("/(main)/home");
 }
 
 function GroupLayoutInner() {
   const { data, loading, error } = useGroupData();
-  const insets = useSafeAreaInsets();
 
   if (loading || !data) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top + 8, paddingHorizontal: 20 }]}>
+      <View style={[styles.container, { paddingHorizontal: 20, paddingTop: 8 }]}>
         <Pressable onPress={goBackToGroups} style={styles.backButton} hitSlop={8}>
           <Text style={styles.backLabel}>← Groups</Text>
         </Pressable>
@@ -39,7 +33,7 @@ function GroupLayoutInner() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.shell, { paddingTop: insets.top + 8 }]}>
+      <View style={styles.shell}>
         <Pressable onPress={goBackToGroups} style={styles.backButton} hitSlop={8}>
           <Text style={styles.backLabel}>← Groups</Text>
         </Pressable>
@@ -85,6 +79,7 @@ const styles = StyleSheet.create({
   },
   shell: {
     paddingHorizontal: 20,
+    paddingTop: 8,
     backgroundColor: colors.bg,
   },
   backButton: {
