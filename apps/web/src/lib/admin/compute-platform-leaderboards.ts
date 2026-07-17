@@ -69,17 +69,15 @@ export async function computePlatformLeaderboards(): Promise<PlatformLeaderboard
     ...row,
   }));
 
-  const players: PlayerLeaderboardEntry[] = users
-    .filter((u) => u._count.memberships > 0 || u.totalPoints !== 0)
-    .map((u, i) => ({
-      rank: i + 1,
-      userId: u.id,
-      name: u.name,
-      totalPoints: u.totalPoints,
-      legsWon: u.legsWon,
-      legsLost: u.legsLost,
-      groupCount: u._count.memberships,
-    }));
+  const players: PlayerLeaderboardEntry[] = users.map((u, i) => ({
+    rank: i + 1,
+    userId: u.id,
+    name: u.name,
+    totalPoints: u.totalPoints,
+    legsWon: u.legsWon,
+    legsLost: u.legsLost,
+    groupCount: u._count.memberships,
+  }));
 
   return { groups, players };
 }

@@ -321,7 +321,7 @@ Platform admins (`User.role = admin`) see an **Admin** tab with **Overview** and
 | Leaderboard | Ranked by |
 |-------------|-----------|
 | Groups | Sum of `GroupMember.points` per group; columns: name, **owner**, members, points, W/L record |
-| Players | `User.totalPoints` (all groups) |
+| Players | `User.totalPoints` (all groups); **all registered users** listed (0 pts if no groups) |
 
 Admin-only for now; public rollout planned when user base grows.
 
