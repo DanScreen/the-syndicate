@@ -2,6 +2,7 @@
 
 import {
   filterUserStatsByGroup,
+  type UserCategoryStats,
   type UserStatsChartPoint,
   type UserStatsGroupBreakdown,
   type UserStatsSummary,
@@ -25,13 +26,64 @@ type UserStatsData = {
   summary: UserStatsSummary;
   chart: UserStatsChartPoint[];
   groups: UserStatsGroupBreakdown[];
+  competition: UserCategoryStats;
+  market: UserCategoryStats;
+  team: UserCategoryStats;
 };
 
-function StatCard({ label, value }: { label: string; value: string }) {
+function StatCard({
+  label,
+  value,
+  detail,
+}: {
+  label: string;
+  value: string;
+  detail?: string;
+}) {
   return (
     <div className="rounded-lg border border-border bg-card px-3 py-2">
       <p className="text-xs text-muted">{label}</p>
       <p className="mt-1 text-lg font-semibold">{value}</p>
+      {detail ? <p className="mt-1 text-xs leading-snug text-muted">{detail}</p> : null}
+    </div>
+  );
+}
+
+function CategoryRow({
+  label,
+  favourite,
+  bestWorst,
+}: {
+  label: string;
+  favourite: string | null;
+  bestWorst: UserCategoryStats["bestWorst"];
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-card px-3 py-3 text-sm">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted">{label}</p>
+      <p className="mt-1">
+        Most picked: <span className="text-foreground">{favourite ?? "—"}</span>
+      </p>
+      {bestWorst ? (
+        <div className="mt-2 space-y-1 text-muted">
+          <p>
+            Best: <span className="text-accent">{bestWorst.best.key}</span>
+            {" · "}
+            {formatLegPoints(bestWorst.best.avgPoints)} avg / leg
+            <span className="text-muted/80"> ({bestWorst.best.legs})</span>
+          </p>
+          <p>
+            Worst: <span className="text-red-400">{bestWorst.worst.key}</span>
+            {" · "}
+            {formatLegPoints(bestWorst.worst.avgPoints)} avg / leg
+            <span className="text-muted/80"> ({bestWorst.worst.legs})</span>
+          </p>
+        </div>
+      ) : (
+        <p className="mt-1 text-xs text-muted">
+          Best/worst needs 3+ legs in two different categories
+        </p>
+      )}
     </div>
   );
 }
@@ -108,11 +160,11 @@ export function DashboardStats({ userName }: { userName: string }) {
     );
   }
 
-  const { summary, chart, groups } = filtered;
+  const { summary, chart, groups, competition, market, team } = filtered;
   const viewingAll = selectedGroupId === "all";
   const shareTitle = selectedGroup
     ? `${selectedGroup.groupName} stats`
-    : `${userName}'s group stats`;
+    : `${userName}'s performance`;
   const shareSubtitle = selectedGroup
     ? `${summary.settledRounds} settled round${summary.settledRounds === 1 ? "" : "s"}`
     : `Across ${summary.groupCount} group${summary.groupCount === 1 ? "" : "s"}`;
@@ -145,13 +197,55 @@ export function DashboardStats({ userName }: { userName: string }) {
         <StatCard label="Rounds" value={String(summary.settledRounds)} />
         <StatCard label="Legs" value={String(summary.legsPlayed)} />
         <StatCard
-          label="Win rate"
+          label="Avg pts / leg"
+          value={
+            summary.averagePointsPerLeg != null
+              ? formatLegPoints(summary.averagePointsPerLeg)
+              : "—"
+          }
+        />
+        <StatCard
+          label="Pick win rate"
           value={summary.winRate != null ? `${summary.winRate}%` : "—"}
+          detail="Your legs only — ignores group acca results"
         />
         <StatCard label="Net points" value={formatLegPoints(summary.netPoints)} />
+        {summary.averageOdds != null ? (
+          <StatCard label="Avg odds" value={String(summary.averageOdds)} />
+        ) : null}
       </div>
 
       <StakeProfit points={summary.netPoints} />
+
+      <div className="space-y-3">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-muted">
+            Your insights
+          </p>
+          <p className="mt-1 text-xs text-muted">
+            Based on your individual picks across{" "}
+            {viewingAll ? "all groups" : "this group"} (won = odds − 1, lost = −1). Best/worst
+            need 3+ settled legs in at least two categories.
+          </p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <CategoryRow
+            label="Competition"
+            favourite={competition.favourite}
+            bestWorst={competition.bestWorst}
+          />
+          <CategoryRow
+            label="Bet type"
+            favourite={market.favourite}
+            bestWorst={market.bestWorst}
+          />
+          <CategoryRow
+            label="Team"
+            favourite={team.favourite}
+            bestWorst={team.bestWorst}
+          />
+        </div>
+      </div>
 
       {chart.length > 1 ? (
         <div className="rounded-xl border border-border bg-card p-4">
@@ -213,6 +307,7 @@ export function DashboardStats({ userName }: { userName: string }) {
                 <span className="font-medium">{g.groupName}</span>
                 <span className="text-muted">
                   {formatLegPoints(g.netPoints)} pts · {g.legsPlayed} legs
+                  {g.winRate != null ? ` · ${g.winRate}% picks` : ""}
                 </span>
               </Link>
             ))}

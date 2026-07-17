@@ -28,7 +28,6 @@ export async function GET() {
     memberships.map((m) => ({
       groupId: m.groupId,
       groupName: m.group.name,
-      points: m.points,
       group: { rounds: m.group.rounds },
     })),
     userId

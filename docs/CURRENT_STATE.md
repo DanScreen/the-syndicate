@@ -1,6 +1,6 @@
 # Current state (as-built)
 
-Last updated 17 July 2026 (invite join signed-out UX). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
+Last updated 17 July 2026 (personal performance insights). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
 
 Production: **https://www.tikiacca.com** (apex → 301 to www via Cloudflare).
 
@@ -356,19 +356,19 @@ Admin-only for now; public rollout planned when user base grows.
 
 Computed on read from settled rounds. No materialised stats tables.
 
-Member summary **best / worst leg** = highest / lowest decimal odds across the member's legs (not round points).
+Member summary **best / worst leg** = highest / lowest decimal odds across the member's legs (not round points). Category **best / worst** (competition, bet type, team) on group member breakdown **and** `/performance` = highest / lowest **average points per individual settled leg** (min 3 legs in at least two categories). Pick win rate is won / (won + lost) on that member's legs only — independent of whether the group acca won.
 
 | Route | Purpose |
 |-------|---------|
 | `GET /api/groups/[id]/stats` | Group summary + cumulative points chart |
 | `GET /api/groups/[id]/members/[userId]/stats` | Member breakdown, favourites, best/worst |
-| `GET /api/user/stats` | Cross-group performance summary + chart |
+| `GET /api/user/stats` | Cross-group performance summary + chart + individual insights (competition / bet type / team) |
 
 | Path | Role |
 |------|------|
 | `apps/web/src/lib/stats/compute-group-stats.ts` | Group summary metrics |
 | `apps/web/src/lib/stats/compute-member-stats.ts` | Member breakdown |
-| `apps/web/src/lib/stats/compute-user-stats.ts` | Cross-group user stats |
+| `apps/web/src/lib/stats/compute-user-stats.ts` | Cross-group user stats + personal competition/bet-type/team insights |
 | `apps/web/src/lib/stats/compute-member-chart.ts` | Multi-member chart series |
 | `apps/web/src/lib/stats/helpers.ts` | Shared helpers (favourites, best/worst, live net points); chart labels `formatBetAxisLabel` + `formatSettledDateLabel`; `CHART_ORIGIN_LABEL` (`Start`) at 0 pts |
 | `apps/web/src/components/group-stats.tsx` | Group performance UI (Recharts) |

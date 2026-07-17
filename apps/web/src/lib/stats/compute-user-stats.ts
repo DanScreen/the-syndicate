@@ -1,10 +1,19 @@
+import type { Leg } from "@prisma/client";
 import {
+  betTypeForLeg,
+  bestWorstCategory,
+  favouriteCategory,
   formatBetAxisLabel,
   formatSettledDateLabel,
+  legPoints,
+  memberNetPointsAcrossRounds,
   memberPointsInRound,
   roundAccaWon,
+  roundById,
   roundSortKey,
+  teamForLeg,
   CHART_ORIGIN_LABEL,
+  type BestWorstInsight,
   type RoundWithLegs,
 } from "./helpers";
 
@@ -13,8 +22,16 @@ export type UserStatsSummary = {
   settledRounds: number;
   legsPlayed: number;
   netPoints: number;
+  averagePointsPerLeg: number | null;
+  /** Individual pick win rate: won / (won + lost), voids excluded. */
   winRate: number | null;
+  averageOdds: number | null;
   netAccaPlGbp: number;
+};
+
+export type UserCategoryStats = {
+  favourite: string | null;
+  bestWorst: BestWorstInsight | null;
 };
 
 export type UserStatsGroupBreakdown = {
@@ -23,6 +40,12 @@ export type UserStatsGroupBreakdown = {
   netPoints: number;
   legsPlayed: number;
   settledRounds: number;
+  averagePointsPerLeg: number | null;
+  winRate: number | null;
+  averageOdds: number | null;
+  competition: UserCategoryStats;
+  market: UserCategoryStats;
+  team: UserCategoryStats;
 };
 
 export type UserStatsChartPoint = {
@@ -41,53 +64,124 @@ export type UserStatsResult = {
   summary: UserStatsSummary;
   chart: UserStatsChartPoint[];
   groups: UserStatsGroupBreakdown[];
+  competition: UserCategoryStats;
+  market: UserCategoryStats;
+  team: UserCategoryStats;
 };
 
 type UserRoundEntry = {
   round: RoundWithLegs;
   groupId: string;
   groupName: string;
-  userLeg: RoundWithLegs["legs"][number];
 };
+
+function categoryStats(
+  legs: Leg[],
+  roundMap: Map<string, RoundWithLegs>
+): {
+  competition: UserCategoryStats;
+  market: UserCategoryStats;
+  team: UserCategoryStats;
+} {
+  return {
+    competition: {
+      favourite: favouriteCategory(legs, roundMap, (l) => l.competition),
+      bestWorst: bestWorstCategory(legs, roundMap, (l) => l.competition),
+    },
+    market: {
+      favourite: favouriteCategory(legs, roundMap, betTypeForLeg),
+      bestWorst: bestWorstCategory(legs, roundMap, betTypeForLeg),
+    },
+    team: {
+      favourite: favouriteCategory(legs, roundMap, teamForLeg),
+      bestWorst: bestWorstCategory(legs, roundMap, teamForLeg),
+    },
+  };
+}
+
+function individualLegSummary(legs: Leg[], roundMap: Map<string, RoundWithLegs>) {
+  const settledLegs = legs.filter((l) => l.outcome !== "pending");
+  const decidedLegs = settledLegs.filter(
+    (l) => l.outcome === "won" || l.outcome === "lost"
+  );
+  const wonLegs = decidedLegs.filter((l) => l.outcome === "won").length;
+  const netPoints = Number(
+    settledLegs
+      .reduce((sum, leg) => {
+        const round = roundMap.get(leg.roundId);
+        return sum + (round ? legPoints(leg, round) : leg.pointsAwarded);
+      }, 0)
+      .toFixed(2)
+  );
+
+  return {
+    legsPlayed: settledLegs.length,
+    netPoints,
+    averagePointsPerLeg:
+      settledLegs.length > 0
+        ? Number((netPoints / settledLegs.length).toFixed(2))
+        : null,
+    winRate:
+      decidedLegs.length > 0
+        ? Number(((wonLegs / decidedLegs.length) * 100).toFixed(1))
+        : null,
+    averageOdds:
+      settledLegs.length > 0
+        ? Number(
+            (
+              settledLegs.reduce((s, l) => s + l.odds, 0) / settledLegs.length
+            ).toFixed(2)
+          )
+        : null,
+  };
+}
 
 export function computeUserStats(
   memberships: {
     groupId: string;
     groupName: string;
-    points: number;
     group: { rounds: RoundWithLegs[] };
   }[],
   userId: string
 ): UserStatsResult {
   const groups: UserStatsGroupBreakdown[] = [];
   const userRoundEntries: UserRoundEntry[] = [];
+  const allUserLegs: Leg[] = [];
+  const allRounds: RoundWithLegs[] = [];
 
   for (const membership of memberships) {
     const settledRounds = membership.group.rounds.filter((r) => r.status === "settled");
     const userLegs = settledRounds.flatMap((r) =>
       r.legs.filter((l) => l.userId === userId)
     );
+    const participatedRounds = settledRounds.filter((r) =>
+      r.legs.some((l) => l.userId === userId)
+    );
+    const roundMap = roundById(settledRounds);
+    const legSummary = individualLegSummary(userLegs, roundMap);
+    const categories = categoryStats(userLegs, roundMap);
 
     groups.push({
       groupId: membership.groupId,
       groupName: membership.groupName,
-      netPoints: Number(membership.points.toFixed(2)),
-      legsPlayed: userLegs.length,
-      settledRounds: settledRounds.filter((r) =>
-        r.legs.some((l) => l.userId === userId)
-      ).length,
+      netPoints: memberNetPointsAcrossRounds(settledRounds, userId),
+      legsPlayed: legSummary.legsPlayed,
+      settledRounds: participatedRounds.length,
+      averagePointsPerLeg: legSummary.averagePointsPerLeg,
+      winRate: legSummary.winRate,
+      averageOdds: legSummary.averageOdds,
+      ...categories,
     });
 
-    for (const round of settledRounds) {
-      const userLeg = round.legs.find((l) => l.userId === userId);
-      if (userLeg) {
-        userRoundEntries.push({
-          round,
-          groupId: membership.groupId,
-          groupName: membership.groupName,
-          userLeg,
-        });
-      }
+    allUserLegs.push(...userLegs);
+    allRounds.push(...settledRounds);
+
+    for (const round of participatedRounds) {
+      userRoundEntries.push({
+        round,
+        groupId: membership.groupId,
+        groupName: membership.groupName,
+      });
     }
   }
 
@@ -130,9 +224,9 @@ export function computeUserStats(
           ...chartPoints,
         ];
 
-  const allUserLegs = userRoundEntries.map((e) => e.userLeg);
-
-  const accaWins = userRoundEntries.filter((e) => roundAccaWon(e.round)).length;
+  const allRoundMap = roundById(allRounds);
+  const overall = individualLegSummary(allUserLegs, allRoundMap);
+  const overallCategories = categoryStats(allUserLegs, allRoundMap);
 
   const netAccaPlGbp = userRoundEntries.reduce(
     (sum, e) => sum + (e.round.profitLossGbp ?? 0),
@@ -143,20 +237,16 @@ export function computeUserStats(
     summary: {
       groupCount: memberships.length,
       settledRounds: userRoundEntries.length,
-      legsPlayed: allUserLegs.length,
-      netPoints: Number(
-        userRoundEntries
-          .reduce((sum, e) => sum + memberPointsInRound(e.round, userId), 0)
-          .toFixed(2)
-      ),
-      winRate:
-        userRoundEntries.length > 0
-          ? Number(((accaWins / userRoundEntries.length) * 100).toFixed(1))
-          : null,
+      legsPlayed: overall.legsPlayed,
+      netPoints: overall.netPoints,
+      averagePointsPerLeg: overall.averagePointsPerLeg,
+      winRate: overall.winRate,
+      averageOdds: overall.averageOdds,
       netAccaPlGbp: Number(netAccaPlGbp.toFixed(2)),
     },
     chart,
     groups: groups.sort((a, b) => b.netPoints - a.netPoints),
+    ...overallCategories,
   };
 }
 
@@ -203,7 +293,6 @@ export function filterUserStatsByGroup(
           ...chartPoints,
         ];
 
-  const accaWins = roundPoints.filter((point) => point.accaWon).length;
   const netAccaPlGbp = roundPoints.reduce((sum, point) => sum + point.roundPlGbp, 0);
 
   return {
@@ -212,14 +301,16 @@ export function filterUserStatsByGroup(
       settledRounds: group.settledRounds,
       legsPlayed: group.legsPlayed,
       netPoints: group.netPoints,
-      winRate:
-        roundPoints.length > 0
-          ? Number(((accaWins / roundPoints.length) * 100).toFixed(1))
-          : null,
+      averagePointsPerLeg: group.averagePointsPerLeg,
+      winRate: group.winRate,
+      averageOdds: group.averageOdds,
       netAccaPlGbp: Number(netAccaPlGbp.toFixed(2)),
     },
     chart,
     groups: stats.groups,
+    competition: group.competition,
+    market: group.market,
+    team: group.team,
   };
 }
 
@@ -233,7 +324,7 @@ export function buildShareText(
     `Legs: ${stats.legsPlayed}`,
   ];
   if (stats.winRate != null) {
-    lines.push(`Win rate: ${stats.winRate}%`);
+    lines.push(`Pick win rate: ${stats.winRate}%`);
   }
   lines.push("https://www.tikiacca.com");
   return lines.join("\n");

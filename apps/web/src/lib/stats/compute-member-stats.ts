@@ -4,20 +4,25 @@ import type { LegHighlight } from "@tiki-acca/shared";
 import {
   favouriteCategory,
   bestWorstCategory,
+  betTypeForLeg,
   formatBetAxisLabel,
   formatSettledDateLabel,
+  legPoints,
   memberPointsInRound,
-  roundAccaWon,
   roundById,
   sortedSettledRounds,
   CHART_ORIGIN_LABEL,
   teamForLeg,
+  type BestWorstInsight,
   type RoundWithLegs,
 } from "./helpers";
 
 export type MemberStatsSummary = {
   netPoints: number;
+  /** Average points per settled individual leg (won/lost/void). */
+  averagePointsPerLeg: number | null;
   legsPlayed: number;
+  /** Individual pick win rate: won / (won + lost), voids excluded. */
   winRate: number | null;
   averageOdds: number | null;
   bestLeg: LegHighlight | null;
@@ -34,7 +39,7 @@ export type MemberStatsChartPoint = {
 
 export type MemberCategoryStats = {
   favourite: string | null;
-  bestWorst: { best: string; worst: string } | null;
+  bestWorst: BestWorstInsight | null;
 };
 
 export type MemberStatsResult = {
@@ -60,9 +65,20 @@ export function computeMemberStats(
     }
   }
 
-  const memberRounds = settled.filter((r) => r.legs.some((l) => l.userId === userId));
-  const accaWins = memberRounds.filter((r) => roundAccaWon(r)).length;
-  const pointsPerRound = memberRounds.map((r) => memberPointsInRound(r, userId));
+  const settledLegs = legs.filter((l) => l.outcome !== "pending");
+  const decidedLegs = settledLegs.filter(
+    (l) => l.outcome === "won" || l.outcome === "lost"
+  );
+  const wonLegs = decidedLegs.filter((l) => l.outcome === "won").length;
+
+  const netPoints = Number(
+    settledLegs
+      .reduce((sum, leg) => {
+        const round = roundMap.get(leg.roundId);
+        return sum + (round ? legPoints(leg, round) : leg.pointsAwarded);
+      }, 0)
+      .toFixed(2)
+  );
 
   let cumulative = 0;
   const chartPoints: MemberStatsChartPoint[] = settled.map((round, index) => {
@@ -96,15 +112,23 @@ export function computeMemberStats(
   return {
     userId,
     summary: {
-      netPoints: Number(pointsPerRound.reduce((s, p) => s + p, 0).toFixed(2)),
-      legsPlayed: legs.length,
+      netPoints,
+      averagePointsPerLeg:
+        settledLegs.length > 0
+          ? Number((netPoints / settledLegs.length).toFixed(2))
+          : null,
+      legsPlayed: settledLegs.length,
       winRate:
-        memberRounds.length > 0
-          ? Number(((accaWins / memberRounds.length) * 100).toFixed(1))
+        decidedLegs.length > 0
+          ? Number(((wonLegs / decidedLegs.length) * 100).toFixed(1))
           : null,
       averageOdds:
-        legs.length > 0
-          ? Number((legs.reduce((s, l) => s + l.odds, 0) / legs.length).toFixed(2))
+        settledLegs.length > 0
+          ? Number(
+              (
+                settledLegs.reduce((s, l) => s + l.odds, 0) / settledLegs.length
+              ).toFixed(2)
+            )
           : null,
       bestLeg,
       worstLeg,
@@ -115,8 +139,8 @@ export function computeMemberStats(
       bestWorst: bestWorstCategory(legs, roundMap, (l) => l.competition),
     },
     market: {
-      favourite: favouriteCategory(legs, roundMap, (l) => l.marketLabel),
-      bestWorst: bestWorstCategory(legs, roundMap, (l) => l.marketLabel),
+      favourite: favouriteCategory(legs, roundMap, betTypeForLeg),
+      bestWorst: bestWorstCategory(legs, roundMap, betTypeForLeg),
     },
     team: {
       favourite: favouriteCategory(legs, roundMap, teamForLeg),

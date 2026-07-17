@@ -3,6 +3,7 @@ import {
   accaSucceeded,
   groupAccaRoundPoints,
   memberAccaLegPoints,
+  marketFamilyKey,
   type LegOutcome,
 } from "@tiki-acca/shared";
 
@@ -116,15 +117,33 @@ export function teamForLeg(leg: Leg): string | null {
   return null;
 }
 
-type CategoryAgg = { key: string; count: number; points: number };
+type CategoryAgg = {
+  key: string;
+  count: number;
+  points: number;
+  avgPoints: number;
+};
+
+export type CategoryInsight = {
+  key: string;
+  avgPoints: number;
+  legs: number;
+  netPoints: number;
+};
+
+export type BestWorstInsight = {
+  best: CategoryInsight;
+  worst: CategoryInsight;
+};
 
 function aggregateByKey(
   legs: Leg[],
   roundMap: Map<string, RoundWithLegs>,
   keyFn: (leg: Leg) => string | null
 ): CategoryAgg[] {
-  const map = new Map<string, CategoryAgg>();
+  const map = new Map<string, { key: string; count: number; points: number }>();
   for (const leg of legs) {
+    if (leg.outcome === "pending") continue;
     const key = keyFn(leg);
     if (!key) continue;
     const round = roundMap.get(leg.roundId);
@@ -133,7 +152,10 @@ function aggregateByKey(
     entry.points += round ? legPoints(leg, round) : leg.pointsAwarded;
     map.set(key, entry);
   }
-  return [...map.values()];
+  return [...map.values()].map((entry) => ({
+    ...entry,
+    avgPoints: Number((entry.points / entry.count).toFixed(2)),
+  }));
 }
 
 export function favouriteCategory(
@@ -143,17 +165,75 @@ export function favouriteCategory(
 ): string | null {
   const aggs = aggregateByKey(legs, roundMap, keyFn);
   if (aggs.length === 0) return null;
-  return aggs.sort((a, b) => b.count - a.count)[0].key;
+  return aggs.sort((a, b) => b.count - a.count || a.key.localeCompare(b.key))[0].key;
 }
 
+function toInsight(agg: CategoryAgg): CategoryInsight {
+  return {
+    key: agg.key,
+    avgPoints: agg.avgPoints,
+    legs: agg.count,
+    netPoints: Number(agg.points.toFixed(2)),
+  };
+}
+
+/**
+ * Best / worst category by average points per settled leg (individual pick scoring).
+ * Needs at least two categories with `minLegs` each so the comparison is meaningful.
+ */
 export function bestWorstCategory(
   legs: Leg[],
   roundMap: Map<string, RoundWithLegs>,
   keyFn: (leg: Leg) => string | null,
   minLegs = 3
-): { best: string; worst: string } | null {
-  const eligible = aggregateByKey(legs, roundMap, keyFn).filter((a) => a.count >= minLegs);
-  if (eligible.length === 0) return null;
-  const sorted = [...eligible].sort((a, b) => b.points - a.points);
-  return { best: sorted[0].key, worst: sorted[sorted.length - 1].key };
+): BestWorstInsight | null {
+  const eligible = aggregateByKey(legs, roundMap, keyFn).filter(
+    (a) => a.count >= minLegs
+  );
+  if (eligible.length < 2) return null;
+
+  const sorted = [...eligible].sort(
+    (a, b) =>
+      b.avgPoints - a.avgPoints ||
+      b.count - a.count ||
+      a.key.localeCompare(b.key)
+  );
+  const best = sorted[0]!;
+  const worst = sorted[sorted.length - 1]!;
+  if (best.key === worst.key) return null;
+
+  return { best: toInsight(best), worst: toInsight(worst) };
+}
+
+/** Human-readable bet type for insights (groups line variants, e.g. O/U 1.5 + 2.5). */
+export function betTypeForLeg(leg: Leg): string | null {
+  const family = marketFamilyKey(leg.marketType);
+  const labels: Record<string, string> = {
+    match_winner: "Match result",
+    both_teams_score: "Both teams to score",
+    double_chance: "Double chance",
+    draw_no_bet: "Draw no bet",
+    correct_score: "Correct score",
+    over_under: "Goals over/under",
+    asian_handicap: "Asian handicap",
+    corners_over_under: "Corners over/under",
+    cards_over_under: "Cards over/under",
+    corners_1x2: "Corners result",
+    corners_handicap: "Corners handicap",
+    cards_handicap: "Cards handicap",
+    to_qualify: "To qualify",
+  };
+  if (labels[family]) return labels[family];
+
+  if (family.startsWith("team_corners")) return "Team corners";
+  if (family.startsWith("corners")) return "Corners";
+  if (family.startsWith("cards")) return "Cards";
+  if (family.startsWith("player_")) return "Player props";
+
+  if (leg.marketLabel) {
+    const stripped = leg.marketLabel.replace(/\s+\d+(?:\.\d+)?\s*$/, "").trim();
+    return stripped || leg.marketLabel;
+  }
+
+  return family.replace(/_/g, " ");
 }
