@@ -28,6 +28,9 @@ export function GamblingFooter() {
           <Link href="/about" className="hover:text-foreground hover:underline">
             About
           </Link>
+          <Link href="/terms" className="hover:text-foreground hover:underline">
+            Terms
+          </Link>
           <Link href="/privacy" className="hover:text-foreground hover:underline">
             Privacy
           </Link>

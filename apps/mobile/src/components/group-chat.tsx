@@ -200,6 +200,77 @@ export function GroupThread({
     }
   }
 
+  async function report(messageId: string) {
+    try {
+      await api<{ ok: boolean }>(`/api/messages/${messageId}/report`, {
+        method: "POST",
+        token,
+        body: JSON.stringify({}),
+      });
+      Alert.alert("Reported", "Thanks — we'll review this message.");
+    } catch {
+      setError("Couldn't report that message.");
+    }
+  }
+
+  async function block(userId: string, name: string) {
+    try {
+      await api<{ ok: boolean }>(`/api/users/${userId}/block`, {
+        method: "POST",
+        token,
+      });
+      setMessages((current) =>
+        current.filter((m) => !(m.kind === "user" && m.user?.id === userId))
+      );
+      Alert.alert(
+        "Blocked",
+        `${name}'s messages are now hidden. You can unblock them from Account.`
+      );
+    } catch {
+      setError("Couldn't block that member.");
+    }
+  }
+
+  function moderate(message: RoundMessageDto) {
+    const authorId = message.user?.id;
+    if (readOnly || message.kind !== "user" || !authorId) return;
+    if (authorId === currentUserId) return;
+    if (message.body === DELETED_MESSAGE_BODY) return;
+    const name = message.user?.name ?? "this member";
+    Alert.alert("Message options", undefined, [
+      {
+        text: "Report message",
+        onPress: () =>
+          Alert.alert("Report message", "Report this message for review?", [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Report",
+              style: "destructive",
+              onPress: () => void report(message.id),
+            },
+          ]),
+      },
+      {
+        text: `Block ${name}`,
+        style: "destructive",
+        onPress: () =>
+          Alert.alert(
+            `Block ${name}?`,
+            "You won't see their messages anywhere. You can unblock them from Account.",
+            [
+              { text: "Cancel", style: "cancel" },
+              {
+                text: "Block",
+                style: "destructive",
+                onPress: () => void block(authorId, name),
+              },
+            ]
+          ),
+      },
+      { text: "Cancel", style: "cancel" },
+    ]);
+  }
+
   async function loadEarlier() {
     const oldestId = messages[0]?.id;
     if (!oldestId || loadingEarlier) return;
@@ -266,6 +337,7 @@ export function GroupThread({
               }
               onDelete={remove}
               onReact={react}
+              onModerate={moderate}
             />
           ))
         )}
@@ -305,12 +377,14 @@ function Message({
   canDelete,
   onDelete,
   onReact,
+  onModerate,
 }: {
   message: RoundMessageDto;
   readOnly: boolean;
   canDelete: boolean;
   onDelete: (messageId: string) => void;
   onReact: (messageId: string, emoji: ReactionEmoji) => void;
+  onModerate: (message: RoundMessageDto) => void;
 }) {
   if (message.kind === "system") {
     return (
@@ -326,7 +400,12 @@ function Message({
     );
   }
   return (
-    <View style={styles.message}>
+    <Pressable
+      onLongPress={() => onModerate(message)}
+      delayLongPress={350}
+      style={styles.message}
+      accessibilityHint="Long press for message options"
+    >
       <View style={styles.messageHeader}>
         <Text style={styles.author}>{message.user?.name ?? "Someone"}</Text>
         <Text style={styles.time}>{formatTime(message.createdAt)}</Text>
@@ -346,7 +425,7 @@ function Message({
         {message.body}
       </Text>
       <ReactionBar message={message} readOnly={readOnly} onReact={onReact} />
-    </View>
+    </Pressable>
   );
 }
 
