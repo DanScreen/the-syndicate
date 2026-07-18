@@ -13,7 +13,7 @@ Everything Apple needs, in the format they need it. Companion to
 | [listing-metadata.md](./listing-metadata.md) | App Store Connect → App Information / version page | Text fields |
 | Privacy Policy | Already live: https://www.tikiacca.com/privacy | Public URL (required field) |
 | Terms | Already live: https://www.tikiacca.com/terms | Public URL; Apple's standard EULA applies by default — no upload needed unless you want a custom EULA |
-| Support URL | Required field — use https://www.tikiacca.com/about (contains contact), or ship a dedicated /support page | Public URL |
+| Support URL | Required field — use https://www.tikiacca.com/support (dedicated, unlinked from site nav) | Public URL |
 
 **Nothing else is required up front.** Apple does not ask for incorporation
 documents, insurance, or licences for a standard submission. The one scenario
