@@ -62,12 +62,12 @@ export function GroupDataProvider({
   }, [reload]);
 
   useEffect(() => {
-    if (data?.activeRound?.status !== "locked") return;
+    if (!data?.activeRounds?.some((round) => round.status === "locked")) return;
     const interval = setInterval(() => {
       void reload();
     }, 60_000);
     return () => clearInterval(interval);
-  }, [data?.activeRound?.status, data?.activeRound?.id, reload]);
+  }, [data?.activeRounds, reload]);
 
   const value = useMemo(
     () => ({ data, loading, error, reload, markChatRead }),

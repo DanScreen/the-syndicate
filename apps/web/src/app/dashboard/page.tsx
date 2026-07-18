@@ -145,7 +145,13 @@ export default async function DashboardPage() {
                 memberships.map(async (m) => {
                   const allRounds = m.group.rounds;
                   const activeRoundRow =
-                    allRounds.find((r) => r.status !== "settled") ?? null;
+                    allRounds.find((r) => r.status === "open") ??
+                    allRounds.find((r) => r.status === "locked") ??
+                    null;
+                  const activeBetCount = allRounds.filter(
+                    (round) =>
+                      round.status === "open" || round.status === "locked"
+                  ).length;
                   let activeRound: {
                     id: string;
                     status: string;
@@ -198,6 +204,7 @@ export default async function DashboardPage() {
                     activeLegs,
                     roundStatus,
                     unreadMessageCount,
+                    activeBetCount: activeBetCount || 1,
                   };
                 })
               )).map(
@@ -212,6 +219,7 @@ export default async function DashboardPage() {
                   activeLegs,
                   roundStatus,
                   unreadMessageCount,
+                  activeBetCount,
                 }) => (
                   <Link
                     key={m.group.id}
@@ -233,6 +241,9 @@ export default async function DashboardPage() {
                     </div>
                     <p className="mt-2 text-sm text-muted">
                       {m.group._count.members} members · Owner: {m.group.owner.name}
+                      {activeBetCount > 1
+                        ? ` · ${activeBetCount} active bets`
+                        : ""}
                     </p>
                     <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
                       <PointsText points={groupPoints} label="Group points" />

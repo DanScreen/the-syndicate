@@ -14,7 +14,7 @@ import { Button, Card, ErrorText } from "@/components/ui";
 import { colors } from "@/config";
 import { useGroupData } from "@/context/group-data";
 import { router, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -46,6 +46,28 @@ export default function GroupRoundScreen() {
   const [removeError, setRemoveError] = useState("");
   const [roundMessages, setRoundMessages] = useState<RoundMessageDto[]>([]);
   const [chatRefreshKey, setChatRefreshKey] = useState(0);
+  const [selectedRoundId, setSelectedRoundId] = useState<string | null>(null);
+  const [creatingRound, setCreatingRound] = useState(false);
+  const [createRoundError, setCreateRoundError] = useState("");
+
+  const activeRounds =
+    data?.activeRounds?.length
+      ? data.activeRounds
+      : data?.activeRound
+        ? [data.activeRound]
+        : [];
+  useEffect(() => {
+    if (activeRounds.length === 0) return;
+    if (!activeRounds.some((round) => round.id === selectedRoundId)) {
+      setSelectedRoundId(activeRounds[0]!.id);
+    }
+  }, [activeRounds, selectedRoundId]);
+  useEffect(() => {
+    setEditingLegId(null);
+    setRemoveError("");
+    setRoundMessages([]);
+    setChatRefreshKey(0);
+  }, [selectedRoundId]);
 
   if (!data) {
     return (
@@ -55,7 +77,10 @@ export default function GroupRoundScreen() {
     );
   }
 
-  const round = data.activeRound;
+  const round =
+    activeRounds.find((item) => item.id === selectedRoundId) ??
+    activeRounds[0] ??
+    null;
   const members = data.group.members ?? [];
   const legsPerMember = round?.legsPerMember ?? data.group.legsPerMember ?? 1;
   const myLegs = round?.legs.filter((l) => l.user.id === user?.id) ?? [];
@@ -63,6 +88,14 @@ export default function GroupRoundScreen() {
     round?.status === "open" && myLegs.length < legsPerMember && Boolean(user?.id);
   const isLocked = round?.status === "locked";
   const isOpen = round?.status === "open";
+  const activeBetLimit = data.group.maxActiveBets ?? 1;
+  const emptyOpenBet = activeRounds.some(
+    (item) => item.status === "open" && item.legs.length === 0
+  );
+  const canCreateRound =
+    activeBetLimit > 1 &&
+    activeRounds.length < activeBetLimit &&
+    !emptyOpenBet;
 
   const firstKickoff =
     round && round.legs.length > 0
@@ -92,6 +125,26 @@ export default function GroupRoundScreen() {
       await reload();
     } finally {
       setRefreshing(false);
+    }
+  }
+
+  async function createRound() {
+    if (!token || !data) return;
+    setCreatingRound(true);
+    setCreateRoundError("");
+    try {
+      const body = await api<{ round: { id: string } }>(
+        `/api/groups/${data.group.id}/rounds`,
+        { method: "POST", token }
+      );
+      await reload();
+      setSelectedRoundId(body.round.id);
+    } catch (error) {
+      setCreateRoundError(
+        error instanceof ApiError ? error.message : "Failed to create bet"
+      );
+    } finally {
+      setCreatingRound(false);
     }
   }
 
@@ -132,6 +185,75 @@ export default function GroupRoundScreen() {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
       }
     >
+      {activeBetLimit > 1 ? (
+        <Card>
+          <View style={styles.activeBetsHeader}>
+            <View>
+              <Text style={styles.activeBetsTitle}>Active Bets</Text>
+              <Text style={styles.meta}>
+                {activeRounds.length} of {activeBetLimit} available
+              </Text>
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              disabled={!canCreateRound || creatingRound}
+              onPress={() => void createRound()}
+              style={({ pressed }) => [
+                styles.newBetButton,
+                (!canCreateRound || creatingRound) && styles.newBetButtonDisabled,
+                pressed && canCreateRound && styles.newBetButtonPressed,
+              ]}
+            >
+              <Text style={styles.newBetButtonText}>
+                {creatingRound ? "Creating…" : "New Bet"}
+              </Text>
+            </Pressable>
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.betSwitcher}
+          >
+            {activeRounds.map((item) => {
+              const selected = item.id === round?.id;
+              return (
+                <Pressable
+                  key={item.id}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  onPress={() => setSelectedRoundId(item.id)}
+                  style={[
+                    styles.betOption,
+                    selected && styles.betOptionActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.betOptionTitle,
+                      selected && styles.betOptionTitleActive,
+                    ]}
+                  >
+                    Bet #{item.betNumber ?? "—"}
+                  </Text>
+                  <Text style={styles.betOptionMeta}>
+                    {item.status === "open" ? "Open" : "Locked"} ·{" "}
+                    {item.legs.length} leg{item.legs.length === 1 ? "" : "s"}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+          {!canCreateRound &&
+          activeRounds.length < activeBetLimit &&
+          emptyOpenBet ? (
+            <Text style={styles.betRule}>
+              Add a leg to the empty open bet before creating another.
+            </Text>
+          ) : null}
+          <ErrorText message={createRoundError} />
+        </Card>
+      ) : null}
+
       {isOpen && round && members.length > 0 ? (
         <View style={styles.section}>
           <RoundProgress
@@ -158,7 +280,7 @@ export default function GroupRoundScreen() {
           ) : null}
           <LegsList
             legs={round.legs}
-            legLinks={data.betslipLinks?.legLinks}
+            legLinks={(round.betslipLinks ?? data.betslipLinks)?.legLinks}
             showOpenLinks={isLocked && resolvedLegs === 0}
             inProgress={isLocked}
             showLegIndex={legsPerMember > 1}
@@ -196,13 +318,17 @@ export default function GroupRoundScreen() {
             bookmakerRankings={rankings}
             betslipLink={
               isLocked && resolvedLegs === 0
-                ? data.betslipLink
+                ? round?.betslipLink ?? data.betslipLink
                 : isOpen
-                  ? data.betslipLink
+                  ? round?.betslipLink ?? data.betslipLink
                   : null
             }
-            betslipLinkQuality={data.betslipLinks?.primaryLinkQuality ?? null}
-            betslipHasAllLegLinks={data.betslipLinks?.primaryHasAllLegLinks ?? false}
+            betslipLinkQuality={
+              (round?.betslipLinks ?? data.betslipLinks)?.primaryLinkQuality ?? null
+            }
+            betslipHasAllLegLinks={
+              (round?.betslipLinks ?? data.betslipLinks)?.primaryHasAllLegLinks ?? false
+            }
             legCount={round?.legs.length ?? 1}
             // Show the ranked best-odds-across-bookmakers list while open
             // (provisional) and once locked (odds captured at lock) — locked is
@@ -308,6 +434,7 @@ export default function GroupRoundScreen() {
 
       {round && token ? (
         <RoundThread
+          key={round.id}
           roundId={round.id}
           token={token}
           currentUserId={user?.id}
@@ -345,6 +472,39 @@ const styles = StyleSheet.create({
   section: { gap: 8 },
   sectionTitle: { color: colors.text, fontSize: 18, fontWeight: "600" },
   meta: { color: colors.muted, fontSize: 13 },
+  activeBetsHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  activeBetsTitle: { color: colors.text, fontSize: 16, fontWeight: "600" },
+  newBetButton: {
+    borderRadius: 8,
+    backgroundColor: colors.accent,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+  },
+  newBetButtonDisabled: { opacity: 0.45 },
+  newBetButtonPressed: { opacity: 0.8 },
+  newBetButtonText: { color: colors.onAccent, fontSize: 13, fontWeight: "600" },
+  betSwitcher: { gap: 8, paddingTop: 12, paddingBottom: 4 },
+  betOption: {
+    minWidth: 116,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 9,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  betOptionActive: {
+    borderColor: colors.accent,
+    backgroundColor: "rgba(20, 83, 45, 0.4)",
+  },
+  betOptionTitle: { color: colors.text, fontSize: 14, fontWeight: "600" },
+  betOptionTitleActive: { color: colors.accent },
+  betOptionMeta: { color: colors.muted, fontSize: 12, marginTop: 2 },
+  betRule: { color: colors.muted, fontSize: 12, marginTop: 8 },
   lockedBanner: {
     borderWidth: 1,
     borderColor: "rgba(34, 197, 94, 0.3)",

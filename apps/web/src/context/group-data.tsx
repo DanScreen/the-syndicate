@@ -10,6 +10,58 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 
+export type GroupActiveRound = {
+  id: string;
+  betNumber: number | null;
+  status: string;
+  legsPerMember: number;
+  combinedOdds: number | null;
+  bestBookmakerId: string | null;
+  profitLossGbp: number | null;
+  createdAt: string;
+  lockedAt: string | null;
+  accaBookmakerRankings?: {
+    bookmakerId: string;
+    bookmakerName: string;
+    combinedOdds: number;
+    url?: string | null;
+    hasAllLegLinks?: boolean;
+    linkQuality?: "deeplink" | "hub" | null;
+  }[] | null;
+  legs: {
+    id: string;
+    user: { id: string; name: string };
+    legIndex?: number;
+    fixtureId: string;
+    homeTeam: string;
+    awayTeam: string;
+    competition: string;
+    kickoff: string;
+    marketType: string;
+    selectionLabel: string;
+    marketLabel: string;
+    odds: number;
+    bookmakerName: string;
+    outcome: string;
+    pointsAwarded: number;
+  }[];
+  betslipLink: string | null;
+  betslipLinks: {
+    primaryLink: string | null;
+    primaryBookmakerId: string | null;
+    primaryLinkQuality?: "deeplink" | "hub" | null;
+    primaryHasAllLegLinks?: boolean;
+    legLinks: {
+      legId: string;
+      userName: string;
+      selectionLabel: string;
+      fixtureLabel: string;
+      url: string | null;
+      linkQuality?: "deeplink" | "hub" | null;
+    }[];
+  } | null;
+};
+
 export type GroupData = {
   group: {
     id: string;
@@ -17,6 +69,7 @@ export type GroupData = {
     inviteCode: string;
     status: string;
     legsPerMember: number;
+    maxActiveBets: number;
     memberCount: number;
     unreadMessageCount?: number;
     members: { id: string; name: string; role: string }[];
@@ -30,39 +83,8 @@ export type GroupData = {
     legsLost: number;
     role: string;
   }[];
-  activeRound: {
-    id: string;
-    status: string;
-    legsPerMember: number;
-    combinedOdds: number | null;
-    bestBookmakerId: string | null;
-    profitLossGbp: number | null;
-    accaBookmakerRankings?: {
-      bookmakerId: string;
-      bookmakerName: string;
-      combinedOdds: number;
-      url?: string | null;
-      hasAllLegLinks?: boolean;
-      linkQuality?: "deeplink" | "hub" | null;
-    }[] | null;
-    legs: {
-      id: string;
-      user: { id: string; name: string };
-      legIndex?: number;
-      fixtureId: string;
-      homeTeam: string;
-      awayTeam: string;
-      competition: string;
-      kickoff: string;
-      marketType: string;
-      selectionLabel: string;
-      marketLabel: string;
-      odds: number;
-      bookmakerName: string;
-      outcome: string;
-      pointsAwarded: number;
-    }[];
-  } | null;
+  activeRound: GroupActiveRound | null;
+  activeRounds: GroupActiveRound[];
   recentRounds: {
     id: string;
     status: string;
@@ -151,14 +173,14 @@ export function GroupDataProvider({
     reload();
   }, [reload]);
 
-  // Refresh locked accas so leg results appear as matches finish.
+  // Refresh while any acca is locked so leg results appear as matches finish.
   useEffect(() => {
-    if (data?.activeRound?.status !== "locked") return;
+    if (!data?.activeRounds?.some((round) => round.status === "locked")) return;
     const interval = setInterval(() => {
       void reload();
     }, 60_000);
     return () => clearInterval(interval);
-  }, [data?.activeRound?.status, data?.activeRound?.id, reload]);
+  }, [data?.activeRounds, reload]);
 
   return (
     <GroupDataContext.Provider value={{ data, loading, reload, markChatRead }}>

@@ -124,6 +124,9 @@ export default function GroupsScreen() {
                   </View>
                   <Text style={styles.meta}>
                     {g.memberCount} members · Owner: {g.ownerName}
+                    {g.activeBetCount > 1
+                      ? ` · ${g.activeBetCount} active bets`
+                      : ""}
                   </Text>
                   <View style={styles.pointsRow}>
                     <Text style={[styles.points, pointsStyle(g.groupPoints)]}>
