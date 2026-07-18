@@ -12,6 +12,7 @@ import { lockOpenRoundsAtKickoff } from "@/lib/rounds/lock-open-rounds-at-kickof
 import { openRound } from "@/lib/rounds/open-round";
 import { memberNetPointsAcrossRounds } from "@/lib/stats/helpers";
 import { prisma } from "@tiki-acca/database";
+import { Prisma } from "@prisma/client";
 import type { AccaBookmakerRanking } from "@tiki-acca/shared";
 import {
   allMembersFilledQuota,
@@ -28,6 +29,10 @@ const recentRoundInclude = {
   },
 } as const;
 
+type ActiveRoundRecord = Prisma.RoundGetPayload<{
+  include: typeof recentRoundInclude;
+}>;
+
 function rankedLinksForClient(
   betslip: ReturnType<typeof buildRoundBetslipLinks>
 ): AccaBookmakerRanking[] {
@@ -39,6 +44,69 @@ function rankedLinksForClient(
     hasAllLegLinks: r.hasAllLegLinks,
     linkQuality: r.linkQuality,
   }));
+}
+
+async function activeRoundForClient(round: ActiveRoundRecord) {
+  let accaBookmakerRankings: AccaBookmakerRanking[] | null = null;
+  let betslipLinks = null;
+  let betslipLink: string | null = null;
+  let previewCombinedOdds: number | null = null;
+  let previewBestBookmakerId: string | null = null;
+
+  if (round.legs.length > 0) {
+    const { rankings: computedRankings, bookmakerLinksByLegId } =
+      await computeAccaRankingsForLegs(round.legs);
+    const legsForLinks = mergeLegBookmakerLinks(
+      round.legs,
+      bookmakerLinksByLegId
+    );
+
+    if (round.status === "locked") {
+      const stored = round.accaBookmakerRankings as AccaBookmakerRanking[] | null;
+      const rankings =
+        stored && stored.length > 0 ? stored : computedRankings;
+      betslipLinks = buildRoundBetslipLinks(
+        legsForLinks,
+        rankings,
+        round.bestBookmakerId
+      );
+      accaBookmakerRankings = rankedLinksForClient(betslipLinks);
+      betslipLink = betslipLinks.primaryLink;
+    } else if (round.status === "open" && computedRankings.length > 0) {
+      previewBestBookmakerId = computedRankings[0]!.bookmakerId;
+      previewCombinedOdds = computedRankings[0]!.combinedOdds;
+      betslipLinks = buildRoundBetslipLinks(
+        legsForLinks,
+        computedRankings,
+        previewBestBookmakerId
+      );
+      accaBookmakerRankings = rankedLinksForClient(betslipLinks);
+      betslipLink = betslipLinks.primaryLink;
+    }
+  }
+
+  const legs = [...round.legs].sort((a, b) => {
+    if (a.userId !== b.userId) {
+      return a.user.name.localeCompare(b.user.name);
+    }
+    return a.legIndex - b.legIndex;
+  });
+
+  return {
+    ...round,
+    legs,
+    combinedOdds:
+      round.status === "open" && previewCombinedOdds != null
+        ? previewCombinedOdds
+        : round.combinedOdds,
+    bestBookmakerId:
+      round.status === "open" && previewBestBookmakerId
+        ? previewBestBookmakerId
+        : round.bestBookmakerId,
+    accaBookmakerRankings,
+    betslipLink,
+    betslipLinks,
+  };
 }
 
 export async function GET(_request: Request, { params }: Params) {
@@ -72,7 +140,6 @@ export async function GET(_request: Request, { params }: Params) {
       rounds: {
         where: { status: { in: ["open", "locked"] } },
         orderBy: { createdAt: "desc" },
-        take: 1,
         include: recentRoundInclude,
       },
     },
@@ -82,54 +149,67 @@ export async function GET(_request: Request, { params }: Params) {
     return NextResponse.json({ error: "Group not found" }, { status: 404 });
   }
 
-  let activeRound = group.rounds[0] ?? null;
+  let activeRounds = group.rounds;
 
-  if (!activeRound) {
-    const created = await openRound(id);
-    activeRound = { ...created, legs: [] };
-    group.status = "open";
-  } else if (activeRound.status === "open") {
-    await lockOpenRoundsAtKickoff();
-    let refreshed = await prisma.round.findUnique({
-      where: { id: activeRound.id },
+  if (activeRounds.length === 0) {
+    await openRound(id);
+    activeRounds = await prisma.round.findMany({
+      where: { groupId: id, status: { in: ["open", "locked"] } },
+      orderBy: { createdAt: "desc" },
       include: recentRoundInclude,
     });
-    if (refreshed) activeRound = refreshed;
+    group.status = "open";
+  } else if (activeRounds.some((round) => round.status === "open")) {
+    await lockOpenRoundsAtKickoff();
+    activeRounds = await prisma.round.findMany({
+      where: { groupId: id, status: { in: ["open", "locked"] } },
+      orderBy: { createdAt: "desc" },
+      include: recentRoundInclude,
+    });
 
-    // Final-submit lock can fail if live odds vanished (fixture kicked off /
-    // feed gap). Retry here so the round doesn't sit on "locking…" forever.
-    if (
-      activeRound.status === "open" &&
-      allMembersFilledQuota({
-        memberUserIds: group.members.map((m) => m.userId),
-        legs: activeRound.legs,
-        legsPerMember: activeRound.legsPerMember,
-      })
-    ) {
-      try {
-        await claimAndLockRound(activeRound.id);
-      } catch (err) {
-        console.error("[groups] retry lock on load failed", activeRound.id, err);
+    // Final-submit locks can fail if live odds vanished (fixture kicked off /
+    // feed gap). Retry each eligible open bet on load.
+    for (const round of activeRounds) {
+      if (
+        round.status !== "open" ||
+        !allMembersFilledQuota({
+          memberUserIds: group.members.map((m) => m.userId),
+          legs: round.legs,
+          legsPerMember: round.legsPerMember,
+        })
+      ) {
+        continue;
       }
-      refreshed = await prisma.round.findUnique({
-        where: { id: activeRound.id },
-        include: recentRoundInclude,
-      });
-      if (refreshed) activeRound = refreshed;
+      try {
+        await claimAndLockRound(round.id);
+      } catch (err) {
+        console.error("[groups] retry lock on load failed", round.id, err);
+      }
     }
+
+    activeRounds = await prisma.round.findMany({
+      where: { groupId: id, status: { in: ["open", "locked"] } },
+      orderBy: { createdAt: "desc" },
+      include: recentRoundInclude,
+    });
   }
 
   // Drop duplicate market-family legs from open / pre-kickoff locked rounds
   // that were submitted before the uniqueness rule shipped.
-  if (activeRound && activeRound.legs.length > 1) {
-    const purged = await purgeDuplicateMarketsInRound(activeRound.id);
+  let purgedAny = false;
+  for (const round of activeRounds) {
+    if (round.legs.length <= 1) continue;
+    const purged = await purgeDuplicateMarketsInRound(round.id);
     if (purged.removedLegIds.length > 0) {
-      const refreshedAfterPurge = await prisma.round.findUnique({
-        where: { id: activeRound.id },
-        include: recentRoundInclude,
-      });
-      if (refreshedAfterPurge) activeRound = refreshedAfterPurge;
+      purgedAny = true;
     }
+  }
+  if (purgedAny) {
+    activeRounds = await prisma.round.findMany({
+      where: { groupId: id, status: { in: ["open", "locked"] } },
+      orderBy: { createdAt: "desc" },
+      include: recentRoundInclude,
+    });
   }
 
   const [recentSettled, settledForLeaderboard] = await Promise.all([
@@ -145,43 +225,15 @@ export async function GET(_request: Request, { params }: Params) {
     }),
   ]);
 
-  let accaBookmakerRankings: AccaBookmakerRanking[] | null = null;
-  let betslipLinks = null;
-  let betslipLink: string | null = null;
-  let previewCombinedOdds: number | null = null;
-  let previewBestBookmakerId: string | null = null;
-
-  if (activeRound && activeRound.legs.length > 0) {
-    const { rankings: computedRankings, bookmakerLinksByLegId } =
-      await computeAccaRankingsForLegs(activeRound.legs);
-    const legsForLinks = mergeLegBookmakerLinks(activeRound.legs, bookmakerLinksByLegId);
-
-    if (activeRound.status === "locked") {
-      const stored = activeRound.accaBookmakerRankings as AccaBookmakerRanking[] | null;
-      const rankings =
-        stored && stored.length > 0 ? stored : computedRankings;
-
-      betslipLinks = buildRoundBetslipLinks(
-        legsForLinks,
-        rankings,
-        activeRound.bestBookmakerId
-      );
-
-      accaBookmakerRankings = rankedLinksForClient(betslipLinks);
-      betslipLink = betslipLinks.primaryLink;
-    } else if (activeRound.status === "open" && computedRankings.length > 0) {
-      // Live preview from current submitted legs — not persisted until lock.
-      previewBestBookmakerId = computedRankings[0]!.bookmakerId;
-      previewCombinedOdds = computedRankings[0]!.combinedOdds;
-      betslipLinks = buildRoundBetslipLinks(
-        legsForLinks,
-        computedRankings,
-        previewBestBookmakerId
-      );
-      accaBookmakerRankings = rankedLinksForClient(betslipLinks);
-      betslipLink = betslipLinks.primaryLink;
-    }
-  }
+  const activeRoundViews = await Promise.all(
+    activeRounds.map(activeRoundForClient)
+  );
+  activeRoundViews.sort((a, b) => {
+    if (a.status === "open" && b.status !== "open") return -1;
+    if (a.status !== "open" && b.status === "open") return 1;
+    return (b.betNumber ?? 0) - (a.betNumber ?? 0);
+  });
+  const activeRound = activeRoundViews[0] ?? null;
 
   // Live points (same rules as Performance) — denormalized GroupMember.points
   // can be stale after scoring rule changes / equal-split backfills.
@@ -196,14 +248,6 @@ export async function GET(_request: Request, { params }: Params) {
     }))
     .sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
 
-  const sortedActiveLegs = activeRound
-    ? [...activeRound.legs].sort((a, b) => {
-        if (a.userId !== b.userId) {
-          return a.user.name.localeCompare(b.user.name);
-        }
-        return a.legIndex - b.legIndex;
-      })
-    : [];
   const unreadSince =
     membership.lastReadMessageAt && membership.lastReadMessageAt > membership.joinedAt
       ? membership.lastReadMessageAt
@@ -226,6 +270,7 @@ export async function GET(_request: Request, { params }: Params) {
       inviteCode: group.inviteCode,
       status: activeRound?.status ?? group.status,
       legsPerMember: group.legsPerMember,
+      maxActiveBets: group.maxActiveBets,
       owner: group.owner,
       memberCount: group.members.length,
       unreadMessageCount,
@@ -236,24 +281,10 @@ export async function GET(_request: Request, { params }: Params) {
       })),
     },
     leaderboard,
-    activeRound: activeRound
-      ? {
-          ...activeRound,
-          legs: sortedActiveLegs,
-          legsPerMember: activeRound.legsPerMember,
-          combinedOdds:
-            activeRound.status === "open" && previewCombinedOdds != null
-              ? previewCombinedOdds
-              : activeRound.combinedOdds,
-          bestBookmakerId:
-            activeRound.status === "open" && previewBestBookmakerId
-              ? previewBestBookmakerId
-              : activeRound.bestBookmakerId,
-          accaBookmakerRankings,
-        }
-      : null,
-    betslipLink,
-    betslipLinks,
+    activeRound,
+    activeRounds: activeRoundViews,
+    betslipLink: activeRound?.betslipLink ?? null,
+    betslipLinks: activeRound?.betslipLinks ?? null,
     isOwner: membership.role === "owner",
     recentRounds: recentSettled.map(mapHistoryRound),
   });
@@ -261,9 +292,8 @@ export async function GET(_request: Request, { params }: Params) {
 
 /**
  * Owner updates group settings.
- * When the active round is still open (not locked / not past kickoff), the new
- * quota applies to that open bet immediately. Locked and in-progress rounds are
- * left alone — the group setting then applies to the next open round.
+ * Leg quota changes apply to every eligible open bet; locked/in-progress bets
+ * keep their snapshot. The active-bet cap cannot be lowered below current use.
  */
 export async function PATCH(request: Request, { params }: Params) {
   const { session, error } = await requireSession();
@@ -276,117 +306,157 @@ export async function PATCH(request: Request, { params }: Params) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const membership = await prisma.groupMember.findUnique({
-    where: {
-      groupId_userId: { groupId: id, userId: session!.user!.id },
-    },
+  const updateResult = await prisma.$transaction(async (tx) => {
+    await tx.$executeRaw(
+      Prisma.sql`SELECT pg_advisory_xact_lock(hashtext(${id}))`
+    );
+
+    const membership = await tx.groupMember.findUnique({
+      where: {
+        groupId_userId: { groupId: id, userId: session!.user!.id },
+      },
+      include: {
+        group: {
+          include: { members: { select: { userId: true } } },
+        },
+      },
+    });
+    if (!membership || membership.role !== "owner") {
+      return { error: "Only the group owner can change settings", status: 403 };
+    }
+
+    const activeRounds = await tx.round.findMany({
+      where: { groupId: id, status: { in: ["open", "locked"] } },
+      include: {
+        legs: { select: { userId: true, kickoff: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    const nextQuota =
+      parsed.data.legsPerMember ?? membership.group.legsPerMember;
+    const nextMax =
+      parsed.data.maxActiveBets ?? membership.group.maxActiveBets;
+
+    if (nextMax < activeRounds.length) {
+      return {
+        error: `Can't lower the limit to ${nextMax} while ${activeRounds.length} bets are still open or locked`,
+        status: 409,
+      };
+    }
+
+    const applicableOpenRounds = activeRounds.filter(
+      (round) =>
+        round.status === "open" && !isPastKickoffCutoff(round.legs)
+    );
+    if (parsed.data.legsPerMember !== undefined) {
+      for (const round of applicableOpenRounds) {
+        const counts = countLegsByUser(round.legs);
+        if ([...counts.values()].some((count) => count > nextQuota)) {
+          return {
+            error: `Can't lower to ${nextQuota}. At least one member already has more than ${nextQuota} leg${nextQuota === 1 ? "" : "s"} on Bet #${round.betNumber ?? "?"}.`,
+            status: 409,
+          };
+        }
+      }
+    }
+
+    const group = await tx.group.update({
+      where: { id },
+      data: {
+        ...(parsed.data.legsPerMember !== undefined
+          ? { legsPerMember: nextQuota }
+          : {}),
+        ...(parsed.data.maxActiveBets !== undefined
+          ? { maxActiveBets: nextMax }
+          : {}),
+      },
+      select: {
+        id: true,
+        name: true,
+        legsPerMember: true,
+        maxActiveBets: true,
+      },
+    });
+
+    if (
+      parsed.data.legsPerMember !== undefined &&
+      applicableOpenRounds.length > 0
+    ) {
+      await tx.round.updateMany({
+        where: { id: { in: applicableOpenRounds.map((round) => round.id) } },
+        data: { legsPerMember: nextQuota },
+      });
+    }
+
+    return {
+      group,
+      applicableOpenRounds,
+      memberUserIds: membership.group.members.map((member) => member.userId),
+    };
   });
 
-  if (!membership || membership.role !== "owner") {
+  if ("error" in updateResult) {
     return NextResponse.json(
-      { error: "Only the group owner can change settings" },
-      { status: 403 }
+      { error: updateResult.error },
+      { status: updateResult.status }
     );
   }
 
-  const nextQuota = parsed.data.legsPerMember;
-
-  const activeRound = await prisma.round.findFirst({
-    where: { groupId: id, status: { in: ["open", "locked"] } },
-    include: {
-      legs: { select: { userId: true, kickoff: true } },
-      group: { include: { members: { select: { userId: true } } } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
-
-  let appliedToOpenRound = false;
-  let note =
-    "Saved. Legs per member will apply to the next open round.";
-
-  if (activeRound?.status === "open") {
-    if (isPastKickoffCutoff(activeRound.legs)) {
-      note =
-        "Saved for the next round. The current open bet is already in progress (first kickoff), so its quota stays unchanged.";
-    } else {
-      const counts = countLegsByUser(activeRound.legs);
-      const overQuota = [...counts.entries()].filter(
-        ([, count]) => count > nextQuota
-      );
-      if (overQuota.length > 0) {
-        return NextResponse.json(
-          {
-            error: `Can't lower to ${nextQuota}. At least one member already has more than ${nextQuota} leg${nextQuota === 1 ? "" : "s"} on this open round.`,
-          },
-          { status: 409 }
-        );
-      }
-
-      await prisma.$transaction([
-        prisma.group.update({
-          where: { id },
-          data: { legsPerMember: nextQuota },
-        }),
-        prisma.round.update({
-          where: { id: activeRound.id },
-          data: { legsPerMember: nextQuota },
-        }),
-      ]);
-      appliedToOpenRound = true;
-      note =
-        nextQuota === activeRound.legsPerMember
-          ? "Saved."
-          : `Saved. This open round is now ${nextQuota} leg${nextQuota === 1 ? "" : "s"} per member.`;
-
-      const memberUserIds = activeRound.group.members.map((m) => m.userId);
-      const shouldLock = allMembersFilledQuota({
-        memberUserIds,
-        legs: activeRound.legs,
-        legsPerMember: nextQuota,
-      });
-      if (shouldLock && activeRound.legs.length > 0) {
+  let lockedAfterChange = 0;
+  if (parsed.data.legsPerMember !== undefined) {
+    for (const round of updateResult.applicableOpenRounds) {
+      if (
+        round.legs.length > 0 &&
+        allMembersFilledQuota({
+          memberUserIds: updateResult.memberUserIds,
+          legs: round.legs,
+          legsPerMember: updateResult.group.legsPerMember,
+        })
+      ) {
         try {
-          await claimAndLockRound(activeRound.id);
-          note =
-            "Saved. Everyone was already at the new quota. The acca is locking.";
-        } catch (err) {
+          await claimAndLockRound(round.id);
+          lockedAfterChange++;
+        } catch (error) {
           console.error(
             "[groups] lock after legsPerMember change failed",
-            activeRound.id,
-            err
+            round.id,
+            error
           );
         }
       }
-
-      const group = await prisma.group.findUniqueOrThrow({
-        where: { id },
-        select: { id: true, name: true, legsPerMember: true },
-      });
-
-      return NextResponse.json({
-        group,
-        appliedToOpenRound,
-        note,
-      });
     }
-  } else if (activeRound?.status === "locked") {
-    note =
-      "Saved for the next round. The current bet is locked, so its quota stays unchanged.";
   }
 
-  const group = await prisma.group.update({
-    where: { id },
-    data: { legsPerMember: nextQuota },
-    select: {
-      id: true,
-      name: true,
-      legsPerMember: true,
-    },
-  });
+  const notes = ["Saved."];
+  if (parsed.data.maxActiveBets !== undefined) {
+    notes.push(
+      `Up to ${updateResult.group.maxActiveBets} active bet${
+        updateResult.group.maxActiveBets === 1 ? "" : "s"
+      } allowed.`
+    );
+  }
+  if (parsed.data.legsPerMember !== undefined) {
+    notes.push(
+      updateResult.applicableOpenRounds.length > 0
+        ? `Updated ${updateResult.applicableOpenRounds.length} open bet${
+            updateResult.applicableOpenRounds.length === 1 ? "" : "s"
+          } to ${updateResult.group.legsPerMember} leg${
+            updateResult.group.legsPerMember === 1 ? "" : "s"
+          } per member.`
+        : "The new leg quota will apply to the next open bet."
+    );
+  }
+  if (lockedAfterChange > 0) {
+    notes.push(
+      `${lockedAfterChange} bet${lockedAfterChange === 1 ? "" : "s"} ${
+        lockedAfterChange === 1 ? "is" : "are"
+      } now locking because everyone already filled the new quota.`
+    );
+  }
 
   return NextResponse.json({
-    group,
-    appliedToOpenRound,
-    note,
+    group: updateResult.group,
+    appliedToOpenRound: updateResult.applicableOpenRounds.length > 0,
+    note: notes.join(" "),
   });
 }

@@ -46,12 +46,15 @@ export type GroupSummary = {
   ownerName: string;
   /** Group default — legs each member submits on new rounds. */
   legsPerMember: number;
+  maxActiveBets: number;
+  activeBetCount: number;
   /** Group acca points (combined-odds scoring on wins). */
   groupPoints: number;
   /** This member's leg points in the group. */
   points: number;
   activeRound: {
     id: string;
+    betNumber: number | null;
     status: RoundStatus;
     combinedOdds: number | null;
     legsPerMember: number;
@@ -145,6 +148,21 @@ export type GroupHistoryResponse = {
 /** @deprecated Prefer HistoryRound — kept for older mobile clients during rollout. */
 export type RecentRoundSummary = HistoryRound;
 
+export type ActiveRound = {
+  id: string;
+  betNumber: number | null;
+  status: RoundStatus;
+  legsPerMember: number;
+  combinedOdds: number | null;
+  bestBookmakerId: string | null;
+  legs: GroupLeg[];
+  accaBookmakerRankings?: AccaBookmakerRanking[] | null;
+  betslipLink: string | null;
+  betslipLinks: BetslipLinks | null;
+  createdAt: string;
+  lockedAt?: string | null;
+};
+
 export type GroupDetailResponse = {
   group: {
     id: string;
@@ -152,21 +170,15 @@ export type GroupDetailResponse = {
     inviteCode: string;
     status: string;
     legsPerMember: number;
+    maxActiveBets: number;
     owner: { id: string; name: string };
     memberCount: number;
     unreadMessageCount: number;
     members: GroupMember[];
   };
   leaderboard: GroupLeaderboardEntry[];
-  activeRound: {
-    id: string;
-    status: RoundStatus;
-    legsPerMember: number;
-    combinedOdds: number | null;
-    bestBookmakerId: string | null;
-    legs: GroupLeg[];
-    accaBookmakerRankings?: AccaBookmakerRanking[] | null;
-  } | null;
+  activeRound: ActiveRound | null;
+  activeRounds: ActiveRound[];
   betslipLink: string | null;
   betslipLinks: BetslipLinks | null;
   isOwner: boolean;

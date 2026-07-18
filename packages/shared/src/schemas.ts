@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { DEFAULT_LEGS_PER_MEMBER, LEGS_PER_MEMBER_OPTIONS } from "./constants";
+import {
+  DEFAULT_LEGS_PER_MEMBER,
+  DEFAULT_MAX_ACTIVE_BETS,
+  LEGS_PER_MEMBER_OPTIONS,
+  MAX_ACTIVE_BETS_OPTIONS,
+} from "./constants";
 import { containsProfanity } from "./profanity";
 import { isValidDateOfBirth, meetsMinimumAge, MIN_SIGN_UP_AGE } from "./age";
 
@@ -50,6 +55,15 @@ export const legsPerMemberSchema = z
     { message: "legsPerMember must be 1, 2, or 3" }
   );
 
+export const maxActiveBetsSchema = z
+  .number()
+  .int()
+  .refine(
+    (n): n is (typeof MAX_ACTIVE_BETS_OPTIONS)[number] =>
+      (MAX_ACTIVE_BETS_OPTIONS as readonly number[]).includes(n),
+    { message: "maxActiveBets must be between 1 and 5" }
+  );
+
 export const createGroupSchema = z.object({
   name: z
     .string()
@@ -59,11 +73,18 @@ export const createGroupSchema = z.object({
       message: "Please choose a different group name",
     }),
   legsPerMember: legsPerMemberSchema.optional().default(DEFAULT_LEGS_PER_MEMBER),
+  maxActiveBets: maxActiveBetsSchema
+    .optional()
+    .default(DEFAULT_MAX_ACTIVE_BETS),
 });
 
 export const updateGroupSettingsSchema = z.object({
-  legsPerMember: legsPerMemberSchema,
-});
+  legsPerMember: legsPerMemberSchema.optional(),
+  maxActiveBets: maxActiveBetsSchema.optional(),
+}).refine(
+  (value) => value.legsPerMember !== undefined || value.maxActiveBets !== undefined,
+  { message: "At least one group setting is required" }
+);
 
 export const joinGroupSchema = z.object({
   inviteCode: z.string().min(6).max(12),

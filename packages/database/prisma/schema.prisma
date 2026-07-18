@@ -58,6 +58,8 @@ model Group {
   maxMembers     Int           @default(10)
   /// Legs each member must submit per round (1–3). Applies to newly opened rounds.
   legsPerMember  Int           @default(1)
+  /// Maximum simultaneous open or locked bets (1–5).
+  maxActiveBets  Int           @default(1)
   status         String        @default("open")
   ownerId        String
   owner          User          @relation("GroupOwner", fields: [ownerId], references: [id])
@@ -87,6 +89,8 @@ model GroupMember {
 model Round {
   id              String   @id @default(cuid())
   groupId         String
+  /// Stable, group-scoped display number. Nullable for compatibility with direct test fixtures.
+  betNumber       Int?
   status          String   @default("open")
   /// Snapshot of group.legsPerMember when this round opened.
   legsPerMember   Int      @default(1)
@@ -104,6 +108,8 @@ model Round {
   group           Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
   legs            Leg[]
   messages        RoundMessage[]
+
+  @@unique([groupId, betNumber])
 }
 
 model Leg {

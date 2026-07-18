@@ -38,15 +38,22 @@ export async function GET() {
     memberships.map(async (m) => {
       const allRounds = m.group.rounds;
       const activeRoundRow =
-        allRounds.find((r) => r.status !== "settled") ?? null;
+        allRounds.find((r) => r.status === "open") ??
+        allRounds.find((r) => r.status === "locked") ??
+        null;
+      const activeBetCount = allRounds.filter(
+        (round) => round.status === "open" || round.status === "locked"
+      ).length;
       let activeRound: {
         id: string;
+        betNumber: number | null;
         status: string;
         combinedOdds: number | null;
         legsPerMember: number;
       } | null = activeRoundRow
         ? {
             id: activeRoundRow.id,
+            betNumber: activeRoundRow.betNumber,
             status: activeRoundRow.status,
             combinedOdds: activeRoundRow.combinedOdds,
             legsPerMember: activeRoundRow.legsPerMember,
@@ -56,6 +63,7 @@ export async function GET() {
         const opened = await openRound(m.group.id);
         activeRound = {
           id: opened.id,
+          betNumber: opened.betNumber,
           status: opened.status,
           combinedOdds: opened.combinedOdds,
           legsPerMember: opened.legsPerMember,
@@ -85,6 +93,8 @@ export async function GET() {
         status: activeRound?.status ?? "open",
         ownerName: m.group.owner.name,
         legsPerMember: m.group.legsPerMember,
+        maxActiveBets: m.group.maxActiveBets,
+        activeBetCount: activeBetCount || 1,
         groupPoints: groupNetPoints(allRounds),
         // Live member points (same as leaderboard / Performance) — not stored GroupMember.points.
         points: memberNetPointsAcrossRounds(allRounds, userId),
@@ -120,6 +130,7 @@ export async function POST(request: Request) {
   }
 
   const legsPerMember = parsed.data.legsPerMember;
+  const maxActiveBets = parsed.data.maxActiveBets;
 
   const group = await prisma.group.create({
     data: {
@@ -127,6 +138,7 @@ export async function POST(request: Request) {
       inviteCode,
       status: "open",
       legsPerMember,
+      maxActiveBets,
       ownerId: session!.user!.id,
       members: {
         create: {
@@ -135,7 +147,7 @@ export async function POST(request: Request) {
         },
       },
       rounds: {
-        create: { status: "open", legsPerMember },
+        create: { status: "open", legsPerMember, betNumber: 1 },
       },
     },
     include: {
