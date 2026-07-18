@@ -1,0 +1,49 @@
+WHAT TIKI ACCA IS
+
+Tiki Acca is a social score-keeping app for private groups of friends who
+follow football. Each member of a group picks one leg of a shared accumulator
+("acca"); the app tracks the picks, shows live bookmaker odds, and keeps
+points and leaderboards for bragging rights. Points have no monetary value.
+
+NOT A GAMBLING OPERATOR
+
+- No bets, wagers, or payments are accepted or processed anywhere in the app.
+- There are no in-app purchases and no virtual currency. The app is free.
+- Buttons such as "Open betslip" open the website of an independent,
+  UK-licensed bookmaker externally (in the browser). Any bet a user places
+  there is made directly with that licensed operator, outside this app.
+- Distribution is restricted to the United Kingdom, where the linked
+  bookmakers are licensed by the Gambling Commission.
+
+AGE AND RESPONSIBLE GAMBLING
+
+- Sign-up requires date of birth; 18+ is enforced server-side.
+- Age rating is set to 18+.
+- Responsible gambling guidance (BeGambleAware) is shown in the app, with a
+  link to begambleaware.org.
+
+USER-GENERATED CONTENT (GROUP CHAT)
+
+Chat exists only inside private, invite-only friend groups. Safeguards:
+- Profanity filter on posting.
+- Long-press any message to REPORT it (reports alert the moderation team).
+- Long-press to BLOCK a member — their messages are hidden immediately;
+  unblock from Account > Blocked members.
+- Message deletion by the author and by the group owner.
+- Contact: tikiacca@outlook.com (also linked in Account > Legal & support).
+
+ACCOUNT DELETION
+
+Account > Delete account permanently removes the user's personal data and
+revokes all sessions (Guideline 5.1.1(v)).
+
+DEMO ACCOUNT
+
+Email: [REVIEWER EMAIL — create on production before submitting]
+Password: [PASSWORD]
+This account is a member of an active group with a locked accumulator,
+settled results, chat history, and leaderboards, so all screens show real
+content. Odds data loads regardless of reviewer location; bookmaker links
+open external websites.
+
+Questions welcome: tikiacca@outlook.com
