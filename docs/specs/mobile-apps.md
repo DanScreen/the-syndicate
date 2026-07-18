@@ -88,7 +88,7 @@ Web uses Auth.js cookies; mobile uses a random **Bearer session token** on every
 | Groups list | `/dashboard` | `app/(main)/home.tsx` |
 | Create / join | `/groups/create`, `/groups/join` | `create-group.tsx`, `join-group.tsx` |
 | Group round | `group-ui.tsx` (full) | `groups/[id].tsx` + `components/group-round.tsx` |
-| Leg picker | 4-step + competition + market tiers | `SubmitLegForm` — competition, tiers (core + load more), grouped markets |
+| Leg picker | Progressive 4-step + competition + market tiers | `SubmitLegForm` — competition, tiers (core + load more), grouped markets; selected market collapses into outcomes |
 | Locked acca | `AccaSummary`, compare bookmakers until first result | `AccaSummary` + `LegsList` with outcomes; 60s poll when locked |
 | Group tabs | Round / Leaderboard / Performance | `groups/[id]/_layout.tsx` + tab screens |
 | Cross-group performance | `/performance` | `(main)/performance.tsx` |
@@ -175,6 +175,7 @@ Checklist for implementation. Web route → API → mobile screen.
 ### Phase 2 — Core loop
 
 - [x] Full 4-step leg picker (competition → fixture → market → selection)
+- [x] Progressive market drill-down — selecting a market hides the catalogue and immediately shows outcomes + **Change market**
 - [x] Market tiers: auto-load core; “Load more markets” for specials (no API credit copy in UI)
 - [x] Locked round: picks, outcome badges, frozen odds (`LegsList`, `RoundProgress`)
 - [x] `AccaSummary`: combined odds, compare bookmakers until first result, betslip CTA
