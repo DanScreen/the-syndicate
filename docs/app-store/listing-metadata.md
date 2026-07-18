@@ -13,7 +13,7 @@ Text fields for App Store Connect. Character limits noted; all within limit.
 | Content rights | Does not contain third-party content requiring additional rights *(odds/fixtures are licensed via The Odds API and football-data.org — see compliance statement if queried)* |
 | Age rating | 18+ (see age-rating-worksheet.md) |
 | Privacy Policy URL | https://www.tikiacca.com/privacy |
-| Support URL | https://www.tikiacca.com/about |
+| Support URL | https://www.tikiacca.com/support |
 | Marketing URL | https://www.tikiacca.com |
 | Copyright | © 2026 Tiki Acca |
 
