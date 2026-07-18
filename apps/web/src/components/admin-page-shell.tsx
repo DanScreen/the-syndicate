@@ -1,18 +1,17 @@
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/header";
 import { AdminNav } from "@/components/admin-nav";
-import { PageView } from "@/components/analytics/page-view";
 import { requireAdminPage } from "@/lib/admin";
 import { greetingFirstName } from "@/lib/user-display";
 
 export async function AdminPageShell({
   title,
   description,
-  path,
   children,
 }: {
   title: string;
   description?: string;
+  /** Retained for explicit page identity; global tracking uses the router path. */
   path: string;
   children: React.ReactNode;
 }) {
@@ -21,7 +20,6 @@ export async function AdminPageShell({
 
   return (
     <div className="min-h-screen">
-      <PageView path={path} userId={session!.user?.id} />
       <AppHeader userName={greetingFirstName(session!.user ?? {})} />
       <main className="mx-auto max-w-5xl px-4 py-8">
         <AdminNav />

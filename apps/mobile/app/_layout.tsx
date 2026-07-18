@@ -1,4 +1,5 @@
 import { AuthProvider, useAuth } from "@/auth/AuthProvider";
+import { ActivityTracker } from "@/analytics/activity-tracker";
 import { colors } from "@/config";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -56,6 +57,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <AuthProvider>
         <StatusBar style="light" />
+        <ActivityTracker />
         <RootNavigator />
       </AuthProvider>
     </SafeAreaProvider>

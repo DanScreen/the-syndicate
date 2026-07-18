@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 const links = [
   { href: "/admin", label: "Overview" },
+  { href: "/admin/activity", label: "Activity" },
   { href: "/admin/settlement", label: "Settlement" },
   { href: "/admin/leaderboards", label: "Leaderboards" },
   { href: "/admin/competitions", label: "Competitions" },
@@ -15,7 +16,7 @@ export function AdminNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="mb-8 flex gap-1 border-b border-border">
+    <nav className="mb-8 flex gap-1 overflow-x-auto border-b border-border">
       {links.map((link) => {
         const active =
           link.href === "/admin"

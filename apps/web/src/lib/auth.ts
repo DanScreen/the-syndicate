@@ -65,7 +65,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           if (!valid) return null;
 
           const role = await resolveUserRole(user.id, user.email, user.role);
-          recordAnalyticsEventAsync({ type: "login", userId: user.id });
+          recordAnalyticsEventAsync({
+            type: "login",
+            userId: user.id,
+            channel: "web",
+          });
 
           return {
             id: user.id,
