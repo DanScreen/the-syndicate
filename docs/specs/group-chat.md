@@ -80,6 +80,11 @@ System messages are **written at event time** by the existing lifecycle code pat
 | History tab | Read-only thread per settled round ("relive the carnage") |
 | Unread indicator | `GroupMember.lastReadMessageAt`; badge on group card on `/dashboard` and group tab |
 
+Concurrent bets keep separate round-scoped threads and the active-bet switcher
+shows only the selected thread. Unread state remains group-wide in this version:
+opening one thread advances `GroupMember.lastReadMessageAt` for the group, so
+per-bet unread badges are deferred.
+
 ## Notifications
 
 Through the existing dispatcher ([notifications.md](./notifications.md)) — **push only**, no email:

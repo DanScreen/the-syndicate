@@ -239,6 +239,11 @@ for each open round with legs.length >= 1:
 
 Skip rounds with zero legs (no deadline anchor) — matches [round-deadline-lock.md](./round-deadline-lock.md) open question.
 
+Concurrent bets are processed independently. A member can therefore receive a
+reminder for each open bet they have not joined; `NotificationLog` continues to
+dedupe by `roundId`. Current deep links open the group and do not yet preselect
+the notification’s round when several bets are active.
+
 ---
 
 ## API routes (proposed)

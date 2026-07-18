@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { after, describe, it } from "node:test";
 
 import { prisma } from "@tiki-acca/database";
+import { maxActiveBetsSchema } from "@tiki-acca/shared";
 import {
   createAdditionalRound,
   RoundCreationError,
@@ -72,6 +73,33 @@ after(async () => {
 });
 
 describe("additional active bets", () => {
+  it("validates the owner limit boundaries", () => {
+    assert.equal(maxActiveBetsSchema.safeParse(1).success, true);
+    assert.equal(maxActiveBetsSchema.safeParse(5).success, true);
+    assert.equal(maxActiveBetsSchema.safeParse(0).success, false);
+    assert.equal(maxActiveBetsSchema.safeParse(6).success, false);
+    assert.equal(maxActiveBetsSchema.safeParse(2.5).success, false);
+  });
+
+  it("rejects users who are not group members", async () => {
+    const { group } = await createGroup(3, true);
+    const outsider = await prisma.user.create({
+      data: {
+        firstName: "Outside",
+        lastName: "Tester",
+        name: "Outside Tester",
+        email: `outside-${Date.now()}-${Math.random().toString(36).slice(2)}@example.test`,
+        passwordHash: "not-a-real-hash",
+      },
+    });
+    userIds.push(outsider.id);
+    await assert.rejects(
+      createAdditionalRound(group.id, outsider.id),
+      (error: unknown) =>
+        error instanceof RoundCreationError && error.status === 403
+    );
+  });
+
   it("keeps manual creation disabled when the owner limit is one", async () => {
     const { group, user } = await createGroup(1, true);
     await assert.rejects(
@@ -126,5 +154,31 @@ describe("additional active bets", () => {
       }),
       2
     );
+  });
+
+  it("counts locked bets toward the active cap", async () => {
+    const { group, user } = await createGroup(2, true);
+    await prisma.round.updateMany({
+      where: { groupId: group.id },
+      data: { status: "locked", lockedAt: new Date() },
+    });
+    await createAdditionalRound(group.id, user.id);
+    await assert.rejects(
+      createAdditionalRound(group.id, user.id),
+      (error: unknown) =>
+        error instanceof RoundCreationError &&
+        error.message.includes("maximum")
+    );
+  });
+
+  it("does not count settled bets toward the active cap", async () => {
+    const { group, user } = await createGroup(2, true);
+    await prisma.round.updateMany({
+      where: { groupId: group.id },
+      data: { status: "settled", settledAt: new Date() },
+    });
+    const round = await createAdditionalRound(group.id, user.id);
+    assert.equal(round.status, "open");
+    assert.equal(round.betNumber, 2);
   });
 });

@@ -445,7 +445,7 @@ Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `Analytics
 
 Schema: `packages/database/prisma/schema.prisma`
 
-Recent migrations include `20260717210000_persistent_mobile_sessions` and `20260718190000_concurrent_group_bets`.
+Recent migrations include `20260718190000_concurrent_group_bets` and `20260718193000_concurrent_group_bets_constraints`.
 
 ---
 
@@ -502,7 +502,8 @@ Recent migrations include `20260717210000_persistent_mobile_sessions` and `20260
 9. **Odds snapshots in PostgreSQL** — shared across Cloud Run instances; refreshed by `POST /api/internal/warm-odds-cache` (Cloud Scheduler job in Terraform). Set `ODDS_DB_ONLY=true` so users never burn API credits. In-memory cache remains for quota block/snapshot and football-data only.
 10. **Mobile app** — Native app code complete. **You:** test via Expo Go or `expo run:ios --device` ([DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md)). **Mates:** Android APK; iPhone TestFlight after store fees. [FRIEND_TESTING.md](../apps/mobile/FRIEND_TESTING.md). Leg-edit parity shipped (same "Change my pick" flow as web). Admin pages are web-only by design.
 11. **Auth JWT** — middleware uses edge-safe `auth.config.ts` (no Prisma); `auth.ts` refreshes `role` from DB on each session update.
-12. **Chat realtime** — threads poll every 20 seconds while visible; no WebSocket/SSE, typing indicators, read receipts, media, or reaction notifications in v1. Chat push needs Expo/APNs/FCM setup on a physical device.
+12. **Chat realtime** — threads poll every 20 seconds while visible; no WebSocket/SSE, typing indicators, read receipts, media, or reaction notifications in v1. Concurrent bets have separate threads, but unread state remains group-wide (`GroupMember.lastReadMessageAt`), so opening one thread clears the group badge for all active threads. Chat push needs Expo/APNs/FCM setup on a physical device.
+13. **Concurrent-bet notification links** — reminder/lock/settle payloads carry `roundId`, but current web/mobile group URLs do not preselect that bet; the user lands on the group’s default active bet and can switch manually.
 
 ## Production checklist (operators)
 

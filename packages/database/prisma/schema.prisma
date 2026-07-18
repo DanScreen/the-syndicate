@@ -110,6 +110,7 @@ model Round {
   messages        RoundMessage[]
 
   @@unique([groupId, betNumber])
+  @@index([groupId, status, createdAt])
 }
 
 model Leg {

@@ -38,6 +38,8 @@ single-bet default more complicated.
   lock keyed by group ID, making cap enforcement atomic.
 - Existing rounds receive a group-scoped `betNumber` in migration
   `20260718190000_concurrent_group_bets`.
+- Migration `20260718193000_concurrent_group_bets_constraints` adds a database
+  `1–5` check and an active-round lookup index.
 - `GET /api/groups/[id]` retains `activeRound` and top-level betslip fields for
   older clients while adding `activeRounds`, with betslip data scoped to each round.
 
