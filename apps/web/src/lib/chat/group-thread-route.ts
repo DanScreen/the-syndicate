@@ -48,6 +48,18 @@ async function markGroupChatRead(groupId: string, userId: string) {
   });
 }
 
+/** Hide user messages from authors this member has blocked (App Review 1.2). */
+async function blockedAuthorFilter(userId: string) {
+  const blocks = await prisma.userBlock.findMany({
+    where: { blockerId: userId },
+    select: { blockedId: true },
+  });
+  if (blocks.length === 0) return {};
+  return {
+    NOT: { kind: "user", userId: { in: blocks.map((b) => b.blockedId) } },
+  };
+}
+
 export async function getGroupMessages(
   request: Request,
   groupId: string,
@@ -55,6 +67,8 @@ export async function getGroupMessages(
 ) {
   const memberError = await requireGroupMembership(groupId, userId);
   if (memberError) return memberError;
+
+  const notBlocked = await blockedAuthorFilter(userId);
 
   const url = new URL(request.url);
   const parsedQuery = messagesQuerySchema.safeParse({
@@ -81,6 +95,7 @@ export async function getGroupMessages(
     const page = await prisma.roundMessage.findMany({
       where: {
         groupId,
+        ...notBlocked,
         OR: [
           { createdAt: { lt: cursor.createdAt } },
           { createdAt: cursor.createdAt, id: { lt: before } },
@@ -110,6 +125,7 @@ export async function getGroupMessages(
     const messages = await prisma.roundMessage.findMany({
       where: {
         groupId,
+        ...notBlocked,
         OR: [
           { createdAt: { gt: cursor.createdAt } },
           { createdAt: cursor.createdAt, id: { gt: after } },
@@ -128,7 +144,7 @@ export async function getGroupMessages(
 
   const [latest, latestAnnouncements] = await Promise.all([
     prisma.roundMessage.findMany({
-      where: { groupId },
+      where: { groupId, ...notBlocked },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: limit + 1,
       include: messageInclude,
@@ -136,6 +152,7 @@ export async function getGroupMessages(
     prisma.roundMessage.findMany({
       where: {
         groupId,
+        ...notBlocked,
         round: { status: { in: ["open", "locked"] } },
         legId: { not: null },
         eventType: { in: ["leg_submitted", "leg_changed"] },

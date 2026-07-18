@@ -29,7 +29,15 @@ export class PushRegistrationError extends Error {
 }
 
 export async function registerForPushNotifications(
-  authToken: string
+  authToken: string,
+  options: {
+    /**
+     * Never show the system permission prompt — only refresh the token when
+     * permission is already granted. Used at launch; the prompt itself is
+     * reserved for the explicit opt-in button in Account (App Review 4.5.4).
+     */
+    silent?: boolean;
+  } = {}
 ): Promise<string | null> {
   if (!Device.isDevice) {
     return null;
@@ -40,7 +48,7 @@ export async function registerForPushNotifications(
   type PermissionLike = { granted?: boolean; status?: string };
   const existing = (await Notifications.getPermissionsAsync()) as PermissionLike;
   let granted = existing.granted ?? existing.status === "granted";
-  if (!granted) {
+  if (!granted && !options.silent) {
     const requested = (await Notifications.requestPermissionsAsync()) as PermissionLike;
     granted = requested.granted ?? requested.status === "granted";
   }

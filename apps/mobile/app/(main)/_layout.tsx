@@ -21,7 +21,9 @@ export default function MainLayout() {
 
   useEffect(() => {
     if (!token) return;
-    void registerForPushNotifications(token).catch(() => {});
+    // Silent: refreshes the push token only if permission is already granted.
+    // The permission prompt lives behind the explicit button in Account.
+    void registerForPushNotifications(token, { silent: true }).catch(() => {});
     const subscription = addNotificationResponseListener((groupId, screen) => {
       router.push(
         screen === "chat"

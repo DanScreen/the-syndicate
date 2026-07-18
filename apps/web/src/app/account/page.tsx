@@ -1,4 +1,5 @@
 import { PageView } from "@/components/analytics/page-view";
+import { DeleteAccount } from "@/components/delete-account";
 import { AppHeader } from "@/components/header";
 import { NotificationSettings } from "@/components/notification-settings";
 import { SignOutButton } from "@/components/sign-out-button";
@@ -62,6 +63,20 @@ export default async function AccountPage() {
           </p>
           <div className="mt-4">
             <SignOutButton />
+          </div>
+        </section>
+
+        <section className="mt-10 border-t border-border pt-8">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
+            Delete Account
+          </h2>
+          <p className="mt-2 text-sm text-muted">
+            Permanently removes your personal details from Tiki Acca and signs
+            you out everywhere. Group history stays for other members, shown as
+            &ldquo;Former member&rdquo;. This can&apos;t be undone.
+          </p>
+          <div className="mt-4">
+            <DeleteAccount />
           </div>
         </section>
       </main>

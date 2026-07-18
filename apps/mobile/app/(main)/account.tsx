@@ -1,6 +1,6 @@
 import { ApiError, api } from "@/api/client";
 import { useAuth } from "@/auth/AuthProvider";
-import { Button, Card, ErrorText, Title } from "@/components/ui";
+import { Button, Card, ErrorText, Field, Title } from "@/components/ui";
 import { colors, WEB_URL } from "@/config";
 import { copy } from "@/lib/copy";
 import type { NotificationPreferences } from "@tiki-acca/shared";
@@ -8,6 +8,7 @@ import { registerForPushNotifications } from "@/notifications/register";
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
+  Alert,
   Linking,
   Pressable,
   ScrollView,
@@ -97,6 +98,11 @@ export default function AccountScreen() {
   const [loading, setLoading] = useState(!prefs);
   const [error, setError] = useState("");
   const [pushStatus, setPushStatus] = useState<string | null>(null);
+  const [blocked, setBlocked] = useState<{ userId: string; name: string }[]>([]);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   const load = useCallback(async () => {
     if (!token) return;
@@ -118,6 +124,68 @@ export default function AccountScreen() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (!token) return;
+    api<{ blocks: { userId: string; name: string }[] }>("/api/user/blocks", {
+      token,
+    })
+      .then((data) => setBlocked(data.blocks))
+      .catch(() => {});
+  }, [token]);
+
+  async function unblock(userId: string) {
+    if (!token) return;
+    try {
+      await api<{ ok: boolean }>(`/api/users/${userId}/block`, {
+        method: "DELETE",
+        token,
+      });
+      setBlocked((current) => current.filter((b) => b.userId !== userId));
+    } catch {
+      setError("Couldn't unblock that member.");
+    }
+  }
+
+  function confirmDelete() {
+    if (!deletePassword.trim()) {
+      setDeleteError("Enter your password to confirm.");
+      return;
+    }
+    Alert.alert(
+      "Delete your account?",
+      "This permanently removes your personal details and signs you out everywhere. Groups where you're the only member are deleted; others keep their history.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete account",
+          style: "destructive",
+          onPress: () => void deleteAccount(),
+        },
+      ]
+    );
+  }
+
+  async function deleteAccount() {
+    if (!token) return;
+    setDeleteBusy(true);
+    setDeleteError("");
+    try {
+      await api<{ ok: boolean }>("/api/user", {
+        method: "DELETE",
+        token,
+        body: JSON.stringify({ password: deletePassword }),
+      });
+      await signOut();
+      router.replace("/sign-in");
+    } catch (e) {
+      setDeleteError(
+        e instanceof ApiError ? e.message : "Couldn't delete your account."
+      );
+    } finally {
+      setDeleteBusy(false);
+    }
+  }
 
   async function update(key: PrefKey, value: boolean) {
     if (!token || !prefs) return;
@@ -209,17 +277,40 @@ export default function AccountScreen() {
         </View>
       ) : null}
 
+      {blocked.length > 0 ? (
+        <Card>
+          <Text style={styles.cardTitle}>Blocked members</Text>
+          <Text style={styles.hint}>
+            You won&apos;t see chat messages from blocked members.
+          </Text>
+          {blocked.map((b) => (
+            <View key={b.userId} style={styles.blockedRow}>
+              <Text style={styles.blockedName}>{b.name}</Text>
+              <Pressable onPress={() => void unblock(b.userId)}>
+                <Text style={styles.link}>Unblock</Text>
+              </Pressable>
+            </View>
+          ))}
+        </Card>
+      ) : null}
+
       <Card>
-        <Text style={styles.cardTitle}>Legal</Text>
+        <Text style={styles.cardTitle}>Legal &amp; support</Text>
         <Text style={styles.hint}>
           We only use essential cookies to keep you signed in, and never sell your
           data.
         </Text>
+        <Pressable onPress={() => Linking.openURL(`${WEB_URL}/terms`)}>
+          <Text style={styles.link}>Terms of Service</Text>
+        </Pressable>
         <Pressable onPress={() => Linking.openURL(`${WEB_URL}/privacy`)}>
           <Text style={styles.link}>Privacy Notice</Text>
         </Pressable>
         <Pressable onPress={() => Linking.openURL(`${WEB_URL}/cookies`)}>
           <Text style={styles.link}>Cookie Notice</Text>
+        </Pressable>
+        <Pressable onPress={() => Linking.openURL("mailto:tikiacca@outlook.com")}>
+          <Text style={styles.link}>Contact support</Text>
         </Pressable>
       </Card>
 
@@ -231,6 +322,50 @@ export default function AccountScreen() {
           variant="secondary"
           onPress={() => signOut().then(() => router.replace("/sign-in"))}
         />
+      </Card>
+
+      <Card>
+        <Text style={styles.cardTitle}>Delete account</Text>
+        <Text style={styles.hint}>
+          Permanently removes your personal details from Tiki Acca and signs you
+          out everywhere. Group history stays for other members, shown as
+          &ldquo;Former member&rdquo;. This can&apos;t be undone.
+        </Text>
+        {deleteOpen ? (
+          <>
+            <Field
+              placeholder="Confirm your password"
+              secureTextEntry
+              autoCapitalize="none"
+              value={deletePassword}
+              onChangeText={(v) => {
+                setDeletePassword(v);
+                setDeleteError("");
+              }}
+            />
+            <ErrorText message={deleteError} />
+            <Button
+              label={deleteBusy ? "Deleting…" : "Permanently delete my account"}
+              loading={deleteBusy}
+              onPress={confirmDelete}
+            />
+            <Button
+              label="Cancel"
+              variant="secondary"
+              onPress={() => {
+                setDeleteOpen(false);
+                setDeletePassword("");
+                setDeleteError("");
+              }}
+            />
+          </>
+        ) : (
+          <Button
+            label="Delete account"
+            variant="secondary"
+            onPress={() => setDeleteOpen(true)}
+          />
+        )}
       </Card>
     </ScrollView>
   );
@@ -320,5 +455,17 @@ const styles = StyleSheet.create({
     color: colors.accent,
     fontSize: 14,
     paddingVertical: 6,
+  },
+  blockedRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    paddingVertical: 4,
+  },
+  blockedName: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: "500",
   },
 });
