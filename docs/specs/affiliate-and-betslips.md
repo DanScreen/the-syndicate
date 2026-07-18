@@ -34,16 +34,16 @@
 ## Phase A — Affiliate tracking
 
 - [ ] Join UK bookmaker affiliate programmes (prioritise bookmakers already in Odds API feed: Bet365, Paddy Power, William Hill, Sky Bet, etc.)
-- [ ] Env config for affiliate IDs / tracking templates per bookmaker (e.g. `AFFILIATE_BET365_TAG`)
-- [ ] Append tracking params to outbound deeplinks in `betslip-links.ts` (and lock-time stored URLs where appropriate)
-- [ ] UI disclosure: footer + near betslip CTA (“We may earn commission if you sign up or bet via these links”)
+- [x] Env config per bookmaker — `AFFILIATE_<ID>_PARAMS` (see `apps/web/src/lib/odds/affiliate.ts` + `.env.example`)
+- [x] Tracking params appended in `betslip-links.ts` at build/refresh time (primary, ranked, per-leg, and hub links) — applies to open and locked rounds via link refresh
+- [x] UI disclosure: site footer + under the web betslip CTA + mobile betslip disclosure copy
 - [ ] Ensure `/about` and marketing copy remain accurate (not a bookmaker; affiliate relationship stated)
 - [ ] Admin metric (optional): outbound betslip clicks — `AnalyticsEvent` type or admin counter
 
 **Compliance checklist (non-exhaustive):**
 
-- [ ] 18+ messaging on pages with betslip CTAs
-- [ ] Responsible gambling links (GamCare, BeGambleAware) near affiliate CTAs
+- [x] 18+ messaging on pages with betslip CTAs (web betslip disclosure line)
+- [x] BeGambleAware link near affiliate CTAs (web) + existing mobile footer
 - [ ] No guaranteed winnings / tipster language (align with [BRAND.md](../BRAND.md))
 
 ---

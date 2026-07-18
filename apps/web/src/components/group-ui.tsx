@@ -810,6 +810,23 @@ export function AccaSummary({
         )}
       </div>
 
+      {betslipLink ? (
+        <p className="text-xs leading-snug text-muted">
+          18+. Bets are placed with licensed bookmakers, not Tiki Acca. We may
+          earn commission if you sign up or bet via these links. Gamble
+          responsibly —{" "}
+          <a
+            href="https://www.begambleaware.org"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-accent hover:underline"
+          >
+            BeGambleAware.org
+          </a>
+          .
+        </p>
+      ) : null}
+
       {showCompare && (
         <div className="rounded-xl border border-border bg-card text-sm">
           <button

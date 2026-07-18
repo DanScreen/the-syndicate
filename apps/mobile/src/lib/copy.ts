@@ -35,7 +35,7 @@ export const copy = {
   },
   compliance: {
     betslip:
-      "You place bets directly with licensed bookmakers. Tiki Acca does not take bets or handle money. 18+ only.",
+      "You place bets directly with licensed bookmakers. Tiki Acca does not take bets or handle money. We may earn commission if you sign up or bet via these links. 18+ only.",
     footerTitle: "Gamble responsibly",
     footerBody:
       "Tiki Acca helps groups coordinate accumulator ideas. We do not take bets or handle money. You place bets directly with licensed bookmakers.",
