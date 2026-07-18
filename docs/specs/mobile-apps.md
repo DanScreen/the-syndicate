@@ -176,6 +176,7 @@ Checklist for implementation. Web route → API → mobile screen.
 
 - [x] Full 4-step leg picker (competition → fixture → market → selection)
 - [x] Progressive market drill-down — selecting a market hides the catalogue and immediately shows outcomes + **Change market**
+- [x] Occupied fixtures disabled — one leg per match keeps combined odds free from unpriced bet-builder correlation
 - [x] Market tiers: auto-load core; “Load more markets” for specials (no API credit copy in UI)
 - [x] Locked round: picks, outcome badges, frozen odds (`LegsList`, `RoundProgress`)
 - [x] `AccaSummary`: combined odds, compare bookmakers until first result, betslip CTA

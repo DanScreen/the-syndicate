@@ -10,8 +10,8 @@ import { isPastKickoffCutoff } from "@/lib/rounds/first-kickoff";
 import { prisma } from "@tiki-acca/database";
 import {
   allMembersFilledQuota,
-  findConflictingMarketLeg,
-  formatMarketConflictError,
+  findConflictingFixtureLeg,
+  formatFixtureConflictError,
   getCompetitionById,
   nextLegIndexForUser,
   submitLegSchema,
@@ -97,13 +97,10 @@ export async function POST(request: Request) {
 
   const { fixture, market, selection } = selectionData;
 
-  const marketConflict = findConflictingMarketLeg(round.legs, {
-    fixtureId: fixture.id,
-    marketType: market.type,
-  });
-  if (marketConflict) {
+  const fixtureConflict = findConflictingFixtureLeg(round.legs, fixture.id);
+  if (fixtureConflict) {
     return NextResponse.json(
-      { error: formatMarketConflictError(marketConflict) },
+      { error: formatFixtureConflictError(fixtureConflict) },
       { status: 409 }
     );
   }

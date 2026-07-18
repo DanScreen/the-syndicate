@@ -28,6 +28,7 @@ Owner creates group (name only) → invite code + link. Anyone with the link ope
 2. Group owner sets **legs per member** (1, 2, or 3 — default 1) when creating the group or in **Settings**; changing it updates the **open** round immediately (locked / in-progress bets keep their quota)
 3. Each member picks a **competition**, fixture, market, selection (4-step form) for each of their legs. Selecting a market collapses the long market catalogue and immediately reveals that market's outcomes; **Change market** returns to the catalogue.
 4. **Best odds only** shown per selection
+   - A round allows only **one leg per fixture**. Same-match combinations need bookmaker bet-builder prices adjusted for correlation, which the current odds feed does not provide.
 5. Everyone fills their quota **or the first submitted leg kicks off** → acca **locks** with best combined bookmaker (members under quota miss or enter partial)
 6. Members receive **email notification** when acca locks (if Resend configured)
 7. When a round settles, the next open round starts automatically (using the group's current legs-per-member setting)
@@ -63,6 +64,7 @@ Platform admins (`ADMIN_EMAILS`) see an **Admin** tab in the header with `/admin
 - [x] Multi-leg accas — owner sets 1 / 2 / 3 legs per member (web + mobile)
 - [x] Live odds (The Odds API) + extended markets
 - [x] Per-leg competition picker (EPL, Championship, top European leagues, World Cup)
+- [x] One leg per fixture per round (avoids inaccurate same-match bet-builder multiplication)
 - [x] Leg submit, acca lock, acca bookmaker rankings
 - [x] Real bookmaker betslip deeplinks
 - [x] Match table + football-data.org sync
