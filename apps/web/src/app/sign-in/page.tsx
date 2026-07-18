@@ -41,7 +41,7 @@ function SignInForm() {
 
   return (
     <>
-      <h1 className="text-2xl font-bold">Sign in</h1>
+      <h1 className="font-display text-2xl font-bold">Sign In</h1>
       <p className="mt-2 text-sm text-muted">
         {joiningGroup
           ? "Sign in to join the group you were invited to."
@@ -63,8 +63,9 @@ function SignInForm() {
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         <div>
-          <label className="text-sm text-muted">Email</label>
+          <label htmlFor="signin-email" className="text-sm text-muted">Email</label>
           <input
+            id="signin-email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -74,8 +75,9 @@ function SignInForm() {
           />
         </div>
         <div>
-          <label className="text-sm text-muted">Password</label>
+          <label htmlFor="signin-password" className="text-sm text-muted">Password</label>
           <input
+            id="signin-password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -90,7 +92,7 @@ function SignInForm() {
           disabled={loading}
           className="w-full rounded-lg bg-accent py-2.5 font-medium text-on-accent hover:bg-accent-bright disabled:opacity-50"
         >
-          {loading ? "Signing in..." : "Sign in"}
+          {loading ? "Signing in…" : "Sign in"}
         </button>
       </form>
     </>

@@ -48,12 +48,12 @@ export function GroupNav({
   ];
 
   return (
-    <nav className="mt-6 flex gap-1 border-b border-border">
+    <nav className="mt-6 flex gap-1 overflow-x-auto border-b border-border">
       {tabs.map((tab) => (
         <Link
           key={tab.href}
           href={tab.href}
-          className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
+          className={`-mb-px whitespace-nowrap border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
             tab.active
               ? "border-accent text-accent"
               : "border-transparent text-muted hover:text-foreground"

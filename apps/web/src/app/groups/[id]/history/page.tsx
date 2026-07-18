@@ -37,7 +37,7 @@ export default function GroupHistoryPage() {
 
   return (
     <section>
-      <h2 className="text-lg font-semibold">Bet history</h2>
+      <h2 className="text-lg font-semibold">Bet History</h2>
       <p className="mt-1 text-sm text-muted">
         Every settled acca for this group: fixtures, markets, and outcomes.
       </p>

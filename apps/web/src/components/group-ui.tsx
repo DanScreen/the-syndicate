@@ -1,5 +1,7 @@
 "use client";
 
+import { formatOdds } from "@tiki-acca/shared";
+
 import type {
   Fixture,
   Market,
@@ -79,6 +81,44 @@ function formatKickoff(iso: string) {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function CheckIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`shrink-0 ${className}`}
+      aria-hidden
+    >
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
+
+function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`transition-transform ${open ? "rotate-180" : ""}`}
+      aria-hidden
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
 }
 
 function legOutcomeLabel(outcome: string): string {
@@ -166,12 +206,15 @@ export function RoundProgress({
                   <span className="ml-2 text-xs text-muted">owner</span>
                 )}
               </span>
-              <span className={complete ? "text-accent" : "text-muted"}>
+              <span
+                className={`flex items-center gap-1 ${complete ? "text-accent" : "text-muted"}`}
+              >
+                {complete && <CheckIcon />}
                 {legsPerMember === 1
                   ? complete
-                    ? "✓ Submitted"
+                    ? "Submitted"
                     : "Pending"
-                  : `${count}/${legsPerMember}${complete ? " ✓" : ""}`}
+                  : `${count}/${legsPerMember}`}
               </span>
             </li>
           );
@@ -413,6 +456,7 @@ export function SubmitLegForm({
             <button
               key={c.id}
               type="button"
+              aria-pressed={competitionId === c.id}
               onClick={() => {
                 setCompetitionId(c.id);
                 setFixtureId("");
@@ -425,7 +469,10 @@ export function SubmitLegForm({
                   : "border-border hover:border-accent/40"
               }`}
             >
-              <p className="font-medium">{c.name}</p>
+              <p className="flex items-center gap-1.5 font-medium">
+                {competitionId === c.id && <CheckIcon className="text-accent" />}
+                {c.name}
+              </p>
             </button>
           ))}
         </div>
@@ -451,6 +498,7 @@ export function SubmitLegForm({
               <button
                 key={f.id}
                 type="button"
+                aria-pressed={fixtureId === f.id}
                 onClick={() => {
                   setFixtureId(f.id);
                   setMarketType("");
@@ -462,7 +510,8 @@ export function SubmitLegForm({
                     : "border-border hover:border-accent/40"
                 }`}
               >
-                <p className="font-medium">
+                <p className="flex items-center gap-1.5 font-medium">
+                  {fixtureId === f.id && <CheckIcon className="text-accent" />}
                   {f.homeTeam} vs {f.awayTeam}
                 </p>
                 <p className="mt-1 text-xs text-muted">{formatKickoff(f.kickoff)}</p>
@@ -496,6 +545,7 @@ export function SubmitLegForm({
                     <button
                       key={m.type}
                       type="button"
+                      aria-pressed={marketType === m.type}
                       disabled={taken}
                       title={
                         taken
@@ -507,7 +557,7 @@ export function SubmitLegForm({
                         setMarketType(m.type);
                         setSelectionId("");
                       }}
-                      className={`rounded-lg border px-3 py-2 text-sm ${
+                      className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm ${
                         taken
                           ? "cursor-not-allowed border-border/60 text-muted opacity-50"
                           : marketType === m.type
@@ -515,6 +565,7 @@ export function SubmitLegForm({
                             : "border-border hover:border-accent/40"
                       }`}
                     >
+                      {marketType === m.type && <CheckIcon className="text-accent" />}
                       {m.label}
                       {taken ? " (taken)" : ""}
                     </button>
@@ -559,6 +610,7 @@ export function SubmitLegForm({
                 <button
                   key={s.id}
                   type="button"
+                  aria-pressed={selectionId === s.id}
                   onClick={() => setSelectionId(s.id)}
                   className={`rounded-lg border px-3 py-3 text-sm ${
                     selectionId === s.id
@@ -566,8 +618,11 @@ export function SubmitLegForm({
                       : "border-border hover:border-accent/40"
                   }`}
                 >
-                  <p className="font-medium">{s.label}</p>
-                  {top && <p className="mt-1 text-accent">Best {top.odds}</p>}
+                  <p className="flex items-center justify-center gap-1.5 font-medium">
+                    {selectionId === s.id && <CheckIcon className="text-accent" />}
+                    {s.label}
+                  </p>
+                  {top && <p className="mt-1 text-accent">Best {formatOdds(top.odds)}</p>}
                 </button>
               );
             })}
@@ -578,7 +633,7 @@ export function SubmitLegForm({
       {selection && (
         <p className="text-sm text-muted">
           You&apos;ll submit at the best available odds (
-          {sortQuotesByBestOdds(selection.odds)[0]?.odds ?? "—"}). The group acca
+          {sortQuotesByBestOdds(selection.odds).map((q) => formatOdds(q.odds))[0] ?? "—"}). The group acca
           bookmaker is chosen when all legs are in.
         </p>
       )}
@@ -591,8 +646,8 @@ export function SubmitLegForm({
       >
         {loading
           ? editLegId
-            ? "Updating..."
-            : "Submitting..."
+            ? "Updating…"
+            : "Submitting…"
           : editLegId
             ? "Update leg"
             : "Submit leg"}
@@ -603,7 +658,7 @@ export function SubmitLegForm({
           onClick={onCancel}
           className="w-full rounded-lg border border-border py-2 text-sm text-muted hover:bg-background"
         >
-          Cancel. Keep my current pick
+          Cancel — keep my current pick
         </button>
       )}
     </form>
@@ -689,7 +744,7 @@ export function AccaSummary({
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent/30 bg-accent-muted/20 px-4 py-3 text-sm">
         <div>
           <p className="font-semibold">{oddsLabel}</p>
-          <p className="text-2xl font-bold text-accent">{combinedOdds}</p>
+          <p className="text-2xl font-bold text-accent">{formatOdds(combinedOdds)}</p>
           {singleBookmaker && bookmakerName && (
             <p className="mt-1 flex items-center gap-2 text-xs text-muted">
               {bookmakerId ? (
@@ -719,7 +774,7 @@ export function AccaSummary({
             >
               {ctaLabel}
             </a>
-            {ctaHint ? <p className="text-right text-[11px] leading-snug text-muted">{ctaHint}</p> : null}
+            {ctaHint ? <p className="text-right text-xs leading-snug text-muted">{ctaHint}</p> : null}
           </div>
         )}
       </div>
@@ -728,6 +783,7 @@ export function AccaSummary({
         <div className="rounded-xl border border-border bg-card text-sm">
           <button
             type="button"
+            aria-expanded={bookmakersOpen}
             onClick={() => setBookmakersOpen((o) => !o)}
             className="flex w-full items-center justify-between px-4 py-3 text-left"
           >
@@ -738,7 +794,9 @@ export function AccaSummary({
                 <span className="ml-2 text-xs font-normal text-muted">provisional</span>
               ) : null}
             </span>
-            <span className="text-muted">{bookmakersOpen ? "▲" : "▼"}</span>
+            <span className="text-muted">
+              <Chevron open={bookmakersOpen} />
+            </span>
           </button>
           {bookmakersOpen && (
             <ol className="space-y-2 border-t border-border px-2 py-2">
@@ -757,7 +815,7 @@ export function AccaSummary({
                   >
                     <span className="flex min-w-0 items-center gap-2.5">
                       <span
-                        className={`inline-flex shrink-0 items-center justify-center rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${bookmakerRankBadgeClass(place)}`}
+                        className={`inline-flex shrink-0 items-center justify-center rounded-md px-1.5 py-0.5 text-xs font-bold uppercase tracking-wide ${bookmakerRankBadgeClass(place)}`}
                       >
                         {bookmakerRankLabel(place, index)}
                       </span>
@@ -793,7 +851,7 @@ export function AccaSummary({
                               : "text-base font-semibold tabular-nums text-foreground"
                         }
                       >
-                        {entry.combinedOdds}
+                        {formatOdds(entry.combinedOdds)}
                       </span>
                       {entry.url && (
                         <a
@@ -897,7 +955,7 @@ export function LegsList({
                         {legOutcomeLabel(leg.outcome)}
                       </span>
                     )}
-                    <span className="text-accent">{leg.odds}</span>
+                    <span className="text-accent">{formatOdds(leg.odds)}</span>
                   </div>
                 </div>
                 <p className="text-muted">

@@ -13,7 +13,7 @@ export default async function AdminLeaderboardsPage() {
 
   return (
     <AdminPageShell
-      title="Platform leaderboards"
+      title="Platform Leaderboards"
       description="Group and player rankings by points. Admin-only until we have more users."
       path="/admin/leaderboards"
     >

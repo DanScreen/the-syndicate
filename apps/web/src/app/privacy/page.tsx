@@ -117,7 +117,7 @@ export default function PrivacyPage() {
             to meet a legal obligation.
           </p>
 
-          <h2 className="mt-12 font-display text-2xl font-bold">Your rights</h2>
+          <h2 className="mt-12 font-display text-2xl font-bold">Your Rights</h2>
           <p className="mt-4 leading-relaxed text-muted">
             Under UK/EU GDPR you have the right to access, correct, delete, or port
             your data, to object to or restrict certain processing, and to withdraw

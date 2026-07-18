@@ -16,7 +16,7 @@ export default async function PerformancePage() {
       <PageView path="/performance" userId={session.user.id} />
       <AppHeader userName={firstName} />
       <main className="mx-auto max-w-5xl px-4 py-8">
-        <h1 className="text-2xl font-bold">Your performance</h1>
+        <h1 className="font-display text-2xl font-bold">Your Performance</h1>
         <p className="mt-1 text-sm text-muted">
           Cross-group stats, charts, and share cards.
         </p>

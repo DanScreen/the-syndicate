@@ -88,6 +88,11 @@ export function formatLegPoints(points: number): string {
   return Number(points.toFixed(2)).toString();
 }
 
+/** Decimal odds, always two decimal places (1.5 → "1.50", 5.26666 → "5.27"). */
+export function formatOdds(odds: number): string {
+  return odds.toFixed(2);
+}
+
 export type PointsTone = "positive" | "negative" | "neutral";
 
 export function pointsTone(points: number): PointsTone {

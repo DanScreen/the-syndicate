@@ -10,22 +10,22 @@ export const hero = {
 
 export const valueProps = [
   {
-    title: "Built for friend groups",
+    title: "Built For Friend Groups",
     body: "Pub groups, WhatsApp groups, five-a-side teams. Create a private group, share an invite link, and everyone contributes one selection.",
     icon: "users",
   },
   {
-    title: "Track who’s actually good",
+    title: "Track Who’s Actually Good",
     body: "Leaderboards, performance charts, and leg-by-leg stats. See who consistently finds winners and how your group performs over time.",
     icon: "trophy",
   },
   {
-    title: "Best odds, done for you",
+    title: "Best Odds, Done For You",
     body: "We pull live prices from UK bookmakers, pick out the best odds per leg, and rank who offers the strongest combined acca when you lock.",
     icon: "chart",
   },
   {
-    title: "You place the bets",
+    title: "You Place The Bets",
     body: "We coordinate picks and link you to bookmaker betslips. We never take money or place bets on your behalf.",
     icon: "shield",
   },
@@ -34,32 +34,32 @@ export const valueProps = [
 export const howItWorks = [
   {
     step: "01",
-    title: "Start a group",
+    title: "Start A Group",
     body: "Create a group and drop the invite link in your group chat.",
   },
   {
     step: "02",
-    title: "Everyone picks a leg",
+    title: "Everyone Picks A Leg",
     body: "Each member chooses a competition, fixture, market, and selection from live odds.",
   },
   {
     step: "03",
-    title: "Lock and compete",
+    title: "Lock And Compete",
     body: "When all legs are in, the acca locks at the best combined odds. Then everyone sweats together.",
   },
 ] as const;
 
 export const audiences = [
   {
-    title: "Pub groups",
+    title: "Pub Groups",
     body: "Replace the Saturday spreadsheet with a shared acca everyone can see and contribute to.",
   },
   {
-    title: "Friend groups",
+    title: "Friend Groups",
     body: "Stop arguing about whose pick lost the acca. The stats settle it.",
   },
   {
-    title: "Office leagues",
+    title: "Office Leagues",
     body: "Small groups, one leg each, bragging rights on the line every matchday.",
   },
 ] as const;

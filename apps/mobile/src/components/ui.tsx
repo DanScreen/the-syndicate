@@ -46,10 +46,13 @@ export function Button({
     <Pressable
       onPress={onPress}
       disabled={loading}
-      style={[
+      accessibilityRole="button"
+      accessibilityState={{ disabled: Boolean(loading), busy: Boolean(loading) }}
+      style={({ pressed }) => [
         styles.button,
         variant === "secondary" && styles.buttonSecondary,
         loading && styles.buttonDisabled,
+        pressed && !loading && styles.pressed,
       ]}
     >
       {loading ? (
@@ -85,7 +88,11 @@ export function LinkText({
   onPress: () => void;
 }) {
   return (
-    <Pressable onPress={onPress}>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      style={({ pressed }) => pressed && styles.pressed}
+    >
       <Text style={styles.link}>{label}</Text>
     </Pressable>
   );
@@ -125,11 +132,14 @@ export function OptionRow({
     <Pressable
       onPress={onPress}
       disabled={disabled}
-      style={[
+      accessibilityRole="button"
+      accessibilityState={{ selected, disabled: Boolean(disabled) }}
+      style={({ pressed }) => [
         styles.option,
         dashed && styles.optionDashed,
         selected && styles.optionSelected,
         disabled && styles.optionDisabled,
+        pressed && !disabled && styles.pressed,
       ]}
     >
       <Text
@@ -188,6 +198,9 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
+  },
+  pressed: {
+    opacity: 0.75,
   },
   buttonText: {
     color: colors.onAccent,

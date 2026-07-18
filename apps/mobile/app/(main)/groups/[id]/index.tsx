@@ -1,3 +1,4 @@
+import { formatOdds } from "@tiki-acca/shared";
 import { useAuth } from "@/auth/AuthProvider";
 import {
   AccaSummary,
@@ -217,7 +218,7 @@ export default function GroupRoundScreen() {
             <View key={leg.id} style={styles.myLegRow}>
               <Text style={styles.myLegText}>
                 {legsPerMember > 1 ? `Leg ${leg.legIndex ?? ""}: ` : ""}
-                {leg.selectionLabel} ({leg.odds})
+                {leg.selectionLabel} ({formatOdds(leg.odds)})
               </Text>
               <Button
                 label="Change"

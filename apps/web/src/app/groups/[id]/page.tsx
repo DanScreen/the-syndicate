@@ -1,5 +1,7 @@
 "use client";
 
+import { formatOdds } from "@tiki-acca/shared";
+
 import {
   AccaSummary,
   LegsList,
@@ -185,7 +187,7 @@ export default function GroupRoundPage() {
               >
                 <span>
                   {legsPerMember > 1 ? `Leg ${leg.legIndex ?? ""}: ` : ""}
-                  {leg.selectionLabel} ({leg.odds})
+                  {leg.selectionLabel} ({formatOdds(leg.odds)})
                 </span>
                 <button
                   type="button"

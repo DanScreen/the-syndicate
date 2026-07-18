@@ -256,7 +256,7 @@ export function AdminOddsDiagnosticsPanel() {
 
           {diagnostics.interpretation.length > 0 && (
             <section className="rounded-xl border border-accent/30 bg-accent-muted/20 p-5 text-sm">
-              <h2 className="font-semibold text-accent">What this means</h2>
+              <h2 className="font-semibold text-accent">What This Means</h2>
               <ul className="mt-3 list-disc space-y-2 pl-5 text-muted">
                 {diagnostics.interpretation.map((line) => (
                   <li key={line}>{line}</li>

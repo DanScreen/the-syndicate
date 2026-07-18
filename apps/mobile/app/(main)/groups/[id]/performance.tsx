@@ -12,7 +12,7 @@ export default function GroupPerformanceScreen() {
 
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Group performance</Text>
+      <Text style={styles.title}>Group Performance</Text>
       <Text style={styles.subtitle}>Stats, trends, and member breakdowns.</Text>
       <GroupStatsPanel groupId={data.group.id} token={token} />
     </ScrollView>

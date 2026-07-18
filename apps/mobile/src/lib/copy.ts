@@ -5,7 +5,7 @@ export const copy = {
     emptyBody: "Create a group for your mates or join with an invite code.",
   },
   join: {
-    title: "Join a group",
+    title: "Join A Group",
     subtitle:
       "Enter the invite code shared by your group owner, or open their invite link directly.",
     placeholder: "ABCD1234",

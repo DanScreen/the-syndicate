@@ -40,14 +40,15 @@ export default function CreateGroupPage() {
     <div className="min-h-screen">
       <AppHeader userName="" />
       <main className="mx-auto max-w-md px-4 py-8">
-        <h1 className="text-2xl font-bold">Create a group</h1>
+        <h1 className="font-display text-2xl font-bold">Create A Group</h1>
         <p className="mt-2 text-sm text-muted">
           Anyone with the invite link can join. No member cap.
         </p>
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
-            <label className="text-sm text-muted">Group name</label>
+            <label htmlFor="group-name" className="text-sm text-muted">Group name</label>
             <input
+              id="group-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2"
@@ -85,7 +86,7 @@ export default function CreateGroupPage() {
             disabled={loading}
             className="w-full rounded-lg bg-accent py-2.5 font-medium text-on-accent hover:bg-accent-bright disabled:opacity-50"
           >
-            {loading ? "Creating..." : "Create group"}
+            {loading ? "Creating…" : "Create group"}
           </button>
         </form>
       </main>

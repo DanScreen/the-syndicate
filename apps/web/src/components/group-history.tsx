@@ -1,5 +1,7 @@
 "use client";
 
+import { formatOdds } from "@tiki-acca/shared";
+
 import { PointsText, pointsTextClass } from "@/components/points-text";
 import { RoundThread } from "@/components/group-chat";
 import {
@@ -68,7 +70,7 @@ export function HistoryRoundCard({ round }: { round: HistoryRound }) {
         </div>
         {round.combinedOdds != null ? (
           <p className="text-sm text-muted">
-            Acca @ <span className="font-medium text-foreground">{round.combinedOdds}</span>
+            Acca @ <span className="font-medium text-foreground">{formatOdds(round.combinedOdds)}</span>
           </p>
         ) : null}
       </div>
@@ -85,7 +87,7 @@ export function HistoryRoundCard({ round }: { round: HistoryRound }) {
                 <span className="rounded-full border border-current/20 px-2 py-0.5 text-xs font-medium">
                   {legOutcomeLabel(leg.outcome)}
                 </span>
-                <span className="font-medium text-foreground/80">{leg.odds}</span>
+                <span className="font-medium text-foreground/80">{formatOdds(leg.odds)}</span>
               </div>
             </div>
             <p className="mt-1 text-foreground">
@@ -138,7 +140,7 @@ export function RoundHistory({
   return (
     <section className="mt-8">
       <div className="flex flex-wrap items-end justify-between gap-2">
-        <h2 className="text-lg font-semibold">Recent settled bets</h2>
+        <h2 className="text-lg font-semibold">Recent Settled Bets</h2>
         {groupId ? (
           <Link
             href={`/groups/${groupId}/history`}

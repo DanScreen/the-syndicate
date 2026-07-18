@@ -98,7 +98,7 @@ export default async function HomePage() {
       <section className="mx-auto max-w-6xl px-4 py-20">
         <div className="max-w-2xl">
           <h2 className="font-display text-3xl font-bold tracking-tight md:text-4xl">
-            More than a group chat acca
+            More Than A Group Chat Acca
           </h2>
           <p className="mt-4 text-lg text-muted">
             Tiki Acca gives your group structure: live odds, automatic locking, settlement,
@@ -122,7 +122,7 @@ export default async function HomePage() {
       {/* How it works */}
       <section className="border-y border-border bg-card/30">
         <div className="mx-auto max-w-6xl px-4 py-20">
-          <h2 className="font-display text-3xl font-bold tracking-tight">How it works</h2>
+          <h2 className="font-display text-3xl font-bold tracking-tight">How It Works</h2>
           <div className="mt-12 grid gap-8 md:grid-cols-3">
             {howItWorks.map((item) => (
               <div key={item.step}>
@@ -137,7 +137,7 @@ export default async function HomePage() {
 
       {/* Audiences */}
       <section className="mx-auto max-w-6xl px-4 py-20">
-        <h2 className="font-display text-3xl font-bold tracking-tight">Who it&apos;s for</h2>
+        <h2 className="font-display text-3xl font-bold tracking-tight">Who It&apos;s For</h2>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
           {audiences.map((item) => (
             <div key={item.title} className="rounded-2xl border border-border bg-card p-6">
@@ -151,7 +151,7 @@ export default async function HomePage() {
       {/* FAQ */}
       <section className="border-t border-border bg-card/20">
         <div className="mx-auto max-w-6xl px-4 py-20">
-          <h2 className="font-display text-3xl font-bold tracking-tight">Common questions</h2>
+          <h2 className="font-display text-3xl font-bold tracking-tight">Common Questions</h2>
           <dl className="mt-10 grid gap-6 md:grid-cols-2">
             {faqs.map((item) => (
               <div key={item.q} className="rounded-xl border border-border bg-card/50 p-5">
@@ -167,7 +167,7 @@ export default async function HomePage() {
       <section className="marketing-gradient border-t border-border">
         <div className="mx-auto max-w-6xl px-4 py-20 text-center">
           <h2 className="font-display text-3xl font-bold tracking-tight md:text-4xl">
-            Ready for the next matchday?
+            Ready For The Next Matchday?
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-muted">
             One Leg Each. Best Odds Locked. Bragging Rights Forever.
