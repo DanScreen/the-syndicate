@@ -36,6 +36,7 @@ Core loop and MVP polish are **shipped**:
 - **Points-first UX** — stake → profit converter; see [specs/platform-admin.md](./specs/platform-admin.md)
 - Deploy: Cloud Run + Cloud SQL + GitHub Actions; Cloud Scheduler match sync (every 5 min UTC)
 - **Multi-leg accas** — owner sets 1 / 2 / 3 legs per member; web + mobile — [specs/multi-leg-accas.md](./specs/multi-leg-accas.md)
+- **Concurrent group bets** — owner cap 1–5, guarded member creation, web/mobile active-bet switcher — [spec](./specs/concurrent-group-bets.md) (feature branch; owner testing pending)
 - **Account page** — greeting → `/account` (notifications + sign out); Notifications removed from app nav
 - **Group chat & reactions** — round-scoped web/mobile threads, lifecycle messages, pick-mirrored reactions, unread badges, batched push — [spec](./specs/group-chat.md)
 
