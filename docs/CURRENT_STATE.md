@@ -191,7 +191,7 @@ Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_
 | `apps/web/src/lib/odds/acca.ts` | Acca bookmaker ranking + best combined |
 | `apps/web/src/lib/odds/lock-round.ts` | Lock + reprice + store deeplinks; live link enrichment |
 | `apps/web/src/lib/odds/bookmakers.ts` | Retail filter, sort best odds |
-| `apps/web/src/components/group-ui.tsx` | Leg picker (4-step), locked round picks, settle UI |
+| `apps/web/src/components/group-ui.tsx` | Progressive 4-step leg picker (market list collapses into outcome choices), locked round picks, settle UI |
 | `apps/web/src/components/app-nav.tsx` | Header nav (desktop): Home / About / Groups / Performance / Admin / Blog |
 | `apps/web/src/components/mobile-nav.tsx` | Compact hamburger menu below `md` for marketing + app headers |
 | `apps/web/src/app/account/page.tsx` | Account — profile, notification prefs, sign out (greeting in header links here) |

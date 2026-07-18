@@ -521,7 +521,7 @@ export function SubmitLegForm({
         </div>
       )}
 
-      {fixture && (
+      {fixture && !market && (
         <div className="space-y-3">
           <p className="text-xs font-medium uppercase tracking-wide text-muted">3. Pick a market</p>
           {loadingMarkets && (
@@ -601,7 +601,25 @@ export function SubmitLegForm({
       )}
 
       {market && (
-        <div className="space-y-2">
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-accent/40 bg-accent-muted/20 px-3 py-3">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted">
+                3. Selected market
+              </p>
+              <p className="mt-1 text-sm font-medium">{market.label}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setMarketType("");
+                setSelectionId("");
+              }}
+              className="shrink-0 text-sm font-medium text-accent hover:text-accent-bright"
+            >
+              Change market
+            </button>
+          </div>
           <p className="text-xs font-medium uppercase tracking-wide text-muted">4. Pick your selection</p>
           <div className="grid gap-2 sm:grid-cols-3">
             {market.selections.map((s) => {

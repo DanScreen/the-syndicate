@@ -754,7 +754,7 @@ export function SubmitLegForm({
         </>
       ) : null}
 
-      {fixture ? (
+      {fixture && !market ? (
         <View style={styles.stack}>
           <Text style={styles.stepLabel}>3. Market</Text>
           {loadingMarkets ? (
@@ -808,7 +808,24 @@ export function SubmitLegForm({
       ) : null}
 
       {market ? (
-        <>
+        <View style={styles.stack}>
+          <View style={styles.selectedMarket}>
+            <View style={styles.selectedMarketCopy}>
+              <Text style={styles.selectedMarketEyebrow}>3. Selected market</Text>
+              <Text style={styles.selectedMarketLabel}>{market.label}</Text>
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Change market from ${market.label}`}
+              onPress={() => {
+                setMarketType("");
+                setSelectionId("");
+              }}
+              style={({ pressed }) => pressed && styles.pressed}
+            >
+              <Text style={styles.changeMarket}>Change market</Text>
+            </Pressable>
+          </View>
           <Text style={styles.stepLabel}>4. Selection</Text>
           {market.selections.map((s) => {
             const top = sortQuotesByBestOdds(s.odds)[0];
@@ -822,7 +839,7 @@ export function SubmitLegForm({
               />
             );
           })}
-        </>
+        </View>
       ) : null}
 
       {selection ? (
@@ -1021,6 +1038,33 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: 4,
   },
+  selectedMarket: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    borderWidth: 1,
+    borderColor: "rgba(34, 197, 94, 0.4)",
+    backgroundColor: "rgba(20, 83, 45, 0.2)",
+    borderRadius: 10,
+    padding: 12,
+  },
+  selectedMarketCopy: { flex: 1 },
+  selectedMarketEyebrow: {
+    color: colors.muted,
+    fontSize: 11,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  selectedMarketLabel: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: "600",
+    marginTop: 4,
+  },
+  changeMarket: { color: colors.accent, fontSize: 13, fontWeight: "600" },
+  pressed: { opacity: 0.75 },
   meta: {
     color: colors.muted,
     fontSize: 14,
