@@ -10,7 +10,7 @@ export function AppHeader() {
   return (
     <View style={[styles.wrap, { paddingTop: Math.max(insets.top, 8) }]}>
       <View style={styles.brand}>
-        <LogoMark size={28} />
+        <LogoMark size={34} />
         <Text style={styles.wordmark}>
           Tiki <Text style={styles.accent}>Acca</Text>
         </Text>
@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
   },
   wordmark: {
     color: colors.text,
-    fontSize: 18,
+    fontSize: 21,
     fontWeight: "700",
     letterSpacing: -0.2,
   },

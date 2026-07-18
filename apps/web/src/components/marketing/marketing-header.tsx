@@ -39,7 +39,7 @@ export function MarketingHeader(_props: MarketingHeaderProps = {}) {
           <span className="hidden md:inline">
             <Logo href="/" size="md" />
           </span>
-          <span className="relative -top-[3px] hidden text-sm text-muted md:inline">
+          <span className="relative -top-[3px] hidden text-base text-muted md:inline">
             Social Group Betting
           </span>
         </div>

@@ -13,7 +13,7 @@ export function SiteHeader() {
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 md:py-4">
         <div className="flex items-center gap-2.5">
           <Logo href="/" size="md" />
-          <span className="relative -top-[3px] hidden text-sm text-muted md:inline">
+          <span className="relative -top-[3px] hidden text-base text-muted md:inline">
             Social Group Betting
           </span>
         </div>
@@ -63,7 +63,7 @@ export function AppHeader({ userName }: { userName: string }) {
             <span className="hidden md:inline">
               <Logo href="/" size="md" />
             </span>
-            <span className="relative -top-[3px] hidden text-sm text-muted md:inline">
+            <span className="relative -top-[3px] hidden text-base text-muted md:inline">
               Social Group Betting
             </span>
           </div>

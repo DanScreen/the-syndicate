@@ -9,9 +9,9 @@ type LogoProps = {
 };
 
 const sizes = {
-  sm: { mark: 28, text: "text-base" },
-  md: { mark: 36, text: "text-lg" },
-  lg: { mark: 46, text: "text-xl" },
+  sm: { mark: 34, text: "text-lg" },
+  md: { mark: 44, text: "text-xl" },
+  lg: { mark: 54, text: "text-2xl" },
 };
 
 /**
