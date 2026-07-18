@@ -12,7 +12,7 @@ import { RoundThread } from "@/components/group-chat";
 import { RoundHistory } from "@/components/group-history";
 import { useGroupData } from "@/context/group-data";
 import { useSession } from "next-auth/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { RoundMessageDto } from "@tiki-acca/shared";
 
 function formatCutoff(date: Date) {
@@ -33,11 +33,38 @@ export default function GroupRoundPage() {
   const [removeError, setRemoveError] = useState("");
   const [roundMessages, setRoundMessages] = useState<RoundMessageDto[]>([]);
   const [chatRefreshKey, setChatRefreshKey] = useState(0);
+  const [selectedRoundId, setSelectedRoundId] = useState<string | null>(null);
+  const [creatingRound, setCreatingRound] = useState(false);
+  const [createRoundError, setCreateRoundError] = useState("");
 
-  if (!data?.activeRound) return null;
+  const activeRounds =
+    data?.activeRounds?.length
+      ? data.activeRounds
+      : data?.activeRound
+        ? [data.activeRound]
+        : [];
+  useEffect(() => {
+    if (activeRounds.length === 0) return;
+    if (!activeRounds.some((round) => round.id === selectedRoundId)) {
+      setSelectedRoundId(activeRounds[0]!.id);
+    }
+  }, [activeRounds, selectedRoundId]);
+  useEffect(() => {
+    setEditingLegId(null);
+    setRemoveError("");
+    setRoundMessages([]);
+    setChatRefreshKey(0);
+  }, [selectedRoundId]);
 
+  if (!data || activeRounds.length === 0) return null;
+
+  const activeRound =
+    activeRounds.find((round) => round.id === selectedRoundId) ??
+    activeRounds[0]!;
   const userId = session?.user?.id;
-  const { activeRound, group, betslipLink, betslipLinks } = data;
+  const { group } = data;
+  const betslipLink = activeRound.betslipLink ?? data.betslipLink;
+  const betslipLinks = activeRound.betslipLinks ?? data.betslipLinks;
   const legsPerMember = activeRound.legsPerMember ?? group.legsPerMember ?? 1;
   const userLegs = activeRound.legs.filter((l) => l.user.id === userId);
   const canSubmitMore =
@@ -80,6 +107,14 @@ export default function GroupRoundPage() {
   const showAccaSummary =
     Boolean(combinedOdds) &&
     (isLocked || (isOpen && activeRound.legs.length > 0 && rankings.length > 0));
+  const emptyOpenBet = activeRounds.some(
+    (round) => round.status === "open" && round.legs.length === 0
+  );
+  const activeBetLimit = group.maxActiveBets ?? 1;
+  const canCreateRound =
+    activeBetLimit > 1 &&
+    activeRounds.length < activeBetLimit &&
+    !emptyOpenBet;
 
   const nextSlot = userLegs.length + 1;
   const announcementByLegId = new Map<string, RoundMessageDto>();
@@ -115,8 +150,90 @@ export default function GroupRoundPage() {
     }
   }
 
+  async function createRound() {
+    setCreatingRound(true);
+    setCreateRoundError("");
+    try {
+      const response = await fetch(`/api/groups/${group.id}/rounds`, {
+        method: "POST",
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setCreateRoundError(
+          typeof body.error === "string" ? body.error : "Failed to create bet"
+        );
+        return;
+      }
+      await reload();
+      setSelectedRoundId(body.round.id);
+    } catch {
+      setCreateRoundError("Failed to create bet");
+    } finally {
+      setCreatingRound(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
+      {activeBetLimit > 1 && (
+        <section className="rounded-xl border border-border bg-card p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="font-semibold">Active Bets</h2>
+              <p className="mt-1 text-xs text-muted">
+                {activeRounds.length} of {activeBetLimit} available
+              </p>
+            </div>
+            <button
+              type="button"
+              disabled={!canCreateRound || creatingRound}
+              onClick={() => void createRound()}
+              className="rounded-lg bg-accent px-3 py-2 text-sm font-medium text-on-accent hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {creatingRound ? "Creating…" : "New Bet"}
+            </button>
+          </div>
+          <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+            {activeRounds.map((round) => {
+              const selected = round.id === activeRound.id;
+              return (
+                <button
+                  key={round.id}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => setSelectedRoundId(round.id)}
+                  className={`min-w-32 rounded-lg border px-3 py-2 text-left transition-colors ${
+                    selected
+                      ? "border-accent bg-accent-muted/40"
+                      : "border-border bg-background hover:border-accent/40"
+                  }`}
+                >
+                  <span className="block text-sm font-medium">
+                    Bet #{round.betNumber ?? "—"}
+                  </span>
+                  <span
+                    className={`mt-0.5 block text-xs ${
+                      round.status === "open" ? "text-accent" : "text-muted"
+                    }`}
+                  >
+                    {round.status === "open" ? "Open" : "Locked"} ·{" "}
+                    {round.legs.length} leg{round.legs.length === 1 ? "" : "s"}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          {!canCreateRound && activeRounds.length < activeBetLimit && emptyOpenBet && (
+            <p className="mt-2 text-xs text-muted">
+              Add a leg to the empty open bet before creating another.
+            </p>
+          )}
+          {createRoundError && (
+            <p className="mt-2 text-sm text-danger">{createRoundError}</p>
+          )}
+        </section>
+      )}
+
       {isOpen && (
         <RoundProgress
           members={group.members}
@@ -261,6 +378,7 @@ export default function GroupRoundPage() {
       )}
 
       <RoundThread
+        key={activeRound.id}
         roundId={activeRound.id}
         currentUserId={userId}
         isOwner={data.isOwner}

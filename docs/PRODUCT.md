@@ -24,14 +24,14 @@ Sign up (first + last name) → **Groups** home (`/dashboard`) listing groups. C
 Owner creates group (name only) → invite code + link. Anyone with the link opens `/groups/join?code=`. If signed out, the page prompts **Sign in** or **Sign up** (invite preserved via `callbackUrl`); after auth they return and join.
 
 ### 3. Build the acca
-1. Each group has an always-open round on the **Round** tab — no manual start step
-2. Group owner sets **legs per member** (1, 2, or 3 — default 1) when creating the group or in **Settings**; changing it updates the **open** round immediately (locked / in-progress bets keep their quota)
+1. Each group starts with an open bet on the **Round** tab — no manual start step. The owner chooses a maximum of **1–5 active bets** (default 1). Above 1, any member can start another bet when below the cap, provided every existing open bet already has at least one leg. Lowering the maximum never cancels existing bets; the new limit takes over as they conclude.
+2. Group owner sets **legs per member** (1, 2, or 3 — default 1) when creating the group or in **Settings**; changing it updates all eligible **open** bets immediately (locked / in-progress bets keep their quota)
 3. Each member picks a **competition**, fixture, market, selection (4-step form) for each of their legs. Selecting a market collapses the long market catalogue and immediately reveals that market's outcomes; **Change market** returns to the catalogue.
 4. **Best odds only** shown per selection
-   - A round allows only **one leg per fixture**. Same-match combinations need bookmaker bet-builder prices adjusted for correlation, which the current odds feed does not provide.
+   - A round allows only **one leg per fixture**. Same-match combinations need bookmaker bet-builder prices adjusted for correlation, which the current odds feed does not provide. When this blocks a fixture, the web/mobile picker explains that the rule keeps combined odds accurate; the public FAQ gives the full rationale.
 5. Everyone fills their quota **or the first submitted leg kicks off** → acca **locks** with best combined bookmaker (members under quota miss or enter partial)
 6. Members receive **email notification** when acca locks (if Resend configured)
-7. When a round settles, the next open round starts automatically (using the group's current legs-per-member setting)
+7. When the final active bet settles, a new open bet starts automatically. With a higher cap, members can create replacements before other bets settle.
 8. Each round has a web/mobile **Group Chat** thread. Pick submissions, changes, removals, lock, results, and settlement appear as system messages; members can post text (profanity-filtered) and react using the quiet **React** control. Pick rows mirror reactions from their latest announcement.
 
 → [specs/competitions-and-results.md](./specs/competitions-and-results.md)
@@ -44,7 +44,7 @@ While the bet is open: leg picker shows **best odds only** per selection; **Comp
 **Removing picks:** members can remove only their own leg while the round is still **open** and before the first kickoff. Removal requires confirmation and is announced in Group Chat. Locked and settled accas cannot lose legs.
 
 ### 5. Settle & stats
-**Settlement is system-only** — the match sync cron (every 5 min) updates leg outcomes as matches finish. A round **settles as soon as any leg loses** (group −1, next open round starts) or when every leg is won/void (acca win). Unfinished legs on a busted acca keep resolving afterward for personal outcomes/points. Group owners cannot mark outcomes themselves. Platform admins have a web-only **settlement queue** (`/admin/settlement`) for stuck/overdue legs (including remaining legs after an early loss). Email on settle. **Leaderboard** tab for points; **History** tab for every settled acca (fixtures, markets, outcomes); **Performance** tab for group charts and member breakdowns. User-level **Performance** nav for cross-group stats. Round tab shows a short recent-settled teaser with a link to full history.
+**Settlement is system-only** — the match sync cron (every 5 min) updates leg outcomes as matches finish. A round **settles as soon as any leg loses** (group −1) or when every leg is won/void (acca win). If it was the group’s final active bet, a replacement opens automatically. Unfinished legs on a busted acca keep resolving afterward for personal outcomes/points. Group owners cannot mark outcomes themselves. Platform admins have a web-only **settlement queue** (`/admin/settlement`) for stuck/overdue legs (including remaining legs after an early loss). Email on settle. **Leaderboard** tab for points; **History** tab for every settled acca (fixtures, markets, outcomes); **Performance** tab for group charts and member breakdowns. User-level **Performance** nav for cross-group stats. Round tab shows a short recent-settled teaser with a link to full history.
 
 **Primary metric:** unit-stake **points** (not £ profit). Users can enter a stake on performance pages to see profit equivalent (points × stake).
 
@@ -62,6 +62,7 @@ Platform admins (`ADMIN_EMAILS`) see an **Admin** tab in the header with `/admin
 ### Shipped
 - [x] Auth, groups, invite flow
 - [x] Multi-leg accas — owner sets 1 / 2 / 3 legs per member (web + mobile)
+- [x] Concurrent group bets — owner cap 1–5, member creation guard, active-bet switcher (web + mobile; owner testing pending)
 - [x] Live odds (The Odds API) + extended markets
 - [x] Per-leg competition picker (EPL, Championship, top European leagues, World Cup)
 - [x] One leg per fixture per round (avoids inaccurate same-match bet-builder multiplication)

@@ -82,6 +82,7 @@ docs/
     ├── round-deadline-lock.md        ← Lock at first kickoff + pick reminders (Phase 1 shipped)
     ├── notifications.md              ← Email + push notification plan (planned)
     ├── multi-leg-accas.md            ← Owner 1–3 legs per member (shipped Phases 1–3)
+    ├── concurrent-group-bets.md      ← Owner 1–5 simultaneous active bets (owner test pending)
     ├── mobile-apps.md                ← iOS + Android strategy, parity plan, anti-divergence (spec)
     ├── season-readiness.md           ← World Cup → 2026–27 season transition + cups (backlog, urgent)
     ├── group-chat.md                 ← Round banter thread + reactions + system messages (build priority)

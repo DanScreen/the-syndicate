@@ -1,7 +1,14 @@
 "use client";
 
 import { AppHeader } from "@/components/header";
-import { LEGS_PER_MEMBER_OPTIONS, DEFAULT_LEGS_PER_MEMBER, type LegsPerMember } from "@tiki-acca/shared";
+import {
+  DEFAULT_LEGS_PER_MEMBER,
+  DEFAULT_MAX_ACTIVE_BETS,
+  LEGS_PER_MEMBER_OPTIONS,
+  MAX_ACTIVE_BETS_OPTIONS,
+  type LegsPerMember,
+  type MaxActiveBets,
+} from "@tiki-acca/shared";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -9,6 +16,9 @@ export default function CreateGroupPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [legsPerMember, setLegsPerMember] = useState<LegsPerMember>(DEFAULT_LEGS_PER_MEMBER);
+  const [maxActiveBets, setMaxActiveBets] = useState<MaxActiveBets>(
+    DEFAULT_MAX_ACTIVE_BETS
+  );
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -20,7 +30,7 @@ export default function CreateGroupPage() {
     const res = await fetch("/api/groups", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, legsPerMember }),
+      body: JSON.stringify({ name, legsPerMember, maxActiveBets }),
     });
 
     const data = await res.json();
@@ -71,6 +81,30 @@ export default function CreateGroupPage() {
                   onClick={() => setLegsPerMember(n)}
                   className={`rounded-lg border px-3 py-2.5 text-sm font-medium ${
                     legsPerMember === n
+                      ? "border-accent bg-accent-muted/40 text-accent"
+                      : "border-border bg-card text-muted hover:text-foreground"
+                  }`}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend className="text-sm text-muted">Maximum active bets</legend>
+            <p className="mt-1 text-xs text-muted">
+              Allow up to five open or locked bets at once. When the limit is
+              above one, any member can start another bet after each open bet
+              has at least one leg.
+            </p>
+            <div className="mt-3 grid grid-cols-5 gap-2">
+              {MAX_ACTIVE_BETS_OPTIONS.map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setMaxActiveBets(n)}
+                  className={`rounded-lg border px-2 py-2.5 text-sm font-medium ${
+                    maxActiveBets === n
                       ? "border-accent bg-accent-muted/40 text-accent"
                       : "border-border bg-card text-muted hover:text-foreground"
                   }`}

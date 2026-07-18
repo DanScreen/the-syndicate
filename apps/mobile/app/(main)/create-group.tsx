@@ -2,7 +2,14 @@ import { ApiError, api } from "@/api/client";
 import { useAuth } from "@/auth/AuthProvider";
 import { Button, ErrorText, Field, Screen, Subtitle, Title } from "@/components/ui";
 import { colors } from "@/config";
-import { LEGS_PER_MEMBER_OPTIONS, DEFAULT_LEGS_PER_MEMBER, type LegsPerMember } from "@tiki-acca/shared";
+import {
+  DEFAULT_LEGS_PER_MEMBER,
+  DEFAULT_MAX_ACTIVE_BETS,
+  LEGS_PER_MEMBER_OPTIONS,
+  MAX_ACTIVE_BETS_OPTIONS,
+  type LegsPerMember,
+  type MaxActiveBets,
+} from "@tiki-acca/shared";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -11,6 +18,9 @@ export default function CreateGroupScreen() {
   const { token } = useAuth();
   const [name, setName] = useState("");
   const [legsPerMember, setLegsPerMember] = useState<LegsPerMember>(DEFAULT_LEGS_PER_MEMBER);
+  const [maxActiveBets, setMaxActiveBets] = useState<MaxActiveBets>(
+    DEFAULT_MAX_ACTIVE_BETS
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -21,7 +31,7 @@ export default function CreateGroupScreen() {
       const data = await api<{ group: { id: string } }>("/api/groups", {
         method: "POST",
         token,
-        body: JSON.stringify({ name: name.trim(), legsPerMember }),
+        body: JSON.stringify({ name: name.trim(), legsPerMember, maxActiveBets }),
       });
       router.replace(`/(main)/groups/${data.group.id}`);
     } catch (e) {
@@ -52,6 +62,29 @@ export default function CreateGroupScreen() {
               style={[
                 styles.optionText,
                 legsPerMember === n && styles.optionTextActive,
+              ]}
+            >
+              {n}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+      <Text style={styles.label}>Maximum active bets</Text>
+      <Text style={styles.hint}>
+        With more than one, any member can start another bet after every open
+        bet has at least one leg.
+      </Text>
+      <View style={styles.row}>
+        {MAX_ACTIVE_BETS_OPTIONS.map((n) => (
+          <Pressable
+            key={n}
+            onPress={() => setMaxActiveBets(n)}
+            style={[styles.option, maxActiveBets === n && styles.optionActive]}
+          >
+            <Text
+              style={[
+                styles.optionText,
+                maxActiveBets === n && styles.optionTextActive,
               ]}
             >
               {n}

@@ -1,6 +1,6 @@
 # Current state (as-built)
 
-Last updated 18 July 2026 (competition catalogue expanded to full provider overlap). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
+Last updated 18 July 2026 (concurrent group bets implemented on feature branch; owner testing pending). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
 
 Production: **https://www.tikiacca.com** (apex → 301 to www via Cloudflare).
 
@@ -53,7 +53,7 @@ Match sync + odds warm: Cloud Scheduler (Terraform) → `POST /api/internal/sync
 | Notifications | `apps/web/src/lib/notifications/` (branded email templates + layout; logo at `public/brand/email-logo.png`) |
 | Auth | `apps/web/src/lib/auth.ts`, `apps/web/src/lib/auth.config.ts` |
 | Settlement (auto) | `apps/web/src/lib/settlement/auto-settle-round.ts` |
-| Round lifecycle | `apps/web/src/lib/rounds/open-round.ts`, `claim-lock-round.ts`, `lock-open-rounds-at-kickoff.ts`, `first-kickoff.ts` |
+| Round lifecycle | `apps/web/src/lib/rounds/open-round.ts`, `create-additional-round.ts`, `claim-lock-round.ts`, `lock-open-rounds-at-kickoff.ts`, `first-kickoff.ts` |
 | Group UI | `apps/web/src/components/group-ui.tsx`, `group-stats.tsx` |
 | App navigation | `apps/web/src/components/app-nav.tsx`, `mobile-nav.tsx`, `group-nav.tsx`, `header.tsx` |
 | Logo & marketing | `apps/web/src/components/logo.tsx`, `components/marketing/` (`marketing-shell.tsx`, `session-aware-marketing-header.tsx`, `marketing-header.tsx`, `marketing-ctas.tsx`), `lib/marketing-content.ts` |
@@ -80,8 +80,9 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 | Auth (email/password, Auth.js JWT sessions) | ✅ |
 | Groups, invite codes, join links (`?code=`), no member cap | ✅ |
 | Legs per member (1 / 2 / 3) — owner create + Settings; updates open rounds | ✅ |
+| Concurrent active bets — owner cap 1–5; member-created; web + mobile switcher | ✅ pending owner test |
 | One leg per fixture within a round (prevents unpriced correlated bet builders) | ✅ |
-| Always-open rounds (auto-created with group; next opens on settle) | ✅ |
+| At least one active round per group (auto-created with group / after final active settlement) | ✅ |
 | Rounds: open → locked → settled (badges: **Bet Open**, **Bet Locked**, **Bet Settled**) | ✅ |
 | Live odds ([The Odds API](https://the-odds-api.com/)) + mock fallback | ✅ |
 | Markets: h2h, totals (dynamic lines), spreads*, BTTS, double chance, correct score, corners/cards† | ✅ |
@@ -150,7 +151,7 @@ POST /api/legs                        → best retail quote; stores competitionI
 (lock) lockRoundWithAccaPricing()     → re-fetch quotes, rankAccaBookmakers(), store deeplinks on Leg
 ```
 
-At lock, `Leg.betslipUrl` stores the chosen bookmaker's **real** outcome/event deeplink (never a generic football hub); `Leg.bookmakerLinks` maps retail bookmakers → Odds API links only. **Hub URLs** (`BOOKMAKER_HUB_URLS`) are a last-resort UI fallback and are tagged `linkQuality: "hub"`. Matching featured and alternate market lines (for example, standard + alternate Over 2.5 goals) merge bookmaker quotes by market type, selection, and bookmaker, retaining the best quote and available deeplink; this avoids losing broader alternate-feed coverage. New/edited picks enforce **one leg per fixture per round** because The Odds API exposes single-selection prices, not bookmaker correlation-adjusted bet-builder prices; combined odds therefore multiply legs from separate fixtures only. **While bet is open:** leg picker shows best odds only; **Compare bookmakers** shows a live provisional ranking + refreshed deeplinks from current quotes. **Once locked:** **final combined odds** + the **Compare bookmakers** ranking captured at lock (so members can pick the best bookmaker when placing the bet); primary CTA opens the best available deeplink (first pick when multi-leg) until the first result, then tracking only. Per-leg **Open** uses `bookmakerLinks[recommendedBookmaker]` when present.
+At lock, `Leg.betslipUrl` stores the chosen bookmaker's **real** outcome/event deeplink (never a generic football hub); `Leg.bookmakerLinks` maps retail bookmakers → Odds API links only. **Hub URLs** (`BOOKMAKER_HUB_URLS`) are a last-resort UI fallback and are tagged `linkQuality: "hub"`. Matching featured and alternate market lines (for example, standard + alternate Over 2.5 goals) merge bookmaker quotes by market type, selection, and bookmaker, retaining the best quote and available deeplink; this avoids losing broader alternate-feed coverage. New/edited picks enforce **one leg per fixture per round** because The Odds API exposes single-selection prices, not bookmaker correlation-adjusted bet-builder prices; combined odds therefore multiply legs from separate fixtures only. Occupied fixtures are disabled with a short accuracy explanation in both pickers, and the public homepage FAQ provides the full rationale. **While bet is open:** leg picker shows best odds only; **Compare bookmakers** shows a live provisional ranking + refreshed deeplinks from current quotes. **Once locked:** **final combined odds** + the **Compare bookmakers** ranking captured at lock (so members can pick the best bookmaker when placing the bet); primary CTA opens the best available deeplink (first pick when multi-leg) until the first result, then tracking only. Per-leg **Open** uses `bookmakerLinks[recommendedBookmaker]` when present.
 
 Requires live odds (`ODDS_API_KEY`) — mock fixtures have no deeplinks. Odds are stored in **PostgreSQL** (`OddsBulkSnapshot`, `OddsEventSnapshot`) and refreshed by cron (`POST /api/internal/warm-odds-cache`). User picks read the DB; set `ODDS_DB_ONLY=true` in production to block live API calls from user traffic.
 
@@ -222,11 +223,11 @@ Protected routes enforced in `apps/web/src/middleware.ts` / `auth.config.ts`: `/
 | `/admin/odds` | **Admin** — Odds API diagnostics (fixture pipeline) |
 | `/groups/create` | Create group (auth required; legs-per-member picker) |
 | `/groups/join` | Join group — **public**; signed-out shows Sign in / Sign up (keeps `?code=`); signed-in auto-joins when `?code=` present |
-| `/groups/[id]` | **Round** tab — active round, multi-leg picker, picks, lock, settle |
+| `/groups/[id]` | **Round** tab — active-bet switcher, new-bet action, multi-leg picker, picks, lock, settle |
 | `/groups/[id]/history` | **History** tab — every settled acca with fixtures, markets, outcomes |
 | `/groups/[id]/leaderboard` | Points leaderboard |
 | `/groups/[id]/performance` | Group stats (`GroupStats`) — charts, member breakdown |
-| `/groups/[id]/settings` | **Owner** — legs per member (open rounds immediately; locked unchanged) |
+| `/groups/[id]/settings` | **Owner** — legs per member (all eligible open bets immediately) + maximum active bets (1–5) |
 
 **Navigation:** Logo + **Social Group Betting** tagline (tagline hidden below `md`). Logo and **Home** → `/`. `AppNav` order: Home → About → Groups → Performance → Admin (admins) → **Blog** (rightmost). Below `md`, inline links collapse into `MobileNav` (hamburger) — signed-out: Home / About / Blog / Sign in / Sign up as peer links; signed-in adds **Account · {firstName}** → `/account`. Desktop greeting **Hi, {firstName}** → `/account` (notifications + sign out). Legacy `/settings/notifications` redirects to `/account#notifications`. Marketing pages use `SessionAwareMarketingHeader` (client `useSession`) so statically generated `/blog` still shows signed-in chrome. Inside a group, `GroupNav` tabs (Round / History / Leaderboard / Performance / **Settings** for owners) share data via `GroupDataProvider` (fetched once in group layout; polls every 60s while acca locked).
 
@@ -246,7 +247,7 @@ Protected routes enforced in `apps/web/src/middleware.ts` / `auth.config.ts`: `/
 
 Email and push notifications fire on **round locked**, **round settled**, and **pick reminders** (within 2h before first kickoff). Resend for email (`RESEND_API_KEY`, `EMAIL_FROM`); Expo Push API for mobile (`PushDevice` tokens). Per-user preferences at `/account` (web) and `(main)/account` (mobile). Deduped via `NotificationLog`; round-level `lockedNotificationSentAt` / `settledNotificationSentAt` set only when all members are satisfied (delivered or opted out). Failed lock/settle deliveries retried on `sync-matches` (5 min). Pick reminders cron: `POST /api/internal/round-reminders` every 15 min (Terraform). Notification times formatted in `Europe/London`. See [specs/notifications.md](./specs/notifications.md).
 
-**Early settle on loss.** As soon as one leg is `lost`, the round settles: group scores −1, concluded legs award member points under the per-leg rule (won → odds−1, lost → −1, void → 0), and the next open round starts. Remaining legs stay `pending` until match sync (or admin) resolves them via `applyDeferredLegOutcome()` — still exactly-once (pending → outcome claim).
+**Early settle on loss.** As soon as one leg is `lost`, the round settles: group scores −1 and concluded legs award member points under the per-leg rule (won → odds−1, lost → −1, void → 0). If no other open or locked bet remains, the next open round starts automatically; otherwise members continue through the existing active bets and can create another when the owner’s cap permits. Remaining legs stay `pending` until match sync (or admin) resolves them via `applyDeferredLegOutcome()` — still exactly-once (pending → outcome claim).
 
 **Exactly-once settlement.** `applyRoundSettlement()` validates settleability, then runs in a `prisma.$transaction` with an atomic claim — `round.updateMany({ where: { status: "locked" }, data: { status: "settled" } })`. Overlapping settle attempts (e.g. two cron runs) can't double-count points: the loser matches zero rows and throws `RoundNotSettleableError`, treated as a benign `skipped` no-op.
 
@@ -430,19 +431,21 @@ Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `Analytics
 - `User.role` — platform role: `user` (default) or `admin` (via `ADMIN_EMAILS`).
 - `AnalyticsEvent` — lightweight product analytics (`type`, `userId?`, `path?`, `createdAt`).
 - `Group.legsPerMember` — 1–3 (default 1); owner create / Settings.
-- `Round.legsPerMember` — set at round open; owner Settings updates it while the round is `open` and before first kickoff. Locked / kickoff-in-progress rounds keep their quota; group setting then applies to the next open round.
+- `Group.maxActiveBets` — owner-selected 1–5 (default 1); counts `open` + `locked` rounds. Above 1, any member may create a bet if below the cap and every existing open bet has a leg.
+- `Round.betNumber` — stable group-scoped `Bet #N` display number; backfilled for existing rounds.
+- `Round.legsPerMember` — set at round open; owner Settings updates every eligible `open` round before first kickoff. Locked / kickoff-in-progress rounds keep their quota.
 - Up to `legsPerMember` legs per user per round (`@@unique([roundId, userId, legIndex])`).
 - **Fixture uniqueness rule:** new/edited picks allow only one leg per `fixtureId` in a round, regardless of market, because same-match combinations require correlation-adjusted bet-builder pricing unavailable from the current feed. See `packages/shared/src/market-conflicts.ts`. Enforced on `POST`/`PATCH` `/api/legs`; web/mobile pickers disable occupied fixtures. Existing settled history is unchanged. The older `fix-duplicate-markets` maintenance remains available for historical same-market-family cleanup.
 - Leg stores `legIndex` + fixture snapshot: teams, kickoff, `competitionId` (slug), `competition` (display name), optional `matchId` FK, market, odds, bookmaker, `betslipUrl`, `bookmakerLinks` JSON, outcome.
 - `Match` — canonical result per fixture (`externalDataId` from football-data.org).
 - `Round.accaBookmakerRankings` — JSON array of ranked bookmakers at lock.
 - `CompetitionSetting` — `competitionId` slug + `enabled` flag for leg-picker visibility (seeded: World Cup on, every other competition off; new catalogue entries are inserted off).
-- Groups always have an open or locked round; a new open round starts automatically when the previous round settles. Legacy groups without an active round get one on next load.
+- Groups always retain at least one open or locked round. At the default cap of 1, settlement opens the next automatically. At higher caps, members create additional bets explicitly; PostgreSQL advisory locks make cap/empty-bet checks atomic. Legacy groups without an active round get one on next load.
 - `Round.lockedNotificationSentAt` / `settledNotificationSentAt` — email dedup.
 
 Schema: `packages/database/prisma/schema.prisma`
 
-Recent migrations include `20260717150000_group_chat_messages` and `20260717170000_group_chat_phase2`.
+Recent migrations include `20260718190000_concurrent_group_bets` and `20260718193000_concurrent_group_bets_constraints`.
 
 ---
 
@@ -457,11 +460,12 @@ Recent migrations include `20260717150000_group_chat_messages` and `202607171700
 | `PATCH /api/legs/[id]` | Leg owner | Edit own pick until first kickoff (locked rounds reprice; one-leg-per-fixture rule) |
 | `DELETE /api/legs/[id]` | Leg owner | Remove own pick while round is open and before first kickoff |
 | `GET /api/groups` | Session | Groups list + current betslip `activeLegs` + yourLeg / yourLegCount + chat unread count |
-| `POST /api/groups` | Session | Create group (`name`, optional `legsPerMember` 1–3) |
-| `PATCH /api/groups/[id]` | Owner | Update `legsPerMember` (open round immediately; locked left alone) |
+| `POST /api/groups` | Session | Create group (`name`, optional `legsPerMember` 1–3 and `maxActiveBets` 1–5) |
+| `PATCH /api/groups/[id]` | Owner | Update `legsPerMember` and/or `maxActiveBets`; lower caps preserve existing bets and block creation until capacity returns |
+| `POST /api/groups/[id]/rounds` | Member | Create another open bet when owner cap >1, below cap, and no empty open bet exists |
 | `POST /api/internal/sync-matches` | `CRON_SECRET` | Sync football-data.org → `Match` |
 | `POST /api/internal/warm-odds-cache` | `CRON_SECRET` | Refresh odds DB snapshots |
-| `GET /api/groups/[id]` | Member | Group + active round + recent settled bets + betslip deeplinks + chat unread count |
+| `GET /api/groups/[id]` | Member | Group + all `activeRounds` (round-scoped betslip data) + compatibility `activeRound` + recent settled bets + chat unread count |
 | `GET /api/groups/[id]/history` | Member | Full settled bet history (fixtures, markets, outcomes) |
 | `GET /api/groups/[id]/stats` | Member | Group summary stats + chart series |
 | `GET /api/groups/[id]/members/[userId]/stats` | Member | Member breakdown + favourites |
@@ -498,7 +502,8 @@ Recent migrations include `20260717150000_group_chat_messages` and `202607171700
 9. **Odds snapshots in PostgreSQL** — shared across Cloud Run instances; refreshed by `POST /api/internal/warm-odds-cache` (Cloud Scheduler job in Terraform). Set `ODDS_DB_ONLY=true` so users never burn API credits. In-memory cache remains for quota block/snapshot and football-data only.
 10. **Mobile app** — Native app code complete. **You:** test via Expo Go or `expo run:ios --device` ([DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md)). **Mates:** Android APK; iPhone TestFlight after store fees. [FRIEND_TESTING.md](../apps/mobile/FRIEND_TESTING.md). Leg-edit parity shipped (same "Change my pick" flow as web). Admin pages are web-only by design.
 11. **Auth JWT** — middleware uses edge-safe `auth.config.ts` (no Prisma); `auth.ts` refreshes `role` from DB on each session update.
-12. **Chat realtime** — threads poll every 20 seconds while visible; no WebSocket/SSE, typing indicators, read receipts, media, or reaction notifications in v1. Chat push needs Expo/APNs/FCM setup on a physical device.
+12. **Chat realtime** — threads poll every 20 seconds while visible; no WebSocket/SSE, typing indicators, read receipts, media, or reaction notifications in v1. Concurrent bets have separate threads, but unread state remains group-wide (`GroupMember.lastReadMessageAt`), so opening one thread clears the group badge for all active threads. Chat push needs Expo/APNs/FCM setup on a physical device.
+13. **Concurrent-bet notification links** — reminder/lock/settle payloads carry `roundId`, but current web/mobile group URLs do not preselect that bet; the user lands on the group’s default active bet and can switch manually.
 
 ## Production checklist (operators)
 

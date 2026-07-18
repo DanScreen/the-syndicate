@@ -27,6 +27,9 @@ An acca **locks when the earliest submitted leg kicks off**, even if not every m
 
 **Not locked:** open round with **zero** legs (no kickoff anchor yet).
 
+With [concurrent group bets](./concurrent-group-bets.md), these rules run
+independently for every open bet. One bet locking never closes another open bet.
+
 **After lock:**
 
 - No new legs accepted (`POST /api/legs` → 403 if kickoff passed).

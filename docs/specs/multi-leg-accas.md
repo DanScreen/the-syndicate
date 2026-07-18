@@ -23,7 +23,7 @@ Groups can run accas where each member contributes more than one leg:
 | Setting | Values | Notes |
 |---------|--------|-------|
 | `Group.legsPerMember` | `1` (default) · `2` · `3` | Set by owner on create or `PATCH /api/groups/[id]` |
-| `Round.legsPerMember` | Round quota | Set when the round opens; Settings updates it while `open` (before first kickoff). Locked / in-progress rounds unchanged. |
+| `Round.legsPerMember` | Bet quota | Set when the bet opens; Settings updates every eligible `open` bet (before first kickoff). Locked / in-progress bets unchanged. |
 | Lock when | All members have ≥ `legsPerMember` legs | Or first-kickoff partial lock (unchanged) |
 
 **Rules:**
@@ -56,6 +56,8 @@ Groups can run accas where each member contributes more than one leg:
 - [ ] Combined-odds ceiling — not in v1.
 - [x] Block multiple legs from one fixture — any second leg on the same match is rejected by `POST`/`PATCH` `/api/legs`; occupied fixtures are disabled in web/mobile pickers. This keeps combined odds valid without a bet-builder pricing feed. Existing settled rounds are not rewritten.
 - [x] Grandfather existing groups at `legsPerMember = 1` — migration default.
+
+Concurrent open/locked bets are specified separately in [concurrent-group-bets.md](./concurrent-group-bets.md); each bet enforces this quota independently.
 
 ---
 

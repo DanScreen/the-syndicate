@@ -41,9 +41,9 @@ flowchart TB
 |--------|---------|
 | **User** | Account; `firstName` / `lastName` / `name` (full display); `role` (`user` \| `admin`); aggregate `totalPoints` |
 | **MobileSession** | Revocable native-device login; SHA-256 token hash, user, created/last-used/revoked timestamps |
-| **Group** | Name, invite code, owner, status, `legsPerMember` (1–3, default 1) |
+| **Group** | Name, invite code, owner, status, `legsPerMember` (1–3), `maxActiveBets` (1–5; default 1) |
 | **GroupMember** | Membership, group role, group-scoped points, chat `lastReadMessageAt` |
-| **Round** | Acca cycle: open → locked → settled; `legsPerMember` snapshot; `accaBookmakerRankings` JSON at lock |
+| **Round** | One acca: group-scoped `betNumber`; open → locked → settled; `legsPerMember` snapshot; `accaBookmakerRankings` JSON at lock |
 | **Leg** | Pick slot (`legIndex` 1..quota) per member: fixture, `competitionId`, market, odds, outcome |
 | **Match** | Canonical fixture result (football-data.org sync); reused for auto-settle |
 | **AnalyticsEvent** | Product analytics: `sign_up`, `login`, `page_view` |
@@ -63,6 +63,11 @@ Live ([The Odds API](https://the-odds-api.com/)) or mock. Fixtures fetched **per
 
 ### Settlement
 **System-only** — hands-off after match sync (every 5 min UTC); owner settle routes removed (July 2026) so bets are never self-graded. Escape hatch: platform admins settle stuck rounds from the **settlement queue** (`/admin/settlement`), which flags legs still pending 2h+ after kickoff (including remaining legs after an early loss). Sync bypasses football-data cache; leg outcomes update as matches finish; round settles when **any leg loses** or **all legs are won/void**. Unfinished legs on a busted acca resolve later via `applyDeferredLegOutcome()`. Market resolution in `resolve-leg.ts`. Email notifications on lock/settle (Resend, optional). Settlement funnels through a transactional `applyRoundSettlement()` with an atomic `locked → settled` claim (`updateMany`), so overlapping settle attempts award points **exactly once** — the loser throws `RoundNotSettleableError` and no-ops. The leg-lock transition (`open → locked`) uses the same claim pattern so only one final-leg submission reprices the acca.
+
+### Concurrent bets
+Groups may have 1–5 simultaneous `open`/`locked` rounds. `POST /api/groups/[id]/rounds` is member-accessible only when the owner cap exceeds 1, the cap has room, and no open round is empty. Creation and cap changes take a PostgreSQL transaction-level advisory lock keyed by group ID, preventing concurrent requests from exceeding the cap. API responses expose `activeRounds` with round-scoped betslip data while retaining the legacy singular fields during mobile rollout.
+
+→ [specs/concurrent-group-bets.md](./specs/concurrent-group-bets.md)
 
 ### Leg editing
 Members edit their own leg via `PATCH /api/legs/[id]` while the round is `open` or `locked`, until the **earliest kickoff** among the round's legs. Picks are re-validated like a fresh submit; edits on locked rounds re-run `lockRoundWithAccaPricing()` (combined odds, rankings, and deeplinks refresh at current prices) with rollback if repricing fails. After the first match kicks off, picks are final.
@@ -87,7 +92,7 @@ Round-scoped polling threads share one REST contract across web and mobile. Life
 ### Web UI layout
 - **Header:** Logo + “Social Group Betting” tagline; `AppNav` — Home → About → Groups → Performance → Admin (admins) → Blog (rightmost); greeting **Hi, {name}** → `/account`; logo + Home → `/`
 - **Marketing chrome:** `SessionAwareMarketingHeader` (`useSession`) so force-static `/blog` still shows signed-in `AppHeader`
-- **Group shell:** `groups/[id]/layout.tsx` + `GroupDataProvider` — shared fetch for sub-pages; polls every 60s while acca locked
+- **Group shell:** `groups/[id]/layout.tsx` + `GroupDataProvider` — shared fetch for sub-pages; polls every 60s while any acca is locked
 - **Group tabs:** Round (`/groups/[id]`), Leaderboard, Performance
 - **Locked round:** per-leg outcome badges (Won/Lost/Awaiting) → locked combined odds + bookmaker → betslip CTA until first result, then tracking only (no bookmaker comparison)
 

@@ -241,7 +241,7 @@ export function SubmitLegForm({
   onCancel?: () => void;
   /** Override default heading (e.g. "Submit leg 2 of 3"). */
   title?: string;
-  /** Other legs already on this round — used to block duplicate markets on the same fixture. */
+  /** Other legs already on this round — used to block occupied fixtures. */
   existingLegs?: MarketConflictLeg[];
 }) {
   const [competitions, setCompetitions] = useState<Competition[]>([]);
@@ -365,6 +365,9 @@ export function SubmitLegForm({
   const marketGroups = useMemo(() => groupMarkets(allMarkets), [allMarkets]);
   const market = allMarkets.find((m) => m.type === marketType);
   const selection = market?.selections.find((s) => s.id === selectionId);
+  const hasTakenFixtures = fixtures.some((f) =>
+    isFixtureTaken(existingLegs, f.id, editLegId)
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -493,6 +496,11 @@ export function SubmitLegForm({
       {competitionId && !loadingFixtures && fixtures.length > 0 && (
         <div className="space-y-2">
           <p className="text-xs font-medium uppercase tracking-wide text-muted">2. Pick a fixture</p>
+          {hasTakenFixtures && (
+            <p className="text-xs text-muted">
+              One pick per fixture keeps combined odds accurate.
+            </p>
+          )}
           <div className="grid gap-2 sm:grid-cols-2">
             {fixtures.map((f) => {
               const taken = isFixtureTaken(existingLegs, f.id, editLegId);

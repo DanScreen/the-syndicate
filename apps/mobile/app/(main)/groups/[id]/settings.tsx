@@ -5,8 +5,11 @@ import { colors } from "@/config";
 import { useGroupData } from "@/context/group-data";
 import {
   DEFAULT_LEGS_PER_MEMBER,
+  DEFAULT_MAX_ACTIVE_BETS,
   LEGS_PER_MEMBER_OPTIONS,
+  MAX_ACTIVE_BETS_OPTIONS,
   type LegsPerMember,
+  type MaxActiveBets,
 } from "@tiki-acca/shared";
 import { useEffect, useState } from "react";
 import {
@@ -24,6 +27,9 @@ export default function GroupSettingsScreen() {
   const [legsPerMember, setLegsPerMember] = useState<LegsPerMember>(
     DEFAULT_LEGS_PER_MEMBER
   );
+  const [maxActiveBets, setMaxActiveBets] = useState<MaxActiveBets>(
+    DEFAULT_MAX_ACTIVE_BETS
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [savedNote, setSavedNote] = useState("");
@@ -33,6 +39,11 @@ export default function GroupSettingsScreen() {
       setLegsPerMember(data.group.legsPerMember as LegsPerMember);
     }
   }, [data?.group.legsPerMember]);
+  useEffect(() => {
+    if (data?.group.maxActiveBets != null) {
+      setMaxActiveBets(data.group.maxActiveBets as MaxActiveBets);
+    }
+  }, [data?.group.maxActiveBets]);
 
   if (!data) {
     return (
@@ -42,12 +53,12 @@ export default function GroupSettingsScreen() {
     );
   }
 
-  const openRound =
-    data.activeRound?.status === "open" ? data.activeRound : null;
-  const lockedRound =
-    data.activeRound?.status === "locked" ? data.activeRound : null;
-  const currentEffective =
-    openRound?.legsPerMember ?? data.group.legsPerMember;
+  const activeRounds = data.activeRounds ?? (data.activeRound ? [data.activeRound] : []);
+  const openRounds = activeRounds.filter((round) => round.status === "open");
+  const lockedRounds = activeRounds.filter((round) => round.status === "locked");
+  const openRoundsMatchQuota = openRounds.every(
+    (round) => round.legsPerMember === legsPerMember
+  );
 
   if (!data.isOwner) {
     return (
@@ -57,12 +68,8 @@ export default function GroupSettingsScreen() {
             Only the group owner can change settings. This group uses{" "}
             {data.group.legsPerMember} leg
             {data.group.legsPerMember === 1 ? "" : "s"} per member
-            {openRound
-              ? ` — current open round: ${openRound.legsPerMember}`
-              : lockedRound
-                ? ` — locked round stays at ${lockedRound.legsPerMember}`
-                : ""}
-            .
+            , with up to {data.group.maxActiveBets} active bet
+            {data.group.maxActiveBets === 1 ? "" : "s"}.
           </Text>
         </Card>
       </ScrollView>
@@ -78,7 +85,7 @@ export default function GroupSettingsScreen() {
       const json = await api<{ note?: string }>(`/api/groups/${data.group.id}`, {
         method: "PATCH",
         token,
-        body: JSON.stringify({ legsPerMember }),
+        body: JSON.stringify({ legsPerMember, maxActiveBets }),
       });
       setSavedNote(json.note ?? "Saved.");
       await reload();
@@ -91,7 +98,8 @@ export default function GroupSettingsScreen() {
 
   const unchanged =
     legsPerMember === data.group.legsPerMember &&
-    legsPerMember === currentEffective;
+    openRoundsMatchQuota &&
+    maxActiveBets === data.group.maxActiveBets;
 
   return (
     <ScrollView contentContainerStyle={styles.content}>
@@ -100,10 +108,10 @@ export default function GroupSettingsScreen() {
         Changes apply to open rounds immediately. Locked or in-progress bets keep
         their quota until the next round.
       </Text>
-      {lockedRound ? (
+      {lockedRounds.length > 0 ? (
         <Text style={styles.meta}>
-          Current bet is locked at {lockedRound.legsPerMember} leg
-          {lockedRound.legsPerMember === 1 ? "" : "s"} each.
+          {lockedRounds.length} locked bet
+          {lockedRounds.length === 1 ? "" : "s"} will keep their existing quota.
         </Text>
       ) : null}
       <Card>
@@ -126,6 +134,43 @@ export default function GroupSettingsScreen() {
             </Pressable>
           ))}
         </View>
+        <Text style={styles.label}>Maximum active bets</Text>
+        <Text style={styles.meta}>
+          Open and locked unresolved bets count toward this limit. With more
+          than one, any member can start a new bet after each open bet has a leg.
+        </Text>
+        <View style={styles.row}>
+          {MAX_ACTIVE_BETS_OPTIONS.map((n) => (
+            <Pressable
+              key={n}
+              onPress={() => setMaxActiveBets(n)}
+              style={[
+                styles.option,
+                maxActiveBets === n && styles.optionActive,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.optionText,
+                  maxActiveBets === n && styles.optionTextActive,
+                ]}
+              >
+                {n}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+        <Text style={styles.meta}>
+          {activeRounds.length} bet{activeRounds.length === 1 ? "" : "s"} currently
+          open or locked.
+        </Text>
+        {maxActiveBets < activeRounds.length ? (
+          <Text style={styles.warning}>
+            Existing bets will continue. This lower limit will be enforced as
+            they conclude, and no new bet can be created until the active count
+            falls below {maxActiveBets}.
+          </Text>
+        ) : null}
         <ErrorText message={error} />
         {savedNote ? <Text style={styles.saved}>{savedNote}</Text> : null}
         {!unchanged ? (
@@ -170,4 +215,5 @@ const styles = StyleSheet.create({
   optionText: { color: colors.muted, fontWeight: "600" },
   optionTextActive: { color: colors.accent },
   saved: { color: colors.accent, fontSize: 13, marginBottom: 10 },
+  warning: { color: colors.warning, fontSize: 13, marginBottom: 10 },
 });

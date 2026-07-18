@@ -78,6 +78,10 @@ export const faqs = [
     a: "Yes. Each member picks their own competition (Premier League, Championship, World Cup, and more) in the same acca.",
   },
   {
+    q: "Why can we only pick one leg per fixture?",
+    a: "Outcomes from the same match can affect each other, so simply multiplying their odds would produce an inaccurate price. Bookmakers account for this through bet-builder pricing, which our odds feed does not provide. Limiting each acca to one leg per fixture keeps the displayed odds accurate and fair.",
+  },
+  {
     q: "Is it free?",
     a: "Yes. Create groups, submit legs, and track performance at no cost.",
   },
