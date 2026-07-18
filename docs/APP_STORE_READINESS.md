@@ -106,4 +106,4 @@ camera/location/photos permissions · brand assets current.
 - [x] 2. Chat report + block (schema + API + mobile long-press, Account unblock list) — verified end-to-end
 - [x] 3. Push prompt gating (silent token refresh at launch; prompt only from Account)
 - [x] 4. Terms page (/terms) + support contact (in-app + footer)
-- [ ] 5–9. Store setup (owner: Daniel, at submission time)
+- [ ] 5–9. Store setup (owner: Daniel, at submission time) — copy-paste pack drafted in [app-store/](./app-store/README.md)
