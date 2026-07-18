@@ -29,6 +29,8 @@ export default function GroupRoundPage() {
   const { data: session } = useSession();
   const { data, reload, markChatRead } = useGroupData();
   const [editingLegId, setEditingLegId] = useState<string | null>(null);
+  const [removingLegId, setRemovingLegId] = useState<string | null>(null);
+  const [removeError, setRemoveError] = useState("");
   const [roundMessages, setRoundMessages] = useState<RoundMessageDto[]>([]);
   const [chatRefreshKey, setChatRefreshKey] = useState(0);
 
@@ -87,6 +89,29 @@ export default function GroupRoundPage() {
       (message.eventType === "leg_submitted" || message.eventType === "leg_changed")
     ) {
       announcementByLegId.set(message.legId, message);
+    }
+  }
+
+  async function removeLeg(legId: string, selectionLabel: string) {
+    if (!window.confirm(`Remove ${selectionLabel} from this acca?`)) return;
+
+    setRemovingLegId(legId);
+    setRemoveError("");
+    try {
+      const response = await fetch(`/api/legs/${legId}`, { method: "DELETE" });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setRemoveError(
+          typeof body.error === "string" ? body.error : "Failed to remove leg"
+        );
+        return;
+      }
+      await reload();
+      setChatRefreshKey((key) => key + 1);
+    } catch {
+      setRemoveError("Failed to remove leg");
+    } finally {
+      setRemovingLegId(null);
     }
   }
 
@@ -175,10 +200,11 @@ export default function GroupRoundPage() {
         <div className="space-y-2 rounded-xl border border-border bg-card p-4">
           <p className="text-sm font-medium">Your picks</p>
           <p className="text-sm text-muted">
-            You can change them until the first kickoff
+            You can change {isOpen ? "or remove " : ""}them until the first kickoff
             {firstKickoff ? ` (${formatCutoff(firstKickoff)})` : ""}.
             {isLocked && " Changing a pick reprices the whole acca at current odds."}
           </p>
+          {removeError && <p className="text-sm text-danger">{removeError}</p>}
           <ul className="mt-2 space-y-2">
             {userLegs.map((leg) => (
               <li
@@ -189,13 +215,25 @@ export default function GroupRoundPage() {
                   {legsPerMember > 1 ? `Leg ${leg.legIndex ?? ""}: ` : ""}
                   {leg.selectionLabel} ({formatOdds(leg.odds)})
                 </span>
-                <button
-                  type="button"
-                  onClick={() => setEditingLegId(leg.id)}
-                  className="rounded-lg border border-accent px-3 py-1.5 text-sm font-medium text-accent hover:bg-accent-muted/30"
-                >
-                  Change
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditingLegId(leg.id)}
+                    className="rounded-lg border border-accent px-3 py-1.5 text-sm font-medium text-accent hover:bg-accent-muted/30"
+                  >
+                    Change
+                  </button>
+                  {isOpen && (
+                    <button
+                      type="button"
+                      disabled={removingLegId === leg.id}
+                      onClick={() => void removeLeg(leg.id, leg.selectionLabel)}
+                      className="rounded-lg border border-danger/60 px-3 py-1.5 text-sm font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
+                    >
+                      {removingLegId === leg.id ? "Removing…" : "Remove"}
+                    </button>
+                  )}
+                </div>
               </li>
             ))}
           </ul>

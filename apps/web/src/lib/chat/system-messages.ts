@@ -95,6 +95,27 @@ export async function postLegChangedMessage(
   });
 }
 
+export function formatLegRemovedBody(
+  name: string,
+  leg: Pick<AnnouncedLeg, "selectionLabel" | "homeTeam" | "awayTeam">
+): string {
+  return `${name} removed ${leg.selectionLabel} (${leg.homeTeam} v ${leg.awayTeam}) from the acca 🗑️`;
+}
+
+/** Removal messages preserve the event after the deleted leg relation is gone. */
+export async function postLegRemovedMessage(
+  db: Db,
+  leg: AnnouncedLeg,
+  userName?: string
+): Promise<void> {
+  const name = userName ?? (await displayName(db, leg.userId));
+  await createSystemMessage(db, {
+    roundId: leg.roundId,
+    eventType: "leg_removed",
+    body: formatLegRemovedBody(name, leg),
+  });
+}
+
 /** Posted by the winner of the `open → locked` claim, after pricing succeeds. */
 export async function postRoundLockedMessage(db: Db, roundId: string): Promise<void> {
   const round = await db.round.findUnique({

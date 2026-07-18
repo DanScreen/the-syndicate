@@ -40,12 +40,10 @@ export function nextLegIndexForUser(
   userId: string
 ): number {
   const userLegs = legs.filter((l) => l.userId === userId);
-  if (userLegs.length === 0) return 1;
-  const maxIndex = Math.max(
-    ...userLegs.map((l) => l.legIndex ?? 1),
-    userLegs.length
-  );
-  return maxIndex + 1;
+  const used = new Set(userLegs.map((leg, index) => leg.legIndex ?? index + 1));
+  let next = 1;
+  while (used.has(next)) next += 1;
+  return next;
 }
 
 export function isValidLegsPerMember(value: number): value is LegsPerMember {

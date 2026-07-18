@@ -1,5 +1,9 @@
 import { requireSession } from "@/lib/api-auth";
-import { postLegChangedMessage, tryPostSystemMessage } from "@/lib/chat/system-messages";
+import {
+  postLegChangedMessage,
+  postLegRemovedMessage,
+  tryPostSystemMessage,
+} from "@/lib/chat/system-messages";
 import { isBookmakerHubUrl } from "@/lib/odds/betslip-links";
 import { sortQuotesByBestOdds } from "@/lib/odds/bookmakers";
 import { lockRoundWithAccaPricing } from "@/lib/odds/lock-round";
@@ -178,4 +182,49 @@ export async function PATCH(request: Request, { params }: Params) {
   );
 
   return NextResponse.json({ leg: updatedLeg, repriced });
+}
+
+export async function DELETE(_request: Request, { params }: Params) {
+  const { session, error } = await requireSession();
+  if (error) return error;
+
+  const { id: legId } = await params;
+  const leg = await prisma.leg.findUnique({
+    where: { id: legId },
+    include: {
+      user: { select: { name: true } },
+      round: { include: { legs: true } },
+    },
+  });
+
+  if (!leg) {
+    return NextResponse.json({ error: "Leg not found" }, { status: 404 });
+  }
+
+  if (leg.userId !== session!.user!.id) {
+    return NextResponse.json({ error: "You can only remove your own leg" }, { status: 403 });
+  }
+
+  if (leg.round.status !== "open") {
+    return NextResponse.json(
+      { error: "This pick can no longer be removed because the acca is locked" },
+      { status: 403 }
+    );
+  }
+
+  const cutoff = firstKickoff(leg.round.legs);
+  if (cutoff && new Date() >= cutoff) {
+    return NextResponse.json(
+      { error: "Removing picks is closed. The first match in this acca has kicked off." },
+      { status: 403 }
+    );
+  }
+
+  await prisma.leg.delete({ where: { id: leg.id } });
+
+  await tryPostSystemMessage("leg_removed", () =>
+    postLegRemovedMessage(prisma, leg, leg.user.name)
+  );
+
+  return NextResponse.json({ removed: true, legId: leg.id });
 }

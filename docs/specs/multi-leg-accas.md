@@ -30,6 +30,7 @@ Groups can run accas where each member contributes more than one leg:
 
 - Members cannot submit more than their round quota; UI shows `submitted / quota` per member.
 - Legs use `legIndex` (1-based) with `@@unique([roundId, userId, legIndex])`.
+- Members can remove only their own legs while the round is still open and before first kickoff; replacement picks reuse the first free `legIndex`.
 - Member points sum across all legs in the round (existing per-leg scoring).
 - **No duplicate markets on the same fixture** — a round cannot include two legs that share a market family on the same match (e.g. Goals O/U 0.5 and O/U 1.5). Exact same pick is therefore also blocked. Helpers: `marketFamilyKey` / `findConflictingMarketLeg` / `findRedundantMarketLegs` in `packages/shared/src/market-conflicts.ts`. Historical cleanup: `purgeDuplicateMarketsInRound` + `fix-duplicate-markets` maintenance.
 
@@ -42,6 +43,7 @@ Groups can run accas where each member contributes more than one leg:
 | 1 | Schema + quota enforcement + lock condition | ✅ |
 | 2 | Web create / settings / round multi-submit | ✅ |
 | 3 | Mobile parity | ✅ |
+| 3b | Remove own open-round legs + chat event (web/mobile) | ✅ |
 | 4 | Platform admin ceilings + feature flag | Deferred |
 | 5 | Leaderboard / stats polish (primary leg emphasis) | Deferred — ranks on all legs for now |
 
