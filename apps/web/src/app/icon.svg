@@ -1,20 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" fill="none">
-  <!-- Triangle rondo on the Floodlight disc — favicon / app-icon cut.
-       Inverted (apex-down) triangle: three white players + white passes,
-       sky-blue centre player being passed around. Vertices at -90/30/150 deg on
-       R=52, centroid at (110,110), reflected vertically. Explicit chevron
-       arrow tips (no markers) so it renders identically across rasterisers. -->
+  <!-- Wide apex-up triangle rondo on the Floodlight disc. Three white players
+       circulate passes around the sky-blue centre player. R=64, centroid
+       (110,110); explicit chevron arrow tips for consistent rasterisation. -->
   <circle cx="110" cy="110" r="106" fill="#0c4a6e"/>
-  <g transform="translate(0,220) scale(1,-1)">
-    <line x1="120.25" y1="75.75" x2="139.28" y2="108.72" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round"/>
-    <path d="M133.33 112.21 L145.28 119.11 L145.28 105.31" fill="none" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-    <line x1="134.53" y1="136" x2="96.47" y2="136" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round"/>
-    <path d="M96.42 129.1 L84.47 136 L96.42 142.9" fill="none" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-    <line x1="75.22" y1="118.25" x2="94.25" y2="85.28" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round"/>
-    <path d="M100.25 88.69 L100.25 74.89 L88.3 81.79" fill="none" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="110" cy="58" r="14.5" fill="#f1f5f9"/>
-    <circle cx="155.03" cy="136" r="14.5" fill="#f1f5f9"/>
-    <circle cx="64.97" cy="136" r="14.5" fill="#f1f5f9"/>
+  <g>
+    <line x1="122.62" y1="67.85" x2="146.04" y2="108.42" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round"/>
+    <path d="M141.47 114.31 L153.42 121.21 L153.42 107.41" fill="none" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="140.19" y1="142" x2="93.35" y2="142" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round"/>
+    <path d="M90.53 135.10 L78.58 142 L90.53 148.90" fill="none" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="67.19" y1="120.15" x2="90.62" y2="79.58" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round"/>
+    <path d="M98 80.59 L98 66.79 L86.05 73.69" fill="none" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="110" cy="46" r="14.5" fill="#f1f5f9"/>
+    <circle cx="165.42" cy="142" r="14.5" fill="#f1f5f9"/>
+    <circle cx="54.58" cy="142" r="14.5" fill="#f1f5f9"/>
   </g>
   <circle cx="110" cy="110" r="13.5" fill="#38bdf8"/>
 </svg>

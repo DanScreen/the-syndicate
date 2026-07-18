@@ -2,6 +2,7 @@
 /**
  * Regenerates the raster brand assets from the current palette:
  *   - apps/web/src/app/favicon.ico          (48² PNG-in-ICO disc)
+ *   - apps/web/public/brand/email-logo.png  (128² disc)
  *   - apps/mobile/assets/favicon.png        (48² disc)
  *   - apps/mobile/assets/icon.png           (1024² glyph on accent-muted square)
  *   - apps/mobile/assets/splash-icon.png    (1024² disc, centred, transparent)
@@ -12,8 +13,7 @@
  * Disc cuts render apps/web/src/app/icon.svg (keep that file in the palette too;
  * check-brand-sync.mjs guards brand.ts ↔ globals.css but not the SVG).
  *
- * Glyph geometry mirrors logo.tsx including its vertical reflect — the rondo is
- * apex-DOWN; if you touch the geometry, compare against docs/brand history.
+ * Glyph geometry mirrors logo.tsx — wide apex-up rondo.
  *
  * Usage: node scripts/generate-brand-assets.mjs
  */
@@ -35,21 +35,20 @@ const FG = BRAND.foreground;
 const ACCENT = BRAND.accent;
 const ACCENT_MUTED = BRAND.accentMuted;
 
-// Upright coordinates from logo.tsx, reflected apex-down like the DOM/RN cuts.
-// Flipped content bbox: x 43.77..176.23, y 65..184 in the 220 viewBox.
+// Wide apex-up coordinates from logo.tsx. Tight content bbox includes dots.
 function glyphSvg({ mono = false } = {}) {
   const dot = mono ? FG : ACCENT;
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="43.77 65 132.46 119" fill="none">
-  <g transform="translate(0,220) scale(1,-1)">
-  <line x1="121.5" y1="71.92" x2="142.73" y2="108.69" stroke="${FG}" stroke-width="11" stroke-linecap="round"/>
-  <path d="M136.28 112.47 L149.23 119.95 L149.23 105" fill="none" stroke="${FG}" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
-  <line x1="137.23" y1="139" x2="94.77" y2="139" stroke="${FG}" stroke-width="11" stroke-linecap="round"/>
-  <path d="M94.72 131.53 L81.77 139 L94.72 146.47" fill="none" stroke="${FG}" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
-  <line x1="71.27" y1="119.08" x2="92.5" y2="82.31" stroke="${FG}" stroke-width="11" stroke-linecap="round"/>
-  <path d="M99 86 L99 71.05 L86.05 78.53" fill="none" stroke="${FG}" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="110" cy="52" r="16" fill="${FG}"/>
-  <circle cx="160.23" cy="139" r="16" fill="${FG}"/>
-  <circle cx="59.77" cy="139" r="16" fill="${FG}"/>
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="31.65 22 156.7 140" fill="none">
+  <g>
+  <line x1="124.28" y1="62.73" x2="150.63" y2="108.37" stroke="${FG}" stroke-width="11" stroke-linecap="round"/>
+  <path d="M145.75 114.87 L158.70 122.35 L158.70 107.40" fill="none" stroke="${FG}" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="143.80" y1="146" x2="91.09" y2="146" stroke="${FG}" stroke-width="11" stroke-linecap="round"/>
+  <path d="M87.91 138.53 L74.96 146 L87.91 153.47" fill="none" stroke="${FG}" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="61.92" y1="121.27" x2="88.28" y2="75.63" stroke="${FG}" stroke-width="11" stroke-linecap="round"/>
+  <path d="M96.34 76.60 L96.34 61.65 L83.39 69.13" fill="none" stroke="${FG}" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="110" cy="38" r="16" fill="${FG}"/>
+  <circle cx="172.35" cy="146" r="16" fill="${FG}"/>
+  <circle cx="47.65" cy="146" r="16" fill="${FG}"/>
   <circle cx="110" cy="110" r="15" fill="${dot}"/>
   </g>
 </svg>`;
@@ -85,6 +84,9 @@ const disc494 = await sharp(DISC_SVG).resize(494, 494).png().toBuffer();
 await (await canvasWith(1024, T, disc494, 265, 265)).toFile(`${A}/splash-icon.png`);
 
 await sharp(DISC_SVG).resize(48, 48).png().toFile(`${A}/favicon.png`);
+await sharp(DISC_SVG).resize(128, 128).png().toFile(
+  join(root, "apps/web/public/brand/email-logo.png")
+);
 
 // favicon.ico — single 48² PNG entry (PNG-in-ICO).
 const png48 = await sharp(DISC_SVG).resize(48, 48).png().toBuffer();
@@ -102,4 +104,4 @@ header.writeUInt32LE(png48.length, 14); // data size
 header.writeUInt32LE(22, 18); // data offset
 writeFileSync(join(root, "apps/web/src/app/favicon.ico"), Buffer.concat([header, png48]));
 
-console.log(`✓ regenerated 6 mobile assets + favicon.ico (accent ${ACCENT}, disc ${ACCENT_MUTED})`);
+console.log(`✓ regenerated mobile, email, and favicon assets (accent ${ACCENT}, disc ${ACCENT_MUTED})`);

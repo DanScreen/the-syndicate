@@ -15,17 +15,14 @@ const sizes = {
 };
 
 /**
- * Triangle rondo — the Tiki Acca mark ("inverted rondo cut", July 2026).
+ * Triangle rondo — the Tiki Acca mark ("wide rondo cut", July 2026).
  *
- * An inverted (apex-down) equilateral passing triangle: three white players
+ * An apex-up equilateral passing triangle: three white players
  * at the points, white passes circulating between them, and a green
  * player in the centre being passed around (the rondo "piggy in the middle").
- * Geometry is exact — vertices at −90°/30°/150° on a 58-unit circumradius,
- * centroid at the viewBox centre (110,110), reflected vertically about the
- * centre. Arrow tips are explicit chevron paths at the same stroke weight as
- * the pass lines (no SVG markers). The reflect transform is DOM/RN-safe; the
- * Satori/ImageResponse cut (`lib/brand/rondo-icon.tsx`) bakes the same flip
- * into coordinates so every rasteriser agrees.
+ * Geometry is exact — vertices at −90°/30°/150° on a widened 72-unit
+ * circumradius, centroid at the viewBox centre (110,110). Arrow tips are
+ * explicit chevron paths at the same stroke weight as the pass lines.
  *
  * Standalone glyph — no disc, no wordmark. The disc-backed variant lives in
  * `app/icon.svg` / app icons, where tab and home-screen contrast demands it.
@@ -41,21 +38,21 @@ export function LogoMark({ size = 36, className }: { size?: number; className?: 
       className={className}
       aria-hidden
     >
-      {/* Triangle players + passes, reflected vertically (apex down). */}
-      <g transform="translate(0,220) scale(1,-1)">
+      {/* Triangle players + passes (wide, apex up). */}
+      <g>
         {/* pass: top → right */}
-        <line x1="121.5" y1="71.92" x2="142.73" y2="108.69" stroke={BRAND_COLORS.foreground} strokeWidth="11" strokeLinecap="round" />
-        <path d="M136.28 112.47 L149.23 119.95 L149.23 105" fill="none" stroke={BRAND_COLORS.foreground} strokeWidth="11" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1="124.28" y1="62.73" x2="150.63" y2="108.37" stroke={BRAND_COLORS.foreground} strokeWidth="11" strokeLinecap="round" />
+        <path d="M145.75 114.87 L158.70 122.35 L158.70 107.40" fill="none" stroke={BRAND_COLORS.foreground} strokeWidth="11" strokeLinecap="round" strokeLinejoin="round" />
         {/* pass: right → left (base) */}
-        <line x1="137.23" y1="139" x2="94.77" y2="139" stroke={BRAND_COLORS.foreground} strokeWidth="11" strokeLinecap="round" />
-        <path d="M94.72 131.53 L81.77 139 L94.72 146.47" fill="none" stroke={BRAND_COLORS.foreground} strokeWidth="11" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1="143.80" y1="146" x2="91.09" y2="146" stroke={BRAND_COLORS.foreground} strokeWidth="11" strokeLinecap="round" />
+        <path d="M87.91 138.53 L74.96 146 L87.91 153.47" fill="none" stroke={BRAND_COLORS.foreground} strokeWidth="11" strokeLinecap="round" strokeLinejoin="round" />
         {/* pass: left → top (build-up) */}
-        <line x1="71.27" y1="119.08" x2="92.5" y2="82.31" stroke={BRAND_COLORS.foreground} strokeWidth="11" strokeLinecap="round" />
-        <path d="M99 86 L99 71.05 L86.05 78.53" fill="none" stroke={BRAND_COLORS.foreground} strokeWidth="11" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1="61.92" y1="121.27" x2="88.28" y2="75.63" stroke={BRAND_COLORS.foreground} strokeWidth="11" strokeLinecap="round" />
+        <path d="M96.34 76.60 L96.34 61.65 L83.39 69.13" fill="none" stroke={BRAND_COLORS.foreground} strokeWidth="11" strokeLinecap="round" strokeLinejoin="round" />
         {/* triangle players */}
-        <circle cx="110" cy="52" r="16" fill={BRAND_COLORS.foreground} />
-        <circle cx="160.23" cy="139" r="16" fill={BRAND_COLORS.foreground} />
-        <circle cx="59.77" cy="139" r="16" fill={BRAND_COLORS.foreground} />
+        <circle cx="110" cy="38" r="16" fill={BRAND_COLORS.foreground} />
+        <circle cx="172.35" cy="146" r="16" fill={BRAND_COLORS.foreground} />
+        <circle cx="47.65" cy="146" r="16" fill={BRAND_COLORS.foreground} />
       </g>
       {/* centre player being passed around (orientation-invariant) */}
       <circle cx="110" cy="110" r="15" fill={BRAND_COLORS.accent} />
