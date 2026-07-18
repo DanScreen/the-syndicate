@@ -1,6 +1,6 @@
 # Current state (as-built)
 
-Last updated 17 July 2026 (group chat and reactions shipped on web + mobile). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
+Last updated 18 July 2026 (competition catalogue expanded to full provider overlap). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
 
 Production: **https://www.tikiacca.com** (apex → 301 to www via Cloudflare).
 
@@ -136,7 +136,7 @@ Example: acca @ 3.44 (legs 1.6 × 2.15) → **2.44** group pts; members **0.6** 
 
 ## Odds & competitions
 
-Seven competitions in `packages/shared/src/competitions.ts`: EPL, Championship, La Liga, Ligue 1, Serie A, Bundesliga, World Cup. **Admin toggles** which are visible in the leg picker (`CompetitionSetting` table; `/admin/competitions`). Default: **World Cup only**. Match sync still runs for all catalogue competitions so settled legs can resolve when leagues are re-enabled.
+Thirteen competitions in `packages/shared/src/competitions.ts`, covering every competition available from both configured provider accounts: EPL, Championship, La Liga, Ligue 1, Serie A, Bundesliga, Eredivisie, Primeira Liga, Brazil Série A, Champions League, European Championship, Copa Libertadores, and World Cup. **Admin toggles** which are visible in the leg picker (`CompetitionSetting` table; `/admin/competitions`). Default: **World Cup only**; newly discovered catalogue rows are created disabled. Match sync fetches enabled competitions plus any disabled competition that still has a pending leg, avoiding unnecessary football-data.org calls without stranding settlement.
 
 Fixture list uses The Odds API with `commenceTimeFrom` in `YYYY-MM-DDTHH:MM:SSZ` format (no milliseconds) and client-side upcoming filter. When `ODDS_API_KEY` is set, **no mock fallback** — empty list if the bookmaker feed has no upcoming fixtures. **Production never serves demo fixtures**; mock data is local dev only (`source: "mock"`). Check `GET /api/health` → `odds: "configured" | "missing"`.
 
@@ -436,7 +436,7 @@ Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `Analytics
 - Leg stores `legIndex` + fixture snapshot: teams, kickoff, `competitionId` (slug), `competition` (display name), optional `matchId` FK, market, odds, bookmaker, `betslipUrl`, `bookmakerLinks` JSON, outcome.
 - `Match` — canonical result per fixture (`externalDataId` from football-data.org).
 - `Round.accaBookmakerRankings` — JSON array of ranked bookmakers at lock.
-- `CompetitionSetting` — `competitionId` slug + `enabled` flag for leg-picker visibility (seeded: World Cup on, leagues off).
+- `CompetitionSetting` — `competitionId` slug + `enabled` flag for leg-picker visibility (seeded: World Cup on, every other competition off; new catalogue entries are inserted off).
 - Groups always have an open or locked round; a new open round starts automatically when the previous round settles. Legacy groups without an active round get one on next load.
 - `Round.lockedNotificationSentAt` / `settledNotificationSentAt` — email dedup.
 
@@ -487,7 +487,7 @@ Recent migrations include `20260717150000_group_chat_messages` and `202607171700
 
 ## Known limitations
 
-1. **football-data.org free tier:** All catalogue leagues sync on the free tier (incl. La Liga, Ligue 1, Serie A, Bundesliga); EPL/Championship may be empty off-season.
+1. **football-data.org free tier:** All 13 catalogue competitions are exposed by the configured account. Match sync only requests enabled competitions and competitions with pending legs; EPL/Championship may be empty off-season.
 2. **Settlement is system-only** — auto-settle runs after match sync (every 5 min); leg outcomes update as matches finish; round settles when **any leg loses** or **all legs are won/void**. Remaining legs on an early loss keep resolving via `applyDeferredLegOutcome()`. Owners cannot settle (routes removed July 2026). Overlapping settle attempts are safe — transactional, exactly-once via an atomic `locked → settled` claim (see [Settlement](#settlement)). Rounds the system cannot resolve are handled by admins via the **settlement queue** (`/admin/settlement`) — pending legs 2h+ after kickoff (including leftovers after early settle) are flagged for intervention.
 3. **Email notifications** require Resend setup (`RESEND_API_KEY`, `EMAIL_FROM`); skipped if unset.
 4. **Auto-settle requires synced `Match` rows** — 5-min cron or manual `POST /api/internal/sync-matches`.

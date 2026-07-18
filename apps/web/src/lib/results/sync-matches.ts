@@ -4,8 +4,9 @@ import {
   syncDateRange,
   type FootballDataMatch,
 } from "@/lib/results/football-data";
+import { getEnabledCompetitions } from "@/lib/competitions/settings";
 import { prisma } from "@tiki-acca/database";
-import { COMPETITIONS } from "@tiki-acca/shared";
+import { COMPETITIONS, type Competition } from "@tiki-acca/shared";
 
 function matchDataFromFootballData(competitionId: string, match: FootballDataMatch) {
   const homeTeam = match.homeTeam?.name;
@@ -66,8 +67,26 @@ export type SyncMatchesResult = {
   totalSkipped: number;
 };
 
+async function getCompetitionsToSync(): Promise<Competition[]> {
+  const [enabledCompetitions, pendingLegs] = await Promise.all([
+    getEnabledCompetitions(),
+    prisma.leg.findMany({
+      where: { outcome: "pending" },
+      select: { competitionId: true },
+      distinct: ["competitionId"],
+    }),
+  ]);
+  const requiredIds = new Set([
+    ...enabledCompetitions.map((competition) => competition.id),
+    ...pendingLegs.map((leg) => leg.competitionId),
+  ]);
+
+  return COMPETITIONS.filter((competition) => requiredIds.has(competition.id));
+}
+
 export async function syncAllCompetitionMatches(): Promise<SyncMatchesResult> {
   const { from, to } = syncDateRange();
+  const competitions = await getCompetitionsToSync();
   const result: SyncMatchesResult = {
     competitions: [],
     totalCreated: 0,
@@ -75,7 +94,7 @@ export async function syncAllCompetitionMatches(): Promise<SyncMatchesResult> {
     totalSkipped: 0,
   };
 
-  for (const competition of COMPETITIONS) {
+  for (const competition of competitions) {
     const entry: SyncMatchesResult["competitions"][number] = {
       competitionId: competition.id,
       created: 0,

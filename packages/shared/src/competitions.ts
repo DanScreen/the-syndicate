@@ -43,6 +43,42 @@ export const COMPETITIONS: Competition[] = [
     footballDataCode: "BL1",
   },
   {
+    id: "eredivisie",
+    name: "Eredivisie",
+    oddsApiSport: "soccer_netherlands_eredivisie",
+    footballDataCode: "DED",
+  },
+  {
+    id: "primeira-liga",
+    name: "Primeira Liga",
+    oddsApiSport: "soccer_portugal_primeira_liga",
+    footballDataCode: "PPL",
+  },
+  {
+    id: "brazil-serie-a",
+    name: "Brazil Série A",
+    oddsApiSport: "soccer_brazil_campeonato",
+    footballDataCode: "BSA",
+  },
+  {
+    id: "champions-league",
+    name: "UEFA Champions League",
+    oddsApiSport: "soccer_uefa_champs_league",
+    footballDataCode: "CL",
+  },
+  {
+    id: "european-championship",
+    name: "UEFA European Championship",
+    oddsApiSport: "soccer_uefa_european_championship",
+    footballDataCode: "EC",
+  },
+  {
+    id: "copa-libertadores",
+    name: "Copa Libertadores",
+    oddsApiSport: "soccer_conmebol_copa_libertadores",
+    footballDataCode: "CLI",
+  },
+  {
     id: "world-cup",
     name: "FIFA World Cup",
     oddsApiSport: "soccer_fifa_world_cup",

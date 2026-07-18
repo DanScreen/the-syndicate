@@ -3,7 +3,7 @@
 | Field | Value |
 |-------|-------|
 | **Status** | Backlog — mostly ops (leagues can be enabled via `/admin/competitions` when ready; deprioritised July 2026 in favour of group chat) |
-| **Depends on** | Competitions catalogue, admin competition toggles, odds warm cron |
+| **Depends on** | Competitions catalogue (full configured-provider overlap available, disabled by default), admin competition toggles, odds warm cron |
 | **As-built reference** | [../CURRENT_STATE.md](../CURRENT_STATE.md) — Odds & competitions |
 
 ---
@@ -27,8 +27,10 @@ The **World Cup is the only competition enabled by default** (`CompetitionSettin
 
 - [ ] Verify The Odds API sport keys + football-data.org competition IDs resolve for the 2026–27 season (EPL, Championship, La Liga, Ligue 1, Serie A, Bundesliga) — season rollover sometimes changes fixture availability windows.
 - [ ] Enable Championship (kicks off early August) and remaining leagues via `/admin/competitions` as fixtures appear in the bookmaker feed.
-- [ ] Disable World Cup once the final settles and all groups' World Cup rounds are resolved (match sync keeps running for the catalogue regardless, so late settlement is safe).
+- [ ] Disable World Cup once the final settles and all groups' World Cup rounds are resolved (competitions with pending legs keep syncing after they are disabled, so late settlement remains safe).
 - [ ] Confirm odds warm cron budget with multiple competitions re-enabled — see [DEPLOYMENT.md](../DEPLOYMENT.md#the-odds-api--calls-credits--cron); `3 × competitions + 5 × N` per run.
+
+The Admin catalogue also includes Eredivisie, Primeira Liga, Brazil Série A, Champions League, European Championship, and Copa Libertadores. These entries were added disabled and can be staged independently. Match sync only requests enabled competitions plus competitions with pending legs.
 
 ## Workstream B — FA Cup + EFL Cup (code)
 
