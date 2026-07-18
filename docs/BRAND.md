@@ -23,13 +23,26 @@ Visual identity for Tiki Acca.
 
 We are **not** a bookmaker. Copy and UI must always make clear users place bets with licensed operators.
 
+**Approved future competitive campaign line (not live):**
+
+> **Think you know football? Prove it.**
+>
+> **Real picks. Real odds. Real results.**
+
+Use this as a secondary competitive/proof theme, not a replacement for the social
+group headline. Supporting copy may contrast Tiki Acca's transparent real-odds,
+unit-stake scoring with arbitrary fantasy scoring, but must not promise profit,
+claim lasting skill from a short sample, or imply that Tiki Acca supplies tips.
+
 ---
 
 ## Logo (live)
 
-**Triangle rondo** (wide apex-up cut, July 2026) — an equilateral passing triangle with its apex at the top: **three white players** at the points with **white passes** circulating between them, and a **sky-blue player in the centre** being passed around (the rondo "piggy in the middle"). The outer players were widened away from the centre after visual review: glyph circumradius **72** (formerly 58), disc circumradius **64** (formerly 52). Two cuts: **glyph** (standalone, headers/in-app) and **disc** (accent-muted blue circle behind, favicon/app icons). Geometry is centred at `(110,110)` with explicit chevron arrow tips, and the same baked coordinates are used across DOM, React Native, Satori, SVG, and canvas cuts.
+**Triangle rondo** (extra-wide apex-up cut, July 2026) — an equilateral passing triangle with its apex at the top: **three white players** at the points with **white passes** circulating between them, and a **sky-blue player in the centre** being passed around (the rondo "piggy in the middle"). The outer players were widened away from the centre after visual review: glyph circumradius **86** (formerly 72), disc circumradius **76** (formerly 64). Two cuts: **glyph** (standalone, headers/in-app) and **disc** (accent-muted blue circle behind, favicon/app icons). Geometry is centred at `(110,110)` with explicit chevron arrow tips, and the same baked coordinates are used across DOM, React Native, Satori, SVG, and canvas cuts.
 
 **Surfaces (keep in sync):** `apps/web/src/components/logo.tsx` (`LogoMark`/`Logo` glyph), `app/icon.svg` + `lib/brand/rondo-icon.tsx` (disc; apple-icon + blog OG image), `favicon.ico`, `lib/share/render-performance-image.ts` (canvas), `apps/mobile/src/components/logo.tsx` (glyph), and `apps/mobile/assets/*.png` (app icons). Bump the `?v=` favicon cache-bust in `layout.tsx` on any change.
+
+**Rollback archive:** the preceding v6 wide apex-up vectors and exact restoration instructions are preserved in [`docs/brand/logo-archive/v6-wide-apex-up/`](./brand/logo-archive/v6-wide-apex-up/).
 
 **Wordmark:** “Tiki **Acca**” — “Acca” in accent colour, rendered beside the mark in headers (`Logo`). No tagline beside the logo. The mark asset itself contains no text.
 

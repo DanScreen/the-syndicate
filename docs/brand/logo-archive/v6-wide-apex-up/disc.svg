@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" fill="none">
+  <title>Triangle rondo v6 wide apex-up disc</title>
+  <circle cx="110" cy="110" r="106" fill="#0c4a6e"/>
+  <line x1="122.62" y1="67.85" x2="146.04" y2="108.42" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round"/>
+  <path d="M141.47 114.31 L153.42 121.21 L153.42 107.41" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="140.19" y1="142" x2="93.35" y2="142" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round"/>
+  <path d="M90.53 135.10 L78.58 142 L90.53 148.90" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="67.19" y1="120.15" x2="90.62" y2="79.58" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round"/>
+  <path d="M98 80.59 L98 66.79 L86.05 73.69" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="110" cy="46" r="14.5" fill="#f1f5f9"/>
+  <circle cx="165.42" cy="142" r="14.5" fill="#f1f5f9"/>
+  <circle cx="54.58" cy="142" r="14.5" fill="#f1f5f9"/>
+  <circle cx="110" cy="110" r="13.5" fill="#38bdf8"/>
+</svg>

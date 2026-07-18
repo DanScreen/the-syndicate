@@ -1,7 +1,7 @@
 import { BRAND_COLORS } from "@tiki-acca/shared";
 /**
  * Triangle rondo disc mark for favicon / app icon ImageResponse.
- * Mirrors `app/icon.svg` — wide apex-up triangle with three white players,
+ * Mirrors `app/icon.svg` — extra-wide apex-up triangle with three white players,
  * white passes, and a blue centre player. Plain primitives and explicit
  * chevrons keep Satori rendering identical to the browser/resvg cut.
  */
@@ -15,15 +15,15 @@ export function RondoDiscMark({ size }: { size: number }) {
       xmlns="http://www.w3.org/2000/svg"
     >
       <circle cx="110" cy="110" r="106" fill={BRAND_COLORS.accentMuted} />
-      <line x1="122.62" y1="67.85" x2="146.04" y2="108.42" stroke={BRAND_COLORS.foreground} strokeWidth="10" strokeLinecap="round" />
-      <path d="M141.47 114.31 L153.42 121.21 L153.42 107.41" fill="none" stroke={BRAND_COLORS.foreground} strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
-      <line x1="140.19" y1="142" x2="93.35" y2="142" stroke={BRAND_COLORS.foreground} strokeWidth="10" strokeLinecap="round" />
-      <path d="M90.53 135.10 L78.58 142 L90.53 148.90" fill="none" stroke={BRAND_COLORS.foreground} strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
-      <line x1="67.19" y1="120.15" x2="90.62" y2="79.58" stroke={BRAND_COLORS.foreground} strokeWidth="10" strokeLinecap="round" />
-      <path d="M98 80.59 L98 66.79 L86.05 73.69" fill="none" stroke={BRAND_COLORS.foreground} strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="110" cy="46" r="14.5" fill={BRAND_COLORS.foreground} />
-      <circle cx="165.42" cy="142" r="14.5" fill={BRAND_COLORS.foreground} />
-      <circle cx="54.58" cy="142" r="14.5" fill={BRAND_COLORS.foreground} />
+      <line x1="124.98" y1="59.94" x2="152.79" y2="108.13" stroke={BRAND_COLORS.foreground} strokeWidth="10" strokeLinecap="round" />
+      <path d="M149.61 116.41 L161.56 123.31 L161.56 109.51" fill="none" stroke={BRAND_COLORS.foreground} strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
+      <line x1="145.85" y1="148" x2="90.23" y2="148" stroke={BRAND_COLORS.foreground} strokeWidth="10" strokeLinecap="round" />
+      <path d="M84.64 141.10 L72.69 148 L84.64 154.90" fill="none" stroke={BRAND_COLORS.foreground} strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
+      <line x1="59.17" y1="122.06" x2="86.98" y2="73.87" stroke={BRAND_COLORS.foreground} strokeWidth="10" strokeLinecap="round" />
+      <path d="M95.75 72.49 L95.75 58.69 L83.80 65.59" fill="none" stroke={BRAND_COLORS.foreground} strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="110" cy="34" r="14.5" fill={BRAND_COLORS.foreground} />
+      <circle cx="175.81" cy="148" r="14.5" fill={BRAND_COLORS.foreground} />
+      <circle cx="44.19" cy="148" r="14.5" fill={BRAND_COLORS.foreground} />
       <circle cx="110" cy="110" r="13.5" fill={BRAND_COLORS.accent} />
     </svg>
   );

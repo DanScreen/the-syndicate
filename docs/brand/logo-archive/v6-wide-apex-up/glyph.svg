@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="31.65 22 156.7 140" fill="none">
+  <title>Triangle rondo v6 wide apex-up glyph</title>
+  <line x1="124.28" y1="62.73" x2="150.63" y2="108.37" stroke="#f1f5f9" stroke-width="11" stroke-linecap="round"/>
+  <path d="M145.75 114.87 L158.70 122.35 L158.70 107.40" stroke="#f1f5f9" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="143.80" y1="146" x2="91.09" y2="146" stroke="#f1f5f9" stroke-width="11" stroke-linecap="round"/>
+  <path d="M87.91 138.53 L74.96 146 L87.91 153.47" stroke="#f1f5f9" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="61.92" y1="121.27" x2="88.28" y2="75.63" stroke="#f1f5f9" stroke-width="11" stroke-linecap="round"/>
+  <path d="M96.34 76.60 L96.34 61.65 L83.39 69.13" stroke="#f1f5f9" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="110" cy="38" r="16" fill="#f1f5f9"/>
+  <circle cx="172.35" cy="146" r="16" fill="#f1f5f9"/>
+  <circle cx="47.65" cy="146" r="16" fill="#f1f5f9"/>
+  <circle cx="110" cy="110" r="15" fill="#38bdf8"/>
+</svg>

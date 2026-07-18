@@ -1,18 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" fill="none">
   <!-- Wide apex-up triangle rondo on the Floodlight disc. Three white players
-       circulate passes around the sky-blue centre player. R=64, centroid
+       circulate passes around the sky-blue centre player. R=76, centroid
        (110,110); explicit chevron arrow tips for consistent rasterisation. -->
   <circle cx="110" cy="110" r="106" fill="#0c4a6e"/>
   <g>
-    <line x1="122.62" y1="67.85" x2="146.04" y2="108.42" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round"/>
-    <path d="M141.47 114.31 L153.42 121.21 L153.42 107.41" fill="none" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-    <line x1="140.19" y1="142" x2="93.35" y2="142" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round"/>
-    <path d="M90.53 135.10 L78.58 142 L90.53 148.90" fill="none" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-    <line x1="67.19" y1="120.15" x2="90.62" y2="79.58" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round"/>
-    <path d="M98 80.59 L98 66.79 L86.05 73.69" fill="none" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="110" cy="46" r="14.5" fill="#f1f5f9"/>
-    <circle cx="165.42" cy="142" r="14.5" fill="#f1f5f9"/>
-    <circle cx="54.58" cy="142" r="14.5" fill="#f1f5f9"/>
+    <line x1="124.98" y1="59.94" x2="152.79" y2="108.13" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round"/>
+    <path d="M149.61 116.41 L161.56 123.31 L161.56 109.51" fill="none" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="145.85" y1="148" x2="90.23" y2="148" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round"/>
+    <path d="M84.64 141.10 L72.69 148 L84.64 154.90" fill="none" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="59.17" y1="122.06" x2="86.98" y2="73.87" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round"/>
+    <path d="M95.75 72.49 L95.75 58.69 L83.80 65.59" fill="none" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="110" cy="34" r="14.5" fill="#f1f5f9"/>
+    <circle cx="175.81" cy="148" r="14.5" fill="#f1f5f9"/>
+    <circle cx="44.19" cy="148" r="14.5" fill="#f1f5f9"/>
   </g>
   <circle cx="110" cy="110" r="13.5" fill="#38bdf8"/>
 </svg>

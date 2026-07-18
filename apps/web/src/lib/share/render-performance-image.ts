@@ -52,15 +52,15 @@ function drawLogoMark(ctx: CanvasRenderingContext2D, x: number, y: number, size:
   ctx.fillStyle = BRAND_COLORS.accentMuted;
   ctx.fill();
 
-  // Passes: white line + explicit chevron head. Wide apex-up geometry matches
+  // Passes: white line + explicit chevron head. Extra-wide apex-up geometry matches
   // lib/brand/rondo-icon.tsx.
   const passes: {
     line: [number, number, number, number];
     chevron: [number, number, number, number, number, number];
   }[] = [
-    { line: [122.62, 67.85, 146.04, 108.42], chevron: [141.47, 114.31, 153.42, 121.21, 153.42, 107.41] },
-    { line: [140.19, 142, 93.35, 142], chevron: [90.53, 135.1, 78.58, 142, 90.53, 148.9] },
-    { line: [67.19, 120.15, 90.62, 79.58], chevron: [98, 80.59, 98, 66.79, 86.05, 73.69] },
+    { line: [124.98, 59.94, 152.79, 108.13], chevron: [149.61, 116.41, 161.56, 123.31, 161.56, 109.51] },
+    { line: [145.85, 148, 90.23, 148], chevron: [84.64, 141.1, 72.69, 148, 84.64, 154.9] },
+    { line: [59.17, 122.06, 86.98, 73.87], chevron: [95.75, 72.49, 95.75, 58.69, 83.8, 65.59] },
   ];
   ctx.strokeStyle = BRAND_COLORS.foreground;
   ctx.lineWidth = 10;
@@ -78,9 +78,9 @@ function drawLogoMark(ctx: CanvasRenderingContext2D, x: number, y: number, size:
 
   // Triangle players (white)
   const dots: [number, number][] = [
-    [110, 46],
-    [165.42, 142],
-    [54.58, 142],
+    [110, 34],
+    [175.81, 148],
+    [44.19, 148],
   ];
   ctx.fillStyle = BRAND_COLORS.foreground;
   for (const [dx, dy] of dots) {

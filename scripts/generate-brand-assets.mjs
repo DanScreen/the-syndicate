@@ -13,7 +13,7 @@
  * Disc cuts render apps/web/src/app/icon.svg (keep that file in the palette too;
  * check-brand-sync.mjs guards brand.ts ↔ globals.css but not the SVG).
  *
- * Glyph geometry mirrors logo.tsx — wide apex-up rondo.
+ * Glyph geometry mirrors logo.tsx — extra-wide apex-up rondo.
  *
  * Usage: node scripts/generate-brand-assets.mjs
  */
@@ -35,20 +35,20 @@ const FG = BRAND.foreground;
 const ACCENT = BRAND.accent;
 const ACCENT_MUTED = BRAND.accentMuted;
 
-// Wide apex-up coordinates from logo.tsx. Tight content bbox includes dots.
+// Extra-wide apex-up coordinates from logo.tsx. Tight content bbox includes dots.
 function glyphSvg({ mono = false } = {}) {
   const dot = mono ? FG : ACCENT;
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="31.65 22 156.7 140" fill="none">
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="19.52 8 180.96 161.47" fill="none">
   <g>
-  <line x1="124.28" y1="62.73" x2="150.63" y2="108.37" stroke="${FG}" stroke-width="11" stroke-linecap="round"/>
-  <path d="M145.75 114.87 L158.70 122.35 L158.70 107.40" fill="none" stroke="${FG}" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
-  <line x1="143.80" y1="146" x2="91.09" y2="146" stroke="${FG}" stroke-width="11" stroke-linecap="round"/>
-  <path d="M87.91 138.53 L74.96 146 L87.91 153.47" fill="none" stroke="${FG}" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
-  <line x1="61.92" y1="121.27" x2="88.28" y2="75.63" stroke="${FG}" stroke-width="11" stroke-linecap="round"/>
-  <path d="M96.34 76.60 L96.34 61.65 L83.39 69.13" fill="none" stroke="${FG}" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="110" cy="38" r="16" fill="${FG}"/>
-  <circle cx="172.35" cy="146" r="16" fill="${FG}"/>
-  <circle cx="47.65" cy="146" r="16" fill="${FG}"/>
+  <line x1="127.05" y1="53.54" x2="158.53" y2="108.06" stroke="${FG}" stroke-width="11" stroke-linecap="round"/>
+  <path d="M155.22 117.27 L168.17 124.75 L168.17 109.80" fill="none" stroke="${FG}" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="150.38" y1="153" x2="87.42" y2="153" stroke="${FG}" stroke-width="11" stroke-linecap="round"/>
+  <path d="M81.09 145.53 L68.14 153 L81.09 160.47" fill="none" stroke="${FG}" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="52.57" y1="123.46" x2="84.05" y2="68.94" stroke="${FG}" stroke-width="11" stroke-linecap="round"/>
+  <path d="M93.69 67.20 L93.69 52.25 L80.74 59.73" fill="none" stroke="${FG}" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="110" cy="24" r="16" fill="${FG}"/>
+  <circle cx="184.48" cy="153" r="16" fill="${FG}"/>
+  <circle cx="35.52" cy="153" r="16" fill="${FG}"/>
   <circle cx="110" cy="110" r="15" fill="${dot}"/>
   </g>
 </svg>`;

@@ -20,7 +20,7 @@ const sizes = {
  * An apex-up equilateral passing triangle: three white players
  * at the points, white passes circulating between them, and a green
  * player in the centre being passed around (the rondo "piggy in the middle").
- * Geometry is exact — vertices at −90°/30°/150° on a widened 72-unit
+ * Geometry is exact — vertices at −90°/30°/150° on an extra-wide 86-unit
  * circumradius, centroid at the viewBox centre (110,110). Arrow tips are
  * explicit chevron paths at the same stroke weight as the pass lines.
  *
@@ -41,18 +41,18 @@ export function LogoMark({ size = 36, className }: { size?: number; className?: 
       {/* Triangle players + passes (wide, apex up). */}
       <g>
         {/* pass: top → right */}
-        <line x1="124.28" y1="62.73" x2="150.63" y2="108.37" stroke={BRAND_COLORS.foreground} strokeWidth="11" strokeLinecap="round" />
-        <path d="M145.75 114.87 L158.70 122.35 L158.70 107.40" fill="none" stroke={BRAND_COLORS.foreground} strokeWidth="11" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1="127.05" y1="53.54" x2="158.53" y2="108.06" stroke={BRAND_COLORS.foreground} strokeWidth="11" strokeLinecap="round" />
+        <path d="M155.22 117.27 L168.17 124.75 L168.17 109.80" fill="none" stroke={BRAND_COLORS.foreground} strokeWidth="11" strokeLinecap="round" strokeLinejoin="round" />
         {/* pass: right → left (base) */}
-        <line x1="143.80" y1="146" x2="91.09" y2="146" stroke={BRAND_COLORS.foreground} strokeWidth="11" strokeLinecap="round" />
-        <path d="M87.91 138.53 L74.96 146 L87.91 153.47" fill="none" stroke={BRAND_COLORS.foreground} strokeWidth="11" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1="150.38" y1="153" x2="87.42" y2="153" stroke={BRAND_COLORS.foreground} strokeWidth="11" strokeLinecap="round" />
+        <path d="M81.09 145.53 L68.14 153 L81.09 160.47" fill="none" stroke={BRAND_COLORS.foreground} strokeWidth="11" strokeLinecap="round" strokeLinejoin="round" />
         {/* pass: left → top (build-up) */}
-        <line x1="61.92" y1="121.27" x2="88.28" y2="75.63" stroke={BRAND_COLORS.foreground} strokeWidth="11" strokeLinecap="round" />
-        <path d="M96.34 76.60 L96.34 61.65 L83.39 69.13" fill="none" stroke={BRAND_COLORS.foreground} strokeWidth="11" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1="52.57" y1="123.46" x2="84.05" y2="68.94" stroke={BRAND_COLORS.foreground} strokeWidth="11" strokeLinecap="round" />
+        <path d="M93.69 67.20 L93.69 52.25 L80.74 59.73" fill="none" stroke={BRAND_COLORS.foreground} strokeWidth="11" strokeLinecap="round" strokeLinejoin="round" />
         {/* triangle players */}
-        <circle cx="110" cy="38" r="16" fill={BRAND_COLORS.foreground} />
-        <circle cx="172.35" cy="146" r="16" fill={BRAND_COLORS.foreground} />
-        <circle cx="47.65" cy="146" r="16" fill={BRAND_COLORS.foreground} />
+        <circle cx="110" cy="24" r="16" fill={BRAND_COLORS.foreground} />
+        <circle cx="184.48" cy="153" r="16" fill={BRAND_COLORS.foreground} />
+        <circle cx="35.52" cy="153" r="16" fill={BRAND_COLORS.foreground} />
       </g>
       {/* centre player being passed around (orientation-invariant) */}
       <circle cx="110" cy="110" r="15" fill={BRAND_COLORS.accent} />
