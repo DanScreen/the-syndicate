@@ -1,3 +1,4 @@
+import { BRAND_COLORS } from "@tiki-acca/shared";
 import { RondoDiscMark } from "@/lib/brand/rondo-icon";
 import { getAllPosts, getPost } from "@/lib/blog";
 import { ImageResponse } from "next/og";
@@ -26,15 +27,15 @@ export default async function OgImage({ params }: { params: Promise<{ slug: stri
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          background: "#0b1220",
+          background: BRAND_COLORS.background,
           padding: "72px 80px",
           fontFamily: "sans-serif",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
           <RondoDiscMark size={84} />
-          <div style={{ display: "flex", fontSize: 40, fontWeight: 700, color: "#f1f5f9" }}>
-            Tiki <span style={{ color: "#22c55e", marginLeft: 10 }}>Acca</span>
+          <div style={{ display: "flex", fontSize: 40, fontWeight: 700, color: BRAND_COLORS.foreground }}>
+            Tiki <span style={{ color: BRAND_COLORS.accent, marginLeft: 10 }}>Acca</span>
           </div>
         </div>
 
@@ -45,7 +46,7 @@ export default async function OgImage({ params }: { params: Promise<{ slug: stri
               fontSize: 24,
               fontWeight: 600,
               letterSpacing: 4,
-              color: "#22c55e",
+              color: BRAND_COLORS.accent,
               marginBottom: 24,
             }}
           >
@@ -57,7 +58,7 @@ export default async function OgImage({ params }: { params: Promise<{ slug: stri
               fontSize: 64,
               fontWeight: 800,
               lineHeight: 1.1,
-              color: "#f1f5f9",
+              color: BRAND_COLORS.foreground,
               maxWidth: 1000,
             }}
           >
@@ -65,7 +66,7 @@ export default async function OgImage({ params }: { params: Promise<{ slug: stri
           </div>
         </div>
 
-        <div style={{ display: "flex", fontSize: 26, color: "#94a3b8" }}>
+        <div style={{ display: "flex", fontSize: 26, color: BRAND_COLORS.muted }}>
           Your Mates. One Acca. Every Leg Counts.
         </div>
       </div>

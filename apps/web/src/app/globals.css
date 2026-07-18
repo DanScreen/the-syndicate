@@ -1,15 +1,24 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0b1220;
+  --background: #091422;
   --foreground: #f1f5f9;
-  --card: #111827;
-  --accent: #22c55e;
-  --accent-bright: #4ade80;
-  --accent-muted: #14532d;
-  --border: #1f2937;
-  --muted: #94a3b8;
-  --glow: rgba(34, 197, 94, 0.15);
+  --card: #0f1b2d;
+  --accent: #38bdf8;
+  --accent-bright: #7dd3fc;
+  --accent-muted: #0c4a6e;
+  --border: #1e2c40;
+  --muted: #8fa3bb;
+  /* Semantic tones: base token is the text/icon shade, "-strong" is the
+     surface/border shade (typically used at low opacity). Success is kept
+     separate from accent so a re-theme never recolours won/lost states. */
+  --success: #4ade80;
+  --success-strong: #22c55e;
+  --danger: #f87171;
+  --danger-strong: #ef4444;
+  --warning: #fbbf24;
+  --on-accent: #000000;
+  --glow: rgba(56, 189, 248, 0.15);
 }
 
 @theme inline {
@@ -21,6 +30,12 @@
   --color-accent-muted: var(--accent-muted);
   --color-border: var(--border);
   --color-muted: var(--muted);
+  --color-success: var(--success);
+  --color-success-strong: var(--success-strong);
+  --color-danger: var(--danger);
+  --color-danger-strong: var(--danger-strong);
+  --color-warning: var(--warning);
+  --color-on-accent: var(--on-accent);
   --font-sans: var(--font-geist-sans);
   --font-display: var(--font-outfit);
 }

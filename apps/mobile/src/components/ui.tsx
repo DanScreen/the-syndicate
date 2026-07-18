@@ -53,7 +53,7 @@ export function Button({
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={variant === "primary" ? "#000" : colors.accent} />
+        <ActivityIndicator color={variant === "primary" ? colors.onAccent : colors.accent} />
       ) : (
         <Text
           style={[
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   buttonText: {
-    color: "#000",
+    color: colors.onAccent,
     fontWeight: "600",
     fontSize: 16,
   },

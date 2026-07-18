@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 const primaryClass =
-  "rounded-xl bg-accent px-6 py-3 font-medium text-black transition-colors hover:bg-accent-bright";
+  "rounded-xl bg-accent px-6 py-3 font-medium text-on-accent transition-colors hover:bg-accent-bright";
 const secondaryClass =
   "rounded-xl border border-border px-6 py-3 font-medium transition-colors hover:bg-card";
 

@@ -137,9 +137,9 @@ export function ShareCard({
   const tone = pointsTone(netPoints);
   const pointsClass =
     tone === "positive"
-      ? "text-accent"
+      ? "text-success"
       : tone === "negative"
-        ? "text-red-400"
+        ? "text-danger"
         : "text-foreground";
 
   return (
@@ -172,14 +172,14 @@ export function ShareCard({
           <button
             type="button"
             onClick={openPreview}
-            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-black hover:bg-accent-bright"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:bg-accent-bright"
           >
             Share image
           </button>
         </div>
 
         {error && !previewOpen ? (
-          <p className="mt-2 text-sm text-red-400">{error}</p>
+          <p className="mt-2 text-sm text-danger">{error}</p>
         ) : null}
         <p className="mt-2 text-xs text-muted">
           Preview your card, then share or download.
@@ -224,14 +224,14 @@ export function ShareCard({
               )}
             </div>
 
-            {error ? <p className="mt-2 text-sm text-red-400">{error}</p> : null}
+            {error ? <p className="mt-2 text-sm text-danger">{error}</p> : null}
 
             <div className="mt-4 flex gap-2">
               <button
                 type="button"
                 onClick={() => void handleShareImage()}
                 disabled={!imageBlob || sharing}
-                className="flex-1 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-black hover:bg-accent-bright disabled:opacity-50"
+                className="flex-1 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:bg-accent-bright disabled:opacity-50"
               >
                 {sharing ? "Sharing…" : "Share"}
               </button>

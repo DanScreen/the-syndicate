@@ -305,14 +305,14 @@ export function RoundThread({
             <button
               type="submit"
               disabled={posting || input.trim().length === 0}
-              className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-black disabled:opacity-50"
+              className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent disabled:opacity-50"
             >
               Send
             </button>
           </div>
           <div className="mt-1 flex items-center justify-between">
             {error ? (
-              <span className="text-xs text-red-400">{error}</span>
+              <span className="text-xs text-danger">{error}</span>
             ) : (
               <span />
             )}
@@ -323,7 +323,7 @@ export function RoundThread({
         </form>
       )}
       {readOnly && error && (
-        <p className="border-t border-border px-4 py-2 text-xs text-red-400">{error}</p>
+        <p className="border-t border-border px-4 py-2 text-xs text-danger">{error}</p>
       )}
     </section>
   );
@@ -369,7 +369,7 @@ function ChatMessage({
           <button
             type="button"
             onClick={() => onDelete(message.id)}
-            className="ml-auto text-xs text-muted opacity-0 transition-opacity hover:text-red-400 group-hover:opacity-100"
+            className="ml-auto text-xs text-muted opacity-0 transition-opacity hover:text-danger group-hover:opacity-100"
             aria-label="Delete message"
           >
             Delete

@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" fill="none">
-  <!-- Triangle rondo on the Turf Green disc — favicon / app-icon cut.
+  <!-- Triangle rondo on the Floodlight disc — favicon / app-icon cut.
        Inverted (apex-down) triangle: three white players + white passes,
-       green centre player being passed around. Vertices at -90/30/150 deg on
+       sky-blue centre player being passed around. Vertices at -90/30/150 deg on
        R=52, centroid at (110,110), reflected vertically. Explicit chevron
        arrow tips (no markers) so it renders identically across rasterisers. -->
-  <circle cx="110" cy="110" r="106" fill="#14532d"/>
+  <circle cx="110" cy="110" r="106" fill="#0c4a6e"/>
   <g transform="translate(0,220) scale(1,-1)">
     <line x1="120.25" y1="75.75" x2="139.28" y2="108.72" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round"/>
     <path d="M133.33 112.21 L145.28 119.11 L145.28 105.31" fill="none" stroke="#f1f5f9" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
@@ -16,5 +16,5 @@
     <circle cx="155.03" cy="136" r="14.5" fill="#f1f5f9"/>
     <circle cx="64.97" cy="136" r="14.5" fill="#f1f5f9"/>
   </g>
-  <circle cx="110" cy="110" r="13.5" fill="#22c55e"/>
+  <circle cx="110" cy="110" r="13.5" fill="#38bdf8"/>
 </svg>

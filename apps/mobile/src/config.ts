@@ -7,7 +7,7 @@ export const API_URL =
 export const WEB_URL =
   process.env.EXPO_PUBLIC_WEB_URL ?? "https://www.tikiacca.com";
 
-/** Turf Green — sourced from @tiki-acca/shared (matches web globals.css) */
+/** Floodlight — sourced from @tiki-acca/shared (matches web globals.css) */
 export const colors = {
   bg: BRAND_COLORS.background,
   card: BRAND_COLORS.card,
@@ -17,5 +17,10 @@ export const colors = {
   accent: BRAND_COLORS.accent,
   accentBright: BRAND_COLORS.accentBright,
   accentMuted: BRAND_COLORS.accentMuted,
+  success: BRAND_COLORS.success,
+  successStrong: BRAND_COLORS.successStrong,
   danger: BRAND_COLORS.danger,
+  dangerStrong: BRAND_COLORS.dangerStrong,
+  warning: BRAND_COLORS.warning,
+  onAccent: BRAND_COLORS.onAccent,
 };

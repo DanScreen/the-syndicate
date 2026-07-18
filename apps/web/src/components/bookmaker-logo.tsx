@@ -62,7 +62,7 @@ export function bookmakerRankRowClass(place: BookmakerRankPlace): string {
 export function bookmakerRankBadgeClass(place: BookmakerRankPlace): string {
   switch (place) {
     case 1:
-      return "bg-accent text-black";
+      return "bg-accent text-on-accent";
     case 2:
       return "bg-slate-300 text-slate-900";
     case 3:

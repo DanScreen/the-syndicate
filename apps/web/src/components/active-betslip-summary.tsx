@@ -18,7 +18,7 @@ export function ActiveBetslipSummary({
   if (legs.length === 0) {
     if (!waitingMessage) return null;
     return (
-      <p className="mt-3 text-sm text-amber-400">{waitingMessage}</p>
+      <p className="mt-3 text-sm text-warning">{waitingMessage}</p>
     );
   }
 
@@ -50,9 +50,9 @@ export function ActiveBetslipSummary({
                   <span
                     className={`ml-2 text-xs font-medium ${
                       leg.outcome === "won"
-                        ? "text-green-400"
+                        ? "text-success"
                         : leg.outcome === "lost"
-                          ? "text-red-400"
+                          ? "text-danger"
                           : "text-muted"
                     }`}
                   >
@@ -66,7 +66,7 @@ export function ActiveBetslipSummary({
         })}
       </ul>
       {waitingMessage ? (
-        <p className="mt-2 text-sm text-amber-400">{waitingMessage}</p>
+        <p className="mt-2 text-sm text-warning">{waitingMessage}</p>
       ) : null}
     </div>
   );

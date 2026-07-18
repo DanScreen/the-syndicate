@@ -19,8 +19,8 @@ function hoursSince(iso: string): number {
 }
 
 function outcomeBadgeClass(outcome: string): string {
-  if (outcome === "won") return "border-green-500/40 bg-green-500/10 text-green-400";
-  if (outcome === "lost") return "border-red-500/40 bg-red-500/10 text-red-400";
+  if (outcome === "won") return "border-success-strong/40 bg-success-strong/10 text-success";
+  if (outcome === "lost") return "border-danger-strong/40 bg-danger-strong/10 text-danger";
   if (outcome === "void") return "border-border bg-card text-muted";
   return "border-border bg-card text-muted";
 }
@@ -73,7 +73,7 @@ function SettleRoundCard({ round }: { round: SettlementQueueRound }) {
   return (
     <div
       className={`rounded-xl border p-5 ${
-        needsAttention ? "border-red-500/50 bg-red-500/5" : "border-border bg-card"
+        needsAttention ? "border-danger-strong/50 bg-danger-strong/5" : "border-border bg-card"
       }`}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -88,7 +88,7 @@ function SettleRoundCard({ round }: { round: SettlementQueueRound }) {
           </p>
         </div>
         {needsAttention && (
-          <span className="rounded-full border border-red-500/50 bg-red-500/10 px-3 py-1 text-xs font-medium text-red-400">
+          <span className="rounded-full border border-danger-strong/50 bg-danger-strong/10 px-3 py-1 text-xs font-medium text-danger">
             {round.overdueCount} leg{round.overdueCount === 1 ? "" : "s"} overdue
           </span>
         )}
@@ -99,7 +99,7 @@ function SettleRoundCard({ round }: { round: SettlementQueueRound }) {
           <li
             key={leg.id}
             className={`flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm ${
-              leg.overdue ? "border-red-500/50 bg-red-500/10" : "border-border bg-background/40"
+              leg.overdue ? "border-danger-strong/50 bg-danger-strong/10" : "border-border bg-background/40"
             }`}
           >
             <div>
@@ -111,7 +111,7 @@ function SettleRoundCard({ round }: { round: SettlementQueueRound }) {
                 {leg.homeTeam} vs {leg.awayTeam} · {leg.competition} · KO{" "}
                 {formatKickoff(leg.kickoff)}
                 {leg.overdue && (
-                  <span className="ml-2 font-medium text-red-400">
+                  <span className="ml-2 font-medium text-danger">
                     Unresolved {hoursSince(leg.kickoff)}h after kickoff — check result
                   </span>
                 )}
@@ -143,7 +143,7 @@ function SettleRoundCard({ round }: { round: SettlementQueueRound }) {
         ))}
       </ul>
 
-      {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+      {error && <p className="mt-3 text-sm text-danger">{error}</p>}
       <button
         type="button"
         onClick={handleSettle}

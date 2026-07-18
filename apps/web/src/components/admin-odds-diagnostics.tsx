@@ -135,7 +135,7 @@ export function AdminOddsDiagnosticsPanel() {
           type="button"
           onClick={() => void load(true)}
           disabled={loading}
-          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-black hover:bg-green-400 disabled:opacity-50"
+          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:bg-accent-bright disabled:opacity-50"
         >
           {loading ? "Probing…" : "Probe API (uses credits)"}
         </button>
@@ -147,7 +147,7 @@ export function AdminOddsDiagnosticsPanel() {
       </p>
 
       {error && (
-        <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-lg border border-danger-strong/40 bg-danger-strong/10 px-4 py-3 text-sm text-red-300">
           {error}
         </div>
       )}
@@ -248,7 +248,7 @@ export function AdminOddsDiagnosticsPanel() {
                 : "miss"}
             </p>
             {diagnostics.api.error && (
-              <p className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-red-200">
+              <p className="mt-3 rounded-lg border border-danger-strong/30 bg-danger-strong/10 px-3 py-2 text-red-200">
                 {diagnostics.api.error}
               </p>
             )}

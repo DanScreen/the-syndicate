@@ -26,10 +26,10 @@ export const metadata: Metadata = {
     // Query cache-bust — /icon.svg is served with long-lived immutable CDN cache.
     // Bump when the mark changes (inverted rondo + centre player = v4, July 2026).
     icon: [
-      { url: "/icon.svg?v=4", type: "image/svg+xml" },
-      { url: "/favicon.ico?v=4", sizes: "48x48" },
+      { url: "/icon.svg?v=5", type: "image/svg+xml" },
+      { url: "/favicon.ico?v=5", sizes: "48x48" },
     ],
-    apple: "/apple-icon?v=4",
+    apple: "/apple-icon?v=5",
   },
   openGraph: {
     title: "Tiki Acca: Social Group Accas",
