@@ -18,8 +18,13 @@ export function GroupNav({
   const tabs = [
     {
       href: base,
-      label: unreadMessageCount > 0 ? `Round (${unreadMessageCount})` : "Round",
+      label: "Round",
       active: pathname === base,
+    },
+    {
+      href: `${base}/chat`,
+      label: unreadMessageCount > 0 ? `Chat (${unreadMessageCount})` : "Chat",
+      active: pathname === `${base}/chat`,
     },
     {
       href: `${base}/history`,

@@ -1,6 +1,6 @@
 # Current state (as-built)
 
-Last updated 18 July 2026 (concurrent group bets implemented on feature branch; owner testing pending). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
+Last updated 18 July 2026 (longstanding group Chat tab shipped on web/mobile). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
 
 Production: **https://www.tikiacca.com** (apex → 301 to www via Cloudflare).
 
@@ -49,7 +49,7 @@ Match sync + odds warm: Cloud Scheduler (Terraform) → `POST /api/internal/sync
 | Odds | `apps/web/src/lib/odds/` |
 | Settlement | `apps/web/src/lib/settlement/`, `apps/web/src/lib/results/` |
 | Stats | `apps/web/src/lib/stats/` |
-| Group chat | `apps/web/src/components/group-chat.tsx`, `apps/mobile/src/components/group-chat.tsx`, APIs under `api/rounds/[id]/messages` + `api/messages/[id]`, lifecycle writers/tests in `apps/web/src/lib/chat/`, shared contract `packages/shared/src/chat.ts` |
+| Group chat | Dedicated web/mobile Chat tabs, `apps/web/src/components/group-chat.tsx`, `apps/mobile/src/components/group-chat.tsx`, APIs under `api/groups/[id]/messages` + `api/messages/[id]`, lifecycle writers/tests in `apps/web/src/lib/chat/`, shared contract `packages/shared/src/chat.ts` |
 | Notifications | `apps/web/src/lib/notifications/` (branded email templates + layout; logo at `public/brand/email-logo.png`) |
 | Auth | `apps/web/src/lib/auth.ts`, `apps/web/src/lib/auth.config.ts` |
 | Settlement (auto) | `apps/web/src/lib/settlement/auto-settle-round.ts` |
@@ -109,7 +109,7 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 | Locked round UX: picks first, locked odds, bookmaker comparison until first result, in-progress leg results | ✅ |
 | Round history, progress UI, landing/SEO | ✅ |
 | Blog (file-based MDX, static, `/blog`) + sitemap.xml + robots.txt | ✅ |
-| Round-scoped group chat + lifecycle messages + reactions (web + mobile) | ✅ |
+| Longstanding group Chat tab + Bet-labelled lifecycle messages + reactions (web + mobile) | ✅ |
 | Chat unread badges + batched push preference | ✅ |
 
 \*Asian handicap only from exchange bookmakers in current World Cup UK feed — filtered out; handicap UI empty for those fixtures.
@@ -151,7 +151,7 @@ POST /api/legs                        → best retail quote; stores competitionI
 (lock) lockRoundWithAccaPricing()     → re-fetch quotes, rankAccaBookmakers(), store deeplinks on Leg
 ```
 
-At lock, `Leg.betslipUrl` stores the chosen bookmaker's **real** outcome/event deeplink (never a generic football hub); `Leg.bookmakerLinks` maps retail bookmakers → Odds API links only. **Hub URLs** (`BOOKMAKER_HUB_URLS`) are a last-resort UI fallback and are tagged `linkQuality: "hub"`. Matching featured and alternate market lines (for example, standard + alternate Over 2.5 goals) merge bookmaker quotes by market type, selection, and bookmaker, retaining the best quote and available deeplink; this avoids losing broader alternate-feed coverage. New/edited picks enforce **one leg per fixture per round** because The Odds API exposes single-selection prices, not bookmaker correlation-adjusted bet-builder prices; combined odds therefore multiply legs from separate fixtures only. Occupied fixtures are disabled with a short accuracy explanation in both pickers, and the public homepage FAQ provides the full rationale. **While bet is open:** leg picker shows best odds only; **Compare bookmakers** shows a live provisional ranking + refreshed deeplinks from current quotes. **Once locked:** **final combined odds** + the **Compare bookmakers** ranking captured at lock (so members can pick the best bookmaker when placing the bet); primary CTA opens the best available deeplink (first pick when multi-leg) until the first result, then tracking only. Per-leg **Open** uses `bookmakerLinks[recommendedBookmaker]` when present.
+At lock, `Leg.betslipUrl` stores the chosen bookmaker's **real** outcome/event deeplink (never a generic football hub); `Leg.bookmakerLinks` maps retail bookmakers → Odds API links only. **Hub URLs** (`BOOKMAKER_HUB_URLS`) are a last-resort UI fallback and are tagged `linkQuality: "hub"`. Matching featured and alternate market lines (for example, standard + alternate Over 2.5 goals) merge bookmaker quotes by market type, selection, and bookmaker, retaining the best quote and available deeplink; this avoids losing broader alternate-feed coverage. New/edited picks enforce **one leg per fixture per round** because The Odds API exposes single-selection prices, not bookmaker correlation-adjusted bet-builder prices; combined odds therefore multiply legs from separate fixtures only. Occupied fixtures are disabled with a short accuracy explanation in both pickers, and the public homepage FAQ provides the full rationale. **While bet is open:** leg picker shows best odds only; **Compare bookmakers** shows a live current ranking + refreshed deeplinks from current quotes. **Once locked:** **final combined odds** + the **Compare bookmakers** ranking captured at lock (so members can pick the best bookmaker when placing the bet); primary CTA opens the best available deeplink (first pick when multi-leg) until the first result, then tracking only. Per-leg **Open** uses `bookmakerLinks[recommendedBookmaker]` when present.
 
 Requires live odds (`ODDS_API_KEY`) — mock fixtures have no deeplinks. Odds are stored in **PostgreSQL** (`OddsBulkSnapshot`, `OddsEventSnapshot`) and refreshed by cron (`POST /api/internal/warm-odds-cache`). User picks read the DB; set `ODDS_DB_ONLY=true` in production to block live API calls from user traffic.
 
@@ -171,7 +171,7 @@ Full budgeting: [DEPLOYMENT.md — The Odds API](./DEPLOYMENT.md#the-odds-api--c
 
 ### Acca bookmaker rankings
 
-At lock, `rankAccaBookmakers()` in `apps/web/src/lib/odds/acca.ts` ranks all retail bookmakers by combined acca odds. Stored as `Round.accaBookmakerRankings` (JSON). Older locked rounds backfill lazily on `GET /api/groups/[id]`. **Open rounds** use a live provisional ranking for the Compare UI. **Locked rounds** show the ranking captured at lock. Web and mobile display the top three by default, with **Show all {N} bookmakers** / **Show top 3** controls for the complete ranking. `GET /api/groups/[id]` refreshes Odds API deeplinks for the CTA and per-leg Open (odds remain frozen at lock). Multi-leg CTAs label **Open first pick** (or **Open {bookmaker}** for hubs) — UK books rarely expose a one-click full-acca URL.
+At lock, `rankAccaBookmakers()` in `apps/web/src/lib/odds/acca.ts` ranks all retail bookmakers by combined acca odds. Stored as `Round.accaBookmakerRankings` (JSON). Older locked rounds backfill lazily on `GET /api/groups/[id]`. **Open rounds** use a live current ranking for the Compare UI. **Locked rounds** show the ranking captured at lock. Web and mobile display the top three by default, with **Show all {N} bookmakers** / **Show top 3** controls for the complete ranking. `GET /api/groups/[id]` refreshes Odds API deeplinks for the CTA and per-leg Open (odds remain frozen at lock). Multi-leg CTAs label **Open first pick** (or **Open {bookmaker}** for hubs) — UK books rarely expose a one-click full-acca URL.
 
 Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_rankings`.
 
@@ -196,7 +196,7 @@ Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_
 | `apps/web/src/components/app-nav.tsx` | Header nav (desktop): Home / About / Groups / Performance / Admin / Blog |
 | `apps/web/src/components/mobile-nav.tsx` | Compact hamburger menu below `md` for marketing + app headers |
 | `apps/web/src/app/account/page.tsx` | Account — profile, notification prefs, sign out (greeting in header links here) |
-| `apps/web/src/components/group-nav.tsx` | Group tabs: Round / History / Leaderboard / Performance |
+| `apps/web/src/components/group-nav.tsx` | Group tabs: Round / Chat / History / Leaderboard / Performance |
 | `apps/web/src/components/group-layout-client.tsx` | Shared group shell + `GroupDataProvider` |
 | `apps/web/src/context/group-data.tsx` | Group data context for sub-pages |
 
@@ -229,9 +229,11 @@ Protected routes enforced in `apps/web/src/middleware.ts` / `auth.config.ts`: `/
 | `/groups/[id]/performance` | Group stats (`GroupStats`) — charts, member breakdown |
 | `/groups/[id]/settings` | **Owner** — legs per member (all eligible open bets immediately) + maximum active bets (1–5) |
 
-**Navigation:** Logo + **Social Group Betting** tagline (tagline hidden below `md`). Logo and **Home** → `/`. `AppNav` order: Home → About → Groups → Performance → Admin (admins) → **Blog** (rightmost). Below `md`, inline links collapse into `MobileNav` (hamburger) — signed-out: Home / About / Blog / Sign in / Sign up as peer links; signed-in adds **Account · {firstName}** → `/account`. Desktop greeting **Hi, {firstName}** → `/account` (notifications + sign out). Legacy `/settings/notifications` redirects to `/account#notifications`. Marketing pages use `SessionAwareMarketingHeader` (client `useSession`) so statically generated `/blog` still shows signed-in chrome. Inside a group, `GroupNav` tabs (Round / History / Leaderboard / Performance / **Settings** for owners) share data via `GroupDataProvider` (fetched once in group layout; polls every 60s while acca locked).
+**Navigation:** Logo + **Social Group Betting** tagline (tagline hidden below `md`). Logo and **Home** → `/`. `AppNav` order: Home → About → Groups → Performance → Admin (admins) → **Blog** (rightmost). Below `md`, inline links collapse into `MobileNav` (hamburger) — signed-out: Home / About / Blog / Sign in / Sign up as peer links; signed-in adds **Account · {firstName}** → `/account`. Desktop greeting **Hi, {firstName}** → `/account` (notifications + sign out). Legacy `/settings/notifications` redirects to `/account#notifications`. Marketing pages use `SessionAwareMarketingHeader` (client `useSession`) so statically generated `/blog` still shows signed-in chrome. Inside a group, `GroupNav` tabs (Round / Chat / History / Leaderboard / Performance / **Settings** for owners) share data via `GroupDataProvider` (fetched once in group layout; polls every 60s while acca locked). Chat unread counts appear on the Chat tab, which polls its permanent group thread every 20 seconds while visible.
 
-**Open round UI:** provisional combined odds + **Compare bookmakers** podium (logos; 1st–3rd emphasised) from legs submitted so far.  
+**Group cards (web + mobile):** one active bet keeps the detailed current betslip. Two or more active bets switch to a compact, action-first overview: up to three **Bet #N** rows with Open / Locked / In play status, pick or settlement progress, the current member's missing-pick warning, and combined odds when available; additional bets collapse into **+N more**. `GET /api/groups` exposes `activeBets` summaries for mobile, and the server-rendered web dashboard uses the same shared display helpers.
+
+**Open round UI:** current combined odds + **Compare bookmakers** podium (logos; 1st–3rd emphasised) from legs submitted so far.
 **Locked round UI:** picks with per-leg outcomes as matches finish → **locked combined odds + Compare bookmakers** podium (captured at lock) → betslip CTA until the first result, then tracking only. Polls every 60s while locked. **History** tab lists all settled rounds.
 
 ---
@@ -251,7 +253,7 @@ Email and push notifications fire on **round locked**, **round settled**, and **
 
 **Exactly-once settlement.** `applyRoundSettlement()` validates settleability, then runs in a `prisma.$transaction` with an atomic claim — `round.updateMany({ where: { status: "locked" }, data: { status: "settled" } })`. Overlapping settle attempts (e.g. two cron runs) can't double-count points: the loser matches zero rows and throws `RoundNotSettleableError`, treated as a benign `skipped` no-op.
 
-**System chat messages (group chat Step 1).** Round lifecycle events append `RoundMessage` system messages to the round thread ([specs/group-chat.md](./specs/group-chat.md)): leg submitted/changed/removed (`/api/legs` routes), round locked (`claimAndLockRound`, after the `open → locked` claim + successful pricing), leg results (`persistResolvableLegOutcomes` / `applyDeferredLegOutcome`, inside a `pending → outcome` claim transaction), and round settled (`applyRoundSettlement`, inside the settle transaction after the `locked → settled` claim). Message writes are gated on the same atomic claims as the events themselves, so retried or overlapping lock/settle runs never double-post — proven by race tests in `apps/web/src/lib/chat/exactly-once.test.ts` (`npm test --workspace=@tiki-acca/web`; requires local PostgreSQL).
+**System chat messages.** Round lifecycle events append `RoundMessage` system messages to the group's permanent Chat thread ([specs/group-chat.md](./specs/group-chat.md)): leg submitted/changed/removed (`/api/legs` routes), round locked (`claimAndLockRound`, after the `open → locked` claim + successful pricing), leg results (`persistResolvableLegOutcomes` / `applyDeferredLegOutcome`, inside a `pending → outcome` claim transaction), and round settled (`applyRoundSettlement`, inside the settle transaction after the `locked → settled` claim). Each retains nullable `roundId` context and displays its stable **Bet #N**. Message writes are gated on the same atomic claims as the events themselves, so retried or overlapping lock/settle runs never double-post — proven by race tests in `apps/web/src/lib/chat/exactly-once.test.ts` (`npm test --workspace=@tiki-acca/web`; requires local PostgreSQL).
 
 **Lock triggers.** A round moves `open → locked` when **every member has submitted `Round.legsPerMember` legs** or when the **earliest submitted leg kicks off** (partial accas — members under quota are excluded). `claimAndLockRound()` in `claim-lock-round.ts` atomically claims via `updateMany`, reprices, and emails; repricing failures revert to `open`. Kickoff locks run on each match-sync cron (5 min) and when loading `GET /api/groups/[id]`. **Reprice falls back to each leg’s stored odds** when live quotes are missing (fixture already kicked off / warmed cache miss) so kickoff locks don’t flap open↔locked. Loading a group with a full quota also retries lock. See [specs/round-deadline-lock.md](./specs/round-deadline-lock.md) and [specs/multi-leg-accas.md](./specs/multi-leg-accas.md).
 
@@ -421,9 +423,9 @@ Env vars on Cloud Run: `NEXTAUTH_URL`, `EMAIL_FROM`, `ADMIN_EMAILS` (from GitHub
 
 Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `AnalyticsEvent`, `CompetitionSetting`, `RoundMessage`, `MessageReaction`.
 
-- `RoundMessage` — round-scoped chat thread: user banter (`kind: "user"`) + append-only system messages (`kind: "system"`, `eventType`: `leg_submitted | leg_changed | leg_removed | round_locked | leg_result | round_settled`; `legId` set on active pick announcements so the betslip row can mirror reactions). User posts run through shared `containsProfanity` (same list as names/groups). Written at event time by lifecycle code — see [Settlement](#settlement). Legs submitted before group chat shipped may lack announcements; backfill with `npm run db:maintenance -- backfill-leg-announcements --execute` (preview first).
+- `RoundMessage` — group-scoped permanent chat: required `groupId`, nullable `roundId` for lifecycle-event Bet context, user banter (`kind: "user"`) + append-only system messages (`kind: "system"`, `eventType`: `leg_submitted | leg_changed | leg_removed | round_locked | leg_result | round_settled`; `legId` set on active pick announcements so the betslip row can mirror reactions). User posts run through shared `containsProfanity` (same list as names/groups). Existing messages were backfilled by `20260718200000_group_scoped_chat`; its trigger derives `groupId` for old-revision writes during a rolling deploy, with `20260718201000_group_chat_rolling_compat` ensuring the trigger on existing development databases. Legs submitted before group chat shipped may lack announcements; backfill with `npm run db:maintenance -- backfill-leg-announcements --execute` (preview first).
 - `MessageReaction` — emoji reactions on messages, unique per `(messageId, userId, emoji)`. The bar shows **only used emoji chips**; a muted **React** / **+** opens a viewport-level picker (quick picks 🔥😂💀👀🫡🍀, then more). The API validates any single Unicode emoji. Pick rows mirror the latest `leg_submitted` / `leg_changed` message for their `legId`.
-- `GroupMember.lastReadMessageAt` — group-wide unread cursor; dashboard cards and Round tabs show unread counts.
+- `GroupMember.lastReadMessageAt` — group-wide unread cursor; dashboard cards and dedicated Chat tabs show unread counts.
 - `NotificationPreference.pushChat` — chat push opt-in (default on). User messages notify other members at most once per ten-minute group bucket; active 20-second thread polling suppresses foreground pushes.
 
 - `User.firstName` / `User.lastName` — collected at sign-up; header greeting uses first name only (`lib/user-display.ts`).
@@ -459,13 +461,13 @@ Recent migrations include `20260718190000_concurrent_group_bets` and `2026071819
 | `POST /api/legs` | Session | Submit leg (rejects any second leg on the same fixture — 409) |
 | `PATCH /api/legs/[id]` | Leg owner | Edit own pick until first kickoff (locked rounds reprice; one-leg-per-fixture rule) |
 | `DELETE /api/legs/[id]` | Leg owner | Remove own pick while round is open and before first kickoff |
-| `GET /api/groups` | Session | Groups list + current betslip `activeLegs` + yourLeg / yourLegCount + chat unread count |
+| `GET /api/groups` | Session | Groups list + single-bet `activeLegs` + compact multi-bet `activeBets` summaries + yourLeg / yourLegCount + chat unread count |
 | `POST /api/groups` | Session | Create group (`name`, optional `legsPerMember` 1–3 and `maxActiveBets` 1–5) |
 | `PATCH /api/groups/[id]` | Owner | Update `legsPerMember` and/or `maxActiveBets`; lower caps preserve existing bets and block creation until capacity returns |
 | `POST /api/groups/[id]/rounds` | Member | Create another open bet when owner cap >1, below cap, and no empty open bet exists |
 | `POST /api/internal/sync-matches` | `CRON_SECRET` | Sync football-data.org → `Match` |
 | `POST /api/internal/warm-odds-cache` | `CRON_SECRET` | Refresh odds DB snapshots |
-| `GET /api/groups/[id]` | Member | Group + all `activeRounds` (round-scoped betslip data) + compatibility `activeRound` + recent settled bets + chat unread count |
+| `GET /api/groups/[id]` | Member | Group + all `activeRounds` (round-scoped betslip data) + compatibility `activeRound` + recent settled bets + latest active-leg announcements/reactions + chat unread count |
 | `GET /api/groups/[id]/history` | Member | Full settled bet history (fixtures, markets, outcomes) |
 | `GET /api/groups/[id]/stats` | Member | Group summary stats + chart series |
 | `GET /api/groups/[id]/members/[userId]/stats` | Member | Member breakdown + favourites |
@@ -474,8 +476,9 @@ Recent migrations include `20260718190000_concurrent_group_bets` and `2026071819
 | `POST /api/auth/mobile/sign-in` | Public (rate-limited) | Create revocable persistent mobile session |
 | `POST /api/auth/mobile/refresh` | Mobile bearer | Upgrade a valid legacy JWT to a persistent session (persistent tokens pass through) |
 | `POST /api/auth/mobile/sign-out` | Mobile bearer | Revoke the current device session |
-| `GET/POST /api/rounds/[id]/messages` | Member | Cursor-paginated thread (`before`/`after`, latest pick announcements included) / post to an active round (500 chars, profanity filter, 10/min) |
-| `DELETE /api/messages/[id]` | Author or group owner | Soft-delete an active-round user message (body becomes `Message deleted`) |
+| `GET/POST /api/groups/[id]/messages` | Member | Cursor-paginated permanent group thread (`before`/`after`, latest pick announcements included) / post group-wide text (500 chars, profanity filter, 10/min) |
+| `GET/POST /api/rounds/[id]/messages` | Member | Compatibility alias for older clients; resolves to the containing group thread |
+| `DELETE /api/messages/[id]` | Author or group owner | Soft-delete a user message (body becomes `Message deleted`) |
 | `POST /api/messages/[id]/reactions` | Member | Toggle one validated Unicode emoji reaction |
 | `POST/DELETE /api/user/push-token` | Session / mobile bearer | Expo push token |
 | `POST /api/internal/round-reminders` | Cron | Pick reminder dispatch |
@@ -502,7 +505,7 @@ Recent migrations include `20260718190000_concurrent_group_bets` and `2026071819
 9. **Odds snapshots in PostgreSQL** — shared across Cloud Run instances; refreshed by `POST /api/internal/warm-odds-cache` (Cloud Scheduler job in Terraform). Set `ODDS_DB_ONLY=true` so users never burn API credits. In-memory cache remains for quota block/snapshot and football-data only.
 10. **Mobile app** — Native app code complete. **You:** test via Expo Go or `expo run:ios --device` ([DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md)). **Mates:** Android APK; iPhone TestFlight after store fees. [FRIEND_TESTING.md](../apps/mobile/FRIEND_TESTING.md). Leg-edit parity shipped (same "Change my pick" flow as web). Admin pages are web-only by design.
 11. **Auth JWT** — middleware uses edge-safe `auth.config.ts` (no Prisma); `auth.ts` refreshes `role` from DB on each session update.
-12. **Chat realtime** — threads poll every 20 seconds while visible; no WebSocket/SSE, typing indicators, read receipts, media, or reaction notifications in v1. Concurrent bets have separate threads, but unread state remains group-wide (`GroupMember.lastReadMessageAt`), so opening one thread clears the group badge for all active threads. Chat push needs Expo/APNs/FCM setup on a physical device.
+12. **Chat realtime** — the permanent group thread polls every 20 seconds while the Chat tab is visible; no WebSocket/SSE, typing indicators, read receipts, media, or reaction notifications in v1. Chat push needs Expo/APNs/FCM setup on a physical device.
 13. **Concurrent-bet notification links** — reminder/lock/settle payloads carry `roundId`, but current web/mobile group URLs do not preselect that bet; the user lands on the group’s default active bet and can switch manually.
 
 ## Production checklist (operators)

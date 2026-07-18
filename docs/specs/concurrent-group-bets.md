@@ -3,7 +3,7 @@
 | Field | Value |
 |-------|-------|
 | **Status** | Shipped on feature branch — pending owner testing |
-| **Depends on** | Existing round lifecycle, group settings, round-scoped chat |
+| **Depends on** | Existing round lifecycle, group settings, group-scoped chat |
 | **As-built reference** | [../CURRENT_STATE.md](../CURRENT_STATE.md) |
 
 ## Goal
@@ -19,7 +19,7 @@ single-bet default more complicated.
 - When the limit is greater than 1, any group member may create a new bet.
 - A new bet is rejected when the active limit has been reached.
 - A new bet is also rejected while any existing open bet has zero legs.
-- Each bet keeps its own quota snapshot, picks, odds, lifecycle messages, and chat thread.
+- Each bet keeps its own quota snapshot, picks, odds, and lifecycle context. All bets share the group's permanent Chat tab; system messages identify their `Bet #N`.
 - Lowering the limit below the current unresolved bet count saves immediately
   without cancelling bets. Existing bets continue; creation stays blocked until
   the active count falls below the new limit.
@@ -31,7 +31,9 @@ single-bet default more complicated.
   status, and leg count.
 - **New Bet** is disabled with an explanation when an empty open bet blocks creation.
 - The switcher is hidden at the default limit of 1.
-- Group cards show the number of active bets when more than one exists.
+- Group cards keep the detailed betslip for one active bet. With multiple bets,
+  they show up to three action-first **Bet #N** summaries (status, pick/settlement
+  progress, the member's missing-pick warning, and odds), then **+N more**.
 - Group creation and owner Settings expose the 1–5 selector on web and mobile.
 
 ## Concurrency and compatibility

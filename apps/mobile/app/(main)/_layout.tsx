@@ -22,8 +22,12 @@ export default function MainLayout() {
   useEffect(() => {
     if (!token) return;
     void registerForPushNotifications(token).catch(() => {});
-    const subscription = addNotificationResponseListener((groupId) => {
-      router.push(`/(main)/groups/${groupId}`);
+    const subscription = addNotificationResponseListener((groupId, screen) => {
+      router.push(
+        screen === "chat"
+          ? `/(main)/groups/${groupId}/chat`
+          : `/(main)/groups/${groupId}`
+      );
     });
     return () => subscription.remove();
   }, [token, router]);

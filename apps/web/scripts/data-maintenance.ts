@@ -581,7 +581,7 @@ async function findLegsMissingAnnouncements() {
         select: {
           id: true,
           status: true,
-          group: { select: { name: true } },
+          group: { select: { id: true, name: true } },
         },
       },
     },
@@ -632,6 +632,7 @@ async function backfillLegAnnouncements() {
     const chunk = missing.slice(i, i + chunkSize);
     const result = await prisma.roundMessage.createMany({
       data: chunk.map((leg) => ({
+        groupId: leg.round.group.id,
         roundId: leg.roundId,
         kind: "system",
         eventType: "leg_submitted",

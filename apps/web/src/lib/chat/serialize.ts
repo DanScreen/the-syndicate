@@ -8,7 +8,9 @@ import type {
 /** Shape of a RoundMessage row with its author selected (name only). */
 export type RoundMessageWithUser = {
   id: string;
-  roundId: string;
+  groupId: string;
+  roundId: string | null;
+  round?: { betNumber: number | null } | null;
   kind: string;
   body: string;
   eventType: string | null;
@@ -48,7 +50,9 @@ export function serializeMessage(
 
   return {
     id: message.id,
+    groupId: message.groupId,
     roundId: message.roundId,
+    betNumber: message.round?.betNumber ?? null,
     kind: message.kind as MessageKind,
     body: message.body,
     eventType: (message.eventType as SystemMessageEventType | null) ?? null,

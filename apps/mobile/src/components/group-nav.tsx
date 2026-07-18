@@ -1,10 +1,11 @@
 import { colors } from "@/config";
 import { useGroupData } from "@/context/group-data";
 import { router, useLocalSearchParams, useSegments } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text } from "react-native";
 
 const BASE_TABS = [
   { segment: "index", label: "Round" },
+  { segment: "chat", label: "Chat" },
   { segment: "history", label: "History" },
   { segment: "leaderboard", label: "Leaderboard" },
   { segment: "performance", label: "Performance" },
@@ -29,7 +30,12 @@ export function GroupNav() {
   }
 
   return (
-    <View style={styles.nav}>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={styles.nav}
+      contentContainerStyle={styles.navContent}
+    >
       {tabs.map((tab) => {
         const active = activeSegment === tab.segment;
         return (
@@ -39,26 +45,28 @@ export function GroupNav() {
             style={[styles.tab, active && styles.tabActive]}
           >
             <Text style={[styles.tabText, active && styles.tabTextActive]}>
-              {tab.segment === "index" && (data?.group.unreadMessageCount ?? 0) > 0
+              {tab.segment === "chat" && (data?.group.unreadMessageCount ?? 0) > 0
                 ? `${tab.label} (${data!.group.unreadMessageCount})`
                 : tab.label}
             </Text>
           </Pressable>
         );
       })}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   nav: {
-    flexDirection: "row",
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
     marginTop: 16,
   },
+  navContent: {
+    flexDirection: "row",
+  },
   tab: {
-    flex: 1,
+    minWidth: 88,
     paddingVertical: 12,
     alignItems: "center",
     borderBottomWidth: 2,

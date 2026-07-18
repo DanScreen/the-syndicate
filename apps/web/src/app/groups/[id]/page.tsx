@@ -8,7 +8,6 @@ import {
   RoundProgress,
   SubmitLegForm,
 } from "@/components/group-ui";
-import { RoundThread } from "@/components/group-chat";
 import { RoundHistory } from "@/components/group-history";
 import { useGroupData } from "@/context/group-data";
 import { useSession } from "next-auth/react";
@@ -27,12 +26,11 @@ function formatCutoff(date: Date) {
 
 export default function GroupRoundPage() {
   const { data: session } = useSession();
-  const { data, reload, markChatRead } = useGroupData();
+  const { data, reload } = useGroupData();
   const [editingLegId, setEditingLegId] = useState<string | null>(null);
   const [removingLegId, setRemovingLegId] = useState<string | null>(null);
   const [removeError, setRemoveError] = useState("");
-  const [roundMessages, setRoundMessages] = useState<RoundMessageDto[]>([]);
-  const [chatRefreshKey, setChatRefreshKey] = useState(0);
+  const [legAnnouncements, setLegAnnouncements] = useState<RoundMessageDto[]>([]);
   const [selectedRoundId, setSelectedRoundId] = useState<string | null>(null);
   const [creatingRound, setCreatingRound] = useState(false);
   const [createRoundError, setCreateRoundError] = useState("");
@@ -52,9 +50,10 @@ export default function GroupRoundPage() {
   useEffect(() => {
     setEditingLegId(null);
     setRemoveError("");
-    setRoundMessages([]);
-    setChatRefreshKey(0);
   }, [selectedRoundId]);
+  useEffect(() => {
+    setLegAnnouncements(data?.legAnnouncements ?? []);
+  }, [data?.legAnnouncements]);
 
   if (!data || activeRounds.length === 0) return null;
 
@@ -118,7 +117,7 @@ export default function GroupRoundPage() {
 
   const nextSlot = userLegs.length + 1;
   const announcementByLegId = new Map<string, RoundMessageDto>();
-  for (const message of roundMessages) {
+  for (const message of legAnnouncements) {
     if (
       message.legId &&
       (message.eventType === "leg_submitted" || message.eventType === "leg_changed")
@@ -142,7 +141,6 @@ export default function GroupRoundPage() {
         return;
       }
       await reload();
-      setChatRefreshKey((key) => key + 1);
     } catch {
       setRemoveError("Failed to remove leg");
     } finally {
@@ -266,12 +264,11 @@ export default function GroupRoundPage() {
             showLegIndex={legsPerMember > 1}
             announcementByLegId={announcementByLegId}
             onAnnouncementChanged={(updated) => {
-              setRoundMessages((current) =>
+              setLegAnnouncements((current) =>
                 current.map((message) =>
                   message.id === updated.id ? updated : message
                 )
               );
-              setChatRefreshKey((key) => key + 1);
             }}
           />
         </div>
@@ -289,7 +286,7 @@ export default function GroupRoundPage() {
           betslipHasAllLegLinks={betslipLinks?.primaryHasAllLegLinks ?? false}
           legCount={activeRound.legs.length}
           // Show the ranked best-odds-across-bookmakers list while open
-          // (provisional) and once locked (the odds captured at lock) — locked
+          // (using current odds) and once locked (the odds captured at lock) — locked
           // is when members go place the bet, so the comparison is essential.
           // Collapse it once the bet is underway (past first kickoff): still
           // available, just out of the way since you can no longer place it.
@@ -376,16 +373,6 @@ export default function GroupRoundPage() {
           }
         />
       )}
-
-      <RoundThread
-        key={activeRound.id}
-        roundId={activeRound.id}
-        currentUserId={userId}
-        isOwner={data.isOwner}
-        onRead={markChatRead}
-        onMessagesChange={setRoundMessages}
-        refreshKey={chatRefreshKey}
-      />
 
       <RoundHistory rounds={data.recentRounds} groupId={group.id} />
     </div>

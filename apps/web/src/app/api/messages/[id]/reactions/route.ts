@@ -21,7 +21,7 @@ export async function POST(request: Request, { params }: Params) {
 
   const message = await prisma.roundMessage.findUnique({
     where: { id },
-    select: { round: { select: { groupId: true } } },
+    select: { groupId: true },
   });
   if (!message) {
     return NextResponse.json({ error: "Message not found" }, { status: 404 });
@@ -29,7 +29,7 @@ export async function POST(request: Request, { params }: Params) {
 
   const membership = await prisma.groupMember.findUnique({
     where: {
-      groupId_userId: { groupId: message.round.groupId, userId },
+      groupId_userId: { groupId: message.groupId, userId },
     },
     select: { id: true },
   });
@@ -56,6 +56,7 @@ export async function POST(request: Request, { params }: Params) {
     where: { id },
     include: {
       user: { select: { id: true, name: true } },
+      round: { select: { betNumber: true } },
       reactions: {
         include: { user: { select: { name: true } } },
         orderBy: { createdAt: "asc" },

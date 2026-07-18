@@ -44,8 +44,8 @@ function formatTime(iso: string) {
   });
 }
 
-export function RoundThread({
-  roundId,
+export function GroupThread({
+  groupId,
   token,
   currentUserId,
   isOwner = false,
@@ -54,7 +54,7 @@ export function RoundThread({
   onRead,
   refreshKey = 0,
 }: {
-  roundId: string;
+  groupId: string;
   token: string;
   currentUserId?: string;
   isOwner?: boolean;
@@ -82,7 +82,7 @@ export function RoundThread({
 
   const load = useCallback(async () => {
     const response = await api<RoundMessagesResponse>(
-      `/api/rounds/${roundId}/messages`,
+      `/api/groups/${groupId}/messages`,
       { token }
     );
     if (response.messages.length > 0) {
@@ -94,7 +94,7 @@ export function RoundThread({
     }
     if (!loadedEarlier.current) setHasMore(Boolean(response.hasMore));
     onRead?.();
-  }, [roundId, token, onRead]);
+  }, [groupId, token, onRead]);
 
   useEffect(() => {
     let cancelled = false;
@@ -135,7 +135,7 @@ export function RoundThread({
     setError("");
     try {
       const response = await api<{ message: RoundMessageDto }>(
-        `/api/rounds/${roundId}/messages`,
+        `/api/groups/${groupId}/messages`,
         {
           method: "POST",
           token,
@@ -207,7 +207,7 @@ export function RoundThread({
     loadedEarlier.current = true;
     try {
       const response = await api<RoundMessagesResponse>(
-        `/api/rounds/${roundId}/messages?before=${encodeURIComponent(oldestId)}`,
+        `/api/groups/${groupId}/messages?before=${encodeURIComponent(oldestId)}`,
         { token }
       );
       skipNextAutoScroll.current = true;
@@ -315,6 +315,9 @@ function Message({
   if (message.kind === "system") {
     return (
       <View style={styles.systemMessage}>
+        {message.betNumber != null ? (
+          <Text style={styles.betContext}>Bet #{message.betNumber}</Text>
+        ) : null}
         <Text style={styles.systemText}>
           {message.body} · {formatTime(message.createdAt)}
         </Text>
@@ -464,11 +467,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: colors.card,
     overflow: "hidden",
+    flex: 1,
   },
   header: { padding: 14, borderBottomWidth: 1, borderBottomColor: colors.border },
   title: { color: colors.text, fontSize: 18, fontWeight: "600" },
   hint: { color: colors.muted, fontSize: 12, marginTop: 2 },
-  messages: { maxHeight: 380, minHeight: 120, padding: 12 },
+  messages: { flex: 1, minHeight: 240, padding: 12 },
   empty: { color: colors.muted, textAlign: "center", paddingVertical: 24 },
   loadEarlier: {
     color: colors.accent,
@@ -479,6 +483,12 @@ const styles = StyleSheet.create({
   },
   message: { paddingVertical: 6 },
   systemMessage: { alignItems: "center", paddingVertical: 6 },
+  betContext: {
+    color: colors.accent,
+    fontSize: 11,
+    fontWeight: "600",
+    marginBottom: 2,
+  },
   systemText: { color: colors.muted, fontSize: 12, fontStyle: "italic", textAlign: "center" },
   messageHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
   author: { color: colors.text, fontSize: 14, fontWeight: "600" },

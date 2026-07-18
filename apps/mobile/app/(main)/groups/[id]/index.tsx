@@ -8,7 +8,6 @@ import {
   RoundProgress,
   SubmitLegForm,
 } from "@/components/group-round";
-import { RoundThread } from "@/components/group-chat";
 import type { RoundMessageDto } from "@tiki-acca/shared";
 import { Button, Card, ErrorText } from "@/components/ui";
 import { colors } from "@/config";
@@ -39,13 +38,12 @@ function formatCutoff(date: Date) {
 export default function GroupRoundScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { token, user } = useAuth();
-  const { data, error, reload, markChatRead } = useGroupData();
+  const { data, error, reload } = useGroupData();
   const [refreshing, setRefreshing] = useState(false);
   const [editingLegId, setEditingLegId] = useState<string | null>(null);
   const [removingLegId, setRemovingLegId] = useState<string | null>(null);
   const [removeError, setRemoveError] = useState("");
-  const [roundMessages, setRoundMessages] = useState<RoundMessageDto[]>([]);
-  const [chatRefreshKey, setChatRefreshKey] = useState(0);
+  const [legAnnouncements, setLegAnnouncements] = useState<RoundMessageDto[]>([]);
   const [selectedRoundId, setSelectedRoundId] = useState<string | null>(null);
   const [creatingRound, setCreatingRound] = useState(false);
   const [createRoundError, setCreateRoundError] = useState("");
@@ -65,9 +63,10 @@ export default function GroupRoundScreen() {
   useEffect(() => {
     setEditingLegId(null);
     setRemoveError("");
-    setRoundMessages([]);
-    setChatRefreshKey(0);
   }, [selectedRoundId]);
+  useEffect(() => {
+    setLegAnnouncements(data?.legAnnouncements ?? []);
+  }, [data?.legAnnouncements]);
 
   if (!data) {
     return (
@@ -156,7 +155,6 @@ export default function GroupRoundScreen() {
     try {
       await api(`/api/legs/${legId}`, { method: "DELETE", token });
       await reload();
-      setChatRefreshKey((key) => key + 1);
     } catch (e) {
       setRemoveError(
         e instanceof ApiError ? e.message : "Failed to remove leg"
@@ -168,7 +166,7 @@ export default function GroupRoundScreen() {
 
   const nextSlot = myLegs.length + 1;
   const announcementByLegId = new Map<string, RoundMessageDto>();
-  for (const message of roundMessages) {
+  for (const message of legAnnouncements) {
     if (
       message.legId &&
       (message.eventType === "leg_submitted" || message.eventType === "leg_changed")
@@ -287,12 +285,11 @@ export default function GroupRoundScreen() {
             announcementByLegId={announcementByLegId}
             token={token ?? undefined}
             onAnnouncementChanged={(updated) => {
-              setRoundMessages((current) =>
+              setLegAnnouncements((current) =>
                 current.map((message) =>
                   message.id === updated.id ? updated : message
                 )
               );
-              setChatRefreshKey((key) => key + 1);
             }}
           />
         </View>
@@ -331,7 +328,7 @@ export default function GroupRoundScreen() {
             }
             legCount={round?.legs.length ?? 1}
             // Show the ranked best-odds-across-bookmakers list while open
-            // (provisional) and once locked (odds captured at lock) — locked is
+            // (using current odds) and once locked (odds captured at lock) — locked is
             // when members go place the bet, so the comparison is essential.
             // Collapse it once the bet is underway (past first kickoff).
             showBookmakerCompare={isOpen || isLocked}
@@ -432,25 +429,11 @@ export default function GroupRoundScreen() {
         />
       ) : null}
 
-      {round && token ? (
-        <RoundThread
-          key={round.id}
-          roundId={round.id}
-          token={token}
-          currentUserId={user?.id}
-          isOwner={data.isOwner}
-          onMessagesChange={setRoundMessages}
-          onRead={markChatRead}
-          refreshKey={chatRefreshKey}
-        />
-      ) : null}
-
       {data.recentRounds && data.recentRounds.length > 0 ? (
         <View style={styles.section}>
           <RoundHistory
             rounds={data.recentRounds}
             onViewAll={() => router.push(`/(main)/groups/${id}/history`)}
-            token={token ?? undefined}
           />
         </View>
       ) : null}

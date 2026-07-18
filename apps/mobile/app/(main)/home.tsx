@@ -1,7 +1,13 @@
 import { formatOdds } from "@tiki-acca/shared";
 import { api } from "@/api/client";
-import type { GroupSummary, GroupsListResponse } from "@tiki-acca/shared";
+import type {
+  GroupSummary,
+  GroupSummaryActiveBet,
+  GroupsListResponse,
+} from "@tiki-acca/shared";
 import {
+  activeBetProgressLabel,
+  activeBetStatusLabel,
   formatActiveLegSummary,
   formatLegPoints,
   formatRoundStatusBadge,
@@ -119,7 +125,11 @@ export default function GroupsScreen() {
                           {g.unreadMessageCount} new
                         </Text>
                       ) : null}
-                      <Text style={styles.badge}>{formatRoundStatusBadge(g.status)}</Text>
+                      <Text style={styles.badge}>
+                        {g.activeBetCount > 1
+                          ? `${g.activeBetCount} Active`
+                          : formatRoundStatusBadge(g.status)}
+                      </Text>
                     </View>
                   </View>
                   <Text style={styles.meta}>
@@ -136,7 +146,9 @@ export default function GroupsScreen() {
                       Your points: {formatLegPoints(g.points)}
                     </Text>
                   </View>
-                  {legs.length > 0 ? (
+                  {g.activeBetCount > 1 ? (
+                    <ActiveBetsOverview bets={g.activeBets ?? []} />
+                  ) : legs.length > 0 ? (
                     <View style={styles.betslip}>
                       <View style={styles.betslipHeader}>
                         <Text style={styles.betslipTitle}>
@@ -212,6 +224,43 @@ function pointsStyle(value: number) {
   if (tone === "positive") return { color: colors.success };
   if (tone === "negative") return { color: colors.danger };
   return { color: colors.muted };
+}
+
+function ActiveBetsOverview({ bets }: { bets: GroupSummaryActiveBet[] }) {
+  const visible = bets.slice(0, 3);
+  const hiddenCount = bets.length - visible.length;
+
+  return (
+    <View style={styles.activeBets}>
+      <Text style={styles.betslipTitle}>Active bets · {bets.length}</Text>
+      {visible.map((bet) => {
+        const needsPick =
+          bet.status === "open" && bet.yourLegCount < bet.legsPerMember;
+        return (
+          <View key={bet.id} style={styles.activeBetRow}>
+            <View style={styles.activeBetMain}>
+              <Text style={styles.activeBetTitle}>
+                Bet #{bet.betNumber ?? "?"}
+                <Text style={styles.activeBetStatus}>
+                  {" · "}
+                  {activeBetStatusLabel(bet)}
+                </Text>
+              </Text>
+              <Text style={needsPick ? styles.activeBetAction : styles.activeBetProgress}>
+                {activeBetProgressLabel(bet)}
+              </Text>
+            </View>
+            {bet.combinedOdds != null ? (
+              <Text style={styles.activeBetOdds}>@ {formatOdds(bet.combinedOdds)}</Text>
+            ) : null}
+          </View>
+        );
+      })}
+      {hiddenCount > 0 ? (
+        <Text style={styles.moreBets}>+{hiddenCount} more</Text>
+      ) : null}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -295,6 +344,60 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
     gap: 8,
+  },
+  activeBets: {
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.bg,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  activeBetRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  activeBetMain: {
+    flex: 1,
+    minWidth: 0,
+  },
+  activeBetTitle: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  activeBetStatus: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: "400",
+  },
+  activeBetProgress: {
+    color: colors.muted,
+    fontSize: 12,
+    marginTop: 2,
+  },
+  activeBetAction: {
+    color: colors.warning,
+    fontSize: 12,
+    fontWeight: "600",
+    marginTop: 2,
+  },
+  activeBetOdds: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  moreBets: {
+    color: colors.accent,
+    fontSize: 12,
+    fontWeight: "600",
+    paddingTop: 8,
   },
   betslipHeader: {
     flexDirection: "row",

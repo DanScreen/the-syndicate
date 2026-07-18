@@ -1,4 +1,5 @@
 import type { AccaBookmakerRanking } from "./acca";
+import type { RoundMessageDto } from "./chat";
 import type { Fixture, LeaderboardEntry, Market, RoundStatus } from "./types";
 
 export type AuthUser = {
@@ -36,6 +37,19 @@ export type GroupSummaryActiveLeg = {
   outcome: string;
 };
 
+export type GroupSummaryActiveBet = {
+  id: string;
+  betNumber: number | null;
+  status: RoundStatus;
+  combinedOdds: number | null;
+  legsPerMember: number;
+  submittedLegCount: number;
+  requiredLegCount: number;
+  yourLegCount: number;
+  resolvedLegCount: number;
+  firstKickoff: string | null;
+};
+
 export type GroupSummary = {
   id: string;
   name: string;
@@ -48,6 +62,8 @@ export type GroupSummary = {
   legsPerMember: number;
   maxActiveBets: number;
   activeBetCount: number;
+  /** Compact summaries for every open/locked bet on multi-bet group cards. */
+  activeBets: GroupSummaryActiveBet[];
   /** Group acca points (combined-odds scoring on wins). */
   groupPoints: number;
   /** This member's leg points in the group. */
@@ -181,6 +197,8 @@ export type GroupDetailResponse = {
   activeRounds: ActiveRound[];
   betslipLink: string | null;
   betslipLinks: BetslipLinks | null;
+  /** Latest pick announcement per active leg, for mirrored reactions. */
+  legAnnouncements: RoundMessageDto[];
   isOwner: boolean;
   recentRounds?: RecentRoundSummary[];
 };

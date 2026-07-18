@@ -41,8 +41,8 @@ function mergeMessages(
   });
 }
 
-export function RoundThread({
-  roundId,
+export function GroupThread({
+  groupId,
   currentUserId,
   isOwner = false,
   readOnly = false,
@@ -50,7 +50,7 @@ export function RoundThread({
   onRead,
   refreshKey = 0,
 }: {
-  roundId: string;
+  groupId: string;
   currentUserId?: string;
   isOwner?: boolean;
   readOnly?: boolean;
@@ -78,7 +78,7 @@ export function RoundThread({
     lastIdRef.current = null;
     loadedEarlierRef.current = false;
     setError(null);
-  }, [roundId]);
+  }, [groupId]);
 
   useEffect(() => {
     onMessagesChange?.(mergeMessages(messages, legAnnouncements));
@@ -88,7 +88,7 @@ export function RoundThread({
     async (signal?: AbortSignal) => {
       // Reload the latest page so reaction toggles (which do not create a new
       // message cursor) reconcile on every poll.
-      const res = await fetch(`/api/rounds/${roundId}/messages`, { signal });
+      const res = await fetch(`/api/groups/${groupId}/messages`, { signal });
       if (!res.ok) throw new Error("Failed to load messages");
       const json = (await res.json()) as RoundMessagesResponse;
       if (json.messages.length > 0) {
@@ -99,7 +99,7 @@ export function RoundThread({
       if (!loadedEarlierRef.current) setHasMore(Boolean(json.hasMore));
       onRead?.();
     },
-    [roundId, onRead]
+    [groupId, onRead]
   );
 
   // Initial load.
@@ -149,7 +149,7 @@ export function RoundThread({
     setError(null);
     atBottomRef.current = true;
     try {
-      const res = await fetch(`/api/rounds/${roundId}/messages`, {
+      const res = await fetch(`/api/groups/${groupId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ body }),
@@ -226,7 +226,7 @@ export function RoundThread({
     atBottomRef.current = false;
     try {
       const res = await fetch(
-        `/api/rounds/${roundId}/messages?before=${encodeURIComponent(oldestId)}`
+        `/api/groups/${groupId}/messages?before=${encodeURIComponent(oldestId)}`
       );
       if (!res.ok) throw new Error("Failed to load earlier messages");
       const json = (await res.json()) as RoundMessagesResponse;
@@ -253,7 +253,7 @@ export function RoundThread({
       <div
         ref={scrollRef}
         onScroll={onScroll}
-        className="max-h-96 min-h-[8rem] space-y-2 overflow-y-auto px-4 py-3"
+        className="max-h-[60vh] min-h-[24rem] space-y-2 overflow-y-auto px-4 py-3"
       >
         {hasMore ? (
           <button
@@ -348,6 +348,11 @@ function ChatMessage({
     return (
       <div className="px-2 py-1 text-center text-xs text-muted">
         <p>
+          {message.betNumber != null ? (
+            <span className="mr-2 rounded-full bg-accent-muted/40 px-2 py-0.5 font-medium not-italic text-accent">
+              Bet #{message.betNumber}
+            </span>
+          ) : null}
           <span className="italic">{message.body}</span>
           <span className="ml-2 tabular-nums opacity-60">{formatTime(message.createdAt)}</span>
         </p>

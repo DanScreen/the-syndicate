@@ -15,7 +15,7 @@ The emotional product — trash talk when a mate's 9.0 correct-score pick lands,
 
 ## Goals
 
-1. **Round-scoped banter thread** — one thread per round on the Round tab; history browsable per settled round.
+1. **Longstanding group thread** — one permanent conversation per group in a dedicated Chat tab, shared by every current and future bet.
 2. **System messages give the thread a heartbeat** — lifecycle events we already generate (pick locked in / changed / removed, acca locked, leg won/lost, settled) appear inline, so the thread is alive even when nobody types. Pick lock-ins are the flagship event ("Dan locked in BTTS @ 1.80 🔒").
 3. **Emoji reactions on messages *and* picks — one mechanism** *(decision, July 2026)*: reactions attach to chat messages (user + system). Because every pick is announced by a system message, the **betslip row mirrors the reactions on its announcement message** — tapping a reaction on the betslip toggles it on the underlying message. Both surfaces, one data model. When a pick is edited, a new announcement is posted; reactions on the old pick stay with the old message (banter history preserved).
 4. **Web + mobile parity** from v1 (mobile is where banter happens).
@@ -24,13 +24,15 @@ The emotional product — trash talk when a mate's 9.0 correct-score pick lands,
 
 ---
 
-## Data model (proposed)
+## Data model
 
 ```prisma
 model RoundMessage {
   id        String   @id @default(cuid())
-  roundId   String
-  round     Round    @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  roundId   String?  // optional context for lifecycle events; null for user chat
+  round     Round?   @relation(fields: [roundId], references: [id], onDelete: SetNull)
   userId    String?  // null for system messages
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   kind      String   // "user" | "system"
@@ -40,6 +42,7 @@ model RoundMessage {
   leg       Leg?     @relation(fields: [legId], references: [id], onDelete: SetNull)
   createdAt DateTime @default(now())
 
+  @@index([groupId, createdAt])
   @@index([roundId, createdAt])
   @@index([legId])
 }
@@ -61,35 +64,36 @@ model MessageReaction {
 
 System messages are **written at event time** by the existing lifecycle code paths (leg submit/edit/remove routes, `claimAndLockRound`, `persistResolvableLegOutcomes`, `applyRoundSettlement`) — not derived on read — so the thread is an append-only record.
 
-## API routes (proposed)
+## API routes
 
 | Route | Auth | Purpose |
 |-------|------|---------|
-| `GET /api/rounds/[id]/messages?after=<cursor>` | Member | Paginated thread (user + system), newest last |
-| `POST /api/rounds/[id]/messages` | Member | Post message (500 chars; rate limit ~10/min/user) |
+| `GET /api/groups/[id]/messages?after=<cursor>` | Member | Paginated group thread (user + system), newest last |
+| `POST /api/groups/[id]/messages` | Member | Post a group-wide message (500 chars; rate limit ~10/min/user) |
 | `DELETE /api/messages/[id]` | Author or group owner | Delete (soft: body → "deleted") |
 | `POST /api/messages/[id]/reactions` | Member | Toggle reaction `{ emoji }` (used by both chat and betslip surfaces) |
+
+The legacy round messages route resolves to the containing group thread for older mobile clients.
 
 ## UI
 
 | Surface | Behaviour |
 |---------|-----------|
-| Round tab (web + mobile) | Thread below picks; input pinned at bottom; polls with the existing 60s group poll (tighten to 20s while thread visible) |
+| Chat tab (web + mobile) | Permanent group thread; input pinned at bottom; polls every 20s while visible |
 | Betslip pick rows | Reaction bar mirroring the pick's announcement message (tap to toggle; counts + who on long-press/hover) |
 | Chat messages | Same reaction bar on every message (user + system) — **only used emoji chips** plus a quiet **React** / **+** control; defaults live in the picker |
-| History tab | Read-only thread per settled round ("relive the carnage") |
-| Unread indicator | `GroupMember.lastReadMessageAt`; badge on group card on `/dashboard` and group tab |
+| Lifecycle messages | Include a **Bet #N** context label when tied to a round |
+| Unread indicator | `GroupMember.lastReadMessageAt`; badge on group card and dedicated Chat tab |
 
-Concurrent bets keep separate round-scoped threads and the active-bet switcher
-shows only the selected thread. Unread state remains group-wide in this version:
-opening one thread advances `GroupMember.lastReadMessageAt` for the group, so
-per-bet unread badges are deferred.
+Concurrent bets share the same group thread. User messages have no `roundId`;
+lifecycle messages retain optional round context so system events and mirrored
+pick reactions remain attributable to the correct **Bet #N**.
 
 ## Notifications
 
 Through the existing dispatcher ([notifications.md](./notifications.md)) — **push only**, no email:
 
-- `chat_message` — batched: max one push per user per group per 10 min ("3 new messages in {group}"), suppressed while app foregrounded on that group. New `NotificationPreference` toggle (`pushChat`, default on).
+- `chat_message` — batched: max one push per user per group per 10 min ("3 new messages in {group}"), suppressed while the group chat is foregrounded, and deep-links to the Chat tab. `NotificationPreference.pushChat` defaults on.
 - Reactions never notify (v1).
 
 ## Build phases
@@ -108,11 +112,18 @@ Through the existing dispatcher ([notifications.md](./notifications.md)) — **p
 - [x] Unread tracking + dashboard badges
 - [x] Batched `chat_message` push + preference toggle
 
+### Phase 3 — longstanding group chat
+- [x] Add required `RoundMessage.groupId`; make `roundId` optional and backfill existing messages — `20260718200000_group_scoped_chat`. A compatibility trigger derives `groupId` for writes from an older rolling-deploy revision; `20260718201000_group_chat_rolling_compat` idempotently ensures it on development databases.
+- [x] Dedicated Chat tab on web and mobile; remove embedded active/settled bet threads
+- [x] Group-scoped messages API with compatibility route for older clients
+- [x] Label lifecycle messages with their stable `Bet #N`
+- [x] Move unread badges and chat notification destinations to the Chat tab
+
 ## Open questions
 
 | Question | Recommendation |
 |----------|----------------|
-| Group-scoped vs round-scoped thread? | **Round-scoped** — self-archiving, matches product rhythm; group-level feed can aggregate later |
+| Group-scoped vs round-scoped thread? | **Group-scoped** *(revised July 2026)* — concurrent bets made separate threads fragment the group conversation; optional round context preserves bet attribution |
 | Profanity filtering? | **Yes** — reuse shared `containsProfanity` on user posts (same list as names/groups); owner-delete remains for anything that slips through |
 | Realtime (WebSocket/SSE)? | Defer — polling piggybacks existing infra; revisit if chat takes off |
 | Emoji choice? | Keep 🔥 😂 💀 👀 🫡 🍀 as **quick picks inside the picker**; the message row only shows emojis already used, plus a muted **React** / **+** control. The API accepts any single Unicode emoji. |

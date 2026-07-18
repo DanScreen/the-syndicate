@@ -89,9 +89,10 @@ Web uses Auth.js cookies; mobile uses a random **Bearer session token** on every
 | Create / join | `/groups/create`, `/groups/join` | `create-group.tsx`, `join-group.tsx` |
 | Group round | `group-ui.tsx` (full) | `groups/[id].tsx` + `components/group-round.tsx` |
 | Concurrent bets | Active-bet switcher + guarded member creation | Same switcher, stable Bet # labels, owner 1–5 setting |
+| Group chat | Dedicated permanent Chat tab + group-scoped API | Same longstanding Chat tab, Bet-labelled lifecycle events, reactions, unread badge |
 | Leg picker | Progressive 4-step + competition + market tiers | `SubmitLegForm` — competition, tiers (core + load more), grouped markets; selected market collapses into outcomes |
 | Locked acca | `AccaSummary`, compare bookmakers until first result | `AccaSummary` + `LegsList` with outcomes; 60s poll when locked |
-| Group tabs | Round / Leaderboard / Performance | `groups/[id]/_layout.tsx` + tab screens |
+| Group tabs | Round / Chat / History / Leaderboard / Performance | `groups/[id]/_layout.tsx` + tab screens |
 | Cross-group performance | `/performance` | `(main)/performance.tsx` |
 | Admin | `/admin/*` | **Out of scope** |
 
@@ -179,6 +180,7 @@ Checklist for implementation. Web route → API → mobile screen.
 - [x] Progressive market drill-down — selecting a market hides the catalogue and immediately shows outcomes + **Change market**
 - [x] Occupied fixtures disabled — one leg per match keeps combined odds free from unpriced bet-builder correlation
 - [x] Concurrent bets — active-bet switcher, guarded member creation, owner max 1–5 setting
+- [x] Longstanding group Chat tab — shared by all bets, with Bet-labelled system events and notification deep link
 - [x] Market tiers: auto-load core; “Load more markets” for specials (no API credit copy in UI)
 - [x] Locked round: picks, outcome badges, frozen odds (`LegsList`, `RoundProgress`)
 - [x] `AccaSummary`: combined odds, compare bookmakers until first result, betslip CTA

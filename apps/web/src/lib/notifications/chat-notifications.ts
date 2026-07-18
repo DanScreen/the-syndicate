@@ -9,43 +9,39 @@ const FOREGROUND_GRACE_MS = 30 * 1000;
  * group thread in the last 30 seconds is treated as foregrounded and skipped.
  */
 export async function notifyChatMessage(params: {
-  roundId: string;
+  groupId: string;
   senderId: string;
 }): Promise<void> {
-  const round = await prisma.round.findUnique({
-    where: { id: params.roundId },
+  const group = await prisma.group.findUnique({
+    where: { id: params.groupId },
     select: {
-      group: {
-        select: {
-          id: true,
-          name: true,
-          members: {
-            where: { userId: { not: params.senderId } },
-            select: { userId: true, lastReadMessageAt: true },
-          },
-        },
+      id: true,
+      name: true,
+      members: {
+        where: { userId: { not: params.senderId } },
+        select: { userId: true, lastReadMessageAt: true },
       },
     },
   });
-  if (!round) return;
+  if (!group) return;
 
   const now = Date.now();
   const bucketStartMs = Math.floor(now / CHAT_PUSH_WINDOW_MS) * CHAT_PUSH_WINDOW_MS;
   const bucketStart = new Date(bucketStartMs);
   const messageCount = await prisma.roundMessage.count({
     where: {
-      round: { groupId: round.group.id },
+      groupId: group.id,
       kind: "user",
       createdAt: { gte: bucketStart },
     },
   });
   const body =
     messageCount === 1
-      ? `New message in ${round.group.name}`
-      : `${messageCount} new messages in ${round.group.name}`;
+      ? `New message in ${group.name}`
+      : `${messageCount} new messages in ${group.name}`;
 
   await Promise.all(
-    round.group.members.map(async (member) => {
+    group.members.map(async (member) => {
       if (
         member.lastReadMessageAt &&
         now - member.lastReadMessageAt.getTime() < FOREGROUND_GRACE_MS
@@ -56,17 +52,17 @@ export async function notifyChatMessage(params: {
         userId: member.userId,
         type: "chat_message",
         dedupeType: `chat_message_${bucketStartMs}`,
-        groupId: round.group.id,
+        groupId: group.id,
         // NotificationLog's roundId column is the durable dedupe scope. Chat
         // batching is group-scoped, so use the group id rather than the round.
-        roundId: round.group.id,
+        roundId: group.id,
         push: {
           title: "Tiki Acca Group Chat",
           body,
           data: {
-            groupId: round.group.id,
-            roundId: params.roundId,
-            url: `tikiacca://groups/${round.group.id}`,
+            groupId: group.id,
+            screen: "chat",
+            url: `tikiacca://groups/${group.id}/chat`,
           },
         },
       });

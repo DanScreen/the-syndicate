@@ -47,7 +47,7 @@ flowchart TB
 | **Leg** | Pick slot (`legIndex` 1..quota) per member: fixture, `competitionId`, market, odds, outcome |
 | **Match** | Canonical fixture result (football-data.org sync); reused for auto-settle |
 | **AnalyticsEvent** | Product analytics: `sign_up`, `login`, `page_view` |
-| **RoundMessage** | Round-scoped user/system chat message; optional `legId` for pick announcements |
+| **RoundMessage** | Group-scoped user/system chat message; optional `roundId` for bet context and `legId` for pick announcements |
 | **MessageReaction** | Constrained emoji reaction, unique per message/user/emoji |
 
 Schema: `packages/database/prisma/schema.prisma`
@@ -85,7 +85,7 @@ Computed on read from settled rounds. Group + member + **cross-group user** APIs
 → `apps/web/src/lib/stats/`
 
 ### Group chat
-Round-scoped polling threads share one REST contract across web and mobile. Lifecycle system messages are persisted at event time and gated by the lock/settlement atomic claims. Reactions attach to messages; pick rows mirror the latest announcement selected by `legId`. `GroupMember.lastReadMessageAt` drives unread badges. Chat push is push-only, sender-suppressed, foreground-suppressed from active polling, and limited to one delivery per user/group ten-minute bucket.
+Each group has one permanent polling thread in a dedicated web/mobile Chat tab. `RoundMessage.groupId` owns every message; nullable `roundId` preserves **Bet #N** context for lifecycle system events while user messages remain group-wide. Existing round messages were backfilled by `20260718200000_group_scoped_chat`. Lifecycle messages are persisted at event time and gated by the lock/settlement atomic claims. Reactions attach to messages; pick rows mirror the latest announcement selected by `legId`. `GroupMember.lastReadMessageAt` drives Chat-tab and group-card unread badges. Chat push is push-only, sender-suppressed, foreground-suppressed from active polling, limited to one delivery per user/group ten-minute bucket, and deep-links to Chat.
 
 → `apps/web/src/lib/chat/` · `apps/web/src/components/group-chat.tsx` · `apps/mobile/src/components/group-chat.tsx` · [spec](./specs/group-chat.md)
 
@@ -93,7 +93,7 @@ Round-scoped polling threads share one REST contract across web and mobile. Life
 - **Header:** Logo + “Social Group Betting” tagline; `AppNav` — Home → About → Groups → Performance → Admin (admins) → Blog (rightmost); greeting **Hi, {name}** → `/account`; logo + Home → `/`
 - **Marketing chrome:** `SessionAwareMarketingHeader` (`useSession`) so force-static `/blog` still shows signed-in `AppHeader`
 - **Group shell:** `groups/[id]/layout.tsx` + `GroupDataProvider` — shared fetch for sub-pages; polls every 60s while any acca is locked
-- **Group tabs:** Round (`/groups/[id]`), Leaderboard, Performance
+- **Group tabs:** Round (`/groups/[id]`), Chat, History, Leaderboard, Performance, Settings (owner)
 - **Locked round:** per-leg outcome badges (Won/Lost/Awaiting) → locked combined odds + bookmaker → betslip CTA until first result, then tracking only (no bookmaker comparison)
 
 → [CURRENT_STATE.md](./CURRENT_STATE.md#web-pages)

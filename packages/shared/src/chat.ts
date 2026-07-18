@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { containsProfanity } from "./profanity";
 
-/** Round chat message kinds — user banter vs. lifecycle system messages. */
+/** Group chat message kinds — user banter vs. lifecycle system messages. */
 export const MESSAGE_KINDS = ["user", "system"] as const;
 
 export type MessageKind = (typeof MESSAGE_KINDS)[number];
@@ -46,7 +46,7 @@ export type ReactionEmoji = string;
 
 export const MAX_MESSAGE_LENGTH = 500;
 
-/** How many messages GET /api/rounds/[id]/messages returns per page. */
+/** How many messages GET /api/groups/[id]/messages returns per page. */
 export const MESSAGE_PAGE_SIZE = 50;
 
 /** Body a message is overwritten with on soft delete (author or group owner). */
@@ -94,10 +94,14 @@ export type PostMessageInput = z.infer<typeof postMessageSchema>;
 export type MessagesQuery = z.infer<typeof messagesQuerySchema>;
 export type ToggleReactionInput = z.infer<typeof toggleReactionSchema>;
 
-/** One message in a round thread, as served by GET /api/rounds/[id]/messages. */
+/** One message in a longstanding group thread. */
 export type RoundMessageDto = {
   id: string;
-  roundId: string;
+  groupId: string;
+  /** Optional bet context. User messages are group-wide and have no round. */
+  roundId: string | null;
+  /** Stable display number for the contextual bet, when present. */
+  betNumber: number | null;
   kind: MessageKind;
   body: string;
   /** Null for user messages. */
@@ -120,10 +124,14 @@ export type MessageReactionSummary = {
   reacted: boolean;
 };
 
-/** GET /api/rounds/[id]/messages response — ordered oldest-first (newest last). */
+/** GET /api/groups/[id]/messages response — ordered oldest-first (newest last). */
 export type RoundMessagesResponse = {
   messages: RoundMessageDto[];
   hasMore?: boolean;
   /** Latest pick announcement per leg, for betslip reaction mirroring. */
   legAnnouncements?: RoundMessageDto[];
 };
+
+/** Preferred group-scoped names; round-prefixed aliases remain for compatibility. */
+export type GroupMessageDto = RoundMessageDto;
+export type GroupMessagesResponse = RoundMessagesResponse;

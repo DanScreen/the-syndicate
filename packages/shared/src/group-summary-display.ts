@@ -1,4 +1,8 @@
-import type { GroupSummaryActiveLeg, GroupSummaryYourLeg } from "./api-types";
+import type {
+  GroupSummaryActiveBet,
+  GroupSummaryActiveLeg,
+  GroupSummaryYourLeg,
+} from "./api-types";
 import type { RoundStatus } from "./types";
 
 export function yourLegStatusMessage(
@@ -42,4 +46,33 @@ export function legOutcomeShortLabel(outcome: string): string {
   if (outcome === "lost") return "Lost";
   if (outcome === "void") return "Void";
   return "";
+}
+
+export function activeBetStatusLabel(
+  bet: GroupSummaryActiveBet,
+  now = Date.now()
+): "Open" | "Locked" | "In play" {
+  if (bet.status === "open") return "Open";
+  const started =
+    bet.resolvedLegCount > 0 ||
+    (bet.firstKickoff != null &&
+      new Date(bet.firstKickoff).getTime() <= now);
+  return started ? "In play" : "Locked";
+}
+
+export function activeBetProgressLabel(bet: GroupSummaryActiveBet): string {
+  if (bet.status === "open") {
+    if (bet.yourLegCount < bet.legsPerMember) {
+      const remaining = bet.legsPerMember - bet.yourLegCount;
+      return remaining === 1
+        ? "Your pick needed"
+        : `${remaining} picks needed from you`;
+    }
+    if (bet.submittedLegCount === 0) return "Ready for the first pick";
+    return `${bet.submittedLegCount}/${bet.requiredLegCount} picks`;
+  }
+  if (bet.resolvedLegCount > 0) {
+    return `${bet.resolvedLegCount}/${bet.submittedLegCount} settled`;
+  }
+  return `${bet.submittedLegCount} leg${bet.submittedLegCount === 1 ? "" : "s"}`;
 }

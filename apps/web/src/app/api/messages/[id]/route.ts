@@ -20,12 +20,7 @@ export async function DELETE(_request: Request, { params }: Params) {
       id: true,
       kind: true,
       userId: true,
-      round: {
-        select: {
-          status: true,
-          group: { select: { ownerId: true } },
-        },
-      },
+      group: { select: { ownerId: true } },
     },
   });
 
@@ -37,15 +32,8 @@ export async function DELETE(_request: Request, { params }: Params) {
   if (message.kind !== "user") {
     return NextResponse.json({ error: "System messages cannot be deleted" }, { status: 403 });
   }
-  if (message.round.status === "settled") {
-    return NextResponse.json(
-      { error: "Settled round threads are read-only" },
-      { status: 409 }
-    );
-  }
-
   const isAuthor = message.userId === userId;
-  const isOwner = message.round.group.ownerId === userId;
+  const isOwner = message.group.ownerId === userId;
   if (!isAuthor && !isOwner) {
     return NextResponse.json({ error: "Not allowed" }, { status: 403 });
   }
@@ -56,6 +44,7 @@ export async function DELETE(_request: Request, { params }: Params) {
     data: { body: DELETED_MESSAGE_BODY },
     include: {
       user: { select: { id: true, name: true } },
+      round: { select: { betNumber: true } },
       reactions: {
         include: { user: { select: { name: true } } },
         orderBy: { createdAt: "asc" },

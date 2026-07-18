@@ -1,4 +1,5 @@
 import { requireSession } from "@/lib/api-auth";
+import { serializeMessage } from "@/lib/chat/serialize";
 import { mapHistoryRound } from "@/lib/groups/map-history-round";
 import { buildRoundBetslipLinks } from "@/lib/odds/betslip-links";
 import {
@@ -234,6 +235,33 @@ export async function GET(_request: Request, { params }: Params) {
     return (b.betNumber ?? 0) - (a.betNumber ?? 0);
   });
   const activeRound = activeRoundViews[0] ?? null;
+  const activeLegIds = activeRoundViews.flatMap((round) =>
+    round.legs.map((leg) => leg.id)
+  );
+  const latestAnnouncements =
+    activeLegIds.length > 0
+      ? await prisma.roundMessage.findMany({
+          where: {
+            groupId: id,
+            legId: { in: activeLegIds },
+            eventType: { in: ["leg_submitted", "leg_changed"] },
+          },
+          distinct: ["legId"],
+          orderBy: [
+            { legId: "asc" },
+            { createdAt: "desc" },
+            { id: "desc" },
+          ],
+          include: {
+            user: { select: { id: true, name: true } },
+            round: { select: { betNumber: true } },
+            reactions: {
+              include: { user: { select: { name: true } } },
+              orderBy: { createdAt: "asc" },
+            },
+          },
+        })
+      : [];
 
   // Live points (same rules as Performance) — denormalized GroupMember.points
   // can be stale after scoring rule changes / equal-split backfills.
@@ -254,7 +282,7 @@ export async function GET(_request: Request, { params }: Params) {
       : membership.joinedAt;
   const unreadMessageCount = await prisma.roundMessage.count({
     where: {
-      round: { groupId: id },
+      groupId: id,
       createdAt: { gt: unreadSince },
       OR: [
         { userId: null },
@@ -285,6 +313,9 @@ export async function GET(_request: Request, { params }: Params) {
     activeRounds: activeRoundViews,
     betslipLink: activeRound?.betslipLink ?? null,
     betslipLinks: activeRound?.betslipLinks ?? null,
+    legAnnouncements: latestAnnouncements.map((message) =>
+      serializeMessage(message, session!.user!.id)
+    ),
     isOwner: membership.role === "owner",
     recentRounds: recentSettled.map(mapHistoryRound),
   });

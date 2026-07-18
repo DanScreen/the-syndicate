@@ -38,7 +38,7 @@ Core loop and MVP polish are **shipped**:
 - **Multi-leg accas** — owner sets 1 / 2 / 3 legs per member; web + mobile — [specs/multi-leg-accas.md](./specs/multi-leg-accas.md)
 - **Concurrent group bets** — owner cap 1–5, guarded member creation, web/mobile active-bet switcher — [spec](./specs/concurrent-group-bets.md) (feature branch; owner testing pending)
 - **Account page** — greeting → `/account` (notifications + sign out); Notifications removed from app nav
-- **Group chat & reactions** — round-scoped web/mobile threads, lifecycle messages, pick-mirrored reactions, unread badges, batched push — [spec](./specs/group-chat.md)
+- **Group chat & reactions** — one longstanding web/mobile Chat tab per group, Bet-labelled lifecycle messages, pick-mirrored reactions, unread badges, batched push — [spec](./specs/group-chat.md)
 
 ---
 

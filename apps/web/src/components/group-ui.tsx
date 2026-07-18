@@ -709,7 +709,7 @@ export function AccaSummary({
   legCount?: number;
   /** Locked acca — frozen odds copy; outcomes may be in progress. */
   inProgress?: boolean;
-  /** Open round — live provisional odds from legs so far. */
+  /** Open round — live current odds from legs so far. */
   preview?: boolean;
   /** Show ranked bookmaker list. */
   showBookmakerCompare?: boolean;
@@ -735,7 +735,7 @@ export function AccaSummary({
   const oddsLabel = inProgress
     ? "Locked combined odds"
     : preview
-      ? "Provisional combined odds"
+      ? "Current combined odds"
       : "Combined odds";
   const bookmakerLine = inProgress
     ? `Locked at ${bookmakerName}`
@@ -786,7 +786,7 @@ export function AccaSummary({
           )}
           {preview ? (
             <p className="mt-1 text-xs text-muted">
-              Live preview from legs submitted so far. Final bookmaker locks when the bet closes.
+              Based on legs submitted so far. Final odds lock when the bet closes.
             </p>
           ) : null}
           {!singleBookmaker && !preview && (
@@ -821,9 +821,6 @@ export function AccaSummary({
             <span className="font-medium">
               Compare bookmakers
               <span className="ml-2 text-muted">({bookmakerRankings.length})</span>
-              {preview ? (
-                <span className="ml-2 text-xs font-normal text-muted">provisional</span>
-              ) : null}
             </span>
             <span className="text-muted">
               <Chevron open={bookmakersOpen} />

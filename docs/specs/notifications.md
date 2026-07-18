@@ -197,7 +197,7 @@ Mobile app already uses **Expo SDK 54** with EAS build profiles. Recommended pat
 | `app.json` | iOS `UIBackgroundModes: remote-notification`; Android notification icon/color |
 | Permission UX | Prompt after first group join or on dashboard — explain kickoff reminders |
 | Token registration | `POST /api/user/push-token` `{ token, platform }` on login + token refresh |
-| Handlers | Tap notification → `router.push('/(main)/groups/{id}')` via deep link payload |
+| Handlers | Tap round notification → group; tap `chat_message` → dedicated group Chat tab via payload `screen: "chat"` |
 | Physical device | Push does not work in iOS Simulator (Android emulator OK with Google Play) |
 
 ### Server work

@@ -1,6 +1,7 @@
 import { requireSession } from "@/lib/api-auth";
 import { generateInviteCode } from "@/lib/invite-code";
 import { activeLegsInRound, yourLegInRound } from "@/lib/groups/your-leg-summary";
+import { activeBetSummaries } from "@/lib/groups/active-bet-summaries";
 import { openRound } from "@/lib/rounds/open-round";
 import { groupNetPoints, memberNetPointsAcrossRounds } from "@/lib/stats/helpers";
 import { prisma } from "@tiki-acca/database";
@@ -41,9 +42,14 @@ export async function GET() {
         allRounds.find((r) => r.status === "open") ??
         allRounds.find((r) => r.status === "locked") ??
         null;
-      const activeBetCount = allRounds.filter(
-        (round) => round.status === "open" || round.status === "locked"
-      ).length;
+      let openedSummaryRound: {
+        id: string;
+        betNumber: number | null;
+        status: string;
+        combinedOdds: number | null;
+        legsPerMember: number;
+        legs: never[];
+      } | null = null;
       let activeRound: {
         id: string;
         betNumber: number | null;
@@ -61,6 +67,14 @@ export async function GET() {
         : null;
       if (!activeRound) {
         const opened = await openRound(m.group.id);
+        openedSummaryRound = {
+          id: opened.id,
+          betNumber: opened.betNumber,
+          status: opened.status,
+          combinedOdds: opened.combinedOdds,
+          legsPerMember: opened.legsPerMember,
+          legs: [],
+        };
         activeRound = {
           id: opened.id,
           betNumber: opened.betNumber,
@@ -72,13 +86,18 @@ export async function GET() {
 
       const legs = activeRoundRow?.legs ?? [];
       const yourLegCount = legs.filter((l) => l.userId === userId).length;
+      const activeBets = activeBetSummaries(
+        openedSummaryRound ? [...allRounds, openedSummaryRound] : allRounds,
+        userId,
+        m.group._count.members
+      );
       const unreadSince =
         m.lastReadMessageAt && m.lastReadMessageAt > m.joinedAt
           ? m.lastReadMessageAt
           : m.joinedAt;
       const unreadMessageCount = await prisma.roundMessage.count({
         where: {
-          round: { groupId: m.group.id },
+          groupId: m.group.id,
           createdAt: { gt: unreadSince },
           OR: [{ userId: null }, { userId: { not: userId } }],
         },
@@ -94,7 +113,8 @@ export async function GET() {
         ownerName: m.group.owner.name,
         legsPerMember: m.group.legsPerMember,
         maxActiveBets: m.group.maxActiveBets,
-        activeBetCount: activeBetCount || 1,
+        activeBetCount: activeBets.length,
+        activeBets,
         groupPoints: groupNetPoints(allRounds),
         // Live member points (same as leaderboard / Performance) — not stored GroupMember.points.
         points: memberNetPointsAcrossRounds(allRounds, userId),

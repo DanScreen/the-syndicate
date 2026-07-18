@@ -65,6 +65,7 @@ model Group {
   owner          User          @relation("GroupOwner", fields: [ownerId], references: [id])
   members        GroupMember[]
   rounds         Round[]
+  messages       RoundMessage[]
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 }
@@ -235,12 +236,14 @@ model NotificationPreference {
   updatedAt          DateTime @updatedAt
 }
 
-/// Round-scoped chat thread — user banter plus append-only system messages
-/// written at event time by the round lifecycle (see specs/group-chat.md).
+/// Longstanding group chat — user banter plus append-only round lifecycle
+/// messages. `roundId` is optional context for bet-specific system events.
 model RoundMessage {
   id        String   @id @default(cuid())
-  roundId   String
-  round     Round    @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  roundId   String?
+  round     Round?   @relation(fields: [roundId], references: [id], onDelete: SetNull)
   userId    String?  // null for system messages
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   kind      String   // "user" | "system"
@@ -251,6 +254,7 @@ model RoundMessage {
   createdAt DateTime @default(now())
   reactions MessageReaction[]
 
+  @@index([groupId, createdAt])
   @@index([roundId, createdAt])
   @@index([legId])
 }

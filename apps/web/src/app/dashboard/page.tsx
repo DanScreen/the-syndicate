@@ -1,9 +1,13 @@
 import { AppHeader } from "@/components/header";
 import { PageView } from "@/components/analytics/page-view";
-import { ActiveBetslipSummary } from "@/components/active-betslip-summary";
+import {
+  ActiveBetslipSummary,
+  ActiveBetsSummary,
+} from "@/components/active-betslip-summary";
 import { PointsText } from "@/components/points-text";
 import { yourLegStatusMessage } from "@tiki-acca/shared";
 import { activeLegsInRound, yourLegInRound } from "@/lib/groups/your-leg-summary";
+import { activeBetSummaries } from "@/lib/groups/active-bet-summaries";
 import { openRound } from "@/lib/rounds/open-round";
 import { groupNetPoints, memberNetPointsAcrossRounds } from "@/lib/stats/helpers";
 import { formatLegPoints, formatRoundStatusBadge } from "@tiki-acca/shared";
@@ -72,15 +76,15 @@ export default async function DashboardPage() {
     const unreadMessages = await prisma.roundMessage.findMany({
       where: {
         OR: memberships.map((m) => ({
-          round: { groupId: m.group.id },
+          groupId: m.group.id,
           createdAt: { gt: unreadSinceByGroup.get(m.group.id)! },
           OR: [{ userId: null }, { userId: { not: session.user.id } }],
         })),
       },
-      select: { round: { select: { groupId: true } } },
+      select: { groupId: true },
     });
     for (const msg of unreadMessages) {
-      const gid = msg.round.groupId;
+      const gid = msg.groupId;
       unreadCountByGroup.set(gid, (unreadCountByGroup.get(gid) ?? 0) + 1);
     }
   }
@@ -148,10 +152,14 @@ export default async function DashboardPage() {
                     allRounds.find((r) => r.status === "open") ??
                     allRounds.find((r) => r.status === "locked") ??
                     null;
-                  const activeBetCount = allRounds.filter(
-                    (round) =>
-                      round.status === "open" || round.status === "locked"
-                  ).length;
+                  let openedSummaryRound: {
+                    id: string;
+                    betNumber: number | null;
+                    status: string;
+                    combinedOdds: number | null;
+                    legsPerMember: number;
+                    legs: never[];
+                  } | null = null;
                   let activeRound: {
                     id: string;
                     status: string;
@@ -167,6 +175,14 @@ export default async function DashboardPage() {
                     : null;
                   if (!activeRound) {
                     const opened = await openRound(m.group.id);
+                    openedSummaryRound = {
+                      id: opened.id,
+                      betNumber: opened.betNumber,
+                      status: opened.status,
+                      combinedOdds: opened.combinedOdds,
+                      legsPerMember: opened.legsPerMember,
+                      legs: [],
+                    };
                     activeRound = {
                       id: opened.id,
                       status: opened.status,
@@ -188,6 +204,13 @@ export default async function DashboardPage() {
                     (l) => l.userId === session.user.id
                   ).length;
                   const activeLegs = activeLegsInRound(legs, session.user.id);
+                  const activeBets = activeBetSummaries(
+                    openedSummaryRound
+                      ? [...allRounds, openedSummaryRound]
+                      : allRounds,
+                    session.user.id,
+                    m.group._count.members
+                  );
                   const unreadMessageCount =
                     unreadCountByGroup.get(m.group.id) ?? 0;
                   const roundStatus = activeRound?.status ?? "open";
@@ -204,7 +227,8 @@ export default async function DashboardPage() {
                     activeLegs,
                     roundStatus,
                     unreadMessageCount,
-                    activeBetCount: activeBetCount || 1,
+                    activeBetCount: activeBets.length,
+                    activeBets,
                   };
                 })
               )).map(
@@ -220,6 +244,7 @@ export default async function DashboardPage() {
                   roundStatus,
                   unreadMessageCount,
                   activeBetCount,
+                  activeBets,
                 }) => (
                   <Link
                     key={m.group.id}
@@ -235,7 +260,9 @@ export default async function DashboardPage() {
                           </span>
                         ) : null}
                         <span className="rounded-full bg-accent-muted px-2 py-0.5 text-xs text-accent">
-                          {formatRoundStatusBadge(activeRound?.status ?? "open")}
+                          {activeBetCount > 1
+                            ? `${activeBetCount} Active`
+                            : formatRoundStatusBadge(activeRound?.status ?? "open")}
                         </span>
                       </div>
                     </div>
@@ -249,17 +276,21 @@ export default async function DashboardPage() {
                       <PointsText points={groupPoints} label="Group points" />
                       <PointsText points={yourPoints} label="Your points" />
                     </div>
-                    <ActiveBetslipSummary
-                      legs={activeLegs}
-                      currentUserId={session.user.id}
-                      combinedOdds={activeRound?.combinedOdds}
-                      waitingMessage={
-                        yourLegStatusMessage(roundStatus, yourLeg, {
-                          yourLegCount,
-                          legsPerMember,
-                        }) || undefined
-                      }
-                    />
+                    {activeBetCount > 1 ? (
+                      <ActiveBetsSummary bets={activeBets} />
+                    ) : (
+                      <ActiveBetslipSummary
+                        legs={activeLegs}
+                        currentUserId={session.user.id}
+                        combinedOdds={activeRound?.combinedOdds}
+                        waitingMessage={
+                          yourLegStatusMessage(roundStatus, yourLeg, {
+                            yourLegCount,
+                            legsPerMember,
+                          }) || undefined
+                        }
+                      />
+                    )}
                   </Link>
                 )
               )}

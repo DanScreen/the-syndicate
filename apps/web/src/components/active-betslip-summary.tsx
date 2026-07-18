@@ -1,9 +1,71 @@
-import { formatOdds } from "@tiki-acca/shared";
+import {
+  activeBetProgressLabel,
+  activeBetStatusLabel,
+  formatOdds,
+} from "@tiki-acca/shared";
 import {
   formatActiveLegSummary,
   legOutcomeShortLabel,
+  type GroupSummaryActiveBet,
   type GroupSummaryActiveLeg,
 } from "@tiki-acca/shared";
+
+const MAX_VISIBLE_ACTIVE_BETS = 3;
+
+export function ActiveBetsSummary({
+  bets,
+}: {
+  bets: GroupSummaryActiveBet[];
+}) {
+  const visible = bets.slice(0, MAX_VISIBLE_ACTIVE_BETS);
+  const hiddenCount = bets.length - visible.length;
+
+  return (
+    <div className="mt-3 rounded-lg border border-border bg-background/50 px-3 py-2">
+      <p className="text-xs font-medium uppercase tracking-wide text-accent">
+        Active bets · {bets.length}
+      </p>
+      <ul className="mt-1 divide-y divide-border">
+        {visible.map((bet) => {
+          const needsPick =
+            bet.status === "open" && bet.yourLegCount < bet.legsPerMember;
+          return (
+            <li
+              key={bet.id}
+              className="flex items-center justify-between gap-3 py-2 text-sm"
+            >
+              <span className="min-w-0">
+                <span className="font-semibold text-foreground">
+                  Bet #{bet.betNumber ?? "?"}
+                </span>
+                <span className="ml-2 text-xs text-muted">
+                  {activeBetStatusLabel(bet)}
+                </span>
+                <span
+                  className={`block truncate text-xs ${
+                    needsPick ? "font-medium text-warning" : "text-muted"
+                  }`}
+                >
+                  {activeBetProgressLabel(bet)}
+                </span>
+              </span>
+              {bet.combinedOdds != null ? (
+                <span className="shrink-0 text-xs font-medium text-foreground">
+                  @ {formatOdds(bet.combinedOdds)}
+                </span>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
+      {hiddenCount > 0 ? (
+        <p className="border-t border-border pt-2 text-xs font-medium text-accent">
+          +{hiddenCount} more
+        </p>
+      ) : null}
+    </div>
+  );
+}
 
 export function ActiveBetslipSummary({
   legs,

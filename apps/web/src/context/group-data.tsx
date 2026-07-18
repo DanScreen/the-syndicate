@@ -1,5 +1,6 @@
 "use client";
 
+import type { RoundMessageDto } from "@tiki-acca/shared";
 import {
   createContext,
   useCallback,
@@ -123,6 +124,7 @@ export type GroupData = {
       linkQuality?: "deeplink" | "hub" | null;
     }[];
   } | null;
+  legAnnouncements: RoundMessageDto[];
   isOwner: boolean;
 };
 

@@ -32,12 +32,14 @@ Owner creates group (name only) → invite code + link. Anyone with the link ope
 5. Everyone fills their quota **or the first submitted leg kicks off** → acca **locks** with best combined bookmaker (members under quota miss or enter partial)
 6. Members receive **email notification** when acca locks (if Resend configured)
 7. When the final active bet settles, a new open bet starts automatically. With a higher cap, members can create replacements before other bets settle.
-8. Each round has a web/mobile **Group Chat** thread. Pick submissions, changes, removals, lock, results, and settlement appear as system messages; members can post text (profanity-filtered) and react using the quiet **React** control. Pick rows mirror reactions from their latest announcement.
+8. Each group has one permanent web/mobile **Chat** tab shared by every bet. Pick submissions, changes, removals, lock, results, and settlement appear as **Bet #N**-labelled system messages; members can post group-wide text (profanity-filtered) and react using the quiet **React** control. Pick rows mirror reactions from their latest announcement.
+
+On the overall Groups screen, a group with one active bet keeps its detailed betslip preview. A group with multiple active bets shows a compact action-first overview instead: Bet number, Open / Locked / In play status, pick or settlement progress, missing picks for the current member, and available combined odds.
 
 → [specs/competitions-and-results.md](./specs/competitions-and-results.md)
 
 ### 4. Place & track
-While the bet is open: leg picker shows **best odds only** per selection; **Compare bookmakers** shows a provisional ranking from legs submitted so far. Once locked: **frozen combined odds** and the **Compare bookmakers** ranking captured at lock, so members can see which bookmaker gives the best acca odds when they place the bet. Per-leg **Won / Lost / Awaiting** badges update as matches finish. Betslip links shown until the first result; then tracking only. Page auto-refreshes every 60s while locked.
+While the bet is open: leg picker shows **best odds only** per selection; **Compare bookmakers** shows the current ranking from legs submitted so far. Once locked: **frozen combined odds** and the **Compare bookmakers** ranking captured at lock, so members can see which bookmaker gives the best acca odds when they place the bet. Per-leg **Won / Lost / Awaiting** badges update as matches finish. Betslip links shown until the first result; then tracking only. Page auto-refreshes every 60s while locked.
 
 **Editing picks:** members can change their own leg — in open rounds and in locked rounds — until the **first kickoff** among the acca's legs. Editing a locked round reprices the whole acca at current odds. Once the first match starts, picks are final.
 

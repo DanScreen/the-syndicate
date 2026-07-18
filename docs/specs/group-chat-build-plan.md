@@ -2,6 +2,9 @@
 
 Companion to [group-chat.md](./group-chat.md) — the execution sequence, which model runs each step, and the exact prompt to paste into Claude Code at the start of each session.
 
+> Historical build sequence for Phases 1–2. The shipped Phase 3 design now uses
+> one longstanding group-scoped Chat tab; see the main spec for current behaviour.
+
 **Rules of engagement**
 
 - One step = one fresh Claude Code session, started with `/model` set per the table. Fresh sessions force the model to onboard from repo docs (CURRENT_STATE.md → spec), not stale conversation.

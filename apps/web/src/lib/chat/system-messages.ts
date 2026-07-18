@@ -2,7 +2,7 @@ import type { Prisma, PrismaClient } from "@prisma/client";
 import { accaSucceeded, groupAccaRoundPoints, type LegOutcome } from "@tiki-acca/shared";
 
 /**
- * System-message writers for the round chat thread (specs/group-chat.md).
+ * System-message writers for the longstanding group chat (specs/group-chat.md).
  *
  * Exactly-once contract: every caller must gate the write on the atomic claim
  * that makes its lifecycle event happen at most once — the `locked → settled`
@@ -44,8 +44,14 @@ async function createSystemMessage(
     createdAt?: Date;
   }
 ): Promise<void> {
+  const round = await db.round.findUnique({
+    where: { id: data.roundId },
+    select: { groupId: true },
+  });
+  if (!round) return;
   await db.roundMessage.create({
     data: {
+      groupId: round.groupId,
       roundId: data.roundId,
       kind: "system",
       eventType: data.eventType,

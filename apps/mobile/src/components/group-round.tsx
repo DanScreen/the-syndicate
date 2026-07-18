@@ -1,7 +1,7 @@
 import { formatOdds } from "@tiki-acca/shared";
 import { ApiError, api } from "@/api/client";
 import { BetslipDisclosure } from "@/components/compliance";
-import { ReactionBar, RoundThread } from "@/components/group-chat";
+import { ReactionBar } from "@/components/group-chat";
 import { Button, Card, ErrorText, OptionRow } from "@/components/ui";
 import { colors } from "@/config";
 import { copy } from "@/lib/copy";
@@ -397,7 +397,7 @@ export function AccaSummary({
       <View style={styles.accaCard}>
         <View style={styles.accaMain}>
           <Text style={styles.accaLabel}>
-            {preview ? "Provisional combined odds" : "Locked combined odds"}
+            {preview ? "Current combined odds" : "Locked combined odds"}
           </Text>
           <Text style={styles.accaOdds}>{formatOdds(combinedOdds)}</Text>
           {singleBookmaker && bookmakerName ? (
@@ -412,7 +412,7 @@ export function AccaSummary({
           ) : null}
           {preview ? (
             <Text style={styles.meta}>
-              Live preview from legs so far. Final bookmaker locks when the bet closes.
+              Based on legs submitted so far. Final odds lock when the bet closes.
             </Text>
           ) : null}
           {!singleBookmaker && !preview ? (
@@ -438,7 +438,6 @@ export function AccaSummary({
           >
             <Text style={styles.sectionTitle}>
               Compare bookmakers ({bookmakerRankings.length})
-              {preview ? " · provisional" : ""}
             </Text>
             <Svg
               width={16}
@@ -943,12 +942,10 @@ export function RoundHistory({
   rounds,
   onViewAll,
   title = "Recent settled bets",
-  token,
 }: {
   rounds: HistoryRound[];
   onViewAll?: () => void;
   title?: string;
-  token?: string;
 }) {
   if (rounds.length === 0) return null;
 
@@ -1027,28 +1024,9 @@ export function RoundHistory({
               </View>
               );
             })}
-            {token ? <HistoryChat roundId={round.id} token={token} /> : null}
           </View>
         );
       })}
-    </View>
-  );
-}
-
-function HistoryChat({ roundId, token }: { roundId: string; token: string }) {
-  const [shown, setShown] = useState(false);
-  return (
-    <View>
-      <Pressable onPress={() => setShown((current) => !current)}>
-        <Text style={styles.viewAll}>
-          {shown ? "Hide group chat" : "Relive the group chat"}
-        </Text>
-      </Pressable>
-      {shown ? (
-        <View style={{ marginTop: 10 }}>
-          <RoundThread roundId={roundId} token={token} readOnly />
-        </View>
-      ) : null}
     </View>
   );
 }

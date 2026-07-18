@@ -91,14 +91,15 @@ export async function unregisterPushNotifications(authToken: string | null) {
 }
 
 export function addNotificationResponseListener(
-  onNavigate: (groupId: string) => void
+  onNavigate: (groupId: string, screen?: string) => void
 ) {
   return Notifications.addNotificationResponseReceivedListener((response) => {
     const data = response.notification.request.content.data as {
       groupId?: string;
+      screen?: string;
     };
     if (data?.groupId) {
-      onNavigate(data.groupId);
+      onNavigate(data.groupId, data.screen);
     }
   });
 }
