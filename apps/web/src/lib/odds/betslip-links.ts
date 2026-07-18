@@ -1,3 +1,4 @@
+import { withAffiliateParams } from "@/lib/odds/affiliate";
 import type { AccaBookmakerRanking } from "@tiki-acca/shared";
 
 export type BetslipLinkQuality = "deeplink" | "hub";
@@ -66,7 +67,8 @@ function normalizeUrl(url: string): string {
 const HUB_URL_SET = new Set(Object.values(BOOKMAKER_HUB_URLS).map(normalizeUrl));
 
 export function bookmakerHubUrl(bookmakerId: string): string | null {
-  return BOOKMAKER_HUB_URLS[bookmakerId] ?? null;
+  // Hub fallbacks carry affiliate tags too.
+  return withAffiliateParams(BOOKMAKER_HUB_URLS[bookmakerId] ?? null, bookmakerId);
 }
 
 /** True when URL is a known generic football hub (not a selection/event deeplink). */
@@ -151,7 +153,12 @@ export function buildRoundBetslipLinks(
       legs,
       ranking.bookmakerId
     );
-    return { ...ranking, url, hasAllLegLinks, linkQuality };
+    return {
+      ...ranking,
+      url: withAffiliateParams(url, ranking.bookmakerId),
+      hasAllLegLinks,
+      linkQuality,
+    };
   });
 
   const primaryBookmakerId = bestBookmakerId ?? rankedLinks[0]?.bookmakerId ?? null;
@@ -159,7 +166,10 @@ export function buildRoundBetslipLinks(
     ? rankedLinkForBookmaker(legs, primaryBookmakerId)
     : { url: null, hasAllLegLinks: false, linkQuality: null as BetslipLinkQuality | null };
   const primaryRank = rankedLinks.find((r) => r.bookmakerId === primaryBookmakerId);
-  const primaryLink = primaryResolved.url ?? primaryRank?.url ?? null;
+  const primaryLink = withAffiliateParams(
+    primaryResolved.url ?? primaryRank?.url ?? null,
+    primaryBookmakerId
+  );
   const primaryLinkQuality =
     primaryResolved.linkQuality ?? primaryRank?.linkQuality ?? null;
   const primaryHasAllLegLinks =
@@ -174,7 +184,7 @@ export function buildRoundBetslipLinks(
       userName: leg.user.name,
       selectionLabel: leg.selectionLabel,
       fixtureLabel: `${leg.homeTeam} vs ${leg.awayTeam}`,
-      url: preferred,
+      url: withAffiliateParams(preferred, primaryBookmakerId),
       linkQuality: preferred ? "deeplink" : null,
     };
   });

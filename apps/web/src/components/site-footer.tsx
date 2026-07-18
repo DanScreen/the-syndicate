@@ -11,6 +11,8 @@ export function GamblingFooter() {
         <p className="mt-2 max-w-2xl">
           Tiki Acca helps groups coordinate accumulator ideas. We do not take
           bets or handle money. You place bets directly with licensed bookmakers.
+          We may earn commission if you sign up or bet via bookmaker links on
+          this site.
         </p>
         <p className="mt-3">
           Need support? Visit{" "}
