@@ -65,7 +65,7 @@ Match sync + odds warm: Cloud Scheduler (Terraform) → `POST /api/internal/sync
 | Scoring | `packages/shared/src/scoring.ts` |
 | Competitions catalogue | `packages/shared/src/competitions.ts` |
 | Platform admin | `apps/web/src/lib/admin.ts`, `lib/admin/`, `lib/competitions/settings.ts`, `app/admin/`, `components/admin-*` |
-| Analytics | `apps/web/src/lib/analytics.ts`, `components/analytics/page-view.tsx` |
+| Analytics | `apps/web/src/lib/analytics.ts`, global web tracker in `components/analytics/authenticated-page-tracker.tsx`, mobile tracker in `apps/mobile/src/analytics/activity-tracker.tsx`, admin report at `/admin/activity` |
 
 ### What's next (July 2026)
 
@@ -103,7 +103,7 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 | Dashboard cross-group stats + share cards | ✅ |
 | Split app layout (Groups / Performance nav; group tabs) | ✅ |
 | Platform admin dashboard + leaderboards (`/admin`) | ✅ |
-| Product analytics (logins, signups, page views) | ✅ |
+| Product analytics (per-user web/mobile logins, 30-minute visits, page/screen views, last active) | ✅ |
 | Marketing site (homepage, about, Turf Green + Triangle rondo logo) | ✅ |
 | Points-first stats UX + stake → profit converter | ✅ |
 | Locked round UX: picks first, locked odds, bookmaker comparison until first result, in-progress leg results | ✅ |
@@ -217,6 +217,7 @@ Protected routes enforced in `apps/web/src/middleware.ts` / `auth.config.ts`: `/
 | `/dashboard` | **Groups home** — list of user's groups; **group/your points**; **current betslip** legs (fixture, market, selection, odds); waiting status if you haven't picked |
 | `/performance` | Cross-group stats (`DashboardStats`) — group filter dropdown, charts, share cards |
 | `/admin` | **Admin** — platform metrics (admin role only) |
+| `/admin/activity` | **Admin** — per-user web/mobile logins, visits, page/screen views, and last activity |
 | `/admin/settlement` | **Admin** — settlement queue: locked rounds, overdue legs (2h+ after KO), manual settle |
 | `/admin/leaderboards` | **Admin** — group & player rankings by points |
 | `/admin/competitions` | **Admin** — enable/disable competitions in leg picker |
@@ -313,7 +314,7 @@ Members can change **their own leg** via `PATCH /api/legs/[id]` while the round 
 
 → Full spec: [specs/platform-admin.md](./specs/platform-admin.md)
 
-Platform admins (`User.role = admin`) see an **Admin** tab with **Overview** and **Leaderboards**.
+Platform admins (`User.role = admin`) see an **Admin** area including Overview, Activity, Settlement, Leaderboards, Competitions, and Odds.
 
 **Granting admin:** set `ADMIN_EMAILS` (comma-separated) in env. Matching users promoted on sign-up or sign-in. Session role refreshes from DB on each request (no re-login needed).
 
@@ -328,6 +329,8 @@ Platform admins (`User.role = admin`) see an **Admin** tab with **Overview** and
 | Logins (7d/30d) | `AnalyticsEvent` type `login` |
 | Page views (7d/30d) | `AnalyticsEvent` type `page_view` |
 
+`/admin/activity` lists every customer with searchable, sortable, paginated lifetime counts split by web and mobile: logins, 30-minute visits, page/screen views, legacy unknown-channel logins, joined date, last login, and last active. The channel filter limits the list to customers with activity on that channel.
+
 ### Leaderboards (`/admin/leaderboards`)
 
 | Leaderboard | Ranked by |
@@ -339,7 +342,7 @@ Admin-only for now; public rollout planned when user base grows.
 
 ### Analytics events
 
-`AnalyticsEvent` table: `sign_up`, `login`, `page_view`. Recorded on sign-up, sign-in (web + mobile), and server-rendered page loads.
+`AnalyticsEvent` table: `sign_up`, `login`, `visit`, `page_view`, `app_open`. New events carry `channel: web | mobile`; historical page views are backfilled as web, while pre-migration logins remain null/legacy because their original channel cannot be recovered. Global authenticated trackers capture App Router navigation and mobile route/foreground activity. A visit begins after 30 minutes without page/screen activity; PostgreSQL advisory locking prevents duplicate starts across tabs or instances. Paths exclude query strings and normalise dynamic group/blog IDs. No IP address, device fingerprint, referrer, or third-party analytics identifier is stored.
 
 ### Key files
 
@@ -358,7 +361,7 @@ Admin-only for now; public rollout planned when user base grows.
 | `GET /api/admin/stats` | JSON overview (admin session) |
 | `GET /api/admin/leaderboards` | JSON leaderboards (admin session) |
 
-**Analytics limitations:** page views on server render only (not in-group tab switches). See spec for details.
+**Analytics coverage:** global authenticated web/mobile trackers include client navigation and group-tab changes. Pre-migration data remains partial; see Known limitations and the platform-admin spec.
 
 ---
 
@@ -431,7 +434,7 @@ Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `Analytics
 - `User.firstName` / `User.lastName` — collected at sign-up; header greeting uses first name only (`lib/user-display.ts`).
 - `User.name` — full display name (`firstName lastName`) for leaderboards, picks, emails.
 - `User.role` — platform role: `user` (default) or `admin` (via `ADMIN_EMAILS`).
-- `AnalyticsEvent` — lightweight product analytics (`type`, `userId?`, `path?`, `createdAt`).
+- `AnalyticsEvent` — first-party customer activity (`type`, `userId?`, `channel?`, normalised `path?`, `createdAt`), indexed by user/channel/time. The authenticated ingest route derives user and channel server-side.
 - `Group.legsPerMember` — 1–3 (default 1); owner create / Settings.
 - `Group.maxActiveBets` — owner-selected 1–5 (default 1); counts `open` + `locked` rounds. Above 1, any member may create a bet if below the cap and every existing open bet has a leg.
 - `Round.betNumber` — stable group-scoped `Bet #N` display number; backfilled for existing rounds.
@@ -473,6 +476,7 @@ Recent migrations include `20260718190000_concurrent_group_bets` and `2026071819
 | `GET /api/groups/[id]/members/[userId]/stats` | Member | Member breakdown + favourites |
 | `GET /api/user/stats` | Session | Cross-group performance stats |
 | `GET/PATCH /api/user/notification-preferences` | Session | Notification toggles |
+| `POST /api/analytics/events` | Session / mobile bearer | Record an authenticated page/screen view or mobile foreground event; derives channel and 30-minute visits server-side |
 | `POST /api/auth/mobile/sign-in` | Public (rate-limited) | Create revocable persistent mobile session |
 | `POST /api/auth/mobile/refresh` | Mobile bearer | Upgrade a valid legacy JWT to a persistent session (persistent tokens pass through) |
 | `POST /api/auth/mobile/sign-out` | Mobile bearer | Revoke the current device session |
@@ -507,6 +511,7 @@ Recent migrations include `20260718190000_concurrent_group_bets` and `2026071819
 11. **Auth JWT** — middleware uses edge-safe `auth.config.ts` (no Prisma); `auth.ts` refreshes `role` from DB on each session update.
 12. **Chat realtime** — the permanent group thread polls every 20 seconds while the Chat tab is visible; no WebSocket/SSE, typing indicators, read receipts, media, or reaction notifications in v1. Chat push needs Expo/APNs/FCM setup on a physical device.
 13. **Concurrent-bet notification links** — reminder/lock/settle payloads carry `roundId`, but current web/mobile group URLs do not preselect that bet; the user lands on the group’s default active bet and can switch manually.
+14. **Analytics coverage boundary** — complete authenticated web/mobile navigation and visit tracking starts with migration `20260718213000_customer_activity_tracking`. Earlier identified web page views remain available, but older login events cannot be split reliably between web and mobile and appear as **Legacy logins**.
 
 ## Production checklist (operators)
 

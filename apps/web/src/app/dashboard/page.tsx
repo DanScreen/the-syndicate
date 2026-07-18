@@ -1,5 +1,4 @@
 import { AppHeader } from "@/components/header";
-import { PageView } from "@/components/analytics/page-view";
 import {
   ActiveBetslipSummary,
   ActiveBetsSummary,
@@ -91,7 +90,6 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen">
-      <PageView path="/dashboard" userId={session.user.id} />
       <AppHeader userName={greetingFirstName(user ?? {})} />
       <main className="mx-auto max-w-5xl px-4 py-8">
         <div className="flex flex-wrap items-end justify-between gap-4">

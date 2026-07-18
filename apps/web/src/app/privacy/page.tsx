@@ -74,12 +74,20 @@ export default function PrivacyPage() {
 
           <h2 className="mt-12 font-display text-2xl font-bold">Analytics</h2>
           <p className="mt-4 leading-relaxed text-muted">
-            We record basic in-app events — the event type, the associated account
-            (when you are signed in), and the page path — in our own database to
-            understand how the product is used and improve it. This is{" "}
+            When you are signed in, we record basic activity events — including
+            logins, visits, page or app-screen views, whether you used the website
+            or mobile app, the associated account, and a normalised page path — in
+            our own database to understand how the product is used and improve it.
+            Query strings and dynamic group identifiers are removed. This is{" "}
             <strong className="text-foreground">first-party and cookieless</strong>:
             we do not use third-party analytics, advertising pixels, or social-media
             trackers.
+          </p>
+          <p className="mt-4 leading-relaxed text-muted">
+            We do not collect IP addresses, device fingerprints, referrers, or
+            advertising identifiers for analytics. Customer-level activity is
+            restricted to platform administrators and is retained under the same
+            account-data policy described below.
           </p>
 
           <h2 className="mt-12 font-display text-2xl font-bold">

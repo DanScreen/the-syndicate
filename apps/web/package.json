@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "node --env-file-if-exists=.env.local --import tsx --test --test-force-exit src/lib/chat/exactly-once.test.ts src/lib/chat/group-scope.test.ts src/lib/chat/leg-removal.test.ts src/lib/odds/fixture-conflicts.test.ts src/lib/odds/merge-markets.test.ts src/lib/rounds/create-additional-round.test.ts",
+    "test": "node --env-file-if-exists=.env.local --import tsx --test --test-force-exit src/lib/analytics.test.ts src/lib/chat/exactly-once.test.ts src/lib/chat/group-scope.test.ts src/lib/chat/leg-removal.test.ts src/lib/odds/fixture-conflicts.test.ts src/lib/odds/merge-markets.test.ts src/lib/rounds/create-additional-round.test.ts",
     "db:maintenance": "npx tsx scripts/data-maintenance.ts"
   },
   "dependencies": {

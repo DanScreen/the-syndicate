@@ -44,7 +44,11 @@ export async function POST(request: Request) {
     }
 
     await resolveUserRole(user.id, user.email, user.role);
-    recordAnalyticsEventAsync({ type: "login", userId: user.id });
+    recordAnalyticsEventAsync({
+      type: "login",
+      userId: user.id,
+      channel: "mobile",
+    });
 
     const token = await createMobileToken({
       id: user.id,
