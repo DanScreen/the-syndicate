@@ -129,7 +129,7 @@ export default function GroupSettingsPage() {
           </div>
         </fieldset>
 
-        {error && <p className="text-sm text-red-400">{error}</p>}
+        {error && <p className="text-sm text-danger">{error}</p>}
         {savedNote && <p className="text-sm text-accent">{savedNote}</p>}
 
         <button
@@ -139,7 +139,7 @@ export default function GroupSettingsPage() {
             (legsPerMember === data.group.legsPerMember &&
               legsPerMember === currentEffective)
           }
-          className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-black hover:bg-green-400 disabled:opacity-50"
+          className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-on-accent hover:bg-accent-bright disabled:opacity-50"
         >
           {saving ? "Saving..." : "Save settings"}
         </button>

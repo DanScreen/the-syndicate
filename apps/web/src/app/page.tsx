@@ -63,7 +63,7 @@ export default async function HomePage() {
             <div className="flex items-center gap-2 border-b border-border px-4 py-3">
               <span className="h-2.5 w-2.5 rounded-full bg-red-500/70" />
               <span className="h-2.5 w-2.5 rounded-full bg-amber-500/70" />
-              <span className="h-2.5 w-2.5 rounded-full bg-accent/70" />
+              <span className="h-2.5 w-2.5 rounded-full bg-green-500/70" />
               <span className="ml-2 text-xs text-muted">Saturday Squad · Round locked</span>
             </div>
             <div className="grid gap-px bg-border md:grid-cols-3">
@@ -86,7 +86,7 @@ export default async function HomePage() {
                 <p className="text-xs uppercase tracking-wide text-muted">Combined odds</p>
                 <p className="text-2xl font-bold text-accent">5.26</p>
               </div>
-              <span className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-black">
+              <span className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent">
                 Open betslip
               </span>
             </div>
@@ -175,7 +175,7 @@ export default async function HomePage() {
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <MarketingCtas
               signedIn={signedIn}
-              primaryClassName="rounded-xl bg-accent px-8 py-3.5 font-medium text-black transition-colors hover:bg-accent-bright"
+              primaryClassName="rounded-xl bg-accent px-8 py-3.5 font-medium text-on-accent transition-colors hover:bg-accent-bright"
               secondaryClassName="rounded-xl border border-border px-8 py-3.5 font-medium transition-colors hover:bg-card"
             />
           </div>

@@ -4,7 +4,7 @@ Visual identity for Tiki Acca.
 
 **Renamed (July 2026):** **The Syndicate → Tiki Acca** — tiki-taka pun; everyone touches the ball, each member adds one leg. Groups are called **"groups"** (the noun "syndicate" is retired). Full rationale + rename scope: [specs/rename-tiki-acca.md](./specs/rename-tiki-acca.md). Legacy internals that deliberately keep old names: GCP resources (Cloud SQL `the_syndicate`, Cloud Run `the-syndicate-web`, artifact repo), mobile SecureStore keys, GitHub repo name, `lib/brand/archive.ts` history.
 
-**Locked (July 2026):** Turf Green palette + **Triangle rondo** logo (replaced the Acca stack at the Tiki Acca rename — see [brand/tiki-logo-review/](./brand/tiki-logo-review/LOGO_REVIEW.md)).
+**Palette (July 2026):** **Floodlight** — sky-blue accent on floodlit navy, chosen from the eight-scheme exploration (replaced Turf Green, which had doubled as both brand and success colour). Logo remains the **Triangle rondo** (see [brand/tiki-logo-review/](./brand/tiki-logo-review/LOGO_REVIEW.md)).
 
 **Messaging & copy direction:** [MARKETING_BRIEF.md](./MARKETING_BRIEF.md) — positioning territories, tagline options, homepage/about page structure (draft, tagline decision open).
 
@@ -46,18 +46,37 @@ Loaded in `apps/web/src/app/layout.tsx`.
 
 ---
 
-## Colour — Turf Green
+## Colour — Floodlight
 
-Tokens in `apps/web/src/app/globals.css` and `packages/shared/src/brand.ts` (mobile imports `BRAND_COLORS`):
+Source of truth: `BRAND_COLORS` in `packages/shared/src/brand.ts`. The web app mirrors
+it as CSS variables in `apps/web/src/app/globals.css`; mobile imports `BRAND_COLORS`
+directly. `npm run check:brand` (also run by `npm run lint`) fails if the two drift —
+`node scripts/check-brand-sync.mjs --fix-hint` prints the expected `:root` block.
 
 | Token | Value | Usage |
 |-------|-------|-------|
-| Background | `#0b1220` | Page background |
-| Card | `#111827` | Cards, header |
-| Accent | `#22c55e` | CTAs, highlights |
-| Accent bright | `#4ade80` | Hover states |
+| Background | `#091422` | Page background |
+| Card | `#0f1b2d` | Cards, header |
+| Accent | `#38bdf8` | CTAs, highlights (brand only — never win/loss state) |
+| Accent bright | `#7dd3fc` | Hover states |
 | Foreground | `#f1f5f9` | Body text |
-| Muted | `#94a3b8` | Secondary text |
+| Muted | `#8fa3bb` | Secondary text |
+| Success / strong | `#4ade80` / `#22c55e` | Won legs, positive points (text / surface-border) |
+| Danger / strong | `#f87171` / `#ef4444` | Lost legs, errors, unread badge (text / surface-border) |
+| Warning | `#fbbf24` | Waiting/attention copy |
+| On accent | `#000000` | Text on accent-filled CTAs |
+
+Semantic tones are independent of the accent: won/lost/waiting states keep their green,
+red, and amber regardless of the brand colour (this is what made the Turf Green →
+Floodlight switch safe).
+
+**Re-theme procedure:** update `BRAND_COLORS` in `packages/shared/src/brand.ts`; run
+`node scripts/check-brand-sync.mjs --fix-hint` and paste the printed block into
+`globals.css` (re-tint `--glow` to the new accent); update the two fills in
+`app/icon.svg`; run `npm run generate:brand-assets` to regenerate `favicon.ico` and
+`apps/mobile/assets/*.png`; bump the `?v=` favicon cache-bust in `layout.tsx`; update
+the table above. Check `apps/mobile/app.json` (splash/adaptive-icon backgrounds,
+Android notification colour) — it can't import `BRAND_COLORS`.
 
 ---
 

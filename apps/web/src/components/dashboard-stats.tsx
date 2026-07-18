@@ -9,7 +9,7 @@ import {
 } from "@/lib/stats/compute-user-stats";
 import { ShareCard } from "@/components/share-card";
 import { StakeProfit } from "@/components/stake-profit";
-import { formatLegPoints } from "@tiki-acca/shared";
+import { BRAND_COLORS, formatLegPoints } from "@tiki-acca/shared";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -73,7 +73,7 @@ function CategoryRow({
             <span className="text-muted/80"> ({bestWorst.best.legs})</span>
           </p>
           <p>
-            Worst: <span className="text-red-400">{bestWorst.worst.key}</span>
+            Worst: <span className="text-danger">{bestWorst.worst.key}</span>
             {" · "}
             {formatLegPoints(bestWorst.worst.avgPoints)} avg / leg
             <span className="text-muted/80"> ({bestWorst.worst.legs})</span>
@@ -255,27 +255,27 @@ export function DashboardStats({ userName }: { userName: string }) {
           <div className="h-48 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chart} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                <CartesianGrid stroke="#1f2937" strokeDasharray="3 3" />
+                <CartesianGrid stroke={BRAND_COLORS.border} strokeDasharray="3 3" />
                 <XAxis
                   dataKey="roundNumber"
                   tickFormatter={(n: number) => (n === 0 ? "Start" : String(n))}
-                  tick={{ fill: "#94a3b8", fontSize: 11 }}
+                  tick={{ fill: BRAND_COLORS.muted, fontSize: 11 }}
                   tickLine={false}
-                  axisLine={{ stroke: "#1f2937" }}
+                  axisLine={{ stroke: BRAND_COLORS.border }}
                 />
                 <YAxis
-                  tick={{ fill: "#94a3b8", fontSize: 11 }}
+                  tick={{ fill: BRAND_COLORS.muted, fontSize: 11 }}
                   tickLine={false}
-                  axisLine={{ stroke: "#1f2937" }}
+                  axisLine={{ stroke: BRAND_COLORS.border }}
                   width={36}
                 />
                 <Tooltip content={<ChartTooltip />} />
                 <Line
                   type="monotone"
                   dataKey="cumulativePoints"
-                  stroke="#22c55e"
+                  stroke={BRAND_COLORS.accent}
                   strokeWidth={2}
-                  dot={{ fill: "#22c55e", r: 3 }}
+                  dot={{ fill: BRAND_COLORS.accent, r: 3 }}
                 />
               </LineChart>
             </ResponsiveContainer>

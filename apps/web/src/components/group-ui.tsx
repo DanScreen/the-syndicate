@@ -89,8 +89,8 @@ function legOutcomeLabel(outcome: string): string {
 }
 
 function legOutcomeClass(outcome: string): string {
-  if (outcome === "won") return "border-green-500/40 bg-green-500/10 text-green-400";
-  if (outcome === "lost") return "border-red-500/40 bg-red-500/10 text-red-400";
+  if (outcome === "won") return "border-success-strong/40 bg-success-strong/10 text-success";
+  if (outcome === "lost") return "border-danger-strong/40 bg-danger-strong/10 text-danger";
   if (outcome === "void") return "border-border bg-card text-muted";
   return "border-border bg-card text-muted";
 }
@@ -400,7 +400,7 @@ export function SubmitLegForm({
       )}
 
       {source === "live" && !oddsConfigured && process.env.NODE_ENV === "development" && (
-        <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+        <div className="rounded-lg border border-danger-strong/30 bg-danger-strong/10 px-4 py-3 text-sm text-red-200">
           Live odds are not configured locally. Add <code className="text-red-100">ODDS_API_KEY</code> to{" "}
           <code className="text-red-100">apps/web/.env.local</code>.
         </div>
@@ -479,7 +479,7 @@ export function SubmitLegForm({
             <p className="text-sm text-muted">Loading popular markets…</p>
           )}
           {marketsError && (
-            <p className="text-sm text-amber-400">{marketsError}</p>
+            <p className="text-sm text-warning">{marketsError}</p>
           )}
           {marketGroups.map((group) => (
             <div key={group.id} className="space-y-2">
@@ -583,11 +583,11 @@ export function SubmitLegForm({
         </p>
       )}
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
       <button
         type="submit"
         disabled={loading || !selectionId}
-        className="w-full rounded-lg bg-accent py-2.5 text-sm font-medium text-black hover:bg-green-400 disabled:opacity-50"
+        className="w-full rounded-lg bg-accent py-2.5 text-sm font-medium text-on-accent hover:bg-accent-bright disabled:opacity-50"
       >
         {loading
           ? editLegId
@@ -704,7 +704,7 @@ export function AccaSummary({
             </p>
           ) : null}
           {!singleBookmaker && !preview && (
-            <p className="mt-0.5 text-xs text-amber-400">
+            <p className="mt-0.5 text-xs text-warning">
               {inProgress ? "Best per-leg odds locked at submission" : "Place legs individually"}
             </p>
           )}
@@ -715,7 +715,7 @@ export function AccaSummary({
               href={betslipLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-black hover:bg-green-400"
+              className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-on-accent hover:bg-accent-bright"
             >
               {ctaLabel}
             </a>
@@ -779,7 +779,7 @@ export function AccaSummary({
                           {entry.bookmakerName}
                         </span>
                         {qualityHint ? (
-                          <span className="text-xs text-amber-400">{qualityHint}</span>
+                          <span className="text-xs text-warning">{qualityHint}</span>
                         ) : null}
                       </span>
                     </span>

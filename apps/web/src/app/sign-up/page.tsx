@@ -134,11 +134,11 @@ function SignUpForm() {
             required
           />
         </div>
-        {error && <p className="text-sm text-red-400">{String(error)}</p>}
+        {error && <p className="text-sm text-danger">{String(error)}</p>}
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-lg bg-accent py-2.5 font-medium text-black hover:bg-green-400 disabled:opacity-50"
+          className="w-full rounded-lg bg-accent py-2.5 font-medium text-on-accent hover:bg-accent-bright disabled:opacity-50"
         >
           {loading ? "Creating..." : "Create account"}
         </button>

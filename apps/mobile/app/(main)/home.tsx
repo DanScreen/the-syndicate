@@ -201,7 +201,7 @@ export default function GroupsScreen() {
 
 function pointsStyle(value: number) {
   const tone = pointsTone(value);
-  if (tone === "positive") return { color: colors.accent };
+  if (tone === "positive") return { color: colors.success };
   if (tone === "negative") return { color: colors.danger };
   return { color: colors.muted };
 }
@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   outcomeWon: {
-    color: colors.accent,
+    color: colors.success,
     fontWeight: "600",
   },
   outcomeLost: {
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   waitingOpen: {
-    color: "#fbbf24",
+    color: colors.warning,
     fontSize: 13,
     lineHeight: 18,
     marginTop: 4,

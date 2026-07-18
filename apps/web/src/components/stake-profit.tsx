@@ -40,7 +40,7 @@ export function StakeProfit({ points, className }: StakeProfitProps) {
         </label>
         <span
           className={`text-lg font-semibold tabular-nums ${
-            profit >= 0 ? "text-accent" : "text-red-400"
+            profit >= 0 ? "text-success" : "text-danger"
           }`}
         >
           {formatProfitGbp(profit)}

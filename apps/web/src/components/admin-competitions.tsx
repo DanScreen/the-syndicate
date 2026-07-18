@@ -66,7 +66,7 @@ export function AdminCompetitionsPanel() {
       </p>
 
       {error && (
-        <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-lg border border-danger-strong/40 bg-danger-strong/10 px-4 py-3 text-sm text-red-300">
           {error}
         </div>
       )}

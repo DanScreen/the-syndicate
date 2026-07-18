@@ -6,8 +6,8 @@ import {
 } from "@tiki-acca/shared";
 
 export function toneTextClass(tone: PointsTone): string {
-  if (tone === "positive") return "text-accent";
-  if (tone === "negative") return "text-red-400";
+  if (tone === "positive") return "text-success";
+  if (tone === "negative") return "text-danger";
   return "text-muted";
 }
 

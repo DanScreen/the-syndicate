@@ -30,7 +30,7 @@ function SignedOutJoinPrompt({ inviteCode }: { inviteCode: string }) {
       <div className="flex flex-col gap-2 sm:flex-row">
         <Link
           href={withCallbackUrl("/sign-in", returnTo)}
-          className="inline-flex flex-1 items-center justify-center rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-black hover:bg-accent-bright"
+          className="inline-flex flex-1 items-center justify-center rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-on-accent hover:bg-accent-bright"
         >
           Sign in
         </Link>
@@ -119,11 +119,11 @@ function JoinGroupForm({ inviteCode: initialCode }: { inviteCode: string }) {
           required
         />
       </div>
-      {error && <p className="text-sm text-red-400">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-lg bg-accent py-2.5 font-medium text-black hover:bg-green-400 disabled:opacity-50"
+        className="w-full rounded-lg bg-accent py-2.5 font-medium text-on-accent hover:bg-accent-bright disabled:opacity-50"
       >
         {loading ? "Joining..." : "Join group"}
       </button>

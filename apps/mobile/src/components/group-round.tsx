@@ -96,14 +96,14 @@ function outcomeColors(outcome: string) {
 
 function pointsStyle(value: number) {
   const tone = pointsTone(value);
-  if (tone === "positive") return { color: colors.accent };
+  if (tone === "positive") return { color: colors.success };
   if (tone === "negative") return { color: colors.danger };
   return { color: colors.muted };
 }
 
 function outcomePointsStyle(outcome: string) {
   const tone = pointsToneFromOutcome(outcome);
-  if (tone === "positive") return { color: colors.accent };
+  if (tone === "positive") return { color: colors.success };
   if (tone === "negative") return { color: colors.danger };
   return { color: colors.muted };
 }
@@ -1008,7 +1008,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   warnText: {
-    color: "#fbbf24",
+    color: colors.warning,
     fontSize: 13,
     marginTop: 4,
   },

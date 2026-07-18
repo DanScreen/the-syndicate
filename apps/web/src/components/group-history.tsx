@@ -20,8 +20,8 @@ function legOutcomeLabel(outcome: string): string {
 }
 
 function legOutcomeClass(outcome: string): string {
-  if (outcome === "won") return "border-green-500/40 bg-green-500/10 text-green-400";
-  if (outcome === "lost") return "border-red-500/40 bg-red-500/10 text-red-400";
+  if (outcome === "won") return "border-success-strong/40 bg-success-strong/10 text-success";
+  if (outcome === "lost") return "border-danger-strong/40 bg-danger-strong/10 text-danger";
   if (outcome === "void") return "border-border bg-card text-muted";
   return "border-border bg-card text-muted";
 }

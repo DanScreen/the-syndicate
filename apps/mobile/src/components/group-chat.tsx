@@ -576,7 +576,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   send: { backgroundColor: colors.accent, borderRadius: 8, paddingHorizontal: 14, paddingVertical: 11 },
-  sendText: { color: "#000", fontSize: 13, fontWeight: "600" },
+  sendText: { color: colors.onAccent, fontSize: 13, fontWeight: "600" },
   disabled: { opacity: 0.5 },
   pressed: { opacity: 0.8 },
   error: { color: colors.danger, fontSize: 12, paddingHorizontal: 12, paddingBottom: 10 },

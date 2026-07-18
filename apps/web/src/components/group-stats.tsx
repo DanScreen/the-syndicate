@@ -5,7 +5,7 @@ import type { MemberChartPoint, MemberSeries } from "@/lib/stats/compute-member-
 import type { MemberStatsResult } from "@/lib/stats/compute-member-stats";
 import { ShareCard } from "@/components/share-card";
 import { StakeProfit } from "@/components/stake-profit";
-import { formatLegHighlight, formatLegPoints } from "@tiki-acca/shared";
+import { BRAND_COLORS, formatLegHighlight, formatLegPoints } from "@tiki-acca/shared";
 import type { LegHighlight } from "@tiki-acca/shared";
 import { useEffect, useState } from "react";
 import {
@@ -20,7 +20,7 @@ import {
 } from "recharts";
 
 const MEMBER_COLORS = [
-  "#22c55e",
+  BRAND_COLORS.accent,
   "#38bdf8",
   "#fbbf24",
   "#a78bfa",
@@ -150,7 +150,7 @@ function CategoryRow({
           </p>
           <p>
             Worst:{" "}
-            <span className="text-red-400">{bestWorst.worst.key}</span>
+            <span className="text-danger">{bestWorst.worst.key}</span>
             {" · "}
             {formatLegPoints(bestWorst.worst.avgPoints)} avg / leg
             <span className="text-muted/80"> ({bestWorst.worst.legs})</span>
@@ -287,7 +287,7 @@ export function GroupStats({ groupId, groupName }: { groupId: string; groupName?
 
   if (error) {
     return (
-      <div className="rounded-xl border border-border bg-card p-4 text-sm text-red-400">
+      <div className="rounded-xl border border-border bg-card p-4 text-sm text-danger">
         {error}
       </div>
     );
@@ -335,27 +335,27 @@ export function GroupStats({ groupId, groupName }: { groupId: string; groupName?
           </p>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chart} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-              <CartesianGrid stroke="#1f2937" strokeDasharray="3 3" />
+              <CartesianGrid stroke={BRAND_COLORS.border} strokeDasharray="3 3" />
               <XAxis
                 dataKey="roundNumber"
                 tickFormatter={(n: number) => (n === 0 ? "Start" : String(n))}
-                tick={{ fill: "#94a3b8", fontSize: 11 }}
+                tick={{ fill: BRAND_COLORS.muted, fontSize: 11 }}
                 tickLine={false}
-                axisLine={{ stroke: "#1f2937" }}
+                axisLine={{ stroke: BRAND_COLORS.border }}
               />
               <YAxis
-                tick={{ fill: "#94a3b8", fontSize: 11 }}
+                tick={{ fill: BRAND_COLORS.muted, fontSize: 11 }}
                 tickLine={false}
-                axisLine={{ stroke: "#1f2937" }}
+                axisLine={{ stroke: BRAND_COLORS.border }}
                 width={36}
               />
               <Tooltip content={<GroupChartTooltip />} />
               <Line
                 type="monotone"
                 dataKey="cumulativePoints"
-                stroke="#22c55e"
+                stroke={BRAND_COLORS.accent}
                 strokeWidth={2}
-                dot={{ fill: "#22c55e", r: 3 }}
+                dot={{ fill: BRAND_COLORS.accent, r: 3 }}
                 activeDot={{ r: 5 }}
               />
             </LineChart>
@@ -370,18 +370,18 @@ export function GroupStats({ groupId, groupName }: { groupId: string; groupName?
           </p>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={memberChart} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-              <CartesianGrid stroke="#1f2937" strokeDasharray="3 3" />
+              <CartesianGrid stroke={BRAND_COLORS.border} strokeDasharray="3 3" />
               <XAxis
                 dataKey="roundNumber"
                 tickFormatter={(n: number) => (n === 0 ? "Start" : String(n))}
-                tick={{ fill: "#94a3b8", fontSize: 11 }}
+                tick={{ fill: BRAND_COLORS.muted, fontSize: 11 }}
                 tickLine={false}
-                axisLine={{ stroke: "#1f2937" }}
+                axisLine={{ stroke: BRAND_COLORS.border }}
               />
               <YAxis
-                tick={{ fill: "#94a3b8", fontSize: 11 }}
+                tick={{ fill: BRAND_COLORS.muted, fontSize: 11 }}
                 tickLine={false}
-                axisLine={{ stroke: "#1f2937" }}
+                axisLine={{ stroke: BRAND_COLORS.border }}
                 width={36}
               />
               <Tooltip

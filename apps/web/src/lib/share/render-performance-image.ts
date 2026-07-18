@@ -49,7 +49,7 @@ function drawLogoMark(ctx: CanvasRenderingContext2D, x: number, y: number, size:
   // Disc
   ctx.beginPath();
   ctx.arc(110, 110, 106, 0, Math.PI * 2);
-  ctx.fillStyle = "#14532d";
+  ctx.fillStyle = BRAND_COLORS.accentMuted;
   ctx.fill();
 
   // Passes: white line + explicit chevron head. Coordinates are the
@@ -63,7 +63,7 @@ function drawLogoMark(ctx: CanvasRenderingContext2D, x: number, y: number, size:
     { line: [134.53, 84, 96.47, 84], chevron: [96.42, 90.9, 84.47, 84, 96.42, 77.1] },
     { line: [75.22, 101.75, 94.25, 134.72], chevron: [100.25, 131.31, 100.25, 145.11, 88.3, 138.21] },
   ];
-  ctx.strokeStyle = "#f1f5f9";
+  ctx.strokeStyle = BRAND_COLORS.foreground;
   ctx.lineWidth = 10;
   for (const p of passes) {
     ctx.beginPath();
@@ -83,7 +83,7 @@ function drawLogoMark(ctx: CanvasRenderingContext2D, x: number, y: number, size:
     [155.03, 84],
     [64.97, 84],
   ];
-  ctx.fillStyle = "#f1f5f9";
+  ctx.fillStyle = BRAND_COLORS.foreground;
   for (const [dx, dy] of dots) {
     ctx.beginPath();
     ctx.arc(dx, dy, 14.5, 0, Math.PI * 2);
@@ -93,7 +93,7 @@ function drawLogoMark(ctx: CanvasRenderingContext2D, x: number, y: number, size:
   // Centre player being passed around (green)
   ctx.beginPath();
   ctx.arc(110, 110, 13.5, 0, Math.PI * 2);
-  ctx.fillStyle = "#22c55e";
+  ctx.fillStyle = BRAND_COLORS.accent;
   ctx.fill();
 
   ctx.restore();

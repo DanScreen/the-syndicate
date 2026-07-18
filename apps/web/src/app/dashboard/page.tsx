@@ -83,7 +83,7 @@ export default async function DashboardPage() {
             </Link>
             <Link
               href="/groups/create"
-              className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-black hover:bg-green-400"
+              className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:bg-accent-bright"
             >
               Create group
             </Link>
@@ -103,7 +103,7 @@ export default async function DashboardPage() {
             </ol>
             <Link
               href="/groups/create"
-              className="mt-4 inline-block rounded-lg bg-accent px-4 py-2 text-sm font-medium text-black hover:bg-green-400"
+              className="mt-4 inline-block rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:bg-accent-bright"
             >
               Create your first group
             </Link>
@@ -213,7 +213,7 @@ export default async function DashboardPage() {
                       <h3 className="font-semibold">{m.group.name}</h3>
                       <div className="flex items-center gap-2">
                         {unreadMessageCount > 0 ? (
-                          <span className="rounded-full bg-red-500 px-2 py-0.5 text-xs font-medium text-white">
+                          <span className="rounded-full bg-danger-strong px-2 py-0.5 text-xs font-medium text-white">
                             {unreadMessageCount} new
                           </span>
                         ) : null}

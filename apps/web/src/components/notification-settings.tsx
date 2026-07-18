@@ -129,7 +129,7 @@ export function NotificationSettings() {
   }
 
   if (!prefs) {
-    return <p className="text-sm text-red-400">Could not load notification settings.</p>;
+    return <p className="text-sm text-danger">Could not load notification settings.</p>;
   }
 
   return (
@@ -139,7 +139,7 @@ export function NotificationSettings() {
         submit before the acca locks at the first kickoff.
         {saving ? " Saving…" : null}
       </p>
-      {message ? <p className="text-sm text-red-400">{message}</p> : null}
+      {message ? <p className="text-sm text-danger">{message}</p> : null}
 
       {ROWS.map((section) => (
         <section key={section.title} className="space-y-3">
