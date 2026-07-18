@@ -18,7 +18,7 @@ export default async function AdminSettlementPage() {
 
   return (
     <AdminPageShell
-      title="Settlement queue"
+      title="Settlement Queue"
       description={`Locked rounds awaiting system settlement. Legs still unresolved ${OVERDUE_AFTER_HOURS} hours after kickoff are flagged — settle those rounds manually once you've verified the results.`}
       path="/admin/settlement"
     >

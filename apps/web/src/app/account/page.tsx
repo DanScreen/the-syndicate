@@ -18,7 +18,7 @@ export default async function AccountPage() {
       <PageView path="/account" userId={session.user.id} />
       <AppHeader userName={firstName} />
       <main className="mx-auto max-w-lg px-4 py-8">
-        <h1 className="text-2xl font-bold">Account</h1>
+        <h1 className="font-display text-2xl font-bold">Account</h1>
         <p className="mt-2 text-sm text-muted">
           Your profile and preferences.
         </p>

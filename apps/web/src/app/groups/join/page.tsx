@@ -110,8 +110,9 @@ function JoinGroupForm({ inviteCode: initialCode }: { inviteCode: string }) {
   return (
     <form onSubmit={handleSubmit} className="mt-6 space-y-4">
       <div>
-        <label className="text-sm text-muted">Invite code</label>
+        <label htmlFor="invite-code" className="text-sm text-muted">Invite code</label>
         <input
+          id="invite-code"
           value={inviteCode}
           onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
           className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 font-mono tracking-widest"
@@ -125,7 +126,7 @@ function JoinGroupForm({ inviteCode: initialCode }: { inviteCode: string }) {
         disabled={loading}
         className="w-full rounded-lg bg-accent py-2.5 font-medium text-on-accent hover:bg-accent-bright disabled:opacity-50"
       >
-        {loading ? "Joining..." : "Join group"}
+        {loading ? "Joining…" : "Join group"}
       </button>
     </form>
   );
@@ -144,7 +145,7 @@ function JoinGroupContent() {
         <MarketingHeader />
       )}
       <main className="mx-auto max-w-md px-4 py-8">
-        <h1 className="text-2xl font-bold">Join a group</h1>
+        <h1 className="font-display text-2xl font-bold">Join A Group</h1>
         <p className="mt-2 text-sm text-muted">
           {status === "unauthenticated"
             ? "You've been invited to a Tiki Acca group."
@@ -170,7 +171,7 @@ export default function JoinGroupPage() {
           <>
             <MarketingHeader />
             <main className="mx-auto max-w-md px-4 py-8">
-              <h1 className="text-2xl font-bold">Join a group</h1>
+              <h1 className="font-display text-2xl font-bold">Join A Group</h1>
               <p className="mt-6 text-sm text-muted">Loading...</p>
             </main>
           </>

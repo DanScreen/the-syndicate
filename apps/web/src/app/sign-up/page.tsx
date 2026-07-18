@@ -60,7 +60,7 @@ function SignUpForm() {
 
   return (
     <>
-      <h1 className="text-2xl font-bold">Create account</h1>
+      <h1 className="font-display text-2xl font-bold">Create Account</h1>
       <p className="mt-2 text-sm text-muted">
         {joiningGroup
           ? "Create an account to join the group you were invited to. Already have one? "
@@ -76,8 +76,9 @@ function SignUpForm() {
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-sm text-muted">First name</label>
+            <label htmlFor="signup-first-name" className="text-sm text-muted">First name</label>
             <input
+              id="signup-first-name"
               type="text"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
@@ -87,8 +88,9 @@ function SignUpForm() {
             />
           </div>
           <div>
-            <label className="text-sm text-muted">Last name</label>
+            <label htmlFor="signup-last-name" className="text-sm text-muted">Last name</label>
             <input
+              id="signup-last-name"
               type="text"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
@@ -99,8 +101,9 @@ function SignUpForm() {
           </div>
         </div>
         <div>
-          <label className="text-sm text-muted">Email</label>
+          <label htmlFor="signup-email" className="text-sm text-muted">Email</label>
           <input
+            id="signup-email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -110,8 +113,9 @@ function SignUpForm() {
           />
         </div>
         <div>
-          <label className="text-sm text-muted">Date of birth</label>
+          <label htmlFor="signup-dob" className="text-sm text-muted">Date of birth</label>
           <input
+            id="signup-dob"
             type="date"
             value={dateOfBirth}
             onChange={(e) => setDateOfBirth(e.target.value)}
@@ -123,8 +127,9 @@ function SignUpForm() {
           <p className="mt-1 text-xs text-muted">You must be {MIN_SIGN_UP_AGE} or over to play.</p>
         </div>
         <div>
-          <label className="text-sm text-muted">Password (min 8 chars)</label>
+          <label htmlFor="signup-password" className="text-sm text-muted">Password (min 8 chars)</label>
           <input
+            id="signup-password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -140,7 +145,7 @@ function SignUpForm() {
           disabled={loading}
           className="w-full rounded-lg bg-accent py-2.5 font-medium text-on-accent hover:bg-accent-bright disabled:opacity-50"
         >
-          {loading ? "Creating..." : "Create account"}
+          {loading ? "Creating…" : "Create account"}
         </button>
       </form>
     </>

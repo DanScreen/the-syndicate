@@ -66,7 +66,7 @@ export default function GroupHistoryScreen() {
         />
       }
     >
-      <Text style={styles.title}>Bet history</Text>
+      <Text style={styles.title}>Bet History</Text>
       <Text style={styles.subtitle}>
         Every settled acca — fixtures, markets, and outcomes.
       </Text>

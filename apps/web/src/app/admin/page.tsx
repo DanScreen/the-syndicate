@@ -13,7 +13,7 @@ export default async function AdminPage() {
 
   return (
     <AdminPageShell
-      title="Platform overview"
+      title="Platform Overview"
       description="Product metrics from the database and lightweight analytics events."
       path="/admin"
     >

@@ -80,7 +80,7 @@ export default function GroupSettingsPage() {
   return (
     <div className="mx-auto max-w-lg space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">Group settings</h2>
+        <h2 className="text-xl font-semibold">Group Settings</h2>
         <p className="mt-1 text-sm text-muted">
           Configure how your group builds each acca.
         </p>
@@ -141,7 +141,7 @@ export default function GroupSettingsPage() {
           }
           className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-on-accent hover:bg-accent-bright disabled:opacity-50"
         >
-          {saving ? "Saving..." : "Save settings"}
+          {saving ? "Saving…" : "Save settings"}
         </button>
       </form>
     </div>

@@ -33,7 +33,7 @@ export default function CreateGroupScreen() {
 
   return (
     <Screen>
-      <Title>Create group</Title>
+      <Title>Create Group</Title>
       <Subtitle>Start a new acca squad</Subtitle>
       <Field placeholder="Group name" value={name} onChangeText={setName} />
       <Text style={styles.label}>Legs per member</Text>

@@ -65,7 +65,7 @@ export default function CookiesPage() {
             purposes.
           </p>
 
-          <h2 className="mt-12 font-display text-2xl font-bold">Cookies we set</h2>
+          <h2 className="mt-12 font-display text-2xl font-bold">Cookies We Set</h2>
         </section>
 
         <div className="mt-6 overflow-x-auto">
@@ -98,7 +98,7 @@ export default function CookiesPage() {
             <code>__Secure-</code> or <code>__Host-</code> prefix.
           </p>
 
-          <h2 className="mt-12 font-display text-2xl font-bold">Managing cookies</h2>
+          <h2 className="mt-12 font-display text-2xl font-bold">Managing Cookies</h2>
           <p className="mt-4 leading-relaxed text-muted">
             Because these cookies are essential, disabling them in your browser
             will prevent you from signing in and using your account. Most browsers
@@ -106,7 +106,7 @@ export default function CookiesPage() {
             clears your session.
           </p>
 
-          <h2 className="mt-12 font-display text-2xl font-bold">Learn more</h2>
+          <h2 className="mt-12 font-display text-2xl font-bold">Learn More</h2>
           <p className="mt-4 leading-relaxed text-muted">
             For how we handle your personal data more broadly, see our{" "}
             <Link href="/privacy" className="text-accent hover:underline">

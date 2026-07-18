@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function AdminOddsDiagnosticsPage() {
   return (
     <AdminPageShell
-      title="Odds diagnostics"
+      title="Odds Diagnostics"
       description="Probe The Odds API and see how many fixtures survive each filter step."
       path="/admin/odds"
     >

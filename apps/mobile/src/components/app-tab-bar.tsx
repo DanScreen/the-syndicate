@@ -2,7 +2,7 @@ import { colors } from "@/config";
 import { router, usePathname } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Circle, Line, Path, Polyline, Rect } from "react-native-svg";
+import Svg, { Circle, Path, Polyline } from "react-native-svg";
 
 type TabIconName = "team" | "performance" | "account";
 
@@ -42,21 +42,16 @@ function TabIcon({ name, active }: { name: TabIconName; active: boolean }) {
   const color = active ? colors.accent : colors.muted;
 
   if (name === "team") {
+    // People glyph — matches the marketing icon set (page.tsx "users" icon).
     return (
       <Svg width={23} height={23} viewBox="0 0 24 24" fill="none">
-        <Rect x={3} y={2} width={18} height={20} rx={2} stroke={color} strokeWidth={1.5} />
-        <Line x1={3} y1={12} x2={21} y2={12} stroke={color} strokeWidth={1} opacity={0.55} />
-        <Circle cx={7.5} cy={5} r={0.9} fill={color} />
-        <Circle cx={12} cy={5} r={0.9} fill={color} />
-        <Circle cx={16.5} cy={5} r={0.9} fill={color} />
-        <Circle cx={7.5} cy={9.5} r={0.9} fill={color} />
-        <Circle cx={12} cy={9.5} r={0.9} fill={color} />
-        <Circle cx={16.5} cy={9.5} r={0.9} fill={color} />
-        <Circle cx={6} cy={14.5} r={0.9} fill={color} />
-        <Circle cx={10} cy={14.5} r={0.9} fill={color} />
-        <Circle cx={14} cy={14.5} r={0.9} fill={color} />
-        <Circle cx={18} cy={14.5} r={0.9} fill={color} />
-        <Circle cx={12} cy={19} r={0.9} fill={color} />
+        <Path
+          d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"
+          stroke={color}
+          strokeWidth={1.7}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </Svg>
     );
   }

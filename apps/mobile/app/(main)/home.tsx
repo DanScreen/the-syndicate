@@ -1,3 +1,4 @@
+import { formatOdds } from "@tiki-acca/shared";
 import { api } from "@/api/client";
 import type { GroupSummary, GroupsListResponse } from "@tiki-acca/shared";
 import {
@@ -9,7 +10,7 @@ import {
   yourLegStatusMessage,
 } from "@tiki-acca/shared";
 import { useAuth } from "@/auth/AuthProvider";
-import { Button, Card, EmptyState, Screen } from "@/components/ui";
+import { Button, Card, EmptyState, Screen, Title } from "@/components/ui";
 import { colors } from "@/config";
 import { copy } from "@/lib/copy";
 import { router, useFocusEffect } from "expo-router";
@@ -85,7 +86,10 @@ export default function GroupsScreen() {
         }
         contentContainerStyle={styles.scroll}
       >
-        <Text style={styles.sectionLabel}>Your groups</Text>
+        {user?.firstName ? (
+          <Text style={styles.greeting}>Hi, {user.firstName}</Text>
+        ) : null}
+        <Title>Your Groups</Title>
         {groups.length === 0 ? (
           <EmptyState
             title={copy.dashboard.emptyTitle}
@@ -103,7 +107,8 @@ export default function GroupsScreen() {
               <Pressable
                 key={g.id}
                 onPress={() => router.push(`/(main)/groups/${g.id}`)}
-                style={{ marginBottom: 12 }}
+                accessibilityRole="button"
+                style={({ pressed }) => [{ marginBottom: 12 }, pressed && { opacity: 0.8 }]}
               >
                 <Card>
                   <View style={styles.row}>
@@ -135,7 +140,7 @@ export default function GroupsScreen() {
                           Current betslip · {legs.length} leg{legs.length === 1 ? "" : "s"}
                         </Text>
                         {g.activeRound?.combinedOdds != null ? (
-                          <Text style={styles.meta}>Acca @ {g.activeRound.combinedOdds}</Text>
+                          <Text style={styles.meta}>Acca @ {formatOdds(g.activeRound.combinedOdds)}</Text>
                         ) : null}
                       </View>
                       {legs.map((leg) => {
@@ -220,14 +225,11 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 14,
   },
-  sectionLabel: {
+  greeting: {
     color: colors.muted,
-    fontSize: 12,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+    fontSize: 14,
     marginTop: 4,
-    marginBottom: 12,
+    marginBottom: 4,
   },
   actions: {
     gap: 8,
@@ -250,8 +252,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   unreadBadge: {
-    color: "#fff",
-    backgroundColor: colors.danger,
+    color: colors.onAccent,
+    backgroundColor: colors.accent,
     borderRadius: 999,
     paddingHorizontal: 8,
     paddingVertical: 3,

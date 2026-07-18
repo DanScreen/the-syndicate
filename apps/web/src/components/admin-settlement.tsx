@@ -1,5 +1,7 @@
 "use client";
 
+import { formatOdds } from "@tiki-acca/shared";
+
 import type { SettlementQueueRound } from "@/lib/admin/compute-settlement-queue";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -83,7 +85,7 @@ function SettleRoundCard({ round }: { round: SettlementQueueRound }) {
             {earlySettled
               ? `Settled early (loss) ${round.settledAt ? formatKickoff(round.settledAt) : "—"}`
               : `Locked ${round.lockedAt ? formatKickoff(round.lockedAt) : "—"}`}
-            {round.combinedOdds ? ` · combined odds ${round.combinedOdds}` : ""}
+            {round.combinedOdds ? ` · combined odds ${formatOdds(round.combinedOdds)}` : ""}
             {` · ${round.resolvedCount}/${round.legs.length} legs resolved`}
           </p>
         </div>
@@ -105,7 +107,7 @@ function SettleRoundCard({ round }: { round: SettlementQueueRound }) {
             <div>
               <p>
                 <span className="text-muted">{leg.userName}:</span> {leg.selectionLabel}{" "}
-                <span className="text-muted">({leg.marketLabel} @ {leg.odds})</span>
+                <span className="text-muted">({leg.marketLabel} @ {formatOdds(leg.odds)})</span>
               </p>
               <p className="text-xs text-muted">
                 {leg.homeTeam} vs {leg.awayTeam} · {leg.competition} · KO{" "}
@@ -152,8 +154,8 @@ function SettleRoundCard({ round }: { round: SettlementQueueRound }) {
       >
         {loading
           ? earlySettled
-            ? "Resolving..."
-            : "Settling..."
+            ? "Resolving…"
+            : "Settling…"
           : allChosen
             ? earlySettled
               ? "Resolve remaining legs & award points"

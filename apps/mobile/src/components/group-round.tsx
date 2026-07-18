@@ -1,3 +1,4 @@
+import { formatOdds } from "@tiki-acca/shared";
 import { ApiError, api } from "@/api/client";
 import { BetslipDisclosure } from "@/components/compliance";
 import { ReactionBar, RoundThread } from "@/components/group-chat";
@@ -37,6 +38,7 @@ import {
   type LegOutcome,
   type MarketConflictLeg,
 } from "@tiki-acca/shared";
+import Svg, { Path } from "react-native-svg";
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -173,9 +175,9 @@ export function RoundProgress({
             <Text style={complete ? styles.submitted : styles.meta}>
               {legsPerMember === 1
                 ? complete
-                  ? "✓ Submitted"
+                  ? "Submitted"
                   : "Pending"
-                : `${count}/${legsPerMember}${complete ? " ✓" : ""}`}
+                : `${count}/${legsPerMember}`}
             </Text>
           </View>
         );
@@ -265,7 +267,7 @@ export function LegsList({
                     </Text>
                   </View>
                 ) : null}
-                <Text style={styles.odds}>{leg.odds}</Text>
+                <Text style={styles.odds}>{formatOdds(leg.odds)}</Text>
               </View>
             </View>
             <Text style={styles.legPick}>
@@ -383,7 +385,7 @@ export function AccaSummary({
           <Text style={styles.accaLabel}>
             {preview ? "Provisional combined odds" : "Locked combined odds"}
           </Text>
-          <Text style={styles.accaOdds}>{combinedOdds}</Text>
+          <Text style={styles.accaOdds}>{formatOdds(combinedOdds)}</Text>
           {singleBookmaker && bookmakerName ? (
             <View style={styles.lockedAtRow}>
               {bookmakerId ? (
@@ -416,13 +418,29 @@ export function AccaSummary({
         <Card>
           <Pressable
             onPress={() => setBookmakersOpen((o) => !o)}
-            style={styles.compareHeader}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: bookmakersOpen }}
+            style={({ pressed }) => [styles.compareHeader, pressed && { opacity: 0.7 }]}
           >
             <Text style={styles.sectionTitle}>
               Compare bookmakers ({bookmakerRankings.length})
               {preview ? " · provisional" : ""}
             </Text>
-            <Text style={styles.meta}>{bookmakersOpen ? "▲" : "▼"}</Text>
+            <Svg
+              width={16}
+              height={16}
+              viewBox="0 0 24 24"
+              fill="none"
+              style={{ transform: [{ rotate: bookmakersOpen ? "180deg" : "0deg" }] }}
+            >
+              <Path
+                d="m6 9 6 6 6-6"
+                stroke={colors.muted}
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
           </Pressable>
           {bookmakersOpen
             ? bookmakerRankings.map((entry, index) => {
@@ -493,7 +511,7 @@ export function AccaSummary({
                           (place === 2 || place === 3) && styles.rankOddsPodium,
                         ]}
                       >
-                        {entry.combinedOdds}
+                        {formatOdds(entry.combinedOdds)}
                       </Text>
                       {entry.url ? (
                         <Pressable onPress={() => Linking.openURL(entry.url!)}>
@@ -798,7 +816,7 @@ export function SubmitLegForm({
               <OptionRow
                 key={s.id}
                 label={s.label}
-                subtitle={top ? `Best ${top.odds}` : undefined}
+                subtitle={top ? `Best ${formatOdds(top.odds)}` : undefined}
                 selected={selectionId === s.id}
                 onPress={() => setSelectionId(s.id)}
               />
@@ -904,7 +922,7 @@ export function RoundHistory({
                 {settledLabel ? ` · ${settledLabel}` : ""}
               </Text>
               {round.combinedOdds ? (
-                <Text style={styles.odds}>Acca @ {round.combinedOdds}</Text>
+                <Text style={styles.odds}>Acca @ {formatOdds(round.combinedOdds)}</Text>
               ) : null}
             </View>
             <Text style={styles.meta}>Group</Text>
@@ -924,7 +942,7 @@ export function RoundHistory({
                 <View style={styles.historyHeader}>
                   <Text style={styles.legUser}>{leg.user.name}</Text>
                   <Text style={{ color: oc.text, fontWeight: "600", fontSize: 13 }}>
-                    {legOutcomeLabel(leg.outcome)} · {leg.odds}
+                    {legOutcomeLabel(leg.outcome)} · {formatOdds(leg.odds)}
                   </Text>
                 </View>
                 <Text style={styles.legPick}>

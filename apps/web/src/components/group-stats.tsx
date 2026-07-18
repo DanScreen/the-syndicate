@@ -306,7 +306,7 @@ export function GroupStats({ groupId, groupName }: { groupId: string; groupName?
 
   return (
     <div className="space-y-6 rounded-xl border border-border bg-card p-4">
-      <h3 className="font-semibold">Group stats</h3>
+      <h3 className="font-semibold">Group Stats</h3>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard label="Rounds" value={String(summary.totalRounds)} />
@@ -439,7 +439,7 @@ export function GroupStats({ groupId, groupName }: { groupId: string; groupName?
       )}
 
       <ShareCard
-        title={groupName ? `${groupName} stats` : "Group stats"}
+        title={groupName ? `${groupName} Stats` : "Group Stats"}
         netPoints={summary.netGroupPoints}
         legsPlayed={summary.totalBets}
         winRate={summary.winRate}

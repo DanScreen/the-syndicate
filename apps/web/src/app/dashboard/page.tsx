@@ -58,6 +58,33 @@ export default async function DashboardPage() {
       .toFixed(2)
   );
 
+  // One query for unread counts across all groups (was one COUNT per group card).
+  const unreadSinceByGroup = new Map(
+    memberships.map((m) => [
+      m.group.id,
+      m.lastReadMessageAt && m.lastReadMessageAt > m.joinedAt
+        ? m.lastReadMessageAt
+        : m.joinedAt,
+    ])
+  );
+  const unreadCountByGroup = new Map<string, number>();
+  if (memberships.length > 0) {
+    const unreadMessages = await prisma.roundMessage.findMany({
+      where: {
+        OR: memberships.map((m) => ({
+          round: { groupId: m.group.id },
+          createdAt: { gt: unreadSinceByGroup.get(m.group.id)! },
+          OR: [{ userId: null }, { userId: { not: session.user.id } }],
+        })),
+      },
+      select: { round: { select: { groupId: true } } },
+    });
+    for (const msg of unreadMessages) {
+      const gid = msg.round.groupId;
+      unreadCountByGroup.set(gid, (unreadCountByGroup.get(gid) ?? 0) + 1);
+    }
+  }
+
   return (
     <div className="min-h-screen">
       <PageView path="/dashboard" userId={session.user.id} />
@@ -65,7 +92,7 @@ export default async function DashboardPage() {
       <main className="mx-auto max-w-5xl px-4 py-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold">Your groups</h1>
+            <h1 className="font-display text-2xl font-bold">Your Groups</h1>
             <p className="mt-1 text-sm text-muted">
               {memberships.length} group{memberships.length === 1 ? "" : "s"} ·{" "}
               {formatLegPoints(yourTotalPoints)} pts total ·{" "}
@@ -92,7 +119,7 @@ export default async function DashboardPage() {
 
         {isNewUser && (
           <section className="mt-8 rounded-xl border border-accent/30 bg-accent-muted/20 p-6">
-            <h2 className="font-semibold text-accent">Welcome to Tiki Acca</h2>
+            <h2 className="font-semibold text-accent">Welcome To Tiki Acca</h2>
             <p className="mt-2 text-sm text-muted">
               Get your mates together in three steps:
             </p>
@@ -111,14 +138,8 @@ export default async function DashboardPage() {
         )}
 
         <section className="mt-8">
-          {memberships.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border p-8 text-center text-muted">
-              <p>No groups yet.</p>
-              <p className="mt-2 text-sm">
-                Create a group for your mates or join with an invite code.
-              </p>
-            </div>
-          ) : (
+          {/* New users get the welcome panel above — no second empty state. */}
+          {memberships.length === 0 ? null : (
             <div className="grid gap-4 md:grid-cols-2">
               {(await Promise.all(
                 memberships.map(async (m) => {
@@ -161,20 +182,8 @@ export default async function DashboardPage() {
                     (l) => l.userId === session.user.id
                   ).length;
                   const activeLegs = activeLegsInRound(legs, session.user.id);
-                  const unreadSince =
-                    m.lastReadMessageAt && m.lastReadMessageAt > m.joinedAt
-                      ? m.lastReadMessageAt
-                      : m.joinedAt;
-                  const unreadMessageCount = await prisma.roundMessage.count({
-                    where: {
-                      round: { groupId: m.group.id },
-                      createdAt: { gt: unreadSince },
-                      OR: [
-                        { userId: null },
-                        { userId: { not: session.user.id } },
-                      ],
-                    },
-                  });
+                  const unreadMessageCount =
+                    unreadCountByGroup.get(m.group.id) ?? 0;
                   const roundStatus = activeRound?.status ?? "open";
                   const legsPerMember =
                     activeRound?.legsPerMember ?? m.group.legsPerMember ?? 1;
@@ -213,7 +222,7 @@ export default async function DashboardPage() {
                       <h3 className="font-semibold">{m.group.name}</h3>
                       <div className="flex items-center gap-2">
                         {unreadMessageCount > 0 ? (
-                          <span className="rounded-full bg-danger-strong px-2 py-0.5 text-xs font-medium text-white">
+                          <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-on-accent">
                             {unreadMessageCount} new
                           </span>
                         ) : null}

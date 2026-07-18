@@ -95,7 +95,7 @@ export default function GroupSettingsScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Group settings</Text>
+      <Text style={styles.title}>Group Settings</Text>
       <Text style={styles.meta}>
         Changes apply to open rounds immediately. Locked or in-progress bets keep
         their quota until the next round.
@@ -130,7 +130,7 @@ export default function GroupSettingsScreen() {
         {savedNote ? <Text style={styles.saved}>{savedNote}</Text> : null}
         {!unchanged ? (
           <Button
-            label={saving ? "Saving..." : "Save settings"}
+            label={saving ? "Saving…" : "Save settings"}
             onPress={handleSave}
             loading={saving}
           />

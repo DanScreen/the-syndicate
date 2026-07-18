@@ -1,3 +1,4 @@
+import { formatOdds } from "@tiki-acca/shared";
 import {
   formatActiveLegSummary,
   legOutcomeShortLabel,
@@ -30,7 +31,7 @@ export function ActiveBetslipSummary({
         </p>
         {combinedOdds != null ? (
           <p className="text-xs text-muted">
-            Acca @ <span className="font-medium text-foreground">{combinedOdds}</span>
+            Acca @ <span className="font-medium text-foreground">{formatOdds(combinedOdds)}</span>
           </p>
         ) : null}
       </div>

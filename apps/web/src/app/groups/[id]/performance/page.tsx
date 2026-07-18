@@ -9,7 +9,7 @@ export default function GroupPerformancePage() {
 
   return (
     <section>
-      <h2 className="text-lg font-semibold">Group performance</h2>
+      <h2 className="text-lg font-semibold">Group Performance</h2>
       <p className="mt-1 text-sm text-muted">Stats, charts, and member breakdowns.</p>
       <div className="mt-4">
         <GroupStats groupId={data.group.id} groupName={data.group.name} />

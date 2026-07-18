@@ -12,7 +12,7 @@ export default function PerformanceScreen() {
 
   return (
     <Screen>
-      <Title>Your performance</Title>
+      <Title>Your Performance</Title>
       <Subtitle>Cross-group stats and trends.</Subtitle>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         <UserPerformancePanel token={token} userName={user.name} />

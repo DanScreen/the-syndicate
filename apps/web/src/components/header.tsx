@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+
 import { Logo } from "@/components/logo";
 import { AppNav, useAppNavItems } from "./app-nav";
+import { AppTabBar } from "./app-tab-bar";
 import { MobileNav } from "./mobile-nav";
 
 export function SiteHeader() {
@@ -44,12 +45,14 @@ export function SiteHeader() {
 }
 
 export function AppHeader({ userName }: { userName: string }) {
-  const pathname = usePathname();
   const navItems = useAppNavItems();
-  const accountActive = pathname === "/account";
-  const accountLabel = userName ? `Account · ${userName}` : "Account";
+  // Groups / Performance / Account live in the bottom tab bar on phones —
+  // the hamburger keeps only the secondary links.
+  const tabBarCovered = new Set(["/dashboard", "/performance"]);
+  const menuItems = navItems.filter((item) => !tabBarCovered.has(item.href));
 
   return (
+    <>
     <header className="sticky top-0 z-50 border-b border-border/80 bg-background/80 backdrop-blur-md">
       <div className="relative mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 md:gap-4 md:py-4">
         <div className="flex min-w-0 items-center gap-x-6">
@@ -73,17 +76,10 @@ export function AppHeader({ userName }: { userName: string }) {
         >
           Hi, {userName}
         </Link>
-        <MobileNav
-          links={[
-            ...navItems,
-            {
-              href: "/account",
-              label: accountLabel,
-              active: accountActive,
-            },
-          ]}
-        />
+        <MobileNav links={menuItems} />
       </div>
     </header>
+    <AppTabBar />
+    </>
   );
 }
