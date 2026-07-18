@@ -293,7 +293,7 @@ export async function GET(_request: Request, { params }: Params) {
 /**
  * Owner updates group settings.
  * Leg quota changes apply to every eligible open bet; locked/in-progress bets
- * keep their snapshot. The active-bet cap cannot be lowered below current use.
+ * keep their snapshot. A lower active-bet cap is enforced as existing bets settle.
  */
 export async function PATCH(request: Request, { params }: Params) {
   const { session, error } = await requireSession();
@@ -336,13 +336,6 @@ export async function PATCH(request: Request, { params }: Params) {
       parsed.data.legsPerMember ?? membership.group.legsPerMember;
     const nextMax =
       parsed.data.maxActiveBets ?? membership.group.maxActiveBets;
-
-    if (nextMax < activeRounds.length) {
-      return {
-        error: `Can't lower the limit to ${nextMax} while ${activeRounds.length} bets are still open or locked`,
-        status: 409,
-      };
-    }
 
     const applicableOpenRounds = activeRounds.filter(
       (round) =>
@@ -391,6 +384,7 @@ export async function PATCH(request: Request, { params }: Params) {
     return {
       group,
       applicableOpenRounds,
+      activeRoundCount: activeRounds.length,
       memberUserIds: membership.group.members.map((member) => member.userId),
     };
   });
@@ -429,11 +423,17 @@ export async function PATCH(request: Request, { params }: Params) {
 
   const notes = ["Saved."];
   if (parsed.data.maxActiveBets !== undefined) {
-    notes.push(
-      `Up to ${updateResult.group.maxActiveBets} active bet${
-        updateResult.group.maxActiveBets === 1 ? "" : "s"
-      } allowed.`
-    );
+    if (updateResult.group.maxActiveBets < updateResult.activeRoundCount) {
+      notes.push(
+        `The maximum is now ${updateResult.group.maxActiveBets}. Existing bets will continue, and the new limit will be enforced as they conclude. No new bet can be created until the active count is below ${updateResult.group.maxActiveBets}.`
+      );
+    } else {
+      notes.push(
+        `Up to ${updateResult.group.maxActiveBets} active bet${
+          updateResult.group.maxActiveBets === 1 ? "" : "s"
+        } allowed.`
+      );
+    }
   }
   if (parsed.data.legsPerMember !== undefined) {
     notes.push(

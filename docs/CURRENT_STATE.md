@@ -461,7 +461,7 @@ Recent migrations include `20260718190000_concurrent_group_bets` and `2026071819
 | `DELETE /api/legs/[id]` | Leg owner | Remove own pick while round is open and before first kickoff |
 | `GET /api/groups` | Session | Groups list + current betslip `activeLegs` + yourLeg / yourLegCount + chat unread count |
 | `POST /api/groups` | Session | Create group (`name`, optional `legsPerMember` 1–3 and `maxActiveBets` 1–5) |
-| `PATCH /api/groups/[id]` | Owner | Update `legsPerMember` and/or `maxActiveBets`; rejects a cap below unresolved count |
+| `PATCH /api/groups/[id]` | Owner | Update `legsPerMember` and/or `maxActiveBets`; lower caps preserve existing bets and block creation until capacity returns |
 | `POST /api/groups/[id]/rounds` | Member | Create another open bet when owner cap >1, below cap, and no empty open bet exists |
 | `POST /api/internal/sync-matches` | `CRON_SECRET` | Sync football-data.org → `Match` |
 | `POST /api/internal/warm-odds-cache` | `CRON_SECRET` | Refresh odds DB snapshots |

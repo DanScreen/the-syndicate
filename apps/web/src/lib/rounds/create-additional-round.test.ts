@@ -181,4 +181,25 @@ describe("additional active bets", () => {
     assert.equal(round.status, "open");
     assert.equal(round.betNumber, 2);
   });
+
+  it("preserves existing bets when the owner lowers the cap", async () => {
+    const { group, user } = await createGroup(3, true);
+    await createAdditionalRound(group.id, user.id);
+    await prisma.group.update({
+      where: { id: group.id },
+      data: { maxActiveBets: 1 },
+    });
+
+    assert.equal(
+      await prisma.round.count({
+        where: { groupId: group.id, status: { in: ["open", "locked"] } },
+      }),
+      2
+    );
+    await assert.rejects(
+      createAdditionalRound(group.id, user.id),
+      (error: unknown) =>
+        error instanceof RoundCreationError && error.status === 403
+    );
+  });
 });

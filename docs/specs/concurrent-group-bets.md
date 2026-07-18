@@ -20,7 +20,9 @@ single-bet default more complicated.
 - A new bet is rejected when the active limit has been reached.
 - A new bet is also rejected while any existing open bet has zero legs.
 - Each bet keeps its own quota snapshot, picks, odds, lifecycle messages, and chat thread.
-- Lowering the limit below the current unresolved bet count is rejected.
+- Lowering the limit below the current unresolved bet count saves immediately
+  without cancelling bets. Existing bets continue; creation stays blocked until
+  the active count falls below the new limit.
 - Changes to legs per member apply to every eligible open bet; locked bets retain their snapshot.
 
 ## UI

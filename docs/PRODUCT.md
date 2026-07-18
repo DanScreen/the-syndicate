@@ -24,7 +24,7 @@ Sign up (first + last name) → **Groups** home (`/dashboard`) listing groups. C
 Owner creates group (name only) → invite code + link. Anyone with the link opens `/groups/join?code=`. If signed out, the page prompts **Sign in** or **Sign up** (invite preserved via `callbackUrl`); after auth they return and join.
 
 ### 3. Build the acca
-1. Each group starts with an open bet on the **Round** tab — no manual start step. The owner chooses a maximum of **1–5 active bets** (default 1). Above 1, any member can start another bet when below the cap, provided every existing open bet already has at least one leg.
+1. Each group starts with an open bet on the **Round** tab — no manual start step. The owner chooses a maximum of **1–5 active bets** (default 1). Above 1, any member can start another bet when below the cap, provided every existing open bet already has at least one leg. Lowering the maximum never cancels existing bets; the new limit takes over as they conclude.
 2. Group owner sets **legs per member** (1, 2, or 3 — default 1) when creating the group or in **Settings**; changing it updates all eligible **open** bets immediately (locked / in-progress bets keep their quota)
 3. Each member picks a **competition**, fixture, market, selection (4-step form) for each of their legs. Selecting a market collapses the long market catalogue and immediately reveals that market's outcomes; **Change market** returns to the catalogue.
 4. **Best odds only** shown per selection

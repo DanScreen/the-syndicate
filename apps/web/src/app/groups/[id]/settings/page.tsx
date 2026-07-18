@@ -137,34 +137,32 @@ export default function GroupSettingsPage() {
             every existing open bet has at least one leg.
           </p>
           <div className="mt-4 grid grid-cols-5 gap-2">
-            {MAX_ACTIVE_BETS_OPTIONS.map((n) => {
-              const belowCurrent = n < activeRounds.length;
-              return (
-                <button
-                  key={n}
-                  type="button"
-                  disabled={belowCurrent}
-                  title={
-                    belowCurrent
-                      ? `${activeRounds.length} bets are currently unresolved`
-                      : undefined
-                  }
-                  onClick={() => setMaxActiveBets(n)}
-                  className={`rounded-lg border px-2 py-3 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-40 ${
-                    maxActiveBets === n
-                      ? "border-accent bg-accent-muted/40 text-accent"
-                      : "border-border bg-background text-muted hover:text-foreground"
-                  }`}
-                >
-                  {n}
-                </button>
-              );
-            })}
+            {MAX_ACTIVE_BETS_OPTIONS.map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setMaxActiveBets(n)}
+                className={`rounded-lg border px-2 py-3 text-sm font-medium ${
+                  maxActiveBets === n
+                    ? "border-accent bg-accent-muted/40 text-accent"
+                    : "border-border bg-background text-muted hover:text-foreground"
+                }`}
+              >
+                {n}
+              </button>
+            ))}
           </div>
           <p className="mt-2 text-xs text-muted">
             {activeRounds.length} bet{activeRounds.length === 1 ? "" : "s"} currently
             open or locked.
           </p>
+          {maxActiveBets < activeRounds.length && (
+            <p className="mt-2 text-sm text-amber-200/90">
+              Existing bets will continue. This lower limit will be enforced as
+              they conclude, and no new bet can be created until the active
+              count falls below {maxActiveBets}.
+            </p>
+          )}
         </fieldset>
 
         {error && <p className="text-sm text-danger">{error}</p>}

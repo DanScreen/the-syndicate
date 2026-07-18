@@ -140,35 +140,37 @@ export default function GroupSettingsScreen() {
           than one, any member can start a new bet after each open bet has a leg.
         </Text>
         <View style={styles.row}>
-          {MAX_ACTIVE_BETS_OPTIONS.map((n) => {
-            const disabled = n < activeRounds.length;
-            return (
-              <Pressable
-                key={n}
-                disabled={disabled}
-                onPress={() => setMaxActiveBets(n)}
+          {MAX_ACTIVE_BETS_OPTIONS.map((n) => (
+            <Pressable
+              key={n}
+              onPress={() => setMaxActiveBets(n)}
+              style={[
+                styles.option,
+                maxActiveBets === n && styles.optionActive,
+              ]}
+            >
+              <Text
                 style={[
-                  styles.option,
-                  maxActiveBets === n && styles.optionActive,
-                  disabled && styles.optionDisabled,
+                  styles.optionText,
+                  maxActiveBets === n && styles.optionTextActive,
                 ]}
               >
-                <Text
-                  style={[
-                    styles.optionText,
-                    maxActiveBets === n && styles.optionTextActive,
-                  ]}
-                >
-                  {n}
-                </Text>
-              </Pressable>
-            );
-          })}
+                {n}
+              </Text>
+            </Pressable>
+          ))}
         </View>
         <Text style={styles.meta}>
           {activeRounds.length} bet{activeRounds.length === 1 ? "" : "s"} currently
           open or locked.
         </Text>
+        {maxActiveBets < activeRounds.length ? (
+          <Text style={styles.warning}>
+            Existing bets will continue. This lower limit will be enforced as
+            they conclude, and no new bet can be created until the active count
+            falls below {maxActiveBets}.
+          </Text>
+        ) : null}
         <ErrorText message={error} />
         {savedNote ? <Text style={styles.saved}>{savedNote}</Text> : null}
         {!unchanged ? (
@@ -210,8 +212,8 @@ const styles = StyleSheet.create({
     borderColor: colors.accent,
     backgroundColor: "rgba(20, 83, 45, 0.4)",
   },
-  optionDisabled: { opacity: 0.35 },
   optionText: { color: colors.muted, fontWeight: "600" },
   optionTextActive: { color: colors.accent },
   saved: { color: colors.accent, fontSize: 13, marginBottom: 10 },
+  warning: { color: colors.warning, fontSize: 13, marginBottom: 10 },
 });
