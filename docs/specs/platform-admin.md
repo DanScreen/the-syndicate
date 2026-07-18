@@ -13,7 +13,7 @@
 1. **Developer admin accounts** — platform-level access separate from group owner role.
 2. **Admin dashboard** — product metrics (users, picks, accas, activity).
 3. **Platform leaderboards** — rank groups and players by points (admin-only until more users).
-4. **Lightweight analytics** — logins, sign-ups, page views in Postgres.
+4. **First-party customer analytics** — per-user web/mobile logins, 30-minute visits, page/screen views, and last activity in Postgres.
 5. **Points-first UX** — points are the primary metric; profit = points × user stake.
 
 ---
@@ -47,6 +47,7 @@ Protected by middleware (`/admin/*` requires login) + `requireAdminPage()` (redi
 | Route | Purpose |
 |-------|---------|
 | `/admin` | Platform overview — users, groups, picks, accas, activity |
+| `/admin/activity` | Searchable per-user web/mobile login, visit, view, and recency report |
 | `/admin/settlement` | Settlement queue — locked rounds, overdue-leg flags, manual settle |
 | `/admin/leaderboards` | Group + player rankings by points |
 | `/admin/competitions` | Enable/disable competitions in the leg picker |
@@ -64,7 +65,7 @@ Settlement is system-only (owners cannot settle), so this page is the **escape h
 - Locked rounds: outcomes must cover every leg; reuses `applyRoundSettlement()` — the same exactly-once `locked → settled` claim as the cron; a lost race returns 409.
 - Settled rounds that still have pending legs (early loss): queue lists them; admin submits outcomes only for remaining pending legs → `applyDeferredLegOutcome()`.
 
-**Nav:** Admin users see **Admin** in `AppNav`. Sub-nav: Overview | Settlement | Leaderboards | Competitions | Odds (`AdminNav`).
+**Nav:** Admin users see **Admin** in `AppNav`. Sub-nav: Overview | Activity | Settlement | Leaderboards | Competitions | Odds (`AdminNav`).
 
 **SEO:** `robots: noindex` on admin pages.
 
@@ -80,6 +81,7 @@ Settlement is system-only (owners cannot settle), so this page is the **escape h
 | `PATCH /api/admin/competitions` | Admin session | Toggle `{ competitionId, enabled }` |
 | `GET /api/admin/odds-diagnostics` | Admin session | Odds API probe (`?competition=world-cup`) |
 | `POST /api/admin/rounds/[id]/settle` | Admin session | Manual settle — outcomes for every leg (escape hatch) |
+| `POST /api/analytics/events` | Web session / mobile bearer | Authenticated page/screen or foreground activity; server derives user, channel, and visit |
 
 Non-admin → `403 Forbidden`. Unauthenticated → `401`.
 
@@ -116,20 +118,24 @@ Non-admin → `403 Forbidden`. Unauthenticated → `401`.
 
 ## Analytics events
 
-Model: `AnalyticsEvent` — `type`, optional `userId`, optional `path`, `createdAt`.
+Model: `AnalyticsEvent` — `type`, optional `userId`, optional `channel` (`web` / `mobile`), optional normalised `path`, `createdAt`.
 
 | Type | When recorded |
 |------|----------------|
 | `sign_up` | `POST /api/auth/sign-up` |
 | `login` | Web sign-in (Auth.js `authorize`) + `POST /api/auth/mobile/sign-in` |
-| `page_view` | Server render via `<PageView path="…" />` on `/`, `/about`, `/dashboard`, `/performance`, `/admin`, `/admin/leaderboards` |
+| `visit` | First authenticated activity after 30 minutes without page/screen activity |
+| `page_view` | Every authenticated web App Router navigation and mobile route change |
+| `app_open` | Mobile initial launch and background-to-foreground transition |
 
-Recording is fire-and-forget (`recordAnalyticsEventAsync`) — failures logged, never block auth.
+Login recording is fire-and-forget (`recordAnalyticsEventAsync`). Client activity uses a best-effort authenticated endpoint that awaits persistence but never blocks navigation. Visit creation is transactionally protected with a PostgreSQL advisory lock per user/channel.
 
 ### Limitations
 
-- Page views only on server-rendered navigations (not client tab switches inside group shell).
-- No unique visitors, referrers, or device data.
+- Complete route and visit coverage begins with migration `20260718213000_customer_activity_tracking`; older page views are partial.
+- Historical login events mixed web and mobile, so they remain null-channel and appear as **Legacy logins**.
+- Paths omit query strings and normalise dynamic group/blog identifiers.
+- No IP addresses, device fingerprints, referrers, or advertising identifiers are collected.
 - For production-grade analytics, consider Plausible / PostHog / GA4 later.
 
 ---
@@ -160,16 +166,19 @@ Recording is fire-and-forget (`recordAnalyticsEventAsync`) — failures logged, 
 | `apps/web/src/lib/admin/compute-admin-stats.ts` | Overview aggregates |
 | `apps/web/src/lib/admin/compute-platform-leaderboards.ts` | Leaderboard queries |
 | `apps/web/src/lib/analytics.ts` | `recordAnalyticsEvent` |
+| `apps/web/src/components/analytics/authenticated-page-tracker.tsx` | Global authenticated web navigation tracker |
+| `apps/mobile/src/analytics/activity-tracker.tsx` | Global mobile route and foreground tracker |
+| `apps/web/src/lib/admin/compute-user-activity.ts` | Paginated per-user activity aggregation |
+| `apps/web/src/components/admin-user-activity.tsx` | Admin customer activity table |
 | `apps/web/src/components/admin-page-shell.tsx` | Shared admin layout |
 | `apps/web/src/components/admin-nav.tsx` | Overview / Leaderboards tabs |
 | `apps/web/src/components/admin-stats.tsx` | Overview UI |
 | `apps/web/src/components/platform-leaderboards.tsx` | Leaderboard tables |
 | `apps/web/src/components/stake-profit.tsx` | Points → profit converter |
-| `apps/web/src/components/analytics/page-view.tsx` | Page view recorder |
 | `packages/shared/src/roles.ts` | `USER_ROLES`, `ANALYTICS_EVENT_TYPES` |
 | `packages/shared/src/scoring.ts` | `profitFromPoints`, `formatProfitGbp` |
 
-Migration: `20260710100000_user_role_analytics`.
+Migrations: `20260710100000_user_role_analytics`, `20260718213000_customer_activity_tracking`.
 
 ---
 

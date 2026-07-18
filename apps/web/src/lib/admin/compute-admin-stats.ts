@@ -8,7 +8,7 @@ function daysAgo(n: number): Date {
 
 async function countEventsSince(type: string, since: Date): Promise<number> {
   return prisma.analyticsEvent.count({
-    where: { type, createdAt: { gte: since } },
+    where: { type, userId: { not: null }, createdAt: { gte: since } },
   });
 }
 

@@ -1,4 +1,3 @@
-import { PageView } from "@/components/analytics/page-view";
 import { DeleteAccount } from "@/components/delete-account";
 import { AppHeader } from "@/components/header";
 import { NotificationSettings } from "@/components/notification-settings";
@@ -16,7 +15,6 @@ export default async function AccountPage() {
 
   return (
     <div className="min-h-screen">
-      <PageView path="/account" userId={session.user.id} />
       <AppHeader userName={firstName} />
       <main className="mx-auto max-w-lg px-4 py-8">
         <h1 className="font-display text-2xl font-bold">Account</h1>

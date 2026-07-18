@@ -1,17 +1,15 @@
 import { GamblingFooter } from "@/components/site-footer";
-import { PageView } from "@/components/analytics/page-view";
 import { SessionAwareMarketingHeader } from "./session-aware-marketing-header";
 
 export function MarketingShell({
   children,
-  path,
 }: {
   children: React.ReactNode;
+  /** Retained for call-site readability; global tracking uses the router path. */
   path?: string;
 }) {
   return (
     <div className="flex min-h-screen flex-col">
-      {path ? <PageView path={path} /> : null}
       <SessionAwareMarketingHeader />
       <main className="flex-1">{children}</main>
       <GamblingFooter />
