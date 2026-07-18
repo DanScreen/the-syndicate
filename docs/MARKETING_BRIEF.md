@@ -51,6 +51,25 @@ Warm, cultural, pub-flavoured. Broadest reach, least differentiated — any foot
 - **Taglines:** "Football's better together." · "The Saturday ritual, upgraded."
 - **Use:** background flavour in the About page and art direction, not the headline.
 
+### Territory D — "Prove it" (competitive proof; approved for future use)
+
+> **Think you know football? Prove it.**
+>
+> **Real picks. Real odds. Real results.**
+
+This is the approved punchy competitive campaign line, but it is **not live yet**.
+Keep Territory A as the social homepage lead; use this as a secondary homepage
+section, campaign/ad line, Performance-page theme, or share-card challenge.
+
+Supporting explanation:
+
+> No arbitrary fantasy scoring. Just your picks, real bookmaker odds and real match results.
+
+The proof is transparent unit-stake scoring: win at 3.00 → +2 points; lose → −1.
+When real bets were not necessarily placed, describe positive points as what the
+picks **would have returned at a level stake**. Prefer “beat the odds” over a
+claim that someone has conclusively “beaten the bookies”.
+
 ### Tagline decision (resolved — July 2026)
 
 **Decision:** the headline keeps "Every leg counts." as its emotional close — it remains the brand's emotional line. The hero eyebrow (logo + tagline block) was **removed** as a duplicate of the top bar; instead, the marketing header shows the category descriptor **"Social Group Betting"** to the right of the wordmark (muted, no separator, hidden below `md` so it never crowds mobile nav). "Social group accas" remains the SEO/meta descriptor (`layout.tsx` metadata) and the `tagline` export in `marketing-content.ts`.

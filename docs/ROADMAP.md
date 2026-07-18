@@ -58,6 +58,7 @@ Core loop and MVP polish are **shipped**:
 | 10 | **Mobile — friend testing → stores** | Product | You: [DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md); mates: APK / TestFlight. Store distribution unblocks the invite loop — prioritise fees once validated |
 | 11 | **Expo push setup** | Mobile ops | See checklist below — required for mobile push (prereq for chat + live matchday push) |
 | 12 | Terraform CI GCS permissions fix | Infra | App deploy unaffected |
+| 13 | **Competitive proof messaging** | Brand/copy | Future secondary theme: **“Think you know football? Prove it. Real picks. Real odds. Real results.”** Keep the social group headline primary; planned uses and guardrails in [MARKETING_BRIEF.md](./MARKETING_BRIEF.md#territory-d--prove-it-competitive-proof-approved-for-future-use) |
 
 ---
 
