@@ -8,6 +8,7 @@ import {
   refreshBulkFixturesFromApi,
   refreshEventMarketsFromApi,
 } from "./odds-store";
+import { mergeMarketCollections } from "./merge-markets";
 import { tierForMarketType, type MarketTierId } from "./market-tiers";
 
 export type OddsSource = "live" | "mock";
@@ -86,9 +87,14 @@ export async function getExtendedMarketsForTier(
   const fixture = await findFixture(fixtureId, competitionId);
   if (!fixture) return [];
 
-  const baseTypes = new Set(fixture.markets.map((m) => m.type));
   const extended = await loadExtendedMarkets(fixtureId, competitionId, tierId);
-  return extended.filter((m) => !baseTypes.has(m.type));
+  const extendedTypes = new Set(extended.map((market) => market.type));
+
+  // Return new extended markets plus merged replacements for exact lines that
+  // also exist in the bulk feed (for example Over 2.5 goals).
+  return mergeMarketCollections(fixture.markets, extended).filter((market) =>
+    extendedTypes.has(market.type)
+  );
 }
 
 export async function getFixtureMarkets(
@@ -99,10 +105,8 @@ export async function getFixtureMarkets(
   const fixture = await findFixture(fixtureId, competitionId);
   if (!fixture) return [];
 
-  const baseTypes = new Set(fixture.markets.map((m) => m.type));
   const extended = await loadExtendedMarkets(fixtureId, competitionId, tierId);
-  const extra = extended.filter((m) => !baseTypes.has(m.type));
-  return [...fixture.markets, ...extra];
+  return mergeMarketCollections(fixture.markets, extended);
 }
 
 export async function findSelection(

@@ -16,7 +16,7 @@ The emotional product — trash talk when a mate's 9.0 correct-score pick lands,
 ## Goals
 
 1. **Round-scoped banter thread** — one thread per round on the Round tab; history browsable per settled round.
-2. **System messages give the thread a heartbeat** — lifecycle events we already generate (pick locked in / changed, acca locked, leg won/lost, settled) appear inline, so the thread is alive even when nobody types. Pick lock-ins are the flagship event ("Dan locked in BTTS @ 1.80 🔒").
+2. **System messages give the thread a heartbeat** — lifecycle events we already generate (pick locked in / changed / removed, acca locked, leg won/lost, settled) appear inline, so the thread is alive even when nobody types. Pick lock-ins are the flagship event ("Dan locked in BTTS @ 1.80 🔒").
 3. **Emoji reactions on messages *and* picks — one mechanism** *(decision, July 2026)*: reactions attach to chat messages (user + system). Because every pick is announced by a system message, the **betslip row mirrors the reactions on its announcement message** — tapping a reaction on the betslip toggles it on the underlying message. Both surfaces, one data model. When a pick is edited, a new announcement is posted; reactions on the old pick stay with the old message (banter history preserved).
 4. **Web + mobile parity** from v1 (mobile is where banter happens).
 
@@ -35,7 +35,7 @@ model RoundMessage {
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   kind      String   // "user" | "system"
   body      String   // user text (max 500 chars) or system event copy
-  eventType String?  // system only: leg_submitted | leg_changed | round_locked | leg_result | round_settled
+  eventType String?  // system only: leg_submitted | leg_changed | leg_removed | round_locked | leg_result | round_settled
   legId     String?  // system pick events: the announced leg — lets the betslip row find its message
   leg       Leg?     @relation(fields: [legId], references: [id], onDelete: SetNull)
   createdAt DateTime @default(now())
@@ -59,7 +59,7 @@ model MessageReaction {
 
 **One reaction model for both surfaces:** the betslip pick row displays/toggles reactions on the pick's *latest* `leg_submitted`/`leg_changed` system message (found via `legId`). No separate `LegReaction` table.
 
-System messages are **written at event time** by the existing lifecycle code paths (leg submit/edit routes, `claimAndLockRound`, `persistResolvableLegOutcomes`, `applyRoundSettlement`) — not derived on read — so the thread is an append-only record.
+System messages are **written at event time** by the existing lifecycle code paths (leg submit/edit/remove routes, `claimAndLockRound`, `persistResolvableLegOutcomes`, `applyRoundSettlement`) — not derived on read — so the thread is an append-only record.
 
 ## API routes (proposed)
 
@@ -92,7 +92,7 @@ Through the existing dispatcher ([notifications.md](./notifications.md)) — **p
 ### Phase 1 — thread + system messages (core)
 - [x] `RoundMessage` + `MessageReaction` migration (incl. `legId`) — `20260717150000_group_chat_messages`
 - [x] Shared chat types/schemas — `packages/shared/src/chat.ts` (event types, emoji set, message/reaction Zod schemas, DTOs)
-- [x] System message writes from lifecycle code paths (pick locked in / changed, round locked, leg results, settled) — `apps/web/src/lib/chat/system-messages.ts`; writes gated on the settlement/lock/leg atomic claims; exactly-once race tests in `apps/web/src/lib/chat/exactly-once.test.ts` (`npm test --workspace=@tiki-acca/web`)
+- [x] System message writes from lifecycle code paths (pick locked in / changed / removed, round locked, leg results, settled) — `apps/web/src/lib/chat/system-messages.ts`; writes gated on the settlement/lock/leg atomic claims; exactly-once race tests in `apps/web/src/lib/chat/exactly-once.test.ts` (`npm test --workspace=@tiki-acca/web`)
 - [x] Message APIs (`GET`/`POST` messages, `DELETE`) + rate limiting
 - [x] Round tab thread UI (web), History read-only view
 - [x] Mobile thread UI

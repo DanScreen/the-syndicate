@@ -31,7 +31,7 @@ Owner creates group (name only) → invite code + link. Anyone with the link ope
 5. Everyone fills their quota **or the first submitted leg kicks off** → acca **locks** with best combined bookmaker (members under quota miss or enter partial)
 6. Members receive **email notification** when acca locks (if Resend configured)
 7. When a round settles, the next open round starts automatically (using the group's current legs-per-member setting)
-8. Each round has a web/mobile **Group Chat** thread. Pick submissions, changes, lock, results, and settlement appear as system messages; members can post text (profanity-filtered) and react using six one-tap defaults or the broad emoji picker opened by `+`. Pick rows mirror reactions from their latest announcement.
+8. Each round has a web/mobile **Group Chat** thread. Pick submissions, changes, removals, lock, results, and settlement appear as system messages; members can post text (profanity-filtered) and react using the quiet **React** control. Pick rows mirror reactions from their latest announcement.
 
 → [specs/competitions-and-results.md](./specs/competitions-and-results.md)
 
@@ -39,6 +39,8 @@ Owner creates group (name only) → invite code + link. Anyone with the link ope
 While the bet is open: leg picker shows **best odds only** per selection; **Compare bookmakers** shows a provisional ranking from legs submitted so far. Once locked: **frozen combined odds** and the **Compare bookmakers** ranking captured at lock, so members can see which bookmaker gives the best acca odds when they place the bet. Per-leg **Won / Lost / Awaiting** badges update as matches finish. Betslip links shown until the first result; then tracking only. Page auto-refreshes every 60s while locked.
 
 **Editing picks:** members can change their own leg — in open rounds and in locked rounds — until the **first kickoff** among the acca's legs. Editing a locked round reprices the whole acca at current odds. Once the first match starts, picks are final.
+
+**Removing picks:** members can remove only their own leg while the round is still **open** and before the first kickoff. Removal requires confirmation and is announced in Group Chat. Locked and settled accas cannot lose legs.
 
 ### 5. Settle & stats
 **Settlement is system-only** — the match sync cron (every 5 min) updates leg outcomes as matches finish. A round **settles as soon as any leg loses** (group −1, next open round starts) or when every leg is won/void (acca win). Unfinished legs on a busted acca keep resolving afterward for personal outcomes/points. Group owners cannot mark outcomes themselves. Platform admins have a web-only **settlement queue** (`/admin/settlement`) for stuck/overdue legs (including remaining legs after an early loss). Email on settle. **Leaderboard** tab for points; **History** tab for every settled acca (fixtures, markets, outcomes); **Performance** tab for group charts and member breakdowns. User-level **Performance** nav for cross-group stats. Round tab shows a short recent-settled teaser with a link to full history.
@@ -66,6 +68,7 @@ Platform admins (`ADMIN_EMAILS`) see an **Admin** tab in the header with `/admin
 - [x] Match table + football-data.org sync
 - [x] Hands-off auto-settle (system-only; owner settlement removed July 2026; early settle on first loss)
 - [x] Editable picks until first kickoff (open + locked rounds; locked edits reprice the acca; web + mobile)
+- [x] Remove own picks while a round is open (confirmation + Group Chat event; web + mobile)
 - [x] Admin settlement queue with overdue-leg flags (web-only)
 - [x] Blog (`/blog`, file-based MDX) + sitemap/robots; session-aware marketing header on static pages
 - [x] Public nav: Home / About always reachable when signed in; Blog rightmost in app nav

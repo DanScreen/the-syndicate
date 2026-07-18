@@ -14,6 +14,7 @@ export type MessageKind = (typeof MESSAGE_KINDS)[number];
 export const SYSTEM_MESSAGE_EVENT_TYPES = [
   "leg_submitted",
   "leg_changed",
+  "leg_removed",
   "round_locked",
   "leg_result",
   "round_settled",

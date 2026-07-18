@@ -1,4 +1,5 @@
 import { formatOdds } from "@tiki-acca/shared";
+import { ApiError, api } from "@/api/client";
 import { useAuth } from "@/auth/AuthProvider";
 import {
   AccaSummary,
@@ -16,6 +17,8 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
+  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -39,6 +42,8 @@ export default function GroupRoundScreen() {
   const { data, error, reload, markChatRead } = useGroupData();
   const [refreshing, setRefreshing] = useState(false);
   const [editingLegId, setEditingLegId] = useState<string | null>(null);
+  const [removingLegId, setRemovingLegId] = useState<string | null>(null);
+  const [removeError, setRemoveError] = useState("");
   const [roundMessages, setRoundMessages] = useState<RoundMessageDto[]>([]);
   const [chatRefreshKey, setChatRefreshKey] = useState(0);
 
@@ -87,6 +92,24 @@ export default function GroupRoundScreen() {
       await reload();
     } finally {
       setRefreshing(false);
+    }
+  }
+
+  async function removeLeg(legId: string) {
+    if (!token) return;
+
+    setRemovingLegId(legId);
+    setRemoveError("");
+    try {
+      await api(`/api/legs/${legId}`, { method: "DELETE", token });
+      await reload();
+      setChatRefreshKey((key) => key + 1);
+    } catch (e) {
+      setRemoveError(
+        e instanceof ApiError ? e.message : "Failed to remove leg"
+      );
+    } finally {
+      setRemovingLegId(null);
     }
   }
 
@@ -210,21 +233,53 @@ export default function GroupRoundScreen() {
         <Card>
           <Text style={styles.editTitle}>Your picks</Text>
           <Text style={styles.editMeta}>
-            You can change them until the first kickoff
+            You can change {isOpen ? "or remove " : ""}them until the first kickoff
             {firstKickoff ? ` — ${formatCutoff(firstKickoff)}` : ""}.
             {isLocked ? " Changing a pick reprices the whole acca at current odds." : ""}
           </Text>
+          <ErrorText message={removeError} />
           {myLegs.map((leg) => (
             <View key={leg.id} style={styles.myLegRow}>
               <Text style={styles.myLegText}>
                 {legsPerMember > 1 ? `Leg ${leg.legIndex ?? ""}: ` : ""}
                 {leg.selectionLabel} ({formatOdds(leg.odds)})
               </Text>
-              <Button
-                label="Change"
-                onPress={() => setEditingLegId(leg.id)}
-                variant="secondary"
-              />
+              <View style={styles.myLegActions}>
+                <Button
+                  label="Change"
+                  onPress={() => setEditingLegId(leg.id)}
+                  variant="secondary"
+                />
+                {isOpen ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    disabled={removingLegId === leg.id}
+                    onPress={() =>
+                      Alert.alert(
+                        "Remove this leg?",
+                        `${leg.selectionLabel} will be removed from the group acca.`,
+                        [
+                          { text: "Cancel", style: "cancel" },
+                          {
+                            text: "Remove",
+                            style: "destructive",
+                            onPress: () => void removeLeg(leg.id),
+                          },
+                        ]
+                      )
+                    }
+                    style={({ pressed }) => [
+                      styles.removeButton,
+                      removingLegId === leg.id && styles.removeButtonDisabled,
+                      pressed && styles.removeButtonPressed,
+                    ]}
+                  >
+                    <Text style={styles.removeButtonText}>
+                      {removingLegId === leg.id ? "Removing…" : "Remove"}
+                    </Text>
+                  </Pressable>
+                ) : null}
+              </View>
             </View>
           ))}
         </Card>
@@ -303,4 +358,16 @@ const styles = StyleSheet.create({
   editMeta: { color: colors.muted, fontSize: 13, marginBottom: 12 },
   myLegRow: { gap: 8, marginBottom: 10 },
   myLegText: { color: colors.text, fontSize: 14 },
+  myLegActions: { gap: 8 },
+  removeButton: {
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors.danger,
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 11,
+  },
+  removeButtonPressed: { opacity: 0.75 },
+  removeButtonDisabled: { opacity: 0.5 },
+  removeButtonText: { color: colors.danger, fontSize: 14, fontWeight: "600" },
 });

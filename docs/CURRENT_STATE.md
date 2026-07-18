@@ -150,7 +150,7 @@ POST /api/legs                        → best retail quote; stores competitionI
 (lock) lockRoundWithAccaPricing()     → re-fetch quotes, rankAccaBookmakers(), store deeplinks on Leg
 ```
 
-At lock, `Leg.betslipUrl` stores the chosen bookmaker's **real** outcome/event deeplink (never a generic football hub); `Leg.bookmakerLinks` maps retail bookmakers → Odds API links only. **Hub URLs** (`BOOKMAKER_HUB_URLS`) are a last-resort UI fallback and are tagged `linkQuality: "hub"`. **While bet is open:** leg picker shows best odds only; **Compare bookmakers** shows a live provisional ranking + refreshed deeplinks from current quotes. **Once locked:** **final combined odds** + the **Compare bookmakers** ranking captured at lock (so members can pick the best bookmaker when placing the bet); primary CTA opens the best available deeplink (first pick when multi-leg) until the first result, then tracking only. Per-leg **Open** uses `bookmakerLinks[recommendedBookmaker]` when present.
+At lock, `Leg.betslipUrl` stores the chosen bookmaker's **real** outcome/event deeplink (never a generic football hub); `Leg.bookmakerLinks` maps retail bookmakers → Odds API links only. **Hub URLs** (`BOOKMAKER_HUB_URLS`) are a last-resort UI fallback and are tagged `linkQuality: "hub"`. Matching featured and alternate market lines (for example, standard + alternate Over 2.5 goals) merge bookmaker quotes by market type, selection, and bookmaker, retaining the best quote and available deeplink; this avoids losing broader alternate-feed coverage. **While bet is open:** leg picker shows best odds only; **Compare bookmakers** shows a live provisional ranking + refreshed deeplinks from current quotes. **Once locked:** **final combined odds** + the **Compare bookmakers** ranking captured at lock (so members can pick the best bookmaker when placing the bet); primary CTA opens the best available deeplink (first pick when multi-leg) until the first result, then tracking only. Per-leg **Open** uses `bookmakerLinks[recommendedBookmaker]` when present.
 
 Requires live odds (`ODDS_API_KEY`) — mock fixtures have no deeplinks. Odds are stored in **PostgreSQL** (`OddsBulkSnapshot`, `OddsEventSnapshot`) and refreshed by cron (`POST /api/internal/warm-odds-cache`). User picks read the DB; set `ODDS_DB_ONLY=true` in production to block live API calls from user traffic.
 
@@ -185,6 +185,7 @@ Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_
 | `apps/web/src/lib/odds/odds-store.ts` | PostgreSQL odds snapshots (bulk + per-event tiers) |
 | `apps/web/src/lib/odds/warm-cache.ts` | Cron odds refresh logic |
 | `apps/web/src/lib/odds/market-builders.ts` | Odds API → app market mappers |
+| `apps/web/src/lib/odds/merge-markets.ts` | Merge matching featured + alternate market quote coverage |
 | `apps/web/src/lib/odds/quotes.ts` | Quote helpers + deeplink resolution (no hub fallback) |
 | `apps/web/src/lib/odds/betslip-links.ts` | Ranked/per-leg links; hub detection; CTA link quality |
 | `apps/web/src/lib/odds/acca.ts` | Acca bookmaker ranking + best combined |
@@ -249,20 +250,21 @@ Email and push notifications fire on **round locked**, **round settled**, and **
 
 **Exactly-once settlement.** `applyRoundSettlement()` validates settleability, then runs in a `prisma.$transaction` with an atomic claim — `round.updateMany({ where: { status: "locked" }, data: { status: "settled" } })`. Overlapping settle attempts (e.g. two cron runs) can't double-count points: the loser matches zero rows and throws `RoundNotSettleableError`, treated as a benign `skipped` no-op.
 
-**System chat messages (group chat Step 1).** Round lifecycle events append `RoundMessage` system messages to the round thread ([specs/group-chat.md](./specs/group-chat.md)): leg submitted/changed (`/api/legs` routes, best-effort after write), round locked (`claimAndLockRound`, after the `open → locked` claim + successful pricing), leg results (`persistResolvableLegOutcomes` / `applyDeferredLegOutcome`, inside a `pending → outcome` claim transaction), and round settled (`applyRoundSettlement`, inside the settle transaction after the `locked → settled` claim). Message writes are gated on the same atomic claims as the events themselves, so retried or overlapping lock/settle runs never double-post — proven by race tests in `apps/web/src/lib/chat/exactly-once.test.ts` (`npm test --workspace=@tiki-acca/web`; requires local PostgreSQL).
+**System chat messages (group chat Step 1).** Round lifecycle events append `RoundMessage` system messages to the round thread ([specs/group-chat.md](./specs/group-chat.md)): leg submitted/changed/removed (`/api/legs` routes), round locked (`claimAndLockRound`, after the `open → locked` claim + successful pricing), leg results (`persistResolvableLegOutcomes` / `applyDeferredLegOutcome`, inside a `pending → outcome` claim transaction), and round settled (`applyRoundSettlement`, inside the settle transaction after the `locked → settled` claim). Message writes are gated on the same atomic claims as the events themselves, so retried or overlapping lock/settle runs never double-post — proven by race tests in `apps/web/src/lib/chat/exactly-once.test.ts` (`npm test --workspace=@tiki-acca/web`; requires local PostgreSQL).
 
 **Lock triggers.** A round moves `open → locked` when **every member has submitted `Round.legsPerMember` legs** or when the **earliest submitted leg kicks off** (partial accas — members under quota are excluded). `claimAndLockRound()` in `claim-lock-round.ts` atomically claims via `updateMany`, reprices, and emails; repricing failures revert to `open`. Kickoff locks run on each match-sync cron (5 min) and when loading `GET /api/groups/[id]`. **Reprice falls back to each leg’s stored odds** when live quotes are missing (fixture already kicked off / warmed cache miss) so kickoff locks don’t flap open↔locked. Loading a group with a full quota also retries lock. See [specs/round-deadline-lock.md](./specs/round-deadline-lock.md) and [specs/multi-leg-accas.md](./specs/multi-leg-accas.md).
 
 **Lock is likewise atomic.** When two members submit the final legs at once, only one request reprices the acca (Odds API credits) and sends the lock email; repricing failures revert the round to `open`.
 
-### Editing picks (until first kickoff)
+### Changing and removing picks (until first kickoff)
 
 Members can change **their own leg** via `PATCH /api/legs/[id]` while the round is `open` **or** `locked`, up to the earliest kickoff among the round's legs. After the first match starts, edits return 403. Rules enforced server-side:
 
 - Only the leg's owner may edit; pick is re-validated against live/mock odds like a fresh submit (competition enabled, selection exists, fixture not kicked off).
 - Edited legs reset `matchId` and keep `outcome: "pending"`.
 - **Locked rounds reprice**: after an edit, `lockRoundWithAccaPricing()` re-runs — combined odds, bookmaker rankings, and betslip links refresh at current prices for **all** legs. If repricing fails, the edit is rolled back (previous pick restored).
-- UI: "Change my pick" on the Round tab (`groups/[id]/page.tsx`), reusing `SubmitLegForm` in edit mode with the cutoff time shown.
+- Members can remove **their own leg** via `DELETE /api/legs/[id]` only while the round remains `open` and before its first kickoff. Locked/settled rounds reject removal. A replacement submission reuses the first available `legIndex`.
+- UI: **Change** and **Remove** actions on the Round tab (web + mobile); removal requires confirmation and posts a `leg_removed` system chat message.
 
 ### Cron (internal)
 
@@ -277,7 +279,7 @@ Members can change **their own leg** via `PATCH /api/legs/[id]` while the round 
 | Path | Role |
 |------|------|
 | `apps/web/src/lib/settlement/auto-settle-round.ts` | Hands-off auto-settle + deferred pending legs on settled rounds |
-| `apps/web/src/app/api/legs/[id]/route.ts` | Leg editing (PATCH) — cutoff, revalidation, locked-round reprice |
+| `apps/web/src/app/api/legs/[id]/route.ts` | Change/remove own leg (PATCH/DELETE) — cutoff, authorization, locked-round edit reprice |
 | `apps/web/src/lib/admin/compute-settlement-queue.ts` | Locked + early-settled-pending queue + 2h overdue-leg flags |
 | `apps/web/src/components/admin-settlement.tsx` | Settlement queue UI + manual settle / resolve-remaining form |
 | `apps/web/src/app/api/admin/rounds/[id]/settle/route.ts` | Admin manual settle (locked) or deferred leg resolve (settled) |
@@ -418,7 +420,7 @@ Env vars on Cloud Run: `NEXTAUTH_URL`, `EMAIL_FROM`, `ADMIN_EMAILS` (from GitHub
 
 Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `AnalyticsEvent`, `CompetitionSetting`, `RoundMessage`, `MessageReaction`.
 
-- `RoundMessage` — round-scoped chat thread: user banter (`kind: "user"`) + append-only system messages (`kind: "system"`, `eventType`: `leg_submitted | leg_changed | round_locked | leg_result | round_settled`; `legId` set on pick announcements so the betslip row can mirror reactions). User posts run through shared `containsProfanity` (same list as names/groups). Written at event time by lifecycle code — see [Settlement](#settlement). Legs submitted before group chat shipped may lack announcements; backfill with `npm run db:maintenance -- backfill-leg-announcements --execute` (preview first).
+- `RoundMessage` — round-scoped chat thread: user banter (`kind: "user"`) + append-only system messages (`kind: "system"`, `eventType`: `leg_submitted | leg_changed | leg_removed | round_locked | leg_result | round_settled`; `legId` set on active pick announcements so the betslip row can mirror reactions). User posts run through shared `containsProfanity` (same list as names/groups). Written at event time by lifecycle code — see [Settlement](#settlement). Legs submitted before group chat shipped may lack announcements; backfill with `npm run db:maintenance -- backfill-leg-announcements --execute` (preview first).
 - `MessageReaction` — emoji reactions on messages, unique per `(messageId, userId, emoji)`. The bar shows **only used emoji chips**; a muted **React** / **+** opens a viewport-level picker (quick picks 🔥😂💀👀🫡🍀, then more). The API validates any single Unicode emoji. Pick rows mirror the latest `leg_submitted` / `leg_changed` message for their `legId`.
 - `GroupMember.lastReadMessageAt` — group-wide unread cursor; dashboard cards and Round tabs show unread counts.
 - `NotificationPreference.pushChat` — chat push opt-in (default on). User messages notify other members at most once per ten-minute group bucket; active 20-second thread polling suppresses foreground pushes.
@@ -453,6 +455,7 @@ Recent migrations include `20260717150000_group_chat_messages` and `202607171700
 | `GET /api/fixtures/[id]/markets` | Session | Extended markets (`?competition=` required) |
 | `POST /api/legs` | Session | Submit leg (rejects same market family on same fixture — 409) |
 | `PATCH /api/legs/[id]` | Leg owner | Edit own pick until first kickoff (locked rounds reprice; same market-family rule) |
+| `DELETE /api/legs/[id]` | Leg owner | Remove own pick while round is open and before first kickoff |
 | `GET /api/groups` | Session | Groups list + current betslip `activeLegs` + yourLeg / yourLegCount + chat unread count |
 | `POST /api/groups` | Session | Create group (`name`, optional `legsPerMember` 1–3) |
 | `PATCH /api/groups/[id]` | Owner | Update `legsPerMember` (open round immediately; locked left alone) |
