@@ -545,7 +545,7 @@ export function SubmitLegForm({
   editLegId?: string;
   onCancel?: () => void;
   title?: string;
-  /** Other legs already on this round — used to block duplicate markets on the same fixture. */
+  /** Other legs already on this round — used to block occupied fixtures. */
   existingLegs?: MarketConflictLeg[];
 }) {
   const [competitions, setCompetitions] = useState<CompetitionOption[]>([]);
@@ -656,6 +656,9 @@ export function SubmitLegForm({
   const marketGroups = useMemo(() => groupMarkets(allMarkets), [allMarkets]);
   const market = allMarkets.find((m) => m.type === marketType);
   const selection = market?.selections.find((s) => s.id === selectionId);
+  const hasTakenFixtures = fixtures.some((f) =>
+    isFixtureTaken(existingLegs, f.id, editLegId)
+  );
 
   async function handleSubmit() {
     setLoading(true);
@@ -742,6 +745,11 @@ export function SubmitLegForm({
       {competitionId && !loadingFixtures && fixtures.length > 0 ? (
         <>
           <Text style={styles.stepLabel}>2. Fixture</Text>
+          {hasTakenFixtures ? (
+            <Text style={styles.fixtureRule}>
+              One pick per fixture keeps combined odds accurate.
+            </Text>
+          ) : null}
           {fixtures.map((f) => {
             const taken = isFixtureTaken(existingLegs, f.id, editLegId);
             return (
@@ -1025,6 +1033,11 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.5,
     marginTop: 8,
+    marginBottom: 4,
+  },
+  fixtureRule: {
+    color: colors.muted,
+    fontSize: 12,
     marginBottom: 4,
   },
   groupLabel: {
