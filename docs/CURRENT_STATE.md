@@ -80,7 +80,7 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 | Auth (email/password, Auth.js JWT sessions) | ✅ |
 | Groups, invite codes, join links (`?code=`), no member cap | ✅ |
 | Legs per member (1 / 2 / 3) — owner create + Settings; updates open rounds | ✅ |
-| No duplicate markets on the same fixture within a round (O/U lines share a family) | ✅ |
+| One leg per fixture within a round (prevents unpriced correlated bet builders) | ✅ |
 | Always-open rounds (auto-created with group; next opens on settle) | ✅ |
 | Rounds: open → locked → settled (badges: **Bet Open**, **Bet Locked**, **Bet Settled**) | ✅ |
 | Live odds ([The Odds API](https://the-odds-api.com/)) + mock fallback | ✅ |
@@ -150,7 +150,7 @@ POST /api/legs                        → best retail quote; stores competitionI
 (lock) lockRoundWithAccaPricing()     → re-fetch quotes, rankAccaBookmakers(), store deeplinks on Leg
 ```
 
-At lock, `Leg.betslipUrl` stores the chosen bookmaker's **real** outcome/event deeplink (never a generic football hub); `Leg.bookmakerLinks` maps retail bookmakers → Odds API links only. **Hub URLs** (`BOOKMAKER_HUB_URLS`) are a last-resort UI fallback and are tagged `linkQuality: "hub"`. Matching featured and alternate market lines (for example, standard + alternate Over 2.5 goals) merge bookmaker quotes by market type, selection, and bookmaker, retaining the best quote and available deeplink; this avoids losing broader alternate-feed coverage. **While bet is open:** leg picker shows best odds only; **Compare bookmakers** shows a live provisional ranking + refreshed deeplinks from current quotes. **Once locked:** **final combined odds** + the **Compare bookmakers** ranking captured at lock (so members can pick the best bookmaker when placing the bet); primary CTA opens the best available deeplink (first pick when multi-leg) until the first result, then tracking only. Per-leg **Open** uses `bookmakerLinks[recommendedBookmaker]` when present.
+At lock, `Leg.betslipUrl` stores the chosen bookmaker's **real** outcome/event deeplink (never a generic football hub); `Leg.bookmakerLinks` maps retail bookmakers → Odds API links only. **Hub URLs** (`BOOKMAKER_HUB_URLS`) are a last-resort UI fallback and are tagged `linkQuality: "hub"`. Matching featured and alternate market lines (for example, standard + alternate Over 2.5 goals) merge bookmaker quotes by market type, selection, and bookmaker, retaining the best quote and available deeplink; this avoids losing broader alternate-feed coverage. New/edited picks enforce **one leg per fixture per round** because The Odds API exposes single-selection prices, not bookmaker correlation-adjusted bet-builder prices; combined odds therefore multiply legs from separate fixtures only. **While bet is open:** leg picker shows best odds only; **Compare bookmakers** shows a live provisional ranking + refreshed deeplinks from current quotes. **Once locked:** **final combined odds** + the **Compare bookmakers** ranking captured at lock (so members can pick the best bookmaker when placing the bet); primary CTA opens the best available deeplink (first pick when multi-leg) until the first result, then tracking only. Per-leg **Open** uses `bookmakerLinks[recommendedBookmaker]` when present.
 
 Requires live odds (`ODDS_API_KEY`) — mock fixtures have no deeplinks. Odds are stored in **PostgreSQL** (`OddsBulkSnapshot`, `OddsEventSnapshot`) and refreshed by cron (`POST /api/internal/warm-odds-cache`). User picks read the DB; set `ODDS_DB_ONLY=true` in production to block live API calls from user traffic.
 
@@ -432,7 +432,7 @@ Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `Analytics
 - `Group.legsPerMember` — 1–3 (default 1); owner create / Settings.
 - `Round.legsPerMember` — set at round open; owner Settings updates it while the round is `open` and before first kickoff. Locked / kickoff-in-progress rounds keep their quota; group setting then applies to the next open round.
 - Up to `legsPerMember` legs per user per round (`@@unique([roundId, userId, legIndex])`).
-- **Duplicate market rule:** within a round, only one leg per `(fixtureId, marketFamily)`. Market families group line variants (e.g. `over_under_05` + `over_under_15` → `over_under`). See `packages/shared/src/market-conflicts.ts`. Enforced on `POST`/`PATCH` `/api/legs`; pickers disable taken markets. **Historical bets:** open / pre-kickoff locked rounds are purged on group load and before lock; locked rounds are purged again before settle; settled rounds are fixed via `npm run db:maintenance -- fix-duplicate-markets` (keeps earliest leg, re-scores points).
+- **Fixture uniqueness rule:** new/edited picks allow only one leg per `fixtureId` in a round, regardless of market, because same-match combinations require correlation-adjusted bet-builder pricing unavailable from the current feed. See `packages/shared/src/market-conflicts.ts`. Enforced on `POST`/`PATCH` `/api/legs`; web/mobile pickers disable occupied fixtures. Existing settled history is unchanged. The older `fix-duplicate-markets` maintenance remains available for historical same-market-family cleanup.
 - Leg stores `legIndex` + fixture snapshot: teams, kickoff, `competitionId` (slug), `competition` (display name), optional `matchId` FK, market, odds, bookmaker, `betslipUrl`, `bookmakerLinks` JSON, outcome.
 - `Match` — canonical result per fixture (`externalDataId` from football-data.org).
 - `Round.accaBookmakerRankings` — JSON array of ranked bookmakers at lock.
@@ -453,8 +453,8 @@ Recent migrations include `20260717150000_group_chat_messages` and `202607171700
 | `GET /api/competitions` | Session | Enabled competitions for leg picker |
 | `GET /api/fixtures` | Session | List fixtures (`?competition=` required) |
 | `GET /api/fixtures/[id]/markets` | Session | Extended markets (`?competition=` required) |
-| `POST /api/legs` | Session | Submit leg (rejects same market family on same fixture — 409) |
-| `PATCH /api/legs/[id]` | Leg owner | Edit own pick until first kickoff (locked rounds reprice; same market-family rule) |
+| `POST /api/legs` | Session | Submit leg (rejects any second leg on the same fixture — 409) |
+| `PATCH /api/legs/[id]` | Leg owner | Edit own pick until first kickoff (locked rounds reprice; one-leg-per-fixture rule) |
 | `DELETE /api/legs/[id]` | Leg owner | Remove own pick while round is open and before first kickoff |
 | `GET /api/groups` | Session | Groups list + current betslip `activeLegs` + yourLeg / yourLegCount + chat unread count |
 | `POST /api/groups` | Session | Create group (`name`, optional `legsPerMember` 1–3) |

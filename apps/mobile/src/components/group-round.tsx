@@ -31,7 +31,7 @@ import {
   bookmakerLogoUrl,
   bookmakerRankPlace,
   groupMarkets,
-  isMarketTakenOnFixture,
+  isFixtureTaken,
   pointsTone,
   pointsToneFromOutcome,
   sortQuotesByBestOdds,
@@ -742,15 +742,21 @@ export function SubmitLegForm({
       {competitionId && !loadingFixtures && fixtures.length > 0 ? (
         <>
           <Text style={styles.stepLabel}>2. Fixture</Text>
-          {fixtures.map((f) => (
-            <OptionRow
-              key={f.id}
-              label={`${f.homeTeam} vs ${f.awayTeam}`}
-              subtitle={formatKickoff(f.kickoff)}
-              selected={fixtureId === f.id}
-              onPress={() => setFixtureId(f.id)}
-            />
-          ))}
+          {fixtures.map((f) => {
+            const taken = isFixtureTaken(existingLegs, f.id, editLegId);
+            return (
+              <OptionRow
+                key={f.id}
+                label={`${f.homeTeam} vs ${f.awayTeam}${taken ? " (already in acca)" : ""}`}
+                subtitle={formatKickoff(f.kickoff)}
+                selected={fixtureId === f.id}
+                disabled={taken}
+                onPress={() => {
+                  if (!taken) setFixtureId(f.id);
+                }}
+              />
+            );
+          })}
         </>
       ) : null}
 
@@ -764,27 +770,17 @@ export function SubmitLegForm({
           {marketGroups.map((group) => (
             <View key={group.id}>
               <Text style={styles.groupLabel}>{group.label}</Text>
-              {group.markets.map((m) => {
-                const taken = isMarketTakenOnFixture(
-                  existingLegs,
-                  fixtureId,
-                  m.type,
-                  editLegId
-                );
-                return (
-                  <OptionRow
-                    key={m.type}
-                    label={taken ? `${m.label} (taken)` : m.label}
-                    selected={marketType === m.type}
-                    disabled={taken}
-                    onPress={() => {
-                      if (taken) return;
-                      setMarketType(m.type);
-                      setSelectionId("");
-                    }}
-                  />
-                );
-              })}
+              {group.markets.map((m) => (
+                <OptionRow
+                  key={m.type}
+                  label={m.label}
+                  selected={marketType === m.type}
+                  onPress={() => {
+                    setMarketType(m.type);
+                    setSelectionId("");
+                  }}
+                />
+              ))}
             </View>
           ))}
           {!loadingMarkets && availableTiers.some((t) => !loadedTiers.includes(t.id)) ? (

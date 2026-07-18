@@ -32,7 +32,7 @@ Groups can run accas where each member contributes more than one leg:
 - Legs use `legIndex` (1-based) with `@@unique([roundId, userId, legIndex])`.
 - Members can remove only their own legs while the round is still open and before first kickoff; replacement picks reuse the first free `legIndex`.
 - Member points sum across all legs in the round (existing per-leg scoring).
-- **No duplicate markets on the same fixture** — a round cannot include two legs that share a market family on the same match (e.g. Goals O/U 0.5 and O/U 1.5). Exact same pick is therefore also blocked. Helpers: `marketFamilyKey` / `findConflictingMarketLeg` / `findRedundantMarketLegs` in `packages/shared/src/market-conflicts.ts`. Historical cleanup: `purgeDuplicateMarketsInRound` + `fix-duplicate-markets` maintenance.
+- **One leg per fixture** — a round cannot include two legs from the same match, even across different markets. Same-match singles cannot be multiplied accurately because bookmakers apply correlation-aware bet-builder pricing and the current feed does not expose that combined quote. Enforced by `findConflictingFixtureLeg` in `packages/shared/src/market-conflicts.ts`; existing settled history is unchanged.
 
 ---
 
@@ -54,7 +54,7 @@ Groups can run accas where each member contributes more than one leg:
 - [x] Can owner change `legsPerMember` with an open round? **Yes** — open rounds update immediately; locked / past-kickoff stay put. Lowering blocked if someone already exceeds the new quota.
 - [x] Leaderboard: all legs vs primary? **All legs** (sum).
 - [ ] Combined-odds ceiling — not in v1.
-- [x] Block same fixture/market twice — **same market family on the same fixture** cannot appear twice in a round (e.g. Over 0.5 and Over 1.5 goals). Different fixtures OK. Enforced on `POST`/`PATCH` `/api/legs` + disabled in web/mobile pickers. Historical/open rounds are purged automatically; settled rounds via `fix-duplicate-markets` maintenance.
+- [x] Block multiple legs from one fixture — any second leg on the same match is rejected by `POST`/`PATCH` `/api/legs`; occupied fixtures are disabled in web/mobile pickers. This keeps combined odds valid without a bet-builder pricing feed. Existing settled rounds are not rewritten.
 - [x] Grandfather existing groups at `legsPerMember = 1` — migration default.
 
 ---

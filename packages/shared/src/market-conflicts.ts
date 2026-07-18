@@ -30,48 +30,40 @@ export type MarketConflictLeg = {
 };
 
 /**
- * Finds an existing round leg that already uses the same market family on the same fixture.
+ * Finds an existing round leg on the candidate fixture.
  * Pass `excludeLegId` when editing so a leg does not conflict with itself.
+ *
+ * Same-fixture singles cannot be multiplied safely because bookmakers apply
+ * correlation-aware bet-builder pricing that our odds feed does not provide.
  */
-export function findConflictingMarketLeg(
+export function findConflictingFixtureLeg(
   existingLegs: ReadonlyArray<MarketConflictLeg>,
-  candidate: { fixtureId: string; marketType: string },
+  fixtureId: string,
   excludeLegId?: string
 ): MarketConflictLeg | null {
-  const family = marketFamilyKey(candidate.marketType);
-
   for (const leg of existingLegs) {
     if (excludeLegId && leg.id === excludeLegId) continue;
-    if (leg.fixtureId !== candidate.fixtureId) continue;
-    if (marketFamilyKey(leg.marketType) === family) return leg;
+    if (leg.fixtureId === fixtureId) return leg;
   }
 
   return null;
 }
 
-/** True when a market type conflicts with existing legs on this fixture. */
-export function isMarketTakenOnFixture(
+/** True when another leg already uses this fixture. */
+export function isFixtureTaken(
   existingLegs: ReadonlyArray<MarketConflictLeg>,
   fixtureId: string,
-  marketType: string,
   excludeLegId?: string
 ): boolean {
-  return (
-    findConflictingMarketLeg(
-      existingLegs,
-      { fixtureId, marketType },
-      excludeLegId
-    ) !== null
-  );
+  return findConflictingFixtureLeg(existingLegs, fixtureId, excludeLegId) !== null;
 }
 
-export function formatMarketConflictError(conflict: MarketConflictLeg): string {
+export function formatFixtureConflictError(conflict: MarketConflictLeg): string {
   const fixture =
     conflict.homeTeam && conflict.awayTeam
       ? `${conflict.homeTeam} vs ${conflict.awayTeam}`
       : "this fixture";
-  const market = conflict.marketLabel ?? "that market";
-  return `This acca already has a ${market} pick on ${fixture}. Choose a different market or fixture — the same market can't be used twice (including other lines like Over 0.5 and Over 1.5).`;
+  return `This acca already has a pick on ${fixture}. Choose a different fixture — only one leg per match is supported.`;
 }
 
 export type MarketRedundancyLeg = MarketConflictLeg & {

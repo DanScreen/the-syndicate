@@ -14,8 +14,8 @@ import { firstKickoff } from "@/lib/rounds/first-kickoff";
 import { prisma } from "@tiki-acca/database";
 import {
   editLegSchema,
-  findConflictingMarketLeg,
-  formatMarketConflictError,
+  findConflictingFixtureLeg,
+  formatFixtureConflictError,
   getCompetitionById,
 } from "@tiki-acca/shared";
 import { NextResponse } from "next/server";
@@ -85,14 +85,14 @@ export async function PATCH(request: Request, { params }: Params) {
     return NextResponse.json({ error: "That fixture has already kicked off" }, { status: 400 });
   }
 
-  const marketConflict = findConflictingMarketLeg(
+  const fixtureConflict = findConflictingFixtureLeg(
     round.legs,
-    { fixtureId: fixture.id, marketType: market.type },
+    fixture.id,
     leg.id
   );
-  if (marketConflict) {
+  if (fixtureConflict) {
     return NextResponse.json(
-      { error: formatMarketConflictError(marketConflict) },
+      { error: formatFixtureConflictError(fixtureConflict) },
       { status: 409 }
     );
   }

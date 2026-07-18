@@ -10,7 +10,7 @@ import type {
   RoundMessageDto,
 } from "@tiki-acca/shared";
 import {
-  isMarketTakenOnFixture,
+  isFixtureTaken,
   type AccaBookmakerRanking,
 } from "@tiki-acca/shared";
 import { PointsText } from "@/components/points-text";
@@ -494,29 +494,38 @@ export function SubmitLegForm({
         <div className="space-y-2">
           <p className="text-xs font-medium uppercase tracking-wide text-muted">2. Pick a fixture</p>
           <div className="grid gap-2 sm:grid-cols-2">
-            {fixtures.map((f) => (
-              <button
-                key={f.id}
-                type="button"
-                aria-pressed={fixtureId === f.id}
-                onClick={() => {
-                  setFixtureId(f.id);
-                  setMarketType("");
-                  setSelectionId("");
-                }}
-                className={`rounded-lg border px-3 py-3 text-left text-sm transition-colors ${
-                  fixtureId === f.id
-                    ? "border-accent bg-accent-muted/30"
-                    : "border-border hover:border-accent/40"
-                }`}
-              >
-                <p className="flex items-center gap-1.5 font-medium">
-                  {fixtureId === f.id && <CheckIcon className="text-accent" />}
-                  {f.homeTeam} vs {f.awayTeam}
-                </p>
-                <p className="mt-1 text-xs text-muted">{formatKickoff(f.kickoff)}</p>
-              </button>
-            ))}
+            {fixtures.map((f) => {
+              const taken = isFixtureTaken(existingLegs, f.id, editLegId);
+              return (
+                <button
+                  key={f.id}
+                  type="button"
+                  aria-pressed={fixtureId === f.id}
+                  disabled={taken}
+                  title={taken ? "Another leg from this fixture is already in the acca" : undefined}
+                  onClick={() => {
+                    if (taken) return;
+                    setFixtureId(f.id);
+                    setMarketType("");
+                    setSelectionId("");
+                  }}
+                  className={`rounded-lg border px-3 py-3 text-left text-sm transition-colors ${
+                    taken
+                      ? "cursor-not-allowed border-border/60 text-muted opacity-50"
+                      : fixtureId === f.id
+                        ? "border-accent bg-accent-muted/30"
+                        : "border-border hover:border-accent/40"
+                  }`}
+                >
+                  <p className="flex items-center gap-1.5 font-medium">
+                    {fixtureId === f.id && <CheckIcon className="text-accent" />}
+                    {f.homeTeam} vs {f.awayTeam}
+                    {taken ? " (already in acca)" : ""}
+                  </p>
+                  <p className="mt-1 text-xs text-muted">{formatKickoff(f.kickoff)}</p>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -534,43 +543,25 @@ export function SubmitLegForm({
             <div key={group.id} className="space-y-2">
               <p className="text-xs font-medium text-muted">{group.label}</p>
               <div className="flex flex-wrap gap-2">
-                {group.markets.map((m) => {
-                  const taken = isMarketTakenOnFixture(
-                    existingLegs,
-                    fixtureId,
-                    m.type,
-                    editLegId
-                  );
-                  return (
-                    <button
-                      key={m.type}
-                      type="button"
-                      aria-pressed={marketType === m.type}
-                      disabled={taken}
-                      title={
-                        taken
-                          ? "This market is already on the acca for this fixture"
-                          : undefined
-                      }
-                      onClick={() => {
-                        if (taken) return;
-                        setMarketType(m.type);
-                        setSelectionId("");
-                      }}
-                      className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm ${
-                        taken
-                          ? "cursor-not-allowed border-border/60 text-muted opacity-50"
-                          : marketType === m.type
-                            ? "border-accent bg-accent-muted/30"
-                            : "border-border hover:border-accent/40"
-                      }`}
-                    >
-                      {marketType === m.type && <CheckIcon className="text-accent" />}
-                      {m.label}
-                      {taken ? " (taken)" : ""}
-                    </button>
-                  );
-                })}
+                {group.markets.map((m) => (
+                  <button
+                    key={m.type}
+                    type="button"
+                    aria-pressed={marketType === m.type}
+                    onClick={() => {
+                      setMarketType(m.type);
+                      setSelectionId("");
+                    }}
+                    className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm ${
+                      marketType === m.type
+                        ? "border-accent bg-accent-muted/30"
+                        : "border-border hover:border-accent/40"
+                    }`}
+                  >
+                    {marketType === m.type && <CheckIcon className="text-accent" />}
+                    {m.label}
+                  </button>
+                ))}
               </div>
             </div>
           ))}
