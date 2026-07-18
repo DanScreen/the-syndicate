@@ -24,6 +24,7 @@ import type {
   RoundMessageDto,
 } from "@tiki-acca/shared";
 import {
+  BOOKMAKER_RANKINGS_PREVIEW_COUNT,
   groupAccaRoundPoints,
   formatLegPoints,
   formatRoundStatusBadge,
@@ -353,8 +354,21 @@ export function AccaSummary({
   compareDefaultOpen?: boolean;
 }) {
   const [bookmakersOpen, setBookmakersOpen] = useState(compareDefaultOpen);
+  const [expandedBookmakerRankingKey, setExpandedBookmakerRankingKey] = useState<
+    string | null
+  >(null);
   const topBookmaker = bookmakerRankings[0];
   const showCompare = showBookmakerCompare && bookmakerRankings.length > 0;
+  const bookmakerRankingKey = bookmakerRankings
+    .map((entry) => entry.bookmakerId)
+    .join(",");
+  const showAllBookmakers =
+    expandedBookmakerRankingKey === bookmakerRankingKey;
+  const canExpandBookmakers =
+    bookmakerRankings.length > BOOKMAKER_RANKINGS_PREVIEW_COUNT;
+  const visibleBookmakerRankings = showAllBookmakers
+    ? bookmakerRankings
+    : bookmakerRankings.slice(0, BOOKMAKER_RANKINGS_PREVIEW_COUNT);
   const ctaBookmaker = bookmakerName || topBookmaker?.bookmakerName || null;
   const linkQuality =
     betslipLinkQuality ??
@@ -442,8 +456,9 @@ export function AccaSummary({
               />
             </Svg>
           </Pressable>
-          {bookmakersOpen
-            ? bookmakerRankings.map((entry, index) => {
+          {bookmakersOpen ? (
+            <>
+              {visibleBookmakerRankings.map((entry, index) => {
                 const place = bookmakerRankPlace(index);
                 const logoSize = place === 1 ? 32 : place === "other" ? 24 : 28;
                 const qualityHint =
@@ -521,8 +536,30 @@ export function AccaSummary({
                     </View>
                   </View>
                 );
-              })
-            : null}
+              })}
+              {canExpandBookmakers ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: showAllBookmakers }}
+                  onPress={() =>
+                    setExpandedBookmakerRankingKey((key) =>
+                      key === bookmakerRankingKey ? null : bookmakerRankingKey,
+                    )
+                  }
+                  style={({ pressed }) => [
+                    styles.showBookmakersButton,
+                    pressed && { opacity: 0.7 },
+                  ]}
+                >
+                  <Text style={styles.showBookmakersText}>
+                    {showAllBookmakers
+                      ? `Show top ${BOOKMAKER_RANKINGS_PREVIEW_COUNT}`
+                      : `Show all ${bookmakerRankings.length} bookmakers`}
+                  </Text>
+                </Pressable>
+              ) : null}
+            </>
+          ) : null}
         </Card>
       ) : null}
     </View>
@@ -1204,6 +1241,17 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 8,
+  },
+  showBookmakersButton: {
+    alignItems: "center",
+    borderRadius: 8,
+    marginTop: 6,
+    paddingVertical: 10,
+  },
+  showBookmakersText: {
+    color: colors.accent,
+    fontSize: 13,
+    fontWeight: "600",
   },
   lockedAtRow: {
     flexDirection: "row",

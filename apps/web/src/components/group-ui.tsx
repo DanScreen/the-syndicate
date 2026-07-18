@@ -10,6 +10,7 @@ import type {
   RoundMessageDto,
 } from "@tiki-acca/shared";
 import {
+  BOOKMAKER_RANKINGS_PREVIEW_COUNT,
   isFixtureTaken,
   type AccaBookmakerRanking,
 } from "@tiki-acca/shared";
@@ -716,8 +717,21 @@ export function AccaSummary({
   compareDefaultOpen?: boolean;
 }) {
   const [bookmakersOpen, setBookmakersOpen] = useState(compareDefaultOpen);
+  const [expandedBookmakerRankingKey, setExpandedBookmakerRankingKey] = useState<
+    string | null
+  >(null);
   const topBookmaker = bookmakerRankings[0];
   const showCompare = showBookmakerCompare && bookmakerRankings.length > 0;
+  const bookmakerRankingKey = bookmakerRankings
+    .map((entry) => entry.bookmakerId)
+    .join(",");
+  const showAllBookmakers =
+    expandedBookmakerRankingKey === bookmakerRankingKey;
+  const canExpandBookmakers =
+    bookmakerRankings.length > BOOKMAKER_RANKINGS_PREVIEW_COUNT;
+  const visibleBookmakerRankings = showAllBookmakers
+    ? bookmakerRankings
+    : bookmakerRankings.slice(0, BOOKMAKER_RANKINGS_PREVIEW_COUNT);
   const oddsLabel = inProgress
     ? "Locked combined odds"
     : preview
@@ -817,7 +831,7 @@ export function AccaSummary({
           </button>
           {bookmakersOpen && (
             <ol className="space-y-2 border-t border-border px-2 py-2">
-              {bookmakerRankings.map((entry, index) => {
+              {visibleBookmakerRankings.map((entry, index) => {
                 const place = bookmakerRankPlace(index);
                 const qualityHint =
                   entry.linkQuality === "hub"
@@ -888,6 +902,24 @@ export function AccaSummary({
                   </li>
                 );
               })}
+              {canExpandBookmakers && (
+                <li>
+                  <button
+                    type="button"
+                    aria-expanded={showAllBookmakers}
+                    onClick={() =>
+                      setExpandedBookmakerRankingKey((key) =>
+                        key === bookmakerRankingKey ? null : bookmakerRankingKey,
+                      )
+                    }
+                    className="w-full rounded-lg px-3 py-2 text-center text-sm font-medium text-accent hover:bg-accent-muted/30"
+                  >
+                    {showAllBookmakers
+                      ? `Show top ${BOOKMAKER_RANKINGS_PREVIEW_COUNT}`
+                      : `Show all ${bookmakerRankings.length} bookmakers`}
+                  </button>
+                </li>
+              )}
             </ol>
           )}
         </div>
