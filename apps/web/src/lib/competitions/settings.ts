@@ -1,6 +1,7 @@
 import { prisma } from "@tiki-acca/database";
 import {
   COMPETITIONS,
+  competitionNeedsManualSettlement,
   DEFAULT_ENABLED_COMPETITION_IDS,
   type Competition,
 } from "@tiki-acca/shared";
@@ -11,6 +12,7 @@ export type CompetitionSettingView = {
   enabled: boolean;
   oddsApiSport: string;
   footballDataCode: string;
+  manualSettlement: boolean;
 };
 
 async function ensureSettingsRows() {
@@ -46,6 +48,7 @@ export async function getCompetitionSettings(): Promise<CompetitionSettingView[]
     enabled: byId.get(competition.id) ?? false,
     oddsApiSport: competition.oddsApiSport,
     footballDataCode: competition.footballDataCode,
+    manualSettlement: competitionNeedsManualSettlement(competition),
   }));
 }
 
