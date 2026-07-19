@@ -2,7 +2,17 @@ export type Competition = {
   id: string;
   name: string;
   oddsApiSport: string;
+  /**
+   * football-data.org competition code used for automatic result sync.
+   * Empty for competitions not covered by our football-data.org tier
+   * (see `manualSettlement`) — those are settled by hand in the admin queue.
+   */
   footballDataCode: string;
+  /**
+   * When true, results are not available from football-data.org on our current
+   * tier, so match sync is skipped and legs must be settled manually by an admin.
+   */
+  manualSettlement?: boolean;
 };
 
 export const COMPETITIONS: Competition[] = [
@@ -84,6 +94,22 @@ export const COMPETITIONS: Competition[] = [
     oddsApiSport: "soccer_fifa_world_cup",
     footballDataCode: "WC",
   },
+  {
+    id: "champions-league-qual",
+    name: "Champions League Qualification",
+    oddsApiSport: "soccer_uefa_champs_league_qualification",
+    // Not on our football-data.org tier — settled manually.
+    footballDataCode: "",
+    manualSettlement: true,
+  },
+  {
+    id: "europa-league",
+    name: "Europa League",
+    oddsApiSport: "soccer_uefa_europa_league",
+    // Not on our football-data.org tier — settled manually.
+    footballDataCode: "",
+    manualSettlement: true,
+  },
 ];
 
 export const DEFAULT_COMPETITION_ID = "world-cup";
@@ -101,4 +127,9 @@ export function getCompetitionByOddsApiSport(sport: string): Competition | undef
 
 export function isValidCompetitionId(id: string): boolean {
   return COMPETITIONS.some((c) => c.id === id);
+}
+
+/** Competitions with no automatic result sync — legs are settled by hand. */
+export function competitionNeedsManualSettlement(competition: Competition): boolean {
+  return competition.manualSettlement === true || competition.footballDataCode === "";
 }

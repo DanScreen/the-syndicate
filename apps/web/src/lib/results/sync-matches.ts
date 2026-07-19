@@ -6,7 +6,11 @@ import {
 } from "@/lib/results/football-data";
 import { getEnabledCompetitions } from "@/lib/competitions/settings";
 import { prisma } from "@tiki-acca/database";
-import { COMPETITIONS, type Competition } from "@tiki-acca/shared";
+import {
+  COMPETITIONS,
+  competitionNeedsManualSettlement,
+  type Competition,
+} from "@tiki-acca/shared";
 
 function matchDataFromFootballData(competitionId: string, match: FootballDataMatch) {
   const homeTeam = match.homeTeam?.name;
@@ -81,7 +85,12 @@ async function getCompetitionsToSync(): Promise<Competition[]> {
     ...pendingLegs.map((leg) => leg.competitionId),
   ]);
 
-  return COMPETITIONS.filter((competition) => requiredIds.has(competition.id));
+  // Manual-settlement competitions have no football-data.org code on our tier;
+  // skip them so sync doesn't fire a doomed request and log a spurious error.
+  return COMPETITIONS.filter(
+    (competition) =>
+      requiredIds.has(competition.id) && !competitionNeedsManualSettlement(competition)
+  );
 }
 
 export async function syncAllCompetitionMatches(): Promise<SyncMatchesResult> {
