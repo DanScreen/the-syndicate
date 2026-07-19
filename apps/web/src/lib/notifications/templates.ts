@@ -31,6 +31,7 @@ export type LockedEmailLeg = {
 export type SettledEmailLeg = {
   memberName: string;
   selectionLabel: string;
+  marketLabel: string;
   outcome: "won" | "lost" | "void" | "pending";
   pointsLabel: string;
 };
@@ -200,7 +201,7 @@ export function roundSettledEmail(params: {
       const badge = outcomeBadge(leg.outcome);
       return {
         primary: escapeHtml(leg.memberName),
-        secondary: `${escapeHtml(leg.selectionLabel)} · ${escapeHtml(leg.pointsLabel)} pts`,
+        secondary: `${escapeHtml(leg.selectionLabel)} · ${escapeHtml(leg.marketLabel)} · ${escapeHtml(leg.pointsLabel)} pts`,
         badge: badge.label,
         badgeTone: badge.tone,
       };
@@ -219,7 +220,7 @@ export function roundSettledEmail(params: {
   const textLegs = params.legs
     .map((leg) => {
       const badge = outcomeBadge(leg.outcome).label;
-      return `- [${badge}] ${leg.memberName}: ${leg.selectionLabel} (${leg.pointsLabel} pts)`;
+      return `- [${badge}] ${leg.memberName}: ${leg.selectionLabel} (${leg.marketLabel}) (${leg.pointsLabel} pts)`;
     })
     .join("\n");
 

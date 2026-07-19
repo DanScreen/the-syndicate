@@ -171,6 +171,7 @@ export async function notifyRoundSettled(roundId: string): Promise<void> {
     legs: round.legs.map((leg) => ({
       memberName: leg.user.name,
       selectionLabel: leg.selectionLabel,
+      marketLabel: leg.marketLabel,
       outcome:
         leg.outcome === "won" ||
         leg.outcome === "lost" ||
