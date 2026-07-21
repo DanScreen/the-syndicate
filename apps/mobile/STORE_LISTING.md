@@ -61,7 +61,7 @@ Capture from production API on a real device:
 4. Group leaderboard  
 5. Performance stats  
 
-Use Turf Green dark UI. No API credit counts in screenshots.
+Use the Floodlight blue (#38bdf8) dark UI. No API credit counts in screenshots.
 
 ## Icons & splash
 
