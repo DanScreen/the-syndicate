@@ -778,7 +778,7 @@ export function SubmitLegForm({
         <Text style={styles.meta}>{copy.legPicker.noFixturesLive}</Text>
       ) : null}
 
-      {competitionId && !loadingFixtures && fixtures.length > 0 ? (
+      {competitionId && !loadingFixtures && fixtures.length > 0 && !fixture ? (
         <>
           <Text style={styles.stepLabel}>2. Fixture</Text>
           {hasTakenFixtures ? (
@@ -793,15 +793,43 @@ export function SubmitLegForm({
                 key={f.id}
                 label={`${f.homeTeam} vs ${f.awayTeam}${taken ? " (already in acca)" : ""}`}
                 subtitle={formatKickoff(f.kickoff)}
-                selected={fixtureId === f.id}
+                selected={false}
                 disabled={taken}
                 onPress={() => {
-                  if (!taken) setFixtureId(f.id);
+                  if (!taken) {
+                    setFixtureId(f.id);
+                    setMarketType("");
+                    setSelectionId("");
+                  }
                 }}
               />
             );
           })}
         </>
+      ) : null}
+
+      {fixture ? (
+        <View style={styles.selectedMarket}>
+          <View style={styles.selectedMarketCopy}>
+            <Text style={styles.selectedMarketEyebrow}>2. Selected fixture</Text>
+            <Text style={styles.selectedMarketLabel}>
+              {fixture.homeTeam} vs {fixture.awayTeam}
+            </Text>
+            <Text style={styles.meta}>{formatKickoff(fixture.kickoff)}</Text>
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Change fixture from ${fixture.homeTeam} vs ${fixture.awayTeam}`}
+            onPress={() => {
+              setFixtureId("");
+              setMarketType("");
+              setSelectionId("");
+            }}
+            style={({ pressed }) => pressed && styles.pressed}
+          >
+            <Text style={styles.changeMarket}>Change fixture</Text>
+          </Pressable>
+        </View>
       ) : null}
 
       {fixture && !market ? (

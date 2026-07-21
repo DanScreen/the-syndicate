@@ -494,7 +494,7 @@ export function SubmitLegForm({
         </p>
       )}
 
-      {competitionId && !loadingFixtures && fixtures.length > 0 && (
+      {competitionId && !loadingFixtures && fixtures.length > 0 && !fixture && (
         <div className="space-y-2">
           <p className="text-xs font-medium uppercase tracking-wide text-muted">2. Pick a fixture</p>
           {hasTakenFixtures && (
@@ -509,7 +509,7 @@ export function SubmitLegForm({
                 <button
                   key={f.id}
                   type="button"
-                  aria-pressed={fixtureId === f.id}
+                  aria-pressed={false}
                   disabled={taken}
                   title={taken ? "Another leg from this fixture is already in the acca" : undefined}
                   onClick={() => {
@@ -521,13 +521,10 @@ export function SubmitLegForm({
                   className={`rounded-lg border px-3 py-3 text-left text-sm transition-colors ${
                     taken
                       ? "cursor-not-allowed border-border/60 text-muted opacity-50"
-                      : fixtureId === f.id
-                        ? "border-accent bg-accent-muted/30"
-                        : "border-border hover:border-accent/40"
+                      : "border-border hover:border-accent/40"
                   }`}
                 >
-                  <p className="flex items-center gap-1.5 font-medium">
-                    {fixtureId === f.id && <CheckIcon className="text-accent" />}
+                  <p className="font-medium">
                     {f.homeTeam} vs {f.awayTeam}
                     {taken ? " (already in acca)" : ""}
                   </p>
@@ -536,6 +533,31 @@ export function SubmitLegForm({
               );
             })}
           </div>
+        </div>
+      )}
+
+      {fixture && (
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-accent/40 bg-accent-muted/20 px-3 py-3">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted">
+              2. Selected fixture
+            </p>
+            <p className="mt-1 text-sm font-medium">
+              {fixture.homeTeam} vs {fixture.awayTeam}
+            </p>
+            <p className="mt-0.5 text-xs text-muted">{formatKickoff(fixture.kickoff)}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setFixtureId("");
+              setMarketType("");
+              setSelectionId("");
+            }}
+            className="shrink-0 text-sm font-medium text-accent hover:text-accent-bright"
+          >
+            Change fixture
+          </button>
         </div>
       )}
 
