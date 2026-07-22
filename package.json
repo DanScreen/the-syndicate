@@ -12,6 +12,11 @@
     "lint": "npm run check:brand && npm run lint --workspace=@tiki-acca/web",
     "check:brand": "node scripts/check-brand-sync.mjs",
     "generate:brand-assets": "node scripts/generate-brand-assets.mjs",
+    "marketing:seed": "cd packages/database && npx tsx prisma/demo-seed.ts",
+    "marketing:capture": "node marketing-posts/scripts/capture-panels.mjs",
+    "marketing:build": "node marketing-posts/scripts/make-posts.mjs",
+    "marketing:gallery": "node marketing-posts/scripts/build-gallery.mjs",
+    "marketing:x-header": "node marketing-posts/scripts/make-x-header.mjs",
     "db:generate": "npm run generate --workspace=@tiki-acca/database",
     "db:migrate": "npm run migrate --workspace=@tiki-acca/database",
     "db:migrate:deploy": "npm run migrate:deploy --workspace=@tiki-acca/database",
@@ -27,5 +32,9 @@
   "dependencies": {
     "react": "19.1.0",
     "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "playwright": "1.61.1",
+    "sharp": "0.34.5"
   }
 }
