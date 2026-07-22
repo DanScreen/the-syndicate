@@ -4,7 +4,10 @@ import { Button, Card, ErrorText, Field, Title } from "@/components/ui";
 import { colors, WEB_URL } from "@/config";
 import { copy } from "@/lib/copy";
 import type { NotificationPreferences } from "@tiki-acca/shared";
-import { registerForPushNotifications } from "@/notifications/register";
+import {
+  isPushEnabled,
+  registerForPushNotifications,
+} from "@/notifications/register";
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -98,6 +101,8 @@ export default function AccountScreen() {
   const [loading, setLoading] = useState(!prefs);
   const [error, setError] = useState("");
   const [pushStatus, setPushStatus] = useState<string | null>(null);
+  // null = still checking; hides the enable button once push is authorised.
+  const [pushEnabled, setPushEnabled] = useState<boolean | null>(null);
   const [blocked, setBlocked] = useState<{ userId: string; name: string }[]>([]);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
@@ -124,6 +129,12 @@ export default function AccountScreen() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    isPushEnabled()
+      .then(setPushEnabled)
+      .catch(() => setPushEnabled(false));
+  }, []);
 
   useEffect(() => {
     if (!token) return;
@@ -213,6 +224,7 @@ export default function AccountScreen() {
     setPushStatus(null);
     try {
       const result = await registerForPushNotifications(token);
+      setPushEnabled(!!result);
       setPushStatus(
         result ? "Push enabled on this device." : "Permission denied or unavailable."
       );
@@ -247,11 +259,19 @@ export default function AccountScreen() {
         <View style={styles.notificationsBlock}>
           <Card>
             <Text style={styles.cardTitle}>This device</Text>
-            <Text style={styles.hint}>
-              Enable push so reminders reach your phone. Requires a physical
-              device (not iOS Simulator).
-            </Text>
-            <Button label="Enable push on this device" onPress={enablePush} />
+            {pushEnabled === true ? (
+              <Text style={styles.hint}>
+                Push notifications are on for this device.
+              </Text>
+            ) : pushEnabled === false ? (
+              <>
+                <Text style={styles.hint}>Enable push notifications.</Text>
+                <Button
+                  label="Enable push on this device"
+                  onPress={enablePush}
+                />
+              </>
+            ) : null}
             {pushStatus ? <Text style={styles.hint}>{pushStatus}</Text> : null}
           </Card>
 

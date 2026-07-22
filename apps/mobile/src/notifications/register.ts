@@ -98,6 +98,19 @@ export async function unregisterPushNotifications(authToken: string | null) {
   }
 }
 
+/**
+ * Whether push is already authorised on this device — used to decide if the
+ * "Enable push" button should show. Returns false on simulators (no push).
+ */
+export async function isPushEnabled(): Promise<boolean> {
+  if (!Device.isDevice) {
+    return false;
+  }
+  type PermissionLike = { granted?: boolean; status?: string };
+  const existing = (await Notifications.getPermissionsAsync()) as PermissionLike;
+  return existing.granted ?? existing.status === "granted";
+}
+
 export function addNotificationResponseListener(
   onNavigate: (groupId: string, screen?: string) => void
 ) {
