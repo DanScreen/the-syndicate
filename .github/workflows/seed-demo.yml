@@ -1,0 +1,46 @@
+name: Seed demo data
+
+# Manual, on-demand only. Populates the production database with the marketing
+# / App Store reviewer demo account (The Thursday Club, login danny@demo).
+# The seed is idempotent — it deletes any prior demo group + users first — so
+# re-running simply refreshes the demo data. Never runs on push/deploy.
+on:
+  workflow_dispatch:
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Seed demo data via Cloud SQL proxy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CLOUD_SQL_CONNECTION_NAME: ${{ secrets.CLOUD_SQL_CONNECTION_NAME }}
+        run: |
+          curl -o cloud-sql-proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.14.3/cloud-sql-proxy.linux.amd64
+          chmod +x cloud-sql-proxy
+          ./cloud-sql-proxy "$CLOUD_SQL_CONNECTION_NAME" &
+          sleep 5
+          npm ci
+          npm run db:generate
+          npm run marketing:seed
