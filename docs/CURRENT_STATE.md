@@ -1,6 +1,6 @@
 # Current state (as-built)
 
-Last updated 21 July 2026 (leg picker fixture collapse on web/mobile). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
+Last updated 23 July 2026 (888sport bookmaker logo mapping). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
 
 Production: **https://www.tikiacca.com** (apex → 301 to www via Cloudflare).
 
@@ -173,6 +173,8 @@ Full budgeting: [DEPLOYMENT.md — The Odds API](./DEPLOYMENT.md#the-odds-api--c
 
 At lock, `rankAccaBookmakers()` in `apps/web/src/lib/odds/acca.ts` ranks all retail bookmakers by combined acca odds. Stored as `Round.accaBookmakerRankings` (JSON). Older locked rounds backfill lazily on `GET /api/groups/[id]`. **Open rounds** use a live current ranking for the Compare UI. **Locked rounds** show the ranking captured at lock. Web and mobile display the top three by default, with **Show all {N} bookmakers** / **Show top 3** controls for the complete ranking. `GET /api/groups/[id]` refreshes Odds API deeplinks for the CTA and per-leg Open (odds remain frozen at lock). Multi-leg CTAs label **Open first pick** (or **Open {bookmaker}** for hubs) — UK books rarely expose a one-click full-acca URL.
 
+**Bookmaker logos** (Compare / rankings UI): Google favicons via `packages/shared/src/bookmaker-branding.ts` (`BOOKMAKER_DOMAINS` → `bookmakerLogoUrl`). Web: `apps/web/src/components/bookmaker-logo.tsx`; mobile: same helper in `group-round.tsx`. Odds API key for 888sport is `sport888` — mapped to `888sport.com` (naive guess would hit `sport888.com` and show a generic globe).
+
 Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_rankings`.
 
 ### Key files
@@ -192,6 +194,8 @@ Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_
 | `apps/web/src/lib/odds/acca.ts` | Acca bookmaker ranking + best combined |
 | `apps/web/src/lib/odds/lock-round.ts` | Lock + reprice + store deeplinks; live link enrichment |
 | `apps/web/src/lib/odds/bookmakers.ts` | Retail filter, sort best odds |
+| `packages/shared/src/bookmaker-branding.ts` | Favicon logo domains (incl. `sport888` → 888sport.com) |
+| `apps/web/src/components/bookmaker-logo.tsx` | Bookmaker logo + initials fallback (web) |
 | `apps/web/src/components/group-ui.tsx` | Progressive 4-step leg picker (fixture and market lists collapse after selection; **Change fixture** / **Change market** to browse again), locked round picks, settle UI |
 | `apps/web/src/components/app-nav.tsx` | Header nav (desktop): Home / About / Groups / Performance / Admin / Blog |
 | `apps/web/src/components/mobile-nav.tsx` | Compact hamburger menu below `md` for marketing + app headers |
