@@ -8,6 +8,8 @@ const BOOKMAKER_DOMAINS: Record<string, string> = {
   williamhill: "williamhill.com",
   paddypower: "paddypower.com",
   skybet: "skybet.com",
+  // Odds API key is sport888 (not 888sport) — guess would hit sport888.com
+  sport888: "888sport.com",
   ladbrokes_uk: "ladbrokes.com",
   coral: "coral.co.uk",
   unibet_uk: "unibet.co.uk",
