@@ -139,11 +139,17 @@ export default function GroupsScreen() {
                       : ""}
                   </Text>
                   <View style={styles.pointsRow}>
-                    <Text style={[styles.points, pointsStyle(g.groupPoints)]}>
-                      Group points: {formatLegPoints(g.groupPoints)}
+                    <Text style={styles.points}>
+                      <Text style={styles.pointsLabel}>Group points: </Text>
+                      <Text style={pointsStyle(g.groupPoints)}>
+                        {formatLegPoints(g.groupPoints)}
+                      </Text>
                     </Text>
-                    <Text style={[styles.points, pointsStyle(g.points)]}>
-                      Your points: {formatLegPoints(g.points)}
+                    <Text style={styles.points}>
+                      <Text style={styles.pointsLabel}>Your points: </Text>
+                      <Text style={pointsStyle(g.points)}>
+                        {formatLegPoints(g.points)}
+                      </Text>
                     </Text>
                   </View>
                   {g.activeBetCount > 1 ? (
@@ -334,6 +340,9 @@ const styles = StyleSheet.create({
   points: {
     fontSize: 14,
     fontWeight: "600",
+  },
+  pointsLabel: {
+    color: colors.accent,
   },
   betslip: {
     marginTop: 10,

@@ -29,11 +29,11 @@ export function PointsText({
   outcome?: string;
 }) {
   return (
-    <span
-      className={`font-medium tabular-nums ${pointsTextClass(points, outcome)} ${className ?? ""}`}
-    >
-      {label ? `${label}: ` : ""}
-      {formatLegPoints(points)} pts
+    <span className={`font-medium tabular-nums ${className ?? ""}`}>
+      {label ? <span className="text-accent">{label}: </span> : ""}
+      <span className={pointsTextClass(points, outcome)}>
+        {formatLegPoints(points)} pts
+      </span>
     </span>
   );
 }
