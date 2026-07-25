@@ -9,6 +9,12 @@
     "scheme": "tikiacca",
     "platforms": ["ios", "android"],
     "userInterfaceStyle": "dark",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/0ad18d34-5681-4e1c-a208-e45064b0515c"
+    },
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -60,6 +66,7 @@
       "expo-secure-store",
       "expo-asset",
       "expo-font",
+      "expo-updates",
       [
         "expo-notifications",
         {

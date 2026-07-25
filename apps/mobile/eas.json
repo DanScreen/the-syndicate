@@ -6,6 +6,7 @@
   "build": {
     "development": {
       "distribution": "internal",
+      "channel": "development",
       "ios": {
         "simulator": true
       },
@@ -15,12 +16,14 @@
     },
     "preview": {
       "distribution": "internal",
+      "channel": "preview",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://www.tikiacca.com"
       }
     },
     "production": {
       "autoIncrement": true,
+      "channel": "production",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://www.tikiacca.com"
       }
