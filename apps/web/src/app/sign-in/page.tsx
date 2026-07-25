@@ -61,6 +61,12 @@ function SignInForm() {
         </p>
       )}
 
+      {searchParams.get("reset") === "1" && (
+        <p className="mt-4 rounded-lg border border-accent/30 bg-accent-muted/20 px-3 py-2 text-sm text-accent">
+          Password reset — sign in below with your new password.
+        </p>
+      )}
+
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         <div>
           <label htmlFor="signin-email" className="text-sm text-muted">Email</label>
@@ -75,7 +81,12 @@ function SignInForm() {
           />
         </div>
         <div>
-          <label htmlFor="signin-password" className="text-sm text-muted">Password</label>
+          <div className="flex items-center justify-between">
+            <label htmlFor="signin-password" className="text-sm text-muted">Password</label>
+            <Link href="/forgot-password" className="text-sm text-accent hover:underline">
+              Forgot password?
+            </Link>
+          </div>
           <input
             id="signin-password"
             type="password"

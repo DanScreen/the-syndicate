@@ -46,6 +46,15 @@ export const signInSchema = z.object({
   password: z.string().min(1),
 });
 
+export const forgotPasswordSchema = z.object({
+  email: z.string().email(),
+});
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1),
+  password: z.string().min(8).max(100),
+});
+
 export const legsPerMemberSchema = z
   .number()
   .int()
@@ -139,6 +148,8 @@ export const notificationPreferencesSchema = z.object({
 
 export type SignUpInput = z.infer<typeof signUpSchema>;
 export type SignInInput = z.infer<typeof signInSchema>;
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type CreateGroupInput = z.infer<typeof createGroupSchema>;
 export type UpdateGroupSettingsInput = z.infer<typeof updateGroupSettingsSchema>;
 export type JoinGroupInput = z.infer<typeof joinGroupSchema>;

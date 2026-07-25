@@ -84,6 +84,9 @@ export default function SignInScreen() {
           <View style={styles.errorSlot}>
             <ErrorText message={error} />
           </View>
+          <Pressable onPress={() => router.push("/forgot-password")} style={styles.forgotLink}>
+            <Text style={styles.forgotText}>Forgot password?</Text>
+          </Pressable>
           <Button label="Sign in" onPress={handleSubmit} loading={loading} />
           <Pressable onPress={() => router.push("/sign-up")} style={styles.createLink}>
             <Text style={styles.createText}>
@@ -153,6 +156,15 @@ const styles = StyleSheet.create({
   },
   errorSlot: {
     minHeight: 18,
+  },
+  forgotLink: {
+    alignSelf: "flex-end",
+    marginBottom: 4,
+  },
+  forgotText: {
+    color: colors.accent,
+    fontSize: 13,
+    fontWeight: "600",
   },
   createLink: {
     alignItems: "center",

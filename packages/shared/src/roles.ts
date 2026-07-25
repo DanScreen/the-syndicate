@@ -7,6 +7,7 @@ export const ANALYTICS_EVENT_TYPES = [
   "visit",
   "login",
   "sign_up",
+  "password_reset",
 ] as const;
 export type AnalyticsEventType = (typeof ANALYTICS_EVENT_TYPES)[number];
 

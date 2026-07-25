@@ -34,9 +34,24 @@ model User {
   roundMessages    RoundMessage[]
   messageReactions MessageReaction[]
   mobileSessions   MobileSession[]
+  passwordResetTokens PasswordResetToken[]
   messageReports   MessageReport[] @relation("MessageReports")
   blocksMade       UserBlock[]     @relation("BlocksMade")
   blocksReceived   UserBlock[]     @relation("BlocksReceived")
+}
+
+/// Single-use, expiring token for the forgot-password flow. Only a SHA-256
+/// hash of the emailed token is stored.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 /// Revocable, non-expiring device session for the native app.
