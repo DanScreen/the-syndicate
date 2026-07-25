@@ -18,7 +18,9 @@
     "submit:android": "eas submit --platform android --profile production --latest",
     "tag:release": "node scripts/tag-release.js",
     "update:preview": "eas update --branch preview",
-    "update:production": "eas update --branch production"
+    "update:production": "eas update --branch production",
+    "sync:native-version": "node scripts/sync-native-version.js",
+    "eas-build-post-install": "node scripts/sync-native-version.js"
   },
   "dependencies": {
     "@react-native-community/datetimepicker": "8.4.4",
