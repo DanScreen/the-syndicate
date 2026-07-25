@@ -19,15 +19,18 @@ import {
   YAxis,
 } from "recharts";
 
+// Distinct per-member line colors. Each must differ from BRAND_COLORS.accent
+// ("#38bdf8") and from each other — a prior version reused the same blue
+// literal for the second slot, so any group of 2+ showed identical lines.
 const MEMBER_COLORS = [
   BRAND_COLORS.accent,
-  "#38bdf8",
-  "#fbbf24",
+  BRAND_COLORS.warning,
+  BRAND_COLORS.success,
   "#a78bfa",
   "#f472b6",
   "#fb923c",
-  "#34d399",
-  "#60a5fa",
+  "#2dd4bf",
+  BRAND_COLORS.danger,
 ];
 
 type GroupStatsData = {
