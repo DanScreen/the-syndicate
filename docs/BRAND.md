@@ -116,6 +116,7 @@ The same identity applies to **website**, **in-app mobile**, and **App Store / P
 | Website | SVG `apps/web/src/components/logo.tsx` | `apps/web/src/lib/marketing-content.ts` | `apps/web/src/app/globals.css` |
 | Mobile app | PNG assets `apps/mobile/assets/` + in-app SVG `apps/mobile/src/components/logo.tsx` | Shared module (`packages/shared/src/brand.ts` for colours) | `apps/mobile/src/config.ts` imports `BRAND_COLORS` |
 | Store listings | Icon + screenshots | [apps/mobile/STORE_LISTING.md](../apps/mobile/STORE_LISTING.md) | N/A |
+| Social graphics | Real UI captures + Triangle rondo wordmark | [`marketing-posts/`](../marketing-posts/README.md) | Floodlight composer |
 
 ### Logo export (mobile / stores)
 

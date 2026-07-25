@@ -7,7 +7,7 @@
 | **Status** | Draft for review — tagline decision open |
 | **Date** | July 2026 |
 | **Scope** | Positioning, tagline, homepage (`/`), about page (`/about`), design & voice rules |
-| **Constraints** | Turf Green palette + Acca stack logo are **locked** ([BRAND.md](./BRAND.md)). This brief evolves the locked brand; it does not replace it. |
+| **Constraints** | Floodlight palette + Triangle rondo logo are **locked** ([BRAND.md](./BRAND.md)). This brief evolves the locked brand; it does not replace it. |
 | **Copy source of truth** | `apps/web/src/lib/marketing-content.ts` |
 
 ---
@@ -151,7 +151,7 @@ Then GambleAware/GamStop links and 18+.
 
 ---
 
-## 5. Design notes (within the locked Turf Green system)
+## 5. Design notes (within the locked Floodlight system)
 
 - **Keep the dark theme** — it reads matchday-under-floodlights, distinct from the garish bookmaker aesthetic. Avoid their red/gold/ALL-CAPS urgency vocabulary entirely; visual calm *is* the "not a bookie" message.
 - **Product-as-hero:** real UI screenshots with real-looking group names ("Dog & Duck FC", "Marketing Team Accas") — never stock photos of lads cheering.

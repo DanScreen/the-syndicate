@@ -25,11 +25,13 @@ const require = createRequire(join(REPO_ROOT, "package.json"));
 const sharp = require("sharp");
 
 const RAW = join(POSTS_ROOT, "_appstore-raw");
-const OUT = join(POSTS_ROOT, "app-store");
+const OUT = join(POSTS_ROOT, process.env.AS_OUT || "app-store");
 
-// App Store 6.7"/6.9" portrait canvas — also the native device screen size.
-const CANVAS_W = 1290, CANVAS_H = 2796;
-const SCREEN_RATIO = CANVAS_W / CANVAS_H; // 0.4614
+// App Store portrait canvas. Defaults to the 6.7"/6.9" size (1290×2796); set
+// AS_W / AS_H to target another slot, e.g. 6.5" = 1284×2778 or 1242×2688.
+const CANVAS_W = Number(process.env.AS_W) || 1290;
+const CANVAS_H = Number(process.env.AS_H) || 2796;
+const SCREEN_RATIO = CANVAS_W / CANVAS_H;
 
 // Floodlight palette — keep in sync with docs/BRAND.md.
 const C = {
@@ -45,11 +47,11 @@ const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, 
 // The five App Store screens, in listing order. `source` is the file in
 // _appstore-raw/ (without extension); headline/sub sit above the phone.
 const SCREENS = [
-  { source: "01-dashboard", file: "01-dashboard", h: "Your mates. One acca.", s: "Everyone picks one leg. The group lives or dies together." },
-  { source: "02-leg-picker", file: "02-leg-picker", h: "Pick your leg", s: "Choose a fixture and market — best odds found for you." },
-  { source: "03-locked-acca", file: "03-locked-acca", h: "Best odds, done for you", s: "Live UK bookmaker prices ranked when your group locks." },
-  { source: "04-leaderboard", file: "04-leaderboard", h: "Track who's actually good", s: "Points, form and bragging rights across every round." },
-  { source: "05-performance", file: "05-performance", h: "See your form", s: "Cross-group stats and trends for every picker." },
+  { source: "01-dashboard", file: "01-dashboard", h: "Your mates. One acca.", s: "Everyone picks one leg — the group wins or loses together." },
+  { source: "02-locked-acca", file: "02-locked-acca", h: "Best odds, done for you", s: "Live UK bookmaker prices, ranked when your group locks." },
+  { source: "03-leaderboard", file: "03-leaderboard", h: "Track who's actually good", s: "Points, form and bragging rights across every round." },
+  { source: "04-performance", file: "04-performance", h: "See your form", s: "Cross-group stats and trends for every picker." },
+  { source: "05-chat", file: "05-chat", h: "Every leg counts", s: "Group banter while the acca is live." },
 ];
 
 // crude word-wrap by estimated glyph width (no font metrics in librsvg)
