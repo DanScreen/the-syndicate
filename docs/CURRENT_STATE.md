@@ -408,7 +408,8 @@ Member summary **best / worst leg** = highest / lowest decimal odds across the m
 | `ODDS_API_SPORT` | No | Default `soccer_fifa_world_cup` (fallback only) |
 | `FOOTBALL_DATA_API_KEY` | No | Match sync |
 | `FOOTBALL_DATA_CACHE_TTL_MS` | No | In-memory cache TTL for football-data fetches (default 60s; bypassed on cron sync) |
-| `ODDS_API_CACHE_TTL_MS` | No | DB snapshot TTL for odds (default 30 min) |
+| `ODDS_API_CACHE_TTL_MS` | No | DB snapshot TTL for odds (code default 30 min; production 7 h — must exceed the 6 h warm cron when `ODDS_DB_ONLY=true`) |
+| `OUTRIGHTS_ENABLED` | No | Season-long outrights; off unless `"true"`. Dormant by design — [ODDS_PROVIDERS.md](./ODDS_PROVIDERS.md) |
 | `ODDS_DB_ONLY` | No | When `true`, user routes read odds DB only (cron must refresh) |
 | `ODDS_WARM_CORE_WITHIN_HOURS` | No | Cron prefetches core extended markets within N hours of kickoff (default 72) |
 | `CRON_SECRET` | No | Bearer token for `/api/internal/*` cron routes |

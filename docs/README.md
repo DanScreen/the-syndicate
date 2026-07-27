@@ -40,8 +40,13 @@ npm run dev   # http://localhost:3000
 | Brand, logo, design | [BRAND.md](./BRAND.md) |
 | Positioning, taglines, marketing copy | [MARKETING_BRIEF.md](./MARKETING_BRIEF.md) |
 | Platform admin & analytics | [specs/platform-admin.md](./specs/platform-admin.md) |
+| **Add an odds market or change odds provider** | [ODDS_PROVIDERS.md](./ODDS_PROVIDERS.md) — verified coverage limits; read before adding outrights |
 | Deploy, infra, or reduce GCP costs | [DEPLOYMENT.md](./DEPLOYMENT.md), [infra/terraform/README.md](../infra/terraform/README.md) |
 | Commands & conventions | [AGENTS.md](../AGENTS.md) |
+| Web app layout & scripts | [apps/web/README.md](../apps/web/README.md) |
+| Database schema & migrations | [packages/database/README.md](../packages/database/README.md) |
+| Shared types & business logic | [packages/shared/README.md](../packages/shared/README.md) |
+| CI workflows at a glance | [.github/workflows/README.md](../.github/workflows/README.md) |
 
 Specs are **design contracts**. [CURRENT_STATE.md](./CURRENT_STATE.md) is **as-built truth** — update it when you ship.
 
@@ -73,6 +78,7 @@ docs/
 ├── ARCHITECTURE.md        ← stack, entities, subsystems
 ├── ROADMAP.md             ← priorities & status
 ├── DEPLOYMENT.md          ← GCP, CI, cron, cost optimization
+├── ODDS_PROVIDERS.md      ← odds/results provider evaluation, verified coverage limits
 ├── MARKETING_BRIEF.md     ← positioning, taglines, homepage/about copy (draft)
 └── specs/
     ├── competitions-and-results.md   ← Phases A–C done; Phase 1b backlog

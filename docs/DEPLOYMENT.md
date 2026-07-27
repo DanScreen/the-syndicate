@@ -122,7 +122,9 @@ If you previously created `sync-matches` manually, **import** it into Terraform 
 
 Fixture and extended odds are stored in PostgreSQL (`OddsBulkSnapshot`, `OddsEventSnapshot`) so all Cloud Run instances share the same data. The Odds API is called by cron — not on every user pick when `ODDS_DB_ONLY=true`.
 
-The **`warm-odds-cache`** job is created by Terraform alongside `sync-matches` (see table above). Optional Cloud Run env vars (set in `deploy.yml`): `ODDS_API_CACHE_TTL_MS` (snapshot TTL, default 30 min), `ODDS_WARM_CORE_WITHIN_HOURS` (default 72), `ODDS_DB_ONLY=true` (block live API on user requests).
+The **`warm-odds-cache`** job is created by Terraform alongside `sync-matches` (see table above). Optional Cloud Run env vars (set in `deploy.yml`): `ODDS_API_CACHE_TTL_MS` (snapshot TTL, code default 30 min; **production sets 7 h**), `ODDS_WARM_CORE_WITHIN_HOURS` (default 72), `ODDS_DB_ONLY=true` (block live API on user requests), `OUTRIGHTS_ENABLED=false` (see [ODDS_PROVIDERS.md](./ODDS_PROVIDERS.md)).
+
+> **The snapshot TTL must exceed the warm-cron interval.** With `ODDS_DB_ONLY=true`, an expired snapshot is not refetched on demand — `readBulkFixtures` returns `null` and users see an **empty fixture list**. The cron runs every 6 h (`warm_odds_cache_schedule`), so the TTL is set to 7 h to cover the gap plus margin. If you shorten the TTL or lengthen the cron schedule, keep TTL > interval or the picker will go blank between runs.
 
 See **[The Odds API — calls, credits & cron](#the-odds-api--calls-credits--cron)** below for the full call inventory and monthly budgeting.
 
