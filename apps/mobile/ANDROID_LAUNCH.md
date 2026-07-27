@@ -9,7 +9,7 @@ binary, wiring push, and submitting to Google Play.
 
 | Step | Status |
 |------|--------|
-| 1 — Build the Android app bundle | **Done** (first build). First production build `versionCode 2` finished 2026-07-25. A rebuild, `versionCode 3`, was kicked off 2026-07-27 to bake in Firebase push and was still in EAS's queue as of this writing — check `eas build:list --platform android --limit 1` for current status before assuming it's ready. Uses EAS-managed keystore `Build Credentials 2rrA7GYzJI (Default)`. |
+| 1 — Build the Android app bundle | **Done.** First production build `versionCode 2` finished 2026-07-25. Rebuilt as `versionCode 3` on 2026-07-27 to bake in Firebase push — finished 2026-07-27 22:58 UTC. Uses EAS-managed keystore `Build Credentials 2rrA7GYzJI (Default)`. |
 | 2 — App Links fingerprint | **Done.** Real SHA-256 from the production keystore is live in `apps/web/public/.well-known/assetlinks.json` (deployed). Still need the **Play App Signing** fingerprint too, once that's known (see step 2 below). |
 | 3 — Push notifications (FCM) | **Done.** `apps/mobile/google-services.json` committed; FCM v1 service account key (`firebase-adminsdk-fbsvc@tiki-acca.iam.gserviceaccount.com`) uploaded and assigned to the project on EAS. |
 | 4 — Submit to Google Play | **Blocked** on Google Play Console ID verification (in progress as of 2026-07-27, pending completion). Nothing else to do until that clears — then create the app, service account, and submit. |
@@ -101,7 +101,7 @@ Android delivers `expo-notifications` via Firebase Cloud Messaging.
    "Firebase Admin SDK" key **is** the FCM v1 credential.) Done — key uploaded and
    assigned to `com.tikiacca.app` for FCM V1; the local downloaded copy was deleted
    after upload since it's a real secret (unlike `google-services.json`).
-4. Rebuild (step 1) so `google-services.json` is baked in. Kicked off as `versionCode 3` (2026-07-27) — confirm it finished with `eas build:list --platform android --limit 1` before relying on it.
+4. Rebuild (step 1) so `google-services.json` is baked in. Done — `versionCode 3`, finished 2026-07-27.
 
 ## Step 4 — Submit to Google Play ⏳ blocked on ID verification
 

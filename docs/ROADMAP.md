@@ -80,7 +80,7 @@ Group-vs-group challenges (needs user density), copy-a-pick between your own gro
 
 Native **iPhone** and **Android** apps via Expo (`apps/mobile/`), targeting **functional parity** with the member-facing website.
 
-**Status:** EAS project linked at `@the-syndicate/tiki-acca`. **iOS** is live in App Store Connect (submitted, build 5 of version 1.0.0 as of 2026-07-22). **Android** has a working production build (`versionCode 2`) and a rebuild in progress (`versionCode 3`) to add Firebase push; not yet submitted to Play — blocked on Google Play Console identity verification (submitted 2026-07-27, pending). See [ANDROID_LAUNCH.md](../apps/mobile/ANDROID_LAUNCH.md) for the full status/checklist.
+**Status:** EAS project linked at `@the-syndicate/tiki-acca`. **iOS** is live in App Store Connect (submitted, build 5 of version 1.0.0 as of 2026-07-22). **Android** has a production build (`versionCode 3`, Firebase push baked in, finished 2026-07-27) but is not yet submitted to Play — blocked on Google Play Console identity verification (submitted 2026-07-27, pending). See [ANDROID_LAUNCH.md](../apps/mobile/ANDROID_LAUNCH.md) for the full status/checklist.
 
 **Next:** once Play ID verification clears, create the Play Console app, a release service account, and run `npm run submit:android`.
 
