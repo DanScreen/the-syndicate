@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "759619636089",
+    "project_id": "tiki-acca",
+    "storage_bucket": "tiki-acca.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:759619636089:android:c5302e13e02868ee89bda8",
+        "android_client_info": {
+          "package_name": "com.tikiacca.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA3QCgN7FE0jGSy9URmHb7cf-h2V9HCoqw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
