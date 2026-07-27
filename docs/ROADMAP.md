@@ -55,8 +55,8 @@ Core loop and MVP polish are **shipped**:
 | 7 | **Seasons + public leaderboards** | Code | Season windows, `/leaderboards`, monthly awards — [specs/seasons-and-public-leaderboards.md](./specs/seasons-and-public-leaderboards.md) (supersedes old "public platform leaderboards" item) |
 | 8 | **Streaks & badges** | Code | Light gamification; needs chat for thread moments — [specs/streaks-and-badges.md](./specs/streaks-and-badges.md) |
 | 9 | **GCP cost reduction** | Ops/infra | Cloud SQL ~90% of spend; see [DEPLOYMENT.md](./DEPLOYMENT.md#cost-optimization) |
-| 10 | **Mobile — friend testing → stores** | Product | You: [DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md); mates: APK / TestFlight. Store distribution unblocks the invite loop — prioritise fees once validated |
-| 11 | **Expo push setup** | Mobile ops | See checklist below — required for mobile push (prereq for chat + live matchday push) |
+| 10 | **Android store submission** | Product | Build/push/Firebase done ([ANDROID_LAUNCH.md](../apps/mobile/ANDROID_LAUNCH.md)); blocked on Play Console ID verification (submitted 2026-07-27), then create app + submit |
+| 11 | **Expo push setup** | Mobile ops | See checklist below — Android FCM done; iOS APNs still to verify on a production build |
 | 12 | Terraform CI GCS permissions fix | Infra | App deploy unaffected |
 | 13 | **Competitive proof messaging** | Brand/copy | Future secondary theme: **“Think you know football? Prove it. Real picks. Real odds. Real results.”** Keep the social group headline primary; planned uses and guardrails in [MARKETING_BRIEF.md](./MARKETING_BRIEF.md#territory-d--prove-it-competitive-proof-approved-for-future-use) |
 
@@ -80,16 +80,19 @@ Group-vs-group challenges (needs user density), copy-a-pick between your own gro
 
 Native **iPhone** and **Android** apps via Expo (`apps/mobile/`), targeting **functional parity** with the member-facing website.
 
-**Status:** EAS project linked at `@the-syndicate/tiki-acca`; developer native testing (Expo Go / device build). Friend distribution: Android APK; iPhone TestFlight after store fees.
+**Status:** EAS project linked at `@the-syndicate/tiki-acca`. **iOS** is live in App Store Connect (submitted, build 5 of version 1.0.0 as of 2026-07-22). **Android** has a working production build (`versionCode 2`) and a rebuild in progress (`versionCode 3`) to add Firebase push; not yet submitted to Play — blocked on Google Play Console identity verification (submitted 2026-07-27, pending). See [ANDROID_LAUNCH.md](../apps/mobile/ANDROID_LAUNCH.md) for the full status/checklist.
 
-**Next:** You validate on device ([DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md)), then 2–3 friend groups ([FRIEND_TESTING.md](../apps/mobile/FRIEND_TESTING.md)).
+**Next:** once Play ID verification clears, create the Play Console app, a release service account, and run `npm run submit:android`.
+
+**Release process:** version/build-number distinction, git tagging (`npm run tag:release`), and OTA updates (`eas update`) are documented in [apps/mobile/README.md](../apps/mobile/README.md#versioning).
 
 **Expo push — operator checklist:**
 
 - [x] `eas login` + `eas init` in `apps/mobile`
 - [x] Set `EAS_PROJECT_ID` in `apps/mobile/.env` (with committed fallback in `app.config.ts`)
+- [x] Android: `google-services.json` + FCM v1 service account key uploaded to EAS (2026-07-27)
+- [ ] iOS: confirm APNs credentials are set up for production push (not verified this pass)
 - [ ] Enable push on a **physical device** via Notifications screen in the app
-- [ ] EAS production build with APNs (iOS) + FCM (Android) credentials for reliable prod push
 - [ ] Test pick reminder + lock/settle push on device
 
 **Spec:** [specs/mobile-apps.md](./specs/mobile-apps.md) — includes [distribution strategy](./specs/mobile-apps.md#distribution-strategy).

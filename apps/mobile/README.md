@@ -2,6 +2,10 @@
 
 Expo React Native app (`apps/mobile`). Strategy: [docs/specs/mobile-apps.md](../../docs/specs/mobile-apps.md).
 
+**Store status:** iOS live in App Store Connect (build 5). Android built with Firebase
+push wired up, submission blocked on Play Console ID verification — see
+[ANDROID_LAUNCH.md](./ANDROID_LAUNCH.md) for the full progress/checklist.
+
 ## Developer testing (start here)
 
 **Run the native app on your iPhone — no store fees:** [DEVELOPER_TESTING.md](./DEVELOPER_TESTING.md)
