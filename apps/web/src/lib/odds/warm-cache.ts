@@ -1,12 +1,14 @@
 import type { Fixture } from "@tiki-acca/shared";
 import { getEnabledCompetitions } from "@/lib/competitions/settings";
-import { isOddsApiConfigured, oddsWarmCoreWithinHours } from "./config";
+import { isOddsApiConfigured, oddsWarmCoreWithinHours, outrightsEnabled } from "./config";
 import { MARKET_TIER_IDS, type MarketTierId } from "./market-tiers";
 import {
   deleteExpiredOddsSnapshots,
   readBulkFixtures,
+  readOutrightMarkets,
   refreshBulkFixturesFromApi,
   refreshEventMarketsFromApi,
+  refreshOutrightMarketsFromApi,
 } from "./odds-store";
 
 export type WarmOddsCacheResult = {
@@ -14,8 +16,10 @@ export type WarmOddsCacheResult = {
     competitionId: string;
     bulk: { ok: boolean; fixtureCount: number; error?: string };
     core: { warmed: number; skipped: number; errors: string[] };
+    /** `refreshed: false` with `ok: true` means cached or no outright key. */
+    outright: { ok: boolean; refreshed: boolean; error?: string };
   }[];
-  cleanup: { bulkDeleted: number; eventDeleted: number };
+  cleanup: { bulkDeleted: number; eventDeleted: number; outrightDeleted: number };
 };
 
 function fixturesWithinHours(fixtures: Fixture[], hours: number): Fixture[] {
@@ -46,6 +50,7 @@ export async function warmOddsCache(options?: {
       competitionId: competition.id,
       bulk: { ok: false, fixtureCount: 0 },
       core: { warmed: 0, skipped: 0, errors: [] },
+      outright: { ok: true, refreshed: false },
     };
 
     try {
@@ -59,6 +64,25 @@ export async function warmOddsCache(options?: {
       };
       competitions.push(entry);
       continue;
+    }
+
+    // After bulk: outrights are a 12h-TTL nice-to-have, so under quota pressure
+    // the fixture list that the app cannot run without has to win. Skipped
+    // entirely while the feature is off, so a dormant feature costs no quota.
+    if (outrightsEnabled() && competition.outrightOddsApiSport) {
+      try {
+        const existing = await readOutrightMarkets(competition.id);
+        if (!existing) {
+          await refreshOutrightMarketsFromApi(competition.id);
+          entry.outright = { ok: true, refreshed: true };
+        }
+      } catch (err) {
+        entry.outright = {
+          ok: false,
+          refreshed: false,
+          error: err instanceof Error ? err.message : String(err),
+        };
+      }
     }
 
     if (!tiers.includes("core")) {

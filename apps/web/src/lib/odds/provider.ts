@@ -1,17 +1,59 @@
 import type { Fixture, Market } from "@tiki-acca/shared";
-import { filterUpcomingFixtures, getCompetitionById } from "@tiki-acca/shared";
-import { isOddsApiConfigured, isProductionRuntime, oddsDbOnly } from "./config";
+import {
+  currentSeasonEndDate,
+  filterUpcomingFixtures,
+  getCompetitionById,
+  isOutrightFixtureId,
+  outrightFixtureId,
+} from "@tiki-acca/shared";
+import { isOddsApiConfigured, isProductionRuntime, oddsDbOnly, outrightsEnabled } from "./config";
 import { getMockFixtures } from "./mock-provider";
 import {
   readBulkFixtures,
   readEventMarkets,
+  readOutrightMarkets,
   refreshBulkFixturesFromApi,
   refreshEventMarketsFromApi,
+  refreshOutrightMarketsFromApi,
 } from "./odds-store";
 import { mergeMarketCollections } from "./merge-markets";
 import { tierForMarketType, type MarketTierId } from "./market-tiers";
 
 export type OddsSource = "live" | "mock";
+
+async function getOutrightFixture(competitionId: string): Promise<Fixture | null> {
+  // Single gate for everything user-facing: web picker, mobile picker, and leg
+  // creation (which validates through findSelection → findFixture → getFixtures).
+  if (!outrightsEnabled()) return null;
+
+  const competition = getCompetitionById(competitionId);
+  if (!competition?.outrightOddsApiSport) return null;
+
+  try {
+    const snapshot = await readOutrightMarkets(competitionId);
+    let markets: Market[];
+    if (snapshot) {
+      markets = snapshot.markets;
+    } else if (!oddsDbOnly()) {
+      markets = await refreshOutrightMarketsFromApi(competitionId);
+    } else {
+      markets = [];
+    }
+    if (markets.length === 0) return null;
+
+    return {
+      id: outrightFixtureId(competitionId),
+      homeTeam: competition.name,
+      awayTeam: "Outright winner",
+      competition: competition.name,
+      kickoff: currentSeasonEndDate().toISOString(),
+      markets,
+    };
+  } catch (err) {
+    console.error("[odds] outright fetch failed:", err);
+    return null;
+  }
+}
 
 export async function getFixtures(
   competitionId: string
@@ -25,19 +67,20 @@ export async function getFixtures(
 
   if (oddsConfigured) {
     try {
-      let snapshot = await readBulkFixtures(competitionId);
-      if (!snapshot && !oddsDbOnly()) {
-        const fixtures = await refreshBulkFixturesFromApi(competitionId);
-        return { fixtures, source: "live", oddsConfigured: true };
-      }
+      let fixtures: Fixture[];
+      const snapshot = await readBulkFixtures(competitionId);
       if (snapshot) {
-        return {
-          fixtures: filterUpcomingFixtures(snapshot.fixtures),
-          source: "live",
-          oddsConfigured: true,
-        };
+        fixtures = filterUpcomingFixtures(snapshot.fixtures);
+      } else if (!oddsDbOnly()) {
+        fixtures = await refreshBulkFixturesFromApi(competitionId);
+      } else {
+        fixtures = [];
       }
-      return { fixtures: [], source: "live", oddsConfigured: true };
+
+      const outright = await getOutrightFixture(competitionId);
+      if (outright) fixtures = [...fixtures, outright];
+
+      return { fixtures, source: "live", oddsConfigured: true };
     } catch (err) {
       console.error("[odds] live fetch failed:", err);
       return { fixtures: [], source: "live", oddsConfigured: true };
@@ -71,6 +114,9 @@ async function loadExtendedMarkets(
   tierId: MarketTierId
 ): Promise<Market[]> {
   if (!isOddsApiConfigured()) return [];
+  // Outright fixtures are synthetic — all their markets are already embedded,
+  // there's no per-event tier endpoint to call for them.
+  if (isOutrightFixtureId(fixtureId)) return [];
 
   let snapshot = await readEventMarkets(competitionId, fixtureId, tierId);
   if (!snapshot && !oddsDbOnly()) {

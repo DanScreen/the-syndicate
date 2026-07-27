@@ -409,6 +409,42 @@ export function buildCorrectScoreMarket(
   return { type: internalType, label, selections };
 }
 
+/** Outright/futures markets (league winner, etc.) — one selection per entrant, no home/away context. */
+export function buildOutrightMarket(
+  bookmakers: OddsApiBookmaker[],
+  apiKey: string,
+  internalType: string,
+  label: string
+): Market | null {
+  const quoteMap = new Map<string, BookmakerQuote[]>();
+  const labels = new Map<string, string>();
+
+  for (const bookmaker of bookmakers) {
+    const market = bookmaker.markets.find((m) => m.key === apiKey);
+    if (!market) continue;
+
+    for (const outcome of market.outcomes) {
+      const selectionId = slugify(outcome.name);
+      labels.set(selectionId, outcome.name);
+      addOutcomeQuote(quoteMap, selectionId, bookmaker, market, outcome);
+    }
+  }
+
+  if (quoteMap.size === 0) return null;
+
+  // Favourites first — an outright field can be 20+ entrants, and alphabetical
+  // order buries the teams anyone is actually picking.
+  const selections: MarketSelection[] = [...quoteMap.entries()]
+    .map(([id, odds]) => ({ id, label: labels.get(id) ?? id, odds }))
+    .sort((a, b) => bestOdds(a.odds) - bestOdds(b.odds) || a.label.localeCompare(b.label));
+
+  return { type: internalType, label, selections };
+}
+
+function bestOdds(quotes: BookmakerQuote[]): number {
+  return quotes.reduce((max, q) => (q.odds > max ? q.odds : max), 0);
+}
+
 function halftimeFulltimeSelectionId(outcomeName: string, event: OddsApiEvent): string | null {
   const parts = outcomeName.split("/").map((p) => p.trim());
   if (parts.length !== 2) return slugify(outcomeName);

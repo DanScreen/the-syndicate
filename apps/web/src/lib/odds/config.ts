@@ -17,6 +17,45 @@ export function oddsCacheTtlMs(): number {
     : DEFAULT_ODDS_CACHE_TTL_MS;
 }
 
+/**
+ * Master switch for season-long outright markets. **Off by default.**
+ *
+ * The plumbing (fetch, cache, homogeneous rounds, manual settlement) is complete
+ * and tested, but The Odds API offers no soccer outrights — see
+ * docs/ODDS_PROVIDERS.md. Keeping this off means the feature ships dormant
+ * rather than surfacing a half-supported market if a feed ever goes live
+ * unannounced. Flip to "true" only alongside a provider that actually serves
+ * them, and re-check `currentSeasonEndDate()` is right for that competition.
+ */
+export function outrightsEnabled(): boolean {
+  return process.env.OUTRIGHTS_ENABLED === "true";
+}
+
+/** Outrights move far slower than match odds — cache for 12h by default. */
+export const DEFAULT_ODDS_OUTRIGHT_CACHE_TTL_MS = 43_200_000;
+
+export function oddsOutrightCacheTtlMs(): number {
+  const configured = Number(process.env.ODDS_OUTRIGHT_CACHE_TTL_MS);
+  return Number.isFinite(configured) && configured > 0
+    ? configured
+    : DEFAULT_ODDS_OUTRIGHT_CACHE_TTL_MS;
+}
+
+/**
+ * How long a *failed* outright fetch is remembered as "no markets".
+ * Without this, every page load for the competition re-hits the API for as long
+ * as the failure persists (a 404 UNKNOWN_SPORT persists indefinitely).
+ * Shorter than the success TTL so a transient outage self-heals reasonably fast.
+ */
+export const DEFAULT_ODDS_OUTRIGHT_FAILURE_TTL_MS = 3_600_000;
+
+export function oddsOutrightFailureTtlMs(): number {
+  const configured = Number(process.env.ODDS_OUTRIGHT_FAILURE_TTL_MS);
+  return Number.isFinite(configured) && configured > 0
+    ? configured
+    : DEFAULT_ODDS_OUTRIGHT_FAILURE_TTL_MS;
+}
+
 export const ODDS_QUOTA_BLOCK_CACHE_KEY = "odds-api:quota-blocked";
 
 export const ODDS_QUOTA_SNAPSHOT_CACHE_KEY = "odds-api:quota-snapshot";

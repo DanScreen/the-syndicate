@@ -13,6 +13,20 @@ export type Competition = {
    * tier, so match sync is skipped and legs must be settled manually by an admin.
    */
   manualSettlement?: boolean;
+  /**
+   * The Odds API sport key for this competition's outright/futures markets, a
+   * separate sport key from `oddsApiSport` per their API.
+   *
+   * Only set this after confirming the key is real: The Odds API exposes
+   * outrights for a *very* small set of competitions, and the only soccer one
+   * is `soccer_fifa_world_cup_winner`. Plausible-looking keys such as
+   * `soccer_epl_winner` do not exist and return 404 UNKNOWN_SPORT. Verify with:
+   *
+   *   GET /v4/sports?all=true  →  entries with `has_outrights: true`
+   *
+   * Omitted everywhere else, so outrights simply don't show for those.
+   */
+  outrightOddsApiSport?: string;
 };
 
 export const COMPETITIONS: Competition[] = [
@@ -93,6 +107,10 @@ export const COMPETITIONS: Competition[] = [
     name: "FIFA World Cup",
     oddsApiSport: "soccer_fifa_world_cup",
     footballDataCode: "WC",
+    // The only soccer outright key The Odds API actually offers. Currently
+    // inactive (next edition is 2030) so it returns an empty field until
+    // bookmakers start pricing it.
+    outrightOddsApiSport: "soccer_fifa_world_cup_winner",
   },
   {
     id: "champions-league-qual",
