@@ -3,6 +3,14 @@ name: Deploy to Cloud Run
 on:
   push:
     branches: [main]
+    paths:
+      - "apps/web/**"
+      - "packages/**"
+      - "Dockerfile"
+      - ".dockerignore"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/deploy.yml"
 
 env:
   GCP_REGION: ${{ vars.GCP_REGION || 'europe-west2' }}
