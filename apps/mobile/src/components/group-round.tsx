@@ -31,8 +31,11 @@ import {
   bookmakerInitials,
   bookmakerLogoUrl,
   bookmakerRankPlace,
+  findOutrightMixConflict,
+  formatFixtureLabel,
   groupMarkets,
   isFixtureTaken,
+  isOutrightFixtureId,
   pointsTone,
   pointsToneFromOutcome,
   sortQuotesByBestOdds,
@@ -272,7 +275,7 @@ export function LegsList({
               </View>
             </View>
             <Text style={styles.legPick}>
-              {leg.homeTeam} vs {leg.awayTeam} · {leg.marketLabel}: {leg.selectionLabel}
+              {formatFixtureLabel(leg)} · {leg.marketLabel}: {leg.selectionLabel}
             </Text>
             <Text style={styles.meta}>
               {leg.competition ?? ""}
@@ -788,15 +791,20 @@ export function SubmitLegForm({
           ) : null}
           {fixtures.map((f) => {
             const taken = isFixtureTaken(existingLegs, f.id, editLegId);
+            const mixes = findOutrightMixConflict(existingLegs, f.id, editLegId) !== null;
+            const disabled = taken || mixes;
+            const suffix = taken ? " (already in acca)" : mixes ? " (not combinable)" : "";
             return (
               <OptionRow
                 key={f.id}
-                label={`${f.homeTeam} vs ${f.awayTeam}${taken ? " (already in acca)" : ""}`}
-                subtitle={formatKickoff(f.kickoff)}
+                label={`${formatFixtureLabel(f)}${suffix}`}
+                subtitle={
+                  isOutrightFixtureId(f.id) ? "Settles at season end" : formatKickoff(f.kickoff)
+                }
                 selected={false}
-                disabled={taken}
+                disabled={disabled}
                 onPress={() => {
-                  if (!taken) {
+                  if (!disabled) {
                     setFixtureId(f.id);
                     setMarketType("");
                     setSelectionId("");
@@ -812,14 +820,16 @@ export function SubmitLegForm({
         <View style={styles.selectedMarket}>
           <View style={styles.selectedMarketCopy}>
             <Text style={styles.selectedMarketEyebrow}>2. Selected fixture</Text>
-            <Text style={styles.selectedMarketLabel}>
-              {fixture.homeTeam} vs {fixture.awayTeam}
+            <Text style={styles.selectedMarketLabel}>{formatFixtureLabel(fixture)}</Text>
+            <Text style={styles.meta}>
+              {isOutrightFixtureId(fixture.id)
+                ? "Settles at the end of the season — this acca stays open until then"
+                : formatKickoff(fixture.kickoff)}
             </Text>
-            <Text style={styles.meta}>{formatKickoff(fixture.kickoff)}</Text>
           </View>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`Change fixture from ${fixture.homeTeam} vs ${fixture.awayTeam}`}
+            accessibilityLabel={`Change fixture from ${formatFixtureLabel(fixture)}`}
             onPress={() => {
               setFixtureId("");
               setMarketType("");
@@ -1028,9 +1038,7 @@ export function RoundHistory({
                     {legOutcomeLabel(leg.outcome)} · {formatOdds(leg.odds)}
                   </Text>
                 </View>
-                <Text style={styles.legPick}>
-                  {leg.homeTeam} vs {leg.awayTeam}
-                </Text>
+                <Text style={styles.legPick}>{formatFixtureLabel(leg)}</Text>
                 <Text style={styles.meta}>
                   {leg.marketLabel}: {leg.selectionLabel}
                 </Text>

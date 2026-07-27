@@ -12,6 +12,7 @@ function decodeLineKey(encoded: string): number {
 }
 
 function marketGroupId(type: string): string {
+  if (type === "league_winner") return "outright";
   if (
     type === "match_winner" ||
     type.startsWith("double_chance") ||
@@ -34,6 +35,7 @@ function marketGroupId(type: string): string {
 }
 
 const GROUP_LABELS: Record<string, string> = {
+  outright: "Outrights",
   result: "Match result",
   goals: "Goals",
   handicap: "Handicap",
@@ -42,7 +44,7 @@ const GROUP_LABELS: Record<string, string> = {
   other: "Other",
 };
 
-const GROUP_ORDER = ["result", "goals", "handicap", "corners", "cards", "other"];
+const GROUP_ORDER = ["outright", "result", "goals", "handicap", "corners", "cards", "other"];
 
 export function groupMarkets(markets: Market[]): MarketGroup[] {
   const byGroup = new Map<string, Market[]>();

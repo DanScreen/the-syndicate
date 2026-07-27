@@ -1,5 +1,5 @@
 import { withAffiliateParams } from "@/lib/odds/affiliate";
-import type { AccaBookmakerRanking } from "@tiki-acca/shared";
+import { formatFixtureLabel, type AccaBookmakerRanking } from "@tiki-acca/shared";
 
 export type BetslipLinkQuality = "deeplink" | "hub";
 
@@ -29,6 +29,7 @@ export type RoundBetslipLinks = {
 
 type LegForBetslip = {
   id: string;
+  fixtureId: string;
   selectionLabel: string;
   homeTeam: string;
   awayTeam: string;
@@ -183,7 +184,7 @@ export function buildRoundBetslipLinks(
       legId: leg.id,
       userName: leg.user.name,
       selectionLabel: leg.selectionLabel,
-      fixtureLabel: `${leg.homeTeam} vs ${leg.awayTeam}`,
+      fixtureLabel: formatFixtureLabel(leg),
       url: withAffiliateParams(preferred, primaryBookmakerId),
       linkQuality: preferred ? "deeplink" : null,
     };

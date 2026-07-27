@@ -11,7 +11,10 @@ import type {
 } from "@tiki-acca/shared";
 import {
   BOOKMAKER_RANKINGS_PREVIEW_COUNT,
+  findOutrightMixConflict,
+  formatFixtureLabel,
   isFixtureTaken,
+  isOutrightFixtureId,
   type AccaBookmakerRanking,
 } from "@tiki-acca/shared";
 import { PointsText } from "@/components/points-text";
@@ -51,6 +54,7 @@ type Leg = {
   id: string;
   user: { id: string; name: string };
   legIndex?: number;
+  fixtureId: string;
   homeTeam: string;
   awayTeam: string;
   competition: string;
@@ -505,30 +509,40 @@ export function SubmitLegForm({
           <div className="grid gap-2 sm:grid-cols-2">
             {fixtures.map((f) => {
               const taken = isFixtureTaken(existingLegs, f.id, editLegId);
+              const mixes = findOutrightMixConflict(existingLegs, f.id, editLegId) !== null;
+              const disabled = taken || mixes;
               return (
                 <button
                   key={f.id}
                   type="button"
                   aria-pressed={false}
-                  disabled={taken}
-                  title={taken ? "Another leg from this fixture is already in the acca" : undefined}
+                  disabled={disabled}
+                  title={
+                    taken
+                      ? "Another leg from this fixture is already in the acca"
+                      : mixes
+                        ? "Outrights and match picks can't share an acca"
+                        : undefined
+                  }
                   onClick={() => {
-                    if (taken) return;
+                    if (disabled) return;
                     setFixtureId(f.id);
                     setMarketType("");
                     setSelectionId("");
                   }}
                   className={`rounded-lg border px-3 py-3 text-left text-sm transition-colors ${
-                    taken
+                    disabled
                       ? "cursor-not-allowed border-border/60 text-muted opacity-50"
                       : "border-border hover:border-accent/40"
                   }`}
                 >
                   <p className="font-medium">
-                    {f.homeTeam} vs {f.awayTeam}
-                    {taken ? " (already in acca)" : ""}
+                    {formatFixtureLabel(f)}
+                    {taken ? " (already in acca)" : mixes ? " (not combinable)" : ""}
                   </p>
-                  <p className="mt-1 text-xs text-muted">{formatKickoff(f.kickoff)}</p>
+                  <p className="mt-1 text-xs text-muted">
+                    {isOutrightFixtureId(f.id) ? "Settles at season end" : formatKickoff(f.kickoff)}
+                  </p>
                 </button>
               );
             })}
@@ -542,10 +556,12 @@ export function SubmitLegForm({
             <p className="text-xs font-medium uppercase tracking-wide text-muted">
               2. Selected fixture
             </p>
-            <p className="mt-1 text-sm font-medium">
-              {fixture.homeTeam} vs {fixture.awayTeam}
+            <p className="mt-1 text-sm font-medium">{formatFixtureLabel(fixture)}</p>
+            <p className="mt-0.5 text-xs text-muted">
+              {isOutrightFixtureId(fixture.id)
+                ? "Settles at the end of the season — this acca stays open until then"
+                : formatKickoff(fixture.kickoff)}
             </p>
-            <p className="mt-0.5 text-xs text-muted">{formatKickoff(fixture.kickoff)}</p>
           </div>
           <button
             type="button"
@@ -1044,7 +1060,7 @@ export function LegsList({
                   </div>
                 </div>
                 <p className="text-muted">
-                  {leg.homeTeam} vs {leg.awayTeam} · {leg.marketLabel}:{" "}
+                  {formatFixtureLabel(leg)} · {leg.marketLabel}:{" "}
                   {leg.selectionLabel}
                 </p>
                 <p className="text-xs text-muted">

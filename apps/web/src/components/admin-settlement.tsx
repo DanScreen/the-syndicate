@@ -1,6 +1,6 @@
 "use client";
 
-import { formatOdds } from "@tiki-acca/shared";
+import { formatFixtureLabel, formatOdds } from "@tiki-acca/shared";
 
 import type { SettlementQueueRound } from "@/lib/admin/compute-settlement-queue";
 import { useRouter } from "next/navigation";
@@ -110,9 +110,14 @@ function SettleRoundCard({ round }: { round: SettlementQueueRound }) {
                 <span className="text-muted">({leg.marketLabel} @ {formatOdds(leg.odds)})</span>
               </p>
               <p className="text-xs text-muted">
-                {leg.homeTeam} vs {leg.awayTeam} · {leg.competition} · KO{" "}
-                {formatKickoff(leg.kickoff)}
-                {leg.overdue && (
+                {formatFixtureLabel(leg)} · {leg.competition} ·{" "}
+                {leg.needsManualResult ? "Settles" : "KO"} {formatKickoff(leg.kickoff)}
+                {leg.needsManualResult && (
+                  <span className="ml-2 font-medium text-accent">
+                    Outright — no results feed, enter the result manually
+                  </span>
+                )}
+                {leg.overdue && !leg.needsManualResult && (
                   <span className="ml-2 font-medium text-danger">
                     Unresolved {hoursSince(leg.kickoff)}h after kickoff — check result
                   </span>

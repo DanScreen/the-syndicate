@@ -2,6 +2,7 @@ import type { HistoryLeg, HistoryRound } from "@tiki-acca/shared";
 
 type LegRow = {
   id: string;
+  fixtureId: string;
   homeTeam: string;
   awayTeam: string;
   competition: string;
@@ -29,6 +30,7 @@ type RoundRow = {
 function mapHistoryLeg(leg: LegRow): HistoryLeg {
   return {
     id: leg.id,
+    fixtureId: leg.fixtureId,
     user: leg.user,
     homeTeam: leg.homeTeam,
     awayTeam: leg.awayTeam,

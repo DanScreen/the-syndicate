@@ -1,10 +1,12 @@
 import { prisma } from "@tiki-acca/database";
+import { isOutrightFixtureId } from "@tiki-acca/shared";
 
 /** A pending leg is flagged for intervention this long after its scheduled kickoff. */
 export const OVERDUE_AFTER_HOURS = 2;
 
 export type SettlementQueueLeg = {
   id: string;
+  fixtureId: string;
   userName: string;
   homeTeam: string;
   awayTeam: string;
@@ -16,6 +18,8 @@ export type SettlementQueueLeg = {
   outcome: string;
   /** Still pending 2+ hours after scheduled kickoff — likely needs intervention. */
   overdue: boolean;
+  /** Outright: no results feed can settle it, so an admin must enter the result. */
+  needsManualResult: boolean;
 };
 
 export type SettlementQueueRound = {
@@ -58,6 +62,7 @@ export async function computeSettlementQueue(now = new Date()): Promise<Settleme
   const queue = rounds.map((round) => {
     const legs: SettlementQueueLeg[] = round.legs.map((leg) => ({
       id: leg.id,
+      fixtureId: leg.fixtureId,
       userName: leg.user.name,
       homeTeam: leg.homeTeam,
       awayTeam: leg.awayTeam,
@@ -70,6 +75,7 @@ export async function computeSettlementQueue(now = new Date()): Promise<Settleme
       overdue:
         leg.outcome === "pending" &&
         now.getTime() - leg.kickoff.getTime() > overdueThresholdMs,
+      needsManualResult: leg.outcome === "pending" && isOutrightFixtureId(leg.fixtureId),
     }));
 
     return {

@@ -230,6 +230,18 @@ model OddsEventSnapshot {
   @@index([expiresAt])
 }
 
+/// Cached outright/futures markets (e.g. league winner) per competition —
+/// refreshed by cron on a much longer interval than match odds.
+model OutrightSnapshot {
+  competitionId String   @id
+  sport         String
+  markets       Json
+  fetchedAt     DateTime @default(now())
+  expiresAt     DateTime
+
+  @@index([expiresAt])
+}
+
 model PushDevice {
   id         String   @id @default(cuid())
   userId     String
