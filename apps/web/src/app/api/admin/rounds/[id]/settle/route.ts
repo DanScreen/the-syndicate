@@ -5,12 +5,52 @@ import {
   applyRoundSettlement,
   RoundNotSettleableError,
 } from "@/lib/settlement/apply-round-settlement";
+import { tryAutoSettleRound } from "@/lib/settlement/auto-settle-round";
+import { propagateSelectionOutcomes } from "@/lib/settlement/propagate-selection-outcome";
 import { prisma } from "@tiki-acca/database";
 import { adminSettleRoundSchema } from "@tiki-acca/shared";
 import type { LegOutcome } from "@tiki-acca/shared";
 import { NextResponse } from "next/server";
 
 type Params = { params: Promise<{ id: string }> };
+
+type LegSelection = {
+  id: string;
+  fixtureId: string;
+  marketType: string;
+  selectionId: string;
+};
+
+/**
+ * An outcome is a fact about a selection, not about one group's leg. Apply what
+ * the admin just entered to every other pending leg on the same selection, so
+ * the same question is never asked twice — and cannot be answered two different
+ * ways. Rounds that become fully resolved are then settled normally.
+ */
+async function propagateResolvedSelections(
+  legs: LegSelection[],
+  outcomeMap: Map<string, LegOutcome>
+): Promise<{ legsUpdated: number; roundsSettled: number }> {
+  const resolved = legs
+    .filter((leg) => outcomeMap.has(leg.id))
+    .map((leg) => ({
+      legId: leg.id,
+      fixtureId: leg.fixtureId,
+      marketType: leg.marketType,
+      selectionId: leg.selectionId,
+      outcome: outcomeMap.get(leg.id)!,
+    }));
+
+  const { legsUpdated, affectedRoundIds } = await propagateSelectionOutcomes(resolved);
+
+  let roundsSettled = 0;
+  for (const affectedRoundId of affectedRoundIds) {
+    const result = await tryAutoSettleRound(affectedRoundId);
+    if (result.status === "settled") roundsSettled += 1;
+  }
+
+  return { legsUpdated, roundsSettled };
+}
 
 /**
  * Platform-admin manual settlement — the escape hatch for rounds the system
@@ -36,7 +76,17 @@ export async function POST(request: Request, { params }: Params) {
 
   const round = await prisma.round.findUnique({
     where: { id: roundId },
-    include: { legs: { select: { id: true, outcome: true } } },
+    include: {
+      legs: {
+        select: {
+          id: true,
+          outcome: true,
+          fixtureId: true,
+          marketType: true,
+          selectionId: true,
+        },
+      },
+    },
   });
 
   if (!round) {
@@ -84,7 +134,9 @@ export async function POST(request: Request, { params }: Params) {
       }
     }
 
-    return NextResponse.json({ status: "settled", deferred: awarded });
+    const propagated = await propagateResolvedSelections(round.legs, outcomeMap);
+
+    return NextResponse.json({ status: "settled", deferred: awarded, propagated });
   }
 
   if (round.status !== "locked") {
@@ -109,7 +161,8 @@ export async function POST(request: Request, { params }: Params) {
 
   try {
     const result = await applyRoundSettlement(roundId, outcomeMap);
-    return NextResponse.json(result);
+    const propagated = await propagateResolvedSelections(round.legs, outcomeMap);
+    return NextResponse.json({ ...result, propagated });
   } catch (err) {
     if (err instanceof RoundNotSettleableError) {
       return NextResponse.json(
