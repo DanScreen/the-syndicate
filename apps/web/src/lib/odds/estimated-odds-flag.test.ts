@@ -44,22 +44,22 @@ test("estimated odds turn on only for an explicit 'true'", () => {
   withEnv("ESTIMATED_ODDS_ENABLED", "true", () => assert.equal(estimatedOddsEnabled(), true));
 });
 
-test("margin defaults to 0.05 and rejects non-positive values instead of applying them", () => {
-  withEnv("ESTIMATED_ODDS_MARGIN", undefined, () => assert.equal(estimatedOddsMargin(), 0.05));
-  withEnv("ESTIMATED_ODDS_MARGIN", "0", () => assert.equal(estimatedOddsMargin(), 0.05));
-  withEnv("ESTIMATED_ODDS_MARGIN", "-0.2", () => assert.equal(estimatedOddsMargin(), 0.05));
-  withEnv("ESTIMATED_ODDS_MARGIN", "not-a-number", () => assert.equal(estimatedOddsMargin(), 0.05));
+test("margin defaults to 0 (true median), honours an explicit 0, rejects negatives", () => {
+  withEnv("ESTIMATED_ODDS_MARGIN", undefined, () => assert.equal(estimatedOddsMargin(), 0));
+  withEnv("ESTIMATED_ODDS_MARGIN", "0", () => assert.equal(estimatedOddsMargin(), 0));
+  withEnv("ESTIMATED_ODDS_MARGIN", "-0.2", () => assert.equal(estimatedOddsMargin(), 0));
+  withEnv("ESTIMATED_ODDS_MARGIN", "not-a-number", () => assert.equal(estimatedOddsMargin(), 0));
 });
 
-test("margin clamps to [0.01, 0.5]", () => {
+test("an explicit positive margin still clamps to [0.01, 0.5]", () => {
   withEnv("ESTIMATED_ODDS_MARGIN", "0.001", () => assert.equal(estimatedOddsMargin(), 0.01));
   withEnv("ESTIMATED_ODDS_MARGIN", "0.9", () => assert.equal(estimatedOddsMargin(), 0.5));
   withEnv("ESTIMATED_ODDS_MARGIN", "0.12", () => assert.equal(estimatedOddsMargin(), 0.12));
 });
 
-test("min real quotes and skip-at default to 2 and 4", () => {
+test("min real quotes defaults to 1 and skip-at to 4", () => {
   withEnv("ESTIMATED_ODDS_MIN_REAL_QUOTES", undefined, () =>
-    assert.equal(estimatedOddsMinRealQuotes(), 2)
+    assert.equal(estimatedOddsMinRealQuotes(), 1)
   );
   withEnv("ESTIMATED_ODDS_SKIP_AT", undefined, () => assert.equal(estimatedOddsSkipAt(), 4));
 });

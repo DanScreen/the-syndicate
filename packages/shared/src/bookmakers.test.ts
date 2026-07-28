@@ -29,16 +29,22 @@ test("realQuotes filters out anything flagged estimated", () => {
   );
 });
 
-test("sortQuotesByBestOdds drops estimated quotes even when they'd sort first", () => {
+test("sortQuotesByBestOdds includes estimates, best odds first", () => {
   const quotes = [real("a", 2.0), estimated("b", 9.99)];
   const sorted = sortQuotesByBestOdds(quotes);
-  assert.deepEqual(sorted.map((q) => q.bookmakerId), ["a"]);
+  assert.deepEqual(sorted.map((q) => q.bookmakerId), ["b", "a"]);
 });
 
-test("topQuotes drops estimated quotes", () => {
+test("sortQuotesByBestOdds: a real quote wins a tie against an estimate", () => {
+  const quotes = [estimated("est", 2.0), real("real", 2.0), estimated("est2", 2.0)];
+  const sorted = sortQuotesByBestOdds(quotes);
+  assert.equal(sorted[0]!.bookmakerId, "real");
+});
+
+test("topQuotes includes estimates", () => {
   const quotes = [real("a", 2.0), estimated("b", 9.99), real("c", 1.5)];
   const top = topQuotes(quotes, 5);
-  assert.deepEqual(top.map((q) => q.bookmakerId), ["a", "c"]);
+  assert.deepEqual(top.map((q) => q.bookmakerId), ["b", "a", "c"]);
 });
 
 test("sortQuotesForDisplay keeps estimates, real wins ties", () => {

@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { fillEstimatedQuotes } from "./estimated-odds";
+import {
+  DEFAULT_ESTIMATED_ODDS_MARGIN,
+  DEFAULT_ESTIMATED_ODDS_MIN_REAL_QUOTES,
+  fillEstimatedQuotes,
+} from "./estimated-odds";
 import type { BookmakerQuote, MarketSelection } from "./types";
 
 function quote(bookmakerId: string, odds: number, extra?: Partial<BookmakerQuote>): BookmakerQuote {
@@ -181,6 +185,39 @@ test("floor: an estimate never drops below 1.01", () => {
   const estimate = filled.odds.find((q) => q.bookmakerId === "c");
   assert.ok(estimate);
   assert.equal(estimate!.odds, 1.01);
+});
+
+test("defaults: true median (no haircut) and fills from a single real quote", () => {
+  assert.equal(DEFAULT_ESTIMATED_ODDS_MARGIN, 0);
+  assert.equal(DEFAULT_ESTIMATED_ODDS_MIN_REAL_QUOTES, 1);
+});
+
+test("margin 0 yields the true median with no reduction", () => {
+  const s = selection([quote("a", 2.0), quote("b", 3.0)]);
+  const filled = fillEstimatedQuotes(
+    s,
+    [{ id: "a", name: "a" }, { id: "b", name: "b" }, { id: "c", name: "c" }],
+    { margin: 0, minRealQuotes: 1, skipAt: 4 }
+  );
+  const estimate = filled.odds.find((q) => q.bookmakerId === "c");
+  assert.ok(estimate);
+  // median(2.0, 3.0) = 2.5, no haircut
+  assert.equal(estimate!.odds, 2.5);
+});
+
+test("single real quote fills every other candidate with that price (minRealQuotes 1)", () => {
+  const s = selection([quote("a", 1.9)]);
+  const filled = fillEstimatedQuotes(
+    s,
+    [{ id: "a", name: "a" }, { id: "b", name: "b" }, { id: "c", name: "c" }],
+    { margin: 0, minRealQuotes: 1, skipAt: 4 }
+  );
+  const estimates = filled.odds.filter((q) => q.estimated);
+  assert.deepEqual(
+    estimates.map((q) => q.bookmakerId).sort(),
+    ["b", "c"]
+  );
+  assert.ok(estimates.every((q) => q.odds === 1.9));
 });
 
 /** Deterministic PRNG so the property-style test is reproducible. */

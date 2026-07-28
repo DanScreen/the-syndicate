@@ -735,24 +735,9 @@ export function SubmitLegForm({
           {sortQuotesForDisplay(selection.odds).length > 0 && (
             <ul className="space-y-1 rounded-lg border border-border bg-card px-3 py-2 text-xs">
               {sortQuotesForDisplay(selection.odds).map((q) => (
-                <li
-                  key={q.bookmakerId}
-                  className={`flex items-center justify-between gap-2 ${
-                    q.estimated ? "italic text-muted" : ""
-                  }`}
-                >
+                <li key={q.bookmakerId} className="flex items-center justify-between gap-2">
                   <span className="truncate">{q.bookmakerName}</span>
-                  <span className="flex items-center gap-1.5 tabular-nums">
-                    {q.estimated && (
-                      <span
-                        className="rounded border border-border px-1 py-0.5 text-[10px] font-semibold not-italic uppercase tracking-wide text-muted"
-                        title="Estimated from other bookmakers' prices — not a real quote, no link"
-                      >
-                        est.
-                      </span>
-                    )}
-                    {formatOdds(q.odds)}
-                  </span>
+                  <span className="tabular-nums">{formatOdds(q.odds)}</span>
                 </li>
               ))}
             </ul>
@@ -1060,6 +1045,12 @@ export function LegsList({
   showLegIndex = false,
   announcementByLegId,
   onAnnouncementChanged,
+  currentUserId,
+  editWindowOpen = false,
+  canRemove = false,
+  removingLegId = null,
+  onChangeLeg,
+  onRemoveLeg,
 }: {
   legs: Leg[];
   legLinks?: { legId: string; url: string | null }[];
@@ -1069,6 +1060,14 @@ export function LegsList({
   showLegIndex?: boolean;
   announcementByLegId?: Map<string, RoundMessageDto>;
   onAnnouncementChanged?: (message: RoundMessageDto) => void;
+  /** When set, the current user's own legs show Change/Remove controls inline. */
+  currentUserId?: string;
+  editWindowOpen?: boolean;
+  /** Whether removing a leg is allowed (open rounds only). */
+  canRemove?: boolean;
+  removingLegId?: string | null;
+  onChangeLeg?: (legId: string) => void;
+  onRemoveLeg?: (leg: { id: string; selectionLabel: string }) => void;
 }) {
   if (legs.length === 0) {
     return <p className="text-sm text-muted">No legs submitted yet.</p>;
@@ -1093,6 +1092,8 @@ export function LegsList({
     <ul className="space-y-2">
       {legs.map((leg) => {
         const openUrl = showOpenLinks ? linkByLegId.get(leg.id) : undefined;
+        const isOwnLeg = currentUserId != null && leg.user.id === currentUserId;
+        const canEditLeg = isOwnLeg && editWindowOpen;
         const showOutcome = inProgress || leg.outcome !== "pending";
         const nameLabel =
           showLegIndex && leg.legIndex != null
@@ -1142,15 +1143,40 @@ export function LegsList({
                   />
                 ) : null}
               </div>
-              {openUrl && (
-                <a
-                  href={openUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="shrink-0 rounded border border-accent/50 px-2 py-1 text-xs font-medium text-accent hover:bg-accent-muted/30"
-                >
-                  Open
-                </a>
+              {(openUrl || canEditLeg) && (
+                <div className="flex shrink-0 items-center gap-2">
+                  {openUrl && (
+                    <a
+                      href={openUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded border border-accent/50 px-2 py-1 text-xs font-medium text-accent hover:bg-accent-muted/30"
+                    >
+                      Open
+                    </a>
+                  )}
+                  {canEditLeg && onChangeLeg && (
+                    <button
+                      type="button"
+                      onClick={() => onChangeLeg(leg.id)}
+                      className="rounded border border-accent px-2 py-1 text-xs font-medium text-accent hover:bg-accent-muted/30"
+                    >
+                      Change
+                    </button>
+                  )}
+                  {canEditLeg && canRemove && onRemoveLeg && (
+                    <button
+                      type="button"
+                      disabled={removingLegId === leg.id}
+                      onClick={() =>
+                        onRemoveLeg({ id: leg.id, selectionLabel: leg.selectionLabel })
+                      }
+                      className="rounded border border-danger/60 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
+                    >
+                      {removingLegId === leg.id ? "Removing…" : "Remove"}
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           </li>

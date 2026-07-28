@@ -5,24 +5,20 @@ import { rankAccaBookmakers } from "./acca";
 import type { BookmakerQuote } from "@tiki-acca/shared";
 
 /**
- * Integration-level pin for the invariant in
- * docs/specs/estimated-odds-fill.md: leg creation (api/legs/route.ts:115),
- * round lock (lock-round.ts:72) and acca maths (acca.ts) all pick a quote via
- * `sortQuotesByBestOdds(selection.odds)[0]` — the exact one-liner reproduced
- * here. An estimate must never win that pick, even when it's numerically the
- * best price in the list (which a correctly-applied haircut should never
- * produce, but this test does not rely on the haircut to hold).
+ * Estimated quotes now participate in every path (leg creation, round lock and
+ * acca maths) via `sortQuotesByBestOdds(...)[0]`, per the product decision to
+ * fill thin markets fully. The remaining guarantee is a preference, not an
+ * exclusion: whenever a real quote sits at the best price, it is picked ahead
+ * of an estimate at the same price, so a leg locks against a real bookmaker
+ * price whenever one matches the best odds.
  */
 
-test("leg-creation / lock-round quote pick never selects an estimate, even if it has the best odds", () => {
+test("a real quote wins the best-odds pick against an estimate at the same price", () => {
   const quotes: BookmakerQuote[] = [
-    { bookmakerId: "coral", bookmakerName: "Coral", odds: 1.8 },
-    // Deliberately the best price in the list, but flagged estimated.
-    { bookmakerId: "williamhill", bookmakerName: "William Hill", odds: 9.99, estimated: true },
+    { bookmakerId: "williamhill", bookmakerName: "William Hill", odds: 1.9, estimated: true },
+    { bookmakerId: "coral", bookmakerName: "Coral", odds: 1.9 },
   ];
 
-  // The exact expression used at apps/web/src/app/api/legs/route.ts:115 and
-  // apps/web/src/lib/odds/lock-round.ts:72.
   const picked = sortQuotesByBestOdds(quotes)[0];
 
   assert.ok(picked);
@@ -30,34 +26,37 @@ test("leg-creation / lock-round quote pick never selects an estimate, even if it
   assert.equal(picked!.estimated, undefined);
 });
 
-test("leg-creation quote pick returns undefined rather than an estimate when only estimates exist", () => {
+test("an estimate is picked when it is the only quote at the best price", () => {
   const quotes: BookmakerQuote[] = [
-    { bookmakerId: "williamhill", bookmakerName: "William Hill", odds: 9.99, estimated: true },
+    { bookmakerId: "coral", bookmakerName: "Coral", odds: 1.8 },
+    { bookmakerId: "williamhill", bookmakerName: "William Hill", odds: 1.9, estimated: true },
   ];
 
   const picked = sortQuotesByBestOdds(quotes)[0];
 
-  assert.equal(picked, undefined);
+  assert.ok(picked);
+  assert.equal(picked!.bookmakerId, "williamhill");
+  assert.equal(picked!.estimated, true);
 });
 
-test("acca maths (rankAccaBookmakers) never ranks a bookmaker whose only quote on a leg is estimated", () => {
+test("acca maths (rankAccaBookmakers) ranks a bookmaker whose quote on a leg is estimated", () => {
   const legs = [
     {
       quotes: [
         { bookmakerId: "coral", bookmakerName: "Coral", odds: 1.8 },
-        { bookmakerId: "williamhill", bookmakerName: "William Hill", odds: 9.99, estimated: true },
+        { bookmakerId: "williamhill", bookmakerName: "William Hill", odds: 1.8, estimated: true },
       ] satisfies BookmakerQuote[],
     },
     {
-      quotes: [{ bookmakerId: "coral", bookmakerName: "Coral", odds: 2.1 }] satisfies BookmakerQuote[],
+      quotes: [
+        { bookmakerId: "coral", bookmakerName: "Coral", odds: 2.1 },
+        { bookmakerId: "williamhill", bookmakerName: "William Hill", odds: 2.1 },
+      ] satisfies BookmakerQuote[],
     },
   ];
 
   const ranked = rankAccaBookmakers(legs);
+  const ids = ranked.map((r) => r.bookmakerId).sort();
 
-  assert.ok(ranked.every((r) => r.bookmakerId !== "williamhill"));
-  assert.deepEqual(
-    ranked.map((r) => r.bookmakerId),
-    ["coral"]
-  );
+  assert.deepEqual(ids, ["coral", "williamhill"]);
 });

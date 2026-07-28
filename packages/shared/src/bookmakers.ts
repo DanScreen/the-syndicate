@@ -26,29 +26,28 @@ export function realQuotes(quotes: BookmakerQuote[]): BookmakerQuote[] {
 }
 
 /**
- * Best decimal odds first (retail, real quotes only).
+ * Best decimal odds first (retail quotes, estimates included).
  *
- * This is the seam every money path funnels through — leg creation, round
- * lock, and acca maths. Estimated quotes are excluded here, not merely
- * ranked low, so no consumer of this function can ever stake or settle one.
+ * This is the seam every path funnels through — leg creation, round lock,
+ * acca maths and display. Estimated quotes participate here: a real quote
+ * still wins ties against an estimate at the same price, so a leg locks at a
+ * real bookmaker's price whenever one matches the best odds; an estimate is
+ * only ever picked when no real quote sits at that price.
  */
 export function sortQuotesByBestOdds(quotes: BookmakerQuote[]): BookmakerQuote[] {
-  return filterRetailQuotes(realQuotes(quotes)).sort((a, b) => b.odds - a.odds);
-}
-
-export function topQuotes(quotes: BookmakerQuote[], limit: number): BookmakerQuote[] {
-  return sortQuotesByBestOdds(quotes).slice(0, limit);
-}
-
-/**
- * Best decimal odds first (retail quotes, estimates included) — for display
- * only. Real quotes win ties against an estimate at the same price.
- */
-export function sortQuotesForDisplay(quotes: BookmakerQuote[]): BookmakerQuote[] {
   return filterRetailQuotes(quotes).sort((a, b) => {
     if (b.odds !== a.odds) return b.odds - a.odds;
     const aReal = a.estimated ? 0 : 1;
     const bReal = b.estimated ? 0 : 1;
     return bReal - aReal;
   });
+}
+
+export function topQuotes(quotes: BookmakerQuote[], limit: number): BookmakerQuote[] {
+  return sortQuotesByBestOdds(quotes).slice(0, limit);
+}
+
+/** Alias retained for display call sites; identical to {@link sortQuotesByBestOdds}. */
+export function sortQuotesForDisplay(quotes: BookmakerQuote[]): BookmakerQuote[] {
+  return sortQuotesByBestOdds(quotes);
 }

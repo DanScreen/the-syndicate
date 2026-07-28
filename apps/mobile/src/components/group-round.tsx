@@ -966,20 +966,9 @@ export function SubmitLegForm({
             <View style={styles.oddsCompareCard}>
               {sortQuotesForDisplay(selection.odds).map((q) => (
                 <View key={q.bookmakerId} style={styles.oddsCompareRow}>
-                  <Text style={[styles.oddsCompareName, q.estimated && styles.oddsCompareEstimatedText]}>
-                    {q.bookmakerName}
-                  </Text>
+                  <Text style={styles.oddsCompareName}>{q.bookmakerName}</Text>
                   <View style={styles.oddsCompareValue}>
-                    {q.estimated ? (
-                      <View style={styles.oddsCompareBadge}>
-                        <Text style={styles.oddsCompareBadgeText}>est.</Text>
-                      </View>
-                    ) : null}
-                    <Text
-                      style={[styles.oddsCompareOdds, q.estimated && styles.oddsCompareEstimatedText]}
-                    >
-                      {formatOdds(q.odds)}
-                    </Text>
+                    <Text style={styles.oddsCompareOdds}>{formatOdds(q.odds)}</Text>
                   </View>
                 </View>
               ))}
@@ -1237,25 +1226,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 13,
     fontWeight: "600",
-  },
-  oddsCompareEstimatedText: {
-    color: colors.muted,
-    fontStyle: "italic",
-    fontWeight: "400",
-  },
-  oddsCompareBadge: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 4,
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-  },
-  oddsCompareBadgeText: {
-    color: colors.muted,
-    fontSize: 9,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
   },
   warnText: {
     color: colors.warning,

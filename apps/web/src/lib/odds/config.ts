@@ -104,7 +104,10 @@ export function estimatedOddsEnabled(): boolean {
 /** Haircut applied to the median of real quotes. Clamped to [0.01, 0.5]; a value <= 0 falls back to the default. */
 export function estimatedOddsMargin(): number {
   const configured = Number(process.env.ESTIMATED_ODDS_MARGIN);
-  if (!Number.isFinite(configured) || configured <= 0) return DEFAULT_ESTIMATED_ODDS_MARGIN;
+  // Unset or invalid falls back to the default (0 = true median, no haircut).
+  // An explicit 0 is honoured; any positive value is clamped to [0.01, 0.5].
+  if (!Number.isFinite(configured) || configured < 0) return DEFAULT_ESTIMATED_ODDS_MARGIN;
+  if (configured === 0) return 0;
   return Math.min(0.5, Math.max(0.01, configured));
 }
 

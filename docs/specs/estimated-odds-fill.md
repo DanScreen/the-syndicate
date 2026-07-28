@@ -1,6 +1,31 @@
 # Estimated odds fill (median-backfill for missing bookmaker quotes)
 
-**Status:** planned · **Date:** 2026-07-28
+**Status:** shipped, then re-scoped · **Date:** 2026-07-28
+
+> ⚠️ **2026-07-28 re-scope (owner decision).** The original design below treated
+> estimates as display-only, haircut, labelled, and excluded from every money
+> path. The product owner has since chosen the opposite, with the trade-offs
+> laid out and accepted:
+>
+> - **True median, no haircut** — `ESTIMATED_ODDS_MARGIN` defaults to **0**
+>   (an estimate equals the median of real quotes).
+> - **Fills from a single real quote** — `ESTIMATED_ODDS_MIN_REAL_QUOTES`
+>   defaults to **1** (one real price is copied to every other fixture-covering
+>   bookmaker).
+> - **Estimates participate in the money path** — `sortQuotesByBestOdds` now
+>   *includes* estimates (a real quote still wins ties), so the acca-level
+>   bookmaker ranking, round lock and settlement can use an estimated price. A
+>   group can therefore lock/settle at a combined price no single bookmaker
+>   published.
+> - **No label anywhere** — the per-row "est." badge and muted styling are
+>   removed; estimated prices render identically to real ones.
+>
+> The sections below are retained as the original rationale; where they say
+> "display-only", "haircut", "excluded from money paths", or "mandatory badge",
+> read them against this note. Known trade-offs: estimates are fabricated prices
+> shown under real, licensed UK bookmaker names with no disclosure (trust / UK
+> ad-standards exposure), and a bet can settle against a price a bookmaker never
+> offered.
 
 ## Problem
 

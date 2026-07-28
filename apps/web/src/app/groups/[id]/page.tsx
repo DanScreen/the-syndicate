@@ -1,7 +1,5 @@
 "use client";
 
-import { formatOdds } from "@tiki-acca/shared";
-
 import {
   AccaSummary,
   LegsList,
@@ -298,6 +296,15 @@ export default function GroupRoundPage() {
             {legsPerMember} legs each this round
           </p>
         )}
+        {userLegs.length > 0 && editWindowOpen && !editingLegId && (
+          <p className="mt-1 text-sm text-muted">
+            You can change {isOpen ? "or remove " : ""}your pick
+            {userLegs.length === 1 ? "" : "s"} until the first kickoff
+            {firstKickoff ? ` (${formatCutoff(firstKickoff)})` : ""}.
+            {isLocked && " Changing a pick reprices the whole acca at current odds."}
+          </p>
+        )}
+        {removeError && <p className="mt-1 text-sm text-danger">{removeError}</p>}
         <div className="mt-3">
           <LegsList
             legs={activeRound.legs}
@@ -313,6 +320,12 @@ export default function GroupRoundPage() {
                 )
               );
             }}
+            currentUserId={userId}
+            editWindowOpen={editWindowOpen && !editingLegId}
+            canRemove={isOpen}
+            removingLegId={removingLegId}
+            onChangeLeg={(legId) => setEditingLegId(legId)}
+            onRemoveLeg={(leg) => void removeLeg(leg.id, leg.selectionLabel)}
           />
         </div>
       </section>
@@ -338,50 +351,6 @@ export default function GroupRoundPage() {
           inProgress={isLocked}
           preview={isOpen}
         />
-      )}
-
-      {userLegs.length > 0 && editWindowOpen && !editingLegId && (
-        <div className="space-y-2 rounded-xl border border-border bg-card p-4">
-          <p className="text-sm font-medium">Your picks</p>
-          <p className="text-sm text-muted">
-            You can change {isOpen ? "or remove " : ""}them until the first kickoff
-            {firstKickoff ? ` (${formatCutoff(firstKickoff)})` : ""}.
-            {isLocked && " Changing a pick reprices the whole acca at current odds."}
-          </p>
-          {removeError && <p className="text-sm text-danger">{removeError}</p>}
-          <ul className="mt-2 space-y-2">
-            {userLegs.map((leg) => (
-              <li
-                key={leg.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border px-3 py-2 text-sm"
-              >
-                <span>
-                  {legsPerMember > 1 ? `Leg ${leg.legIndex ?? ""}: ` : ""}
-                  {leg.selectionLabel} ({formatOdds(leg.odds)})
-                </span>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setEditingLegId(leg.id)}
-                    className="rounded-lg border border-accent px-3 py-1.5 text-sm font-medium text-accent hover:bg-accent-muted/30"
-                  >
-                    Change
-                  </button>
-                  {isOpen && (
-                    <button
-                      type="button"
-                      disabled={removingLegId === leg.id}
-                      onClick={() => void removeLeg(leg.id, leg.selectionLabel)}
-                      className="rounded-lg border border-danger/60 px-3 py-1.5 text-sm font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
-                    >
-                      {removingLegId === leg.id ? "Removing…" : "Remove"}
-                    </button>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
       )}
 
       {canSubmitMore && !editingLegId && (
