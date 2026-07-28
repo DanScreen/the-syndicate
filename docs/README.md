@@ -87,6 +87,7 @@ docs/
     ├── affiliate-and-betslips.md     ← Affiliate tracking + betslip deeplink improvements (backlog)
     ├── round-deadline-lock.md        ← Lock at first kickoff + pick reminders (Phase 1 shipped)
     ├── notifications.md              ← Email + push notification plan (planned)
+    ├── estimated-odds-fill.md        ← Median-backfill for missing bookmaker quotes (planned)
     ├── multi-leg-accas.md            ← Owner 1–3 legs per member (shipped Phases 1–3)
     ├── concurrent-group-bets.md      ← Owner 1–5 simultaneous active bets (owner test pending)
     ├── mobile-apps.md                ← iOS + Android strategy, parity plan, anti-divergence (spec)
