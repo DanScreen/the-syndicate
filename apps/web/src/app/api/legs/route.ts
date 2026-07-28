@@ -10,6 +10,7 @@ import { isPastKickoffCutoff } from "@/lib/rounds/first-kickoff";
 import { prisma } from "@tiki-acca/database";
 import {
   allMembersFilledQuota,
+  effectiveLegQuota,
   findConflictingFixtureLeg,
   findOutrightMixConflict,
   formatFixtureConflictError,
@@ -63,13 +64,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Not a group member" }, { status: 403 });
   }
 
-  const quota = round.legsPerMember;
+  const quota = effectiveLegQuota(round);
   const userLegs = round.legs.filter((l) => l.userId === session!.user!.id);
   if (userLegs.length >= quota) {
     return NextResponse.json(
       {
-        error:
-          quota === 1
+        error: round.unlimitedLegs
+          ? `A solo acca can hold up to ${quota} legs`
+          : quota === 1
             ? "You already submitted a leg"
             : `You've already submitted all ${quota} legs for this round`,
       },
@@ -161,7 +163,7 @@ export async function POST(request: Request) {
     allMembersFilledQuota({
       memberUserIds: updatedRound.group.members.map((m) => m.userId),
       legs: updatedRound.legs,
-      legsPerMember: updatedRound.legsPerMember,
+      legsPerMember: effectiveLegQuota(updatedRound),
     });
 
   if (shouldLock) {

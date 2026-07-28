@@ -43,6 +43,7 @@ export type GroupSummaryActiveBet = {
   status: RoundStatus;
   combinedOdds: number | null;
   legsPerMember: number;
+  unlimitedLegs: boolean;
   submittedLegCount: number;
   requiredLegCount: number;
   yourLegCount: number;
@@ -170,6 +171,8 @@ export type ActiveRound = {
   betNumber: number | null;
   status: RoundStatus;
   legsPerMember: number;
+  /** Solo round: quota is SOLO_MAX_LEGS and the member can lock manually. */
+  unlimitedLegs: boolean;
   combinedOdds: number | null;
   bestBookmakerId: string | null;
   legs: GroupLeg[];

@@ -41,6 +41,8 @@ On the overall Groups screen, a group with one active bet keeps its detailed bet
 ### 4. Place & track
 While the bet is open: leg picker shows **best odds only** per selection; **Compare bookmakers** shows the current ranking from legs submitted so far. Once locked: **frozen combined odds** and the **Compare bookmakers** ranking captured at lock, so members can see which bookmaker gives the best acca odds when they place the bet. Per-leg **Won / Lost / Awaiting** badges update as matches finish. Betslip links shown until the first result; then tracking only. Page auto-refreshes every 60s while locked.
 
+**Solo accas:** a group with **one member** is a valid way to use Tiki Acca alone. Its rounds open with no per-member quota — the member adds up to **10 legs** (a cap, because bookmakers limit accumulators to roughly 12–20 selections and a longer betslip link cannot be placed) and presses **Lock acca** when ready, rather than the acca locking on their first pick. Auto-lock still applies at the 10-leg cap and at first kickoff. Manual lock is deliberately solo-only: in a multi-member group it would lock everyone else out. If someone joins a solo group while an acca is still open, it becomes an ordinary group acca on the spot: the quota reverts to the group's legs-per-member, picks already made stand, and it locks once the new member has picked. Solo rounds count on leaderboards exactly like group rounds. → [specs/solo-unlimited-legs.md](./specs/solo-unlimited-legs.md)
+
 **Editing picks:** members can change their own leg — in open rounds and in locked rounds — until the **first kickoff** among the acca's legs. Editing a locked round reprices the whole acca at current odds. Once the first match starts, picks are final.
 
 **Removing picks:** members can remove only their own leg while the round is still **open** and before the first kickoff. Removal requires confirmation and is announced in Group Chat. Locked and settled accas cannot lose legs.
@@ -64,6 +66,7 @@ Platform admins (`ADMIN_EMAILS`) see an **Admin** tab in the header with `/admin
 ### Shipped
 - [x] Auth, groups, invite flow
 - [x] Multi-leg accas — owner sets 1 / 2 / 3 legs per member (web + mobile)
+- [x] Solo accas — one-member groups build up to 10 legs and lock manually (web + mobile)
 - [x] Concurrent group bets — owner cap 1–5, member creation guard, active-bet switcher (web + mobile; owner testing pending)
 - [x] Live odds (The Odds API) + extended markets
 - [x] Per-leg competition picker (EPL, Championship, top European leagues, World Cup)

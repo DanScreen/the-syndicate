@@ -25,7 +25,7 @@ export async function openRound(
   const [group, latestRound] = await Promise.all([
     db.group.findUniqueOrThrow({
       where: { id: groupId },
-      select: { legsPerMember: true },
+      select: { legsPerMember: true, _count: { select: { members: true } } },
     }),
     db.round.aggregate({
       where: { groupId },
@@ -39,6 +39,7 @@ export async function openRound(
       betNumber: (latestRound._max.betNumber ?? 0) + 1,
       status: "open",
       legsPerMember: group.legsPerMember,
+      unlimitedLegs: group._count.members === 1,
     },
   });
 

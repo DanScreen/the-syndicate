@@ -113,6 +113,9 @@ model Round {
   status          String   @default("open")
   /// Snapshot of group.legsPerMember when this round opened.
   legsPerMember   Int      @default(1)
+  /// True when this round opened in a one-member (solo) group: the quota is
+  /// SOLO_MAX_LEGS and the member may lock the acca manually.
+  unlimitedLegs   Boolean  @default(false)
   combinedOdds    Float?
   bestBookmakerId String?
   accaBookmakerRankings Json?

@@ -28,6 +28,7 @@ export async function createAdditionalRound(groupId: string, userId: string) {
           select: {
             legsPerMember: true,
             maxActiveBets: true,
+            _count: { select: { members: true } },
           },
         },
       },
@@ -77,6 +78,7 @@ export async function createAdditionalRound(groupId: string, userId: string) {
         betNumber: (latestRound._max.betNumber ?? 0) + 1,
         status: "open",
         legsPerMember: membership.group.legsPerMember,
+        unlimitedLegs: membership.group._count.members === 1,
       },
       include: { legs: true },
     });

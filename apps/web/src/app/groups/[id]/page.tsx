@@ -10,7 +10,7 @@ import { RoundHistory } from "@/components/group-history";
 import { useGroupData } from "@/context/group-data";
 import { useSession } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
-import type { RoundMessageDto } from "@tiki-acca/shared";
+import { SOLO_MAX_LEGS, type RoundMessageDto } from "@tiki-acca/shared";
 
 function formatCutoff(date: Date) {
   return date.toLocaleString("en-GB", {
@@ -28,6 +28,8 @@ export default function GroupRoundPage() {
   const [editingLegId, setEditingLegId] = useState<string | null>(null);
   const [removingLegId, setRemovingLegId] = useState<string | null>(null);
   const [removeError, setRemoveError] = useState("");
+  const [lockingRound, setLockingRound] = useState(false);
+  const [lockError, setLockError] = useState("");
   const [legAnnouncements, setLegAnnouncements] = useState<RoundMessageDto[]>([]);
   const [selectedRoundId, setSelectedRoundId] = useState<string | null>(null);
   const [creatingRound, setCreatingRound] = useState(false);
@@ -68,7 +70,10 @@ export default function GroupRoundPage() {
   const { group } = data;
   const betslipLink = activeRound.betslipLink ?? data.betslipLink;
   const betslipLinks = activeRound.betslipLinks ?? data.betslipLinks;
-  const legsPerMember = activeRound.legsPerMember ?? group.legsPerMember ?? 1;
+  const isSolo = Boolean(activeRound.unlimitedLegs);
+  const legsPerMember = isSolo
+    ? SOLO_MAX_LEGS
+    : (activeRound.legsPerMember ?? group.legsPerMember ?? 1);
   const userLegs = activeRound.legs.filter((l) => l.user.id === userId);
   const canSubmitMore =
     Boolean(userId) &&
@@ -189,6 +194,38 @@ export default function GroupRoundPage() {
     }
   }
 
+  async function lockSoloRound() {
+    if (
+      !window.confirm(
+        `Lock this acca with ${activeRound.legs.length} leg${
+          activeRound.legs.length === 1 ? "" : "s"
+        }? You won't be able to add more.`
+      )
+    ) {
+      return;
+    }
+
+    setLockingRound(true);
+    setLockError("");
+    try {
+      const response = await fetch(`/api/rounds/${activeRound.id}/lock`, {
+        method: "POST",
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setLockError(
+          typeof body.error === "string" ? body.error : "Failed to lock acca"
+        );
+        return;
+      }
+      await reload();
+    } catch {
+      setLockError("Failed to lock acca");
+    } finally {
+      setLockingRound(false);
+    }
+  }
+
   async function createRound() {
     setCreatingRound(true);
     setCreateRoundError("");
@@ -273,7 +310,7 @@ export default function GroupRoundPage() {
         </section>
       )}
 
-      {isOpen && (
+      {isOpen && !isSolo && (
         <RoundProgress
           members={group.members}
           legs={activeRound.legs}
@@ -291,10 +328,38 @@ export default function GroupRoundPage() {
 
       <section>
         <h2 className="text-lg font-semibold">Picks</h2>
-        {legsPerMember > 1 && (
+        {isSolo ? (
           <p className="mt-1 text-sm text-muted">
-            {legsPerMember} legs each this round
+            Build your acca — up to {SOLO_MAX_LEGS} legs, then lock it when
+            you&apos;re ready.
           </p>
+        ) : (
+          legsPerMember > 1 && (
+            <p className="mt-1 text-sm text-muted">
+              {legsPerMember} legs each this round
+            </p>
+          )
+        )}
+        {isSolo && isOpen && activeRound.legs.length > 0 && !editingLegId && (
+          <div className="mt-3">
+            <button
+              type="button"
+              onClick={lockSoloRound}
+              disabled={lockingRound}
+              className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:bg-accent-bright disabled:opacity-60"
+            >
+              {lockingRound
+                ? "Locking…"
+                : `Lock acca (${activeRound.legs.length} leg${
+                    activeRound.legs.length === 1 ? "" : "s"
+                  })`}
+            </button>
+            <p className="mt-1 text-xs text-muted">
+              Locking freezes your combined odds and shows the best bookmaker
+              for the whole acca.
+            </p>
+            {lockError && <p className="mt-1 text-sm text-danger">{lockError}</p>}
+          </div>
         )}
         {userLegs.length > 0 && editWindowOpen && !editingLegId && (
           <p className="mt-1 text-sm text-muted">
@@ -311,7 +376,7 @@ export default function GroupRoundPage() {
             legLinks={betslipLinks?.legLinks}
             showOpenLinks={isLocked && resolvedLegs === 0}
             inProgress={isLocked}
-            showLegIndex={legsPerMember > 1}
+            showLegIndex={isSolo || legsPerMember > 1}
             announcementByLegId={announcementByLegId}
             onAnnouncementChanged={(updated) => {
               setLegAnnouncements((current) =>
@@ -368,9 +433,11 @@ export default function GroupRoundPage() {
             legSlot={nextSlot}
             legsPerMember={legsPerMember}
             title={
-              legsPerMember > 1
-                ? `Submit leg ${nextSlot} of ${legsPerMember}`
-                : undefined
+              isSolo
+                ? `Add leg ${nextSlot}`
+                : legsPerMember > 1
+                  ? `Submit leg ${nextSlot} of ${legsPerMember}`
+                  : undefined
             }
           />
         </div>

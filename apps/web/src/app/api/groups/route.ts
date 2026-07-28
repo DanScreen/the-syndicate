@@ -48,6 +48,7 @@ export async function GET() {
         status: string;
         combinedOdds: number | null;
         legsPerMember: number;
+        unlimitedLegs: boolean;
         legs: never[];
       } | null = null;
       let activeRound: {
@@ -73,6 +74,7 @@ export async function GET() {
           status: opened.status,
           combinedOdds: opened.combinedOdds,
           legsPerMember: opened.legsPerMember,
+          unlimitedLegs: opened.unlimitedLegs,
           legs: [],
         };
         activeRound = {

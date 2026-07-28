@@ -14,6 +14,13 @@ export const LEGS_PER_MEMBER_OPTIONS = [1, 2, 3] as const;
 export type LegsPerMember = (typeof LEGS_PER_MEMBER_OPTIONS)[number];
 export const DEFAULT_LEGS_PER_MEMBER: LegsPerMember = 1;
 
+/**
+ * Legs a member may submit into a solo (one-member) acca. Capped because most
+ * bookmakers limit accumulators to roughly 12–20 selections — beyond that the
+ * betslip deeplink is one the user cannot actually place.
+ */
+export const SOLO_MAX_LEGS = 10;
+
 /** Owner-selectable cap for simultaneous open or locked bets. */
 export const MAX_ACTIVE_BETS_OPTIONS = [1, 2, 3, 4, 5] as const;
 export type MaxActiveBets = (typeof MAX_ACTIVE_BETS_OPTIONS)[number];

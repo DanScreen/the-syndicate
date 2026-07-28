@@ -16,6 +16,8 @@ export type GroupActiveRound = {
   betNumber: number | null;
   status: string;
   legsPerMember: number;
+  /** Solo round: quota is SOLO_MAX_LEGS and the member can lock manually. */
+  unlimitedLegs: boolean;
   combinedOdds: number | null;
   bestBookmakerId: string | null;
   profitLossGbp: number | null;

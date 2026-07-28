@@ -18,6 +18,7 @@ import type { AccaBookmakerRanking } from "@tiki-acca/shared";
 import {
   allMembersFilledQuota,
   countLegsByUser,
+  effectiveLegQuota,
   updateGroupSettingsSchema,
 } from "@tiki-acca/shared";
 import { NextResponse } from "next/server";
@@ -176,7 +177,7 @@ export async function GET(_request: Request, { params }: Params) {
         !allMembersFilledQuota({
           memberUserIds: group.members.map((m) => m.userId),
           legs: round.legs,
-          legsPerMember: round.legsPerMember,
+          legsPerMember: effectiveLegQuota(round),
         })
       ) {
         continue;
@@ -368,9 +369,14 @@ export async function PATCH(request: Request, { params }: Params) {
     const nextMax =
       parsed.data.maxActiveBets ?? membership.group.maxActiveBets;
 
+    // Solo rounds run on SOLO_MAX_LEGS, so the group quota does not apply to
+    // them: they are not re-quota'd, not lock-checked, and not counted by the
+    // "can't lower" guard below.
     const applicableOpenRounds = activeRounds.filter(
       (round) =>
-        round.status === "open" && !isPastKickoffCutoff(round.legs)
+        round.status === "open" &&
+        !round.unlimitedLegs &&
+        !isPastKickoffCutoff(round.legs)
     );
     if (parsed.data.legsPerMember !== undefined) {
       for (const round of applicableOpenRounds) {
