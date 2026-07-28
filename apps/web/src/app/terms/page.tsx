@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   title: "Terms of Service",
   description:
     "The terms that apply when you use Tiki Acca — eligibility, group chat rules, and what we are (and aren't) responsible for.",
+  alternates: { canonical: "/terms" },
+  openGraph: { url: "/terms" },
 };
 
 const sectionClass = "mt-10";

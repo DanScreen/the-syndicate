@@ -23,6 +23,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/blog`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${BASE}/privacy`, changeFrequency: "yearly", priority: 0.3 },
     { url: `${BASE}/cookies`, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${BASE}/terms`, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${BASE}/support`, changeFrequency: "monthly", priority: 0.4 },
     ...posts,
     ...tags,
   ];

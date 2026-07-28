@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   title: "Privacy Notice",
   description:
     "How Tiki Acca collects, uses, and protects your personal data, and the rights you have.",
+  alternates: { canonical: "/privacy" },
+  openGraph: { url: "/privacy" },
 };
 
 export default function PrivacyPage() {

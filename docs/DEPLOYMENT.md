@@ -489,6 +489,8 @@ The Cloud Run service is publicly invokable (`INGRESS_TRAFFIC_ALL` + `allUsers`)
 
 **Rotation:** update the Transform Rule value first, then the GitHub secret, then redeploy.
 
+**Google Search Console:** Prefer the property `https://www.tikiacca.com`. Expect **Page with redirect** for apex (`tikiacca.com`) and legacy domains (intentional 301s to www). Expect **Blocked due to access forbidden (403)** for direct `*.run.app` crawls — that is origin bypass protection working; do not “fix” by exposing Cloud Run without Cloudflare. Public marketing URLs must return 200 via Cloudflare (Transform Rule present). Self-canonicals live on public pages under `apps/web/src/app/`.
+
 ### 2. Auth rate limiting
 
 App-level fixed-window limits (per instance, in-memory — `apps/web/src/lib/rate-limit.ts`; with `max_instances = 3` effective limits are up to 3×):

@@ -8,6 +8,12 @@ import {
   howItWorks,
   valueProps,
 } from "@/lib/marketing-content";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+  openGraph: { url: "/" },
+};
 
 function Icon({ name }: { name: (typeof valueProps)[number]["icon"] }) {
   const paths: Record<string, string> = {

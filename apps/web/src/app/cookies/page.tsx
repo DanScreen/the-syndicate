@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   title: "Cookie Notice",
   description:
     "The strictly necessary cookies Tiki Acca uses to keep you signed in, and why we do not show a cookie banner.",
+  alternates: { canonical: "/cookies" },
+  openGraph: { url: "/cookies" },
 };
 
 type CookieRow = {
