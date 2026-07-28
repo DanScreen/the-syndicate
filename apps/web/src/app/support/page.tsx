@@ -7,6 +7,8 @@ import { MarketingShell } from "@/components/marketing/marketing-shell";
 export const metadata: Metadata = {
   title: "Support",
   description: "Get help with Tiki Acca — contact, common questions, and account issues.",
+  alternates: { canonical: "/support" },
+  openGraph: { url: "/support" },
 };
 
 export default function SupportPage() {

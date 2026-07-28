@@ -8,6 +8,8 @@ export const metadata: Metadata = {
   title: "About",
   description:
     "What Tiki Acca is, who it's for, and how social group accumulators work.",
+  alternates: { canonical: "/about" },
+  openGraph: { url: "/about" },
 };
 
 export default async function AboutPage() {
