@@ -19,6 +19,14 @@
 >   published.
 > - **No label anywhere** — the per-row "est." badge and muted styling are
 >   removed; estimated prices render identically to real ones.
+> - **Acca universe expansion** — the acca-level bookmaker ranking
+>   (`rankAccaBookmakers` / `expandLegsToUniverse` in `apps/web/src/lib/odds/acca.ts`)
+>   fills every leg with a median estimate for **every retail bookmaker seen
+>   anywhere across the acca**, so the "Compare bookmakers" list is no longer
+>   capped by the thinnest leg's fixture coverage. This fabricates coverage for
+>   books that don't price a leg at all, and (money-path) can make such a book
+>   the locked `bestBookmakerId` — its per-leg betslip deeplinks are then absent.
+>   Gated by `estimatedOddsEffectivelyEnabled()` at the lock/display call sites.
 >
 > The sections below are retained as the original rationale; where they say
 > "display-only", "haircut", "excluded from money paths", or "mandatory badge",

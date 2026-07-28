@@ -1,5 +1,11 @@
 import { findSelection } from "@/lib/odds/provider";
-import { findBestAccaBookmaker, quoteForBookmaker, rankAccaBookmakers } from "@/lib/odds/acca";
+import {
+  expandLegsToUniverse,
+  findBestAccaBookmaker,
+  quoteForBookmaker,
+  rankAccaBookmakers,
+} from "@/lib/odds/acca";
+import { estimatedOddsEffectivelyEnabled } from "@/lib/odds/estimated-odds-runtime";
 import { buildRoundBetslipLinks, isBookmakerHubUrl } from "@/lib/odds/betslip-links";
 import { sortQuotesByBestOdds } from "@/lib/odds/bookmakers";
 import { bookmakerLinksFromQuotes } from "@/lib/odds/quotes";
@@ -56,20 +62,23 @@ export async function lockRoundWithAccaPricing(roundId: string, legs: Leg[]) {
   );
 
   const quoteLegs = legQuotes.map((l) => ({ quotes: l.quotes }));
-  const acca = findBestAccaBookmaker(quoteLegs);
-  const rankings = rankAccaBookmakers(quoteLegs);
+  const expandUniverse = await estimatedOddsEffectivelyEnabled();
+  const pricedLegs = expandUniverse ? expandLegsToUniverse(quoteLegs) : quoteLegs;
+  const acca = findBestAccaBookmaker(pricedLegs);
+  const rankings = rankAccaBookmakers(pricedLegs);
 
   if (!acca) {
     throw new Error("Unable to price acca");
   }
 
-  for (const { leg, quotes, usedStored } of legQuotes) {
+  for (const [i, { leg, quotes, usedStored }] of legQuotes.entries()) {
+    const pricedQuotes = pricedLegs[i]!.quotes;
     const liveLinks = bookmakerLinksFromQuotes(quotes);
     const bookmakerLinks =
       Object.keys(liveLinks).length > 0 ? liveLinks : storedBookmakerLinks(leg);
     const quote = acca.singleBookmaker
-      ? quoteForBookmaker(quotes, acca.bookmakerId)
-      : sortQuotesByBestOdds(quotes)[0];
+      ? quoteForBookmaker(pricedQuotes, acca.bookmakerId)
+      : sortQuotesByBestOdds(pricedQuotes)[0];
 
     if (quote) {
       await prisma.leg.update({
@@ -170,7 +179,9 @@ export async function computeAccaRankingsForLegs(legs: Leg[]): Promise<AccaRanki
   );
 
   const quoteLegs = legQuotes.map((lq) => ({ quotes: lq.quotes }));
-  const ranked = rankAccaBookmakers(quoteLegs);
+  const expandUniverse = await estimatedOddsEffectivelyEnabled();
+  const pricedLegs = expandUniverse ? expandLegsToUniverse(quoteLegs) : quoteLegs;
+  const ranked = rankAccaBookmakers(pricedLegs);
   if (ranked.length > 0) {
     return {
       rankings: ranked.map((r) => ({
@@ -183,7 +194,7 @@ export async function computeAccaRankingsForLegs(legs: Leg[]): Promise<AccaRanki
   }
 
   // Fallback when no single bookmaker quotes every leg: best-per-leg combined.
-  const best = findBestAccaBookmaker(quoteLegs);
+  const best = findBestAccaBookmaker(pricedLegs);
   if (!best) {
     return { rankings: [], bookmakerLinksByLegId };
   }

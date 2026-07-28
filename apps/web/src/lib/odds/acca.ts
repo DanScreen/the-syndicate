@@ -1,4 +1,5 @@
 import type { BookmakerQuote } from "@tiki-acca/shared";
+import { fillEstimatedQuotes, isRetailBookmaker } from "@tiki-acca/shared";
 import { sortQuotesByBestOdds } from "./bookmakers";
 import { calculateCombinedOdds } from "./betslip-links";
 
@@ -10,15 +11,65 @@ export type AccaBookmakerResult = {
   singleBookmaker: boolean;
 };
 
+export type RankAccaOptions = {
+  /**
+   * When true, every leg is first filled with a median estimate for every
+   * retail bookmaker seen anywhere across the acca, so the ranking lists all of
+   * them — not only books that genuinely price every leg. This fabricates
+   * fixture coverage for books that don't price a given leg at all; gated by
+   * the estimated-odds flag at the (async) call sites.
+   */
+  expandUniverse?: boolean;
+};
+
+/** Retail bookmakers seen anywhere across the acca's legs (real or estimated). */
+function accaBookmakerUniverse(
+  legs: { quotes: BookmakerQuote[] }[]
+): { id: string; name: string }[] {
+  const byId = new Map<string, string>();
+  for (const leg of legs) {
+    for (const q of leg.quotes) {
+      if (isRetailBookmaker(q.bookmakerId) && !byId.has(q.bookmakerId)) {
+        byId.set(q.bookmakerId, q.bookmakerName);
+      }
+    }
+  }
+  return [...byId.entries()].map(([id, name]) => ({ id, name }));
+}
+
+/**
+ * Fill every leg with a true-median estimate for each universe bookmaker it
+ * lacks, so a book present on *any* leg becomes present on *all* legs. Legs
+ * with no real quotes are left untouched (nothing to base a median on).
+ */
+export function expandLegsToUniverse(
+  legs: { quotes: BookmakerQuote[] }[]
+): { quotes: BookmakerQuote[] }[] {
+  const universe = accaBookmakerUniverse(legs);
+  return legs.map((leg) => {
+    const real = leg.quotes.filter((q) => !q.estimated);
+    if (real.length === 0) return leg;
+    const filled = fillEstimatedQuotes(
+      { id: "acca", label: "acca", odds: real },
+      universe,
+      { margin: 0, minRealQuotes: 1, skipAt: Number.MAX_SAFE_INTEGER }
+    );
+    return { ...leg, quotes: filled.odds };
+  });
+}
+
 /**
  * All retail bookmakers that quote every leg, ranked by combined acca odds (best first).
  */
 export function rankAccaBookmakers(
-  legs: { quotes: BookmakerQuote[] }[]
+  legs: { quotes: BookmakerQuote[] }[],
+  options?: RankAccaOptions
 ): AccaBookmakerResult[] {
   if (legs.length === 0) return [];
 
-  const quoteMaps = legs.map((leg) => {
+  const workLegs = options?.expandUniverse ? expandLegsToUniverse(legs) : legs;
+
+  const quoteMaps = workLegs.map((leg) => {
     const map = new Map<string, BookmakerQuote>();
     for (const q of sortQuotesByBestOdds(leg.quotes)) {
       if (!map.has(q.bookmakerId)) map.set(q.bookmakerId, q);
@@ -57,11 +108,12 @@ export function rankAccaBookmakers(
  * Only considers retail bookmakers that quote every leg.
  */
 export function findBestAccaBookmaker(
-  legs: { quotes: BookmakerQuote[] }[]
+  legs: { quotes: BookmakerQuote[] }[],
+  options?: RankAccaOptions
 ): AccaBookmakerResult | null {
   if (legs.length === 0) return null;
 
-  const ranked = rankAccaBookmakers(legs);
+  const ranked = rankAccaBookmakers(legs, options);
   if (ranked.length > 0) return ranked[0];
 
   const bestPerLeg = legs.map((leg) => sortQuotesByBestOdds(leg.quotes)[0]);
