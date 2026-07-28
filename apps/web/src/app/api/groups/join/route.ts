@@ -1,4 +1,5 @@
 import { requireSession } from "@/lib/api-auth";
+import { convertSoloRoundsToGroup } from "@/lib/rounds/convert-solo-rounds";
 import { prisma } from "@tiki-acca/database";
 import { joinGroupSchema } from "@tiki-acca/shared";
 import { NextResponse } from "next/server";
@@ -37,12 +38,17 @@ export async function POST(request: Request) {
     );
   }
 
-  await prisma.groupMember.create({
-    data: {
-      groupId: group.id,
-      userId: session!.user!.id,
-      role: "member",
-    },
+  // Joining and handing any solo acca over to the group must be atomic: a
+  // round left flagged solo would give both members a SOLO_MAX_LEGS quota.
+  await prisma.$transaction(async (tx) => {
+    await tx.groupMember.create({
+      data: {
+        groupId: group.id,
+        userId: session!.user!.id,
+        role: "member",
+      },
+    });
+    await convertSoloRoundsToGroup(group.id, tx);
   });
 
   return NextResponse.json({ groupId: group.id, name: group.name });

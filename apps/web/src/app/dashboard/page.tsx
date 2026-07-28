@@ -156,6 +156,7 @@ export default async function DashboardPage() {
                     status: string;
                     combinedOdds: number | null;
                     legsPerMember: number;
+                    unlimitedLegs: boolean;
                     legs: never[];
                   } | null = null;
                   let activeRound: {
@@ -179,6 +180,7 @@ export default async function DashboardPage() {
                       status: opened.status,
                       combinedOdds: opened.combinedOdds,
                       legsPerMember: opened.legsPerMember,
+                      unlimitedLegs: opened.unlimitedLegs,
                       legs: [],
                     };
                     activeRound = {

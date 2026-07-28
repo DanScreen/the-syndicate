@@ -1,4 +1,4 @@
-import { formatOdds } from "@tiki-acca/shared";
+import { SOLO_MAX_LEGS, formatOdds } from "@tiki-acca/shared";
 import { ApiError, api } from "@/api/client";
 import { useAuth } from "@/auth/AuthProvider";
 import {
@@ -45,6 +45,8 @@ export default function GroupRoundScreen() {
   const [editingLegId, setEditingLegId] = useState<string | null>(null);
   const [removingLegId, setRemovingLegId] = useState<string | null>(null);
   const [removeError, setRemoveError] = useState("");
+  const [lockingRound, setLockingRound] = useState(false);
+  const [lockError, setLockError] = useState("");
   const [legAnnouncements, setLegAnnouncements] = useState<RoundMessageDto[]>([]);
   const [selectedRoundId, setSelectedRoundId] = useState<string | null>(null);
   const [creatingRound, setCreatingRound] = useState(false);
@@ -90,7 +92,10 @@ export default function GroupRoundScreen() {
     activeRounds[0] ??
     null;
   const members = data.group.members ?? [];
-  const legsPerMember = round?.legsPerMember ?? data.group.legsPerMember ?? 1;
+  const isSolo = Boolean(round?.unlimitedLegs);
+  const legsPerMember = isSolo
+    ? SOLO_MAX_LEGS
+    : (round?.legsPerMember ?? data.group.legsPerMember ?? 1);
   const myLegs = round?.legs.filter((l) => l.user.id === user?.id) ?? [];
   const canSubmitMore =
     round?.status === "open" && myLegs.length < legsPerMember && Boolean(user?.id);
@@ -154,6 +159,40 @@ export default function GroupRoundScreen() {
     } finally {
       setCreatingRound(false);
     }
+  }
+
+  async function lockSoloRound() {
+    if (!token || !round) return;
+
+    Alert.alert(
+      "Lock this acca?",
+      `You have ${round.legs.length} leg${
+        round.legs.length === 1 ? "" : "s"
+      }. You won't be able to add more.`,
+      [
+        { text: "Keep building", style: "cancel" },
+        {
+          text: "Lock acca",
+          onPress: async () => {
+            setLockingRound(true);
+            setLockError("");
+            try {
+              await api(`/api/rounds/${round.id}/lock`, {
+                method: "POST",
+                token,
+              });
+              await reload();
+            } catch (e) {
+              setLockError(
+                e instanceof ApiError ? e.message : "Failed to lock acca"
+              );
+            } finally {
+              setLockingRound(false);
+            }
+          },
+        },
+      ]
+    );
   }
 
   async function removeLeg(legId: string) {
@@ -310,7 +349,7 @@ export default function GroupRoundScreen() {
         </Card>
       ) : null}
 
-      {isOpen && round && members.length > 0 ? (
+      {isOpen && round && !isSolo && members.length > 0 ? (
         <View style={styles.section}>
           <RoundProgress
             members={members}
@@ -331,15 +370,36 @@ export default function GroupRoundScreen() {
       {round ? (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Picks</Text>
-          {legsPerMember > 1 ? (
+          {isSolo ? (
+            <Text style={styles.meta}>
+              Build your acca — up to {SOLO_MAX_LEGS} legs, then lock it when
+              you&apos;re ready.
+            </Text>
+          ) : legsPerMember > 1 ? (
             <Text style={styles.meta}>{legsPerMember} legs each this round</Text>
+          ) : null}
+          {isSolo && isOpen && round.legs.length > 0 && !editingLegId ? (
+            <View style={styles.soloLock}>
+              <Button
+                label={`Lock acca (${round.legs.length} leg${
+                  round.legs.length === 1 ? "" : "s"
+                })`}
+                onPress={lockSoloRound}
+                loading={lockingRound}
+              />
+              <Text style={styles.meta}>
+                Locking freezes your combined odds and shows the best bookmaker
+                for the whole acca.
+              </Text>
+              <ErrorText message={lockError} />
+            </View>
           ) : null}
           <LegsList
             legs={round.legs}
             legLinks={(round.betslipLinks ?? data.betslipLinks)?.legLinks}
             showOpenLinks={isLocked && resolvedLegs === 0}
             inProgress={isLocked}
-            showLegIndex={legsPerMember > 1}
+            showLegIndex={isSolo || legsPerMember > 1}
             announcementByLegId={announcementByLegId}
             token={token ?? undefined}
             onAnnouncementChanged={(updated) => {
@@ -473,9 +533,11 @@ export default function GroupRoundScreen() {
             legSlot={nextSlot}
             legsPerMember={legsPerMember}
             title={
-              legsPerMember > 1
-                ? `Submit leg ${nextSlot} of ${legsPerMember}`
-                : undefined
+              isSolo
+                ? `Add leg ${nextSlot}`
+                : legsPerMember > 1
+                  ? `Submit leg ${nextSlot} of ${legsPerMember}`
+                  : undefined
             }
           />
         </View>
@@ -526,6 +588,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
   },
   section: { gap: 8 },
+  soloLock: { gap: 6 },
   legSubmitWrap: { gap: 8 },
   legCelebration: {
     borderWidth: 1,

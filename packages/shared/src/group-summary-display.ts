@@ -8,10 +8,22 @@ import type { RoundStatus } from "./types";
 export function yourLegStatusMessage(
   roundStatus: RoundStatus | string,
   yourLeg: GroupSummaryYourLeg | null,
-  options?: { yourLegCount?: number; legsPerMember?: number }
+  options?: {
+    yourLegCount?: number;
+    legsPerMember?: number;
+    unlimitedLegs?: boolean;
+  }
 ): string {
   const quota = options?.legsPerMember ?? 1;
   const count = options?.yourLegCount ?? (yourLeg ? 1 : 0);
+
+  // Solo: nobody is waiting on you and there is no quota to fall short of.
+  if (options?.unlimitedLegs) {
+    if (roundStatus === "open" && count === 0) {
+      return "Add your first leg to start this acca";
+    }
+    return "";
+  }
 
   if (count >= quota) return "";
 
@@ -62,6 +74,13 @@ export function activeBetStatusLabel(
 
 export function activeBetProgressLabel(bet: GroupSummaryActiveBet): string {
   if (bet.status === "open") {
+    // A solo acca has no quota to chase — the member locks when ready.
+    if (bet.unlimitedLegs) {
+      if (bet.submittedLegCount === 0) return "Ready for your first leg";
+      return `${bet.submittedLegCount} leg${
+        bet.submittedLegCount === 1 ? "" : "s"
+      } — lock when ready`;
+    }
     if (bet.yourLegCount < bet.legsPerMember) {
       const remaining = bet.legsPerMember - bet.yourLegCount;
       return remaining === 1

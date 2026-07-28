@@ -1,4 +1,8 @@
-import type { GroupSummaryActiveBet, RoundStatus } from "@tiki-acca/shared";
+import {
+  effectiveLegQuota,
+  type GroupSummaryActiveBet,
+  type RoundStatus,
+} from "@tiki-acca/shared";
 
 type SummaryRound = {
   id: string;
@@ -6,6 +10,7 @@ type SummaryRound = {
   status: string;
   combinedOdds: number | null;
   legsPerMember: number;
+  unlimitedLegs: boolean;
   legs: {
     userId: string;
     kickoff: Date;
@@ -33,8 +38,12 @@ export function activeBetSummaries(
         status: round.status as RoundStatus,
         combinedOdds: round.combinedOdds,
         legsPerMember: round.legsPerMember,
+        unlimitedLegs: round.unlimitedLegs,
         submittedLegCount: round.legs.length,
-        requiredLegCount: memberCount * round.legsPerMember,
+        // A solo acca has no required total — it is done when the member locks it.
+        requiredLegCount: round.unlimitedLegs
+          ? round.legs.length
+          : memberCount * round.legsPerMember,
         yourLegCount: round.legs.filter((leg) => leg.userId === userId).length,
         resolvedLegCount: round.legs.filter(
           (leg) => leg.outcome !== "pending"
@@ -44,7 +53,7 @@ export function activeBetSummaries(
     })
     .sort((a, b) => {
       const priority = (bet: GroupSummaryActiveBet) =>
-        bet.status === "open" && bet.yourLegCount < bet.legsPerMember
+        bet.status === "open" && bet.yourLegCount < effectiveLegQuota(bet)
           ? 0
           : bet.status === "open"
             ? 1

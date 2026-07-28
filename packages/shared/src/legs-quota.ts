@@ -1,4 +1,16 @@
-import type { LegsPerMember } from "./constants";
+import { SOLO_MAX_LEGS, type LegsPerMember } from "./constants";
+
+/**
+ * Legs each member may submit in this round. Solo rounds (opened in a
+ * one-member group) get `SOLO_MAX_LEGS` instead of the group quota, so the
+ * member can build a full acca alone.
+ */
+export function effectiveLegQuota(round: {
+  legsPerMember: number;
+  unlimitedLegs?: boolean;
+}): number {
+  return round.unlimitedLegs ? SOLO_MAX_LEGS : round.legsPerMember;
+}
 
 /** Count submitted legs per userId. */
 export function countLegsByUser(

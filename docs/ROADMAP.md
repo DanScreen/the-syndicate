@@ -59,6 +59,7 @@ Core loop and MVP polish are **shipped**:
 | 11 | **Expo push setup** | Mobile ops | See checklist below — Android FCM done; iOS APNs still to verify on a production build |
 | 12 | Terraform CI GCS permissions fix | Infra | App deploy unaffected |
 | 13 | **Competitive proof messaging** | Brand/copy | Future secondary theme: **“Think you know football? Prove it. Real picks. Real odds. Real results.”** Keep the social group headline primary; planned uses and guardrails in [MARKETING_BRIEF.md](./MARKETING_BRIEF.md#territory-d--prove-it-competitive-proof-approved-for-future-use) |
+| 14 | **Solo accas — finish verification** | Code | Feature shipped (phases 1–3, [spec](./specs/solo-unlimited-legs.md)). Remaining: route-guard tests for `POST /api/rounds/[id]/lock` and one manual end-to-end solo run. Solo on-ramp UX (dashboard entry point, invite conversion) deliberately deferred to a later spec |
 
 ---
 
