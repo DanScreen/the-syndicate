@@ -9,7 +9,9 @@ import {
 import type { OddsApiBookmaker, OddsApiEvent } from "./api-types";
 import { isRetailBookmaker } from "./bookmakers";
 import { getCached, setCached } from "./cache";
+import { fillMarketsWithEstimates } from "./estimated-odds-fill";
 import { isQuotaExhaustedError, OddsApiQuotaExhaustedError, toOddsApiError } from "./errors";
+import { buildOutrightMarket, slugify } from "./market-builders";
 import { addQuote, resolveDeeplink } from "./quotes";
 import { recordOddsApiQuota } from "./quota-snapshot";
 
@@ -213,15 +215,30 @@ function buildSpreadsMarkets(event: OddsApiEvent, bookmakers: OddsApiBookmaker[]
   return markets.sort((a, b) => a.label.localeCompare(b.label));
 }
 
-export function mapOddsEventToFixture(event: OddsApiEvent): Fixture | null {
+export type MapOddsEventOptions = {
+  /** Backfill thin selections with median-haircut estimates. Off by default. */
+  fillEstimated?: boolean;
+};
+
+export function mapOddsEventToFixture(
+  event: OddsApiEvent,
+  options?: MapOddsEventOptions
+): Fixture | null {
   const bookmakers = retailBookmakers(event.bookmakers);
-  const markets = [
+  let markets = [
     buildH2hMarket(event, bookmakers),
     ...buildTotalsMarkets(bookmakers),
     ...buildSpreadsMarkets(event, bookmakers),
   ].filter((m): m is Market => m !== null);
 
   if (markets.length === 0) return null;
+
+  if (options?.fillEstimated) {
+    markets = fillMarketsWithEstimates(
+      markets,
+      bookmakers.map((b) => ({ id: b.key, name: b.title }))
+    );
+  }
 
   return {
     id: event.id,
@@ -235,7 +252,8 @@ export function mapOddsEventToFixture(event: OddsApiEvent): Fixture | null {
 
 export async function fetchOddsApiFixturesLive(
   sport: string = process.env.ODDS_API_SPORT ?? DEFAULT_ODDS_SPORT,
-  competitionName?: string
+  competitionName?: string,
+  options?: MapOddsEventOptions
 ): Promise<Fixture[]> {
   try {
     const { events } = await fetchOddsApiEventsRaw(sport, {
@@ -245,7 +263,7 @@ export async function fetchOddsApiFixturesLive(
     return filterUpcomingFixtures(
       events
         .map((event) => {
-          const fixture = mapOddsEventToFixture(event);
+          const fixture = mapOddsEventToFixture(event, options);
           if (!fixture) return null;
           return competitionName ? { ...fixture, competition: competitionName } : fixture;
         })
@@ -265,13 +283,72 @@ export async function fetchOddsApiFixtures(
   return fetchOddsApiFixturesLive(sport, competitionName);
 }
 
+/**
+ * Outright/futures markets come back as a bulk-style event list, where each
+ * event is a whole competition rather than a match. A `_winner` sport key
+ * usually carries one event, but the endpoint is a list and nothing guarantees
+ * that — so read them all and take the label from the feed. Assuming index 0 is
+ * "the league winner" would silently mislabel whatever else the sport returns.
+ */
+export async function fetchOddsApiOutrightsLive(sport: string): Promise<Market[]> {
+  try {
+    const { events } = await fetchOddsApiEventsRaw(sport, { markets: "outrights" });
+    return mapOutrightEventsToMarkets(events, sport);
+  } catch (err) {
+    markQuotaExhausted(err);
+    throw err;
+  }
+}
+
+export function mapOutrightEventsToMarkets(
+  events: OddsApiEvent[],
+  sport: string
+): Market[] {
+  const markets: Market[] = [];
+  const usedTypes = new Set<string>();
+
+  for (const event of events) {
+    const label = outrightMarketLabel(event, sport);
+    // Types key stored legs, so prefer the stable slugified title over the
+    // event id (which the feed re-issues season to season). Collisions within
+    // one response fall back to the id to stay unique.
+    const baseType = `outright_${slugify(label)}`;
+    const type = usedTypes.has(baseType) ? `${baseType}__${slugify(event.id)}` : baseType;
+
+    const market = buildOutrightMarket(
+      retailBookmakers(event.bookmakers),
+      "outrights",
+      type,
+      label
+    );
+    if (!market) continue;
+
+    usedTypes.add(type);
+    markets.push(market);
+  }
+
+  return markets;
+}
+
+/** Outright events carry the competition in `sport_title`; teams are absent. */
+function outrightMarketLabel(event: OddsApiEvent, sport: string): string {
+  const title = event.sport_title?.trim();
+  if (title) return title;
+  const fromKey = sport.replace(/^soccer_/, "").replace(/_/g, " ").trim();
+  return fromKey ? capitalizeWords(fromKey) : "Outright";
+}
+
+function capitalizeWords(value: string): string {
+  return value.replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 export function oddsApiCacheKey(sport: string, regions: string): string {
   return `odds-api:v3:${sport}:${regions}`;
 }
 
 export async function fetchOddsApiEventsRaw(
   sport: string,
-  options?: { commenceTimeFrom?: string | null }
+  options?: { commenceTimeFrom?: string | null; markets?: string }
 ): Promise<{ events: OddsApiEvent[]; status: number; headers: Headers }> {
   assertQuotaAvailable();
 
@@ -284,7 +361,7 @@ export async function fetchOddsApiEventsRaw(
   const url = new URL(`${API_BASE}/sports/${sport}/odds`);
   url.searchParams.set("apiKey", apiKey);
   url.searchParams.set("regions", regions);
-  url.searchParams.set("markets", BULK_SOCCER_MARKETS);
+  url.searchParams.set("markets", options?.markets ?? BULK_SOCCER_MARKETS);
   url.searchParams.set("oddsFormat", "decimal");
   url.searchParams.set("includeLinks", "true");
   if (options?.commenceTimeFrom) {

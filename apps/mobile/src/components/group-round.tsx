@@ -31,11 +31,15 @@ import {
   bookmakerInitials,
   bookmakerLogoUrl,
   bookmakerRankPlace,
+  findOutrightMixConflict,
+  formatFixtureLabel,
   groupMarkets,
   isFixtureTaken,
+  isOutrightFixtureId,
   pointsTone,
   pointsToneFromOutcome,
   sortQuotesByBestOdds,
+  sortQuotesForDisplay,
   type LegOutcome,
   type MarketConflictLeg,
 } from "@tiki-acca/shared";
@@ -272,7 +276,7 @@ export function LegsList({
               </View>
             </View>
             <Text style={styles.legPick}>
-              {leg.homeTeam} vs {leg.awayTeam} · {leg.marketLabel}: {leg.selectionLabel}
+              {formatFixtureLabel(leg)} · {leg.marketLabel}: {leg.selectionLabel}
             </Text>
             <Text style={styles.meta}>
               {leg.competition ?? ""}
@@ -788,15 +792,20 @@ export function SubmitLegForm({
           ) : null}
           {fixtures.map((f) => {
             const taken = isFixtureTaken(existingLegs, f.id, editLegId);
+            const mixes = findOutrightMixConflict(existingLegs, f.id, editLegId) !== null;
+            const disabled = taken || mixes;
+            const suffix = taken ? " (already in acca)" : mixes ? " (not combinable)" : "";
             return (
               <OptionRow
                 key={f.id}
-                label={`${f.homeTeam} vs ${f.awayTeam}${taken ? " (already in acca)" : ""}`}
-                subtitle={formatKickoff(f.kickoff)}
+                label={`${formatFixtureLabel(f)}${suffix}`}
+                subtitle={
+                  isOutrightFixtureId(f.id) ? "Settles at season end" : formatKickoff(f.kickoff)
+                }
                 selected={false}
-                disabled={taken}
+                disabled={disabled}
                 onPress={() => {
-                  if (!taken) {
+                  if (!disabled) {
                     setFixtureId(f.id);
                     setMarketType("");
                     setSelectionId("");
@@ -812,14 +821,16 @@ export function SubmitLegForm({
         <View style={styles.selectedMarket}>
           <View style={styles.selectedMarketCopy}>
             <Text style={styles.selectedMarketEyebrow}>2. Selected fixture</Text>
-            <Text style={styles.selectedMarketLabel}>
-              {fixture.homeTeam} vs {fixture.awayTeam}
+            <Text style={styles.selectedMarketLabel}>{formatFixtureLabel(fixture)}</Text>
+            <Text style={styles.meta}>
+              {isOutrightFixtureId(fixture.id)
+                ? "Settles at the end of the season — this acca stays open until then"
+                : formatKickoff(fixture.kickoff)}
             </Text>
-            <Text style={styles.meta}>{formatKickoff(fixture.kickoff)}</Text>
           </View>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`Change fixture from ${fixture.homeTeam} vs ${fixture.awayTeam}`}
+            accessibilityLabel={`Change fixture from ${formatFixtureLabel(fixture)}`}
             onPress={() => {
               setFixtureId("");
               setMarketType("");
@@ -911,7 +922,32 @@ export function SubmitLegForm({
       ) : null}
 
       {selection ? (
-        <Text style={styles.meta}>{copy.legPicker.bestOddsHint}</Text>
+        <View style={styles.stack}>
+          <Text style={styles.meta}>{copy.legPicker.bestOddsHint}</Text>
+          {sortQuotesForDisplay(selection.odds).length > 0 ? (
+            <View style={styles.oddsCompareCard}>
+              {sortQuotesForDisplay(selection.odds).map((q) => (
+                <View key={q.bookmakerId} style={styles.oddsCompareRow}>
+                  <Text style={[styles.oddsCompareName, q.estimated && styles.oddsCompareEstimatedText]}>
+                    {q.bookmakerName}
+                  </Text>
+                  <View style={styles.oddsCompareValue}>
+                    {q.estimated ? (
+                      <View style={styles.oddsCompareBadge}>
+                        <Text style={styles.oddsCompareBadgeText}>est.</Text>
+                      </View>
+                    ) : null}
+                    <Text
+                      style={[styles.oddsCompareOdds, q.estimated && styles.oddsCompareEstimatedText]}
+                    >
+                      {formatOdds(q.odds)}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          ) : null}
+        </View>
       ) : null}
 
       <ErrorText message={error} />
@@ -1028,9 +1064,7 @@ export function RoundHistory({
                     {legOutcomeLabel(leg.outcome)} · {formatOdds(leg.odds)}
                   </Text>
                 </View>
-                <Text style={styles.legPick}>
-                  {leg.homeTeam} vs {leg.awayTeam}
-                </Text>
+                <Text style={styles.legPick}>{formatFixtureLabel(leg)}</Text>
                 <Text style={styles.meta}>
                   {leg.marketLabel}: {leg.selectionLabel}
                 </Text>
@@ -1120,6 +1154,54 @@ const styles = StyleSheet.create({
   meta: {
     color: colors.muted,
     fontSize: 14,
+  },
+  oddsCompareCard: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    borderRadius: 10,
+    padding: 10,
+    gap: 6,
+  },
+  oddsCompareRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 8,
+  },
+  oddsCompareName: {
+    color: colors.text,
+    fontSize: 13,
+    flexShrink: 1,
+  },
+  oddsCompareValue: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  oddsCompareOdds: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  oddsCompareEstimatedText: {
+    color: colors.muted,
+    fontStyle: "italic",
+    fontWeight: "400",
+  },
+  oddsCompareBadge: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 4,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+  },
+  oddsCompareBadgeText: {
+    color: colors.muted,
+    fontSize: 9,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   warnText: {
     color: colors.warning,

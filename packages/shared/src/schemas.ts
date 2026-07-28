@@ -115,6 +115,10 @@ export const updateCompetitionSettingSchema = z.object({
   enabled: z.boolean(),
 });
 
+export const updateEstimatedOddsSettingSchema = z.object({
+  enabled: z.boolean(),
+});
+
 /** Platform-admin manual settlement — outcomes must cover every leg in the round. */
 export const adminSettleRoundSchema = z.object({
   legOutcomes: z

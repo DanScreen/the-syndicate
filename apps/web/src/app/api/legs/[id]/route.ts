@@ -15,7 +15,9 @@ import { prisma } from "@tiki-acca/database";
 import {
   editLegSchema,
   findConflictingFixtureLeg,
+  findOutrightMixConflict,
   formatFixtureConflictError,
+  formatOutrightMixError,
   getCompetitionById,
 } from "@tiki-acca/shared";
 import { NextResponse } from "next/server";
@@ -95,6 +97,11 @@ export async function PATCH(request: Request, { params }: Params) {
       { error: formatFixtureConflictError(fixtureConflict) },
       { status: 409 }
     );
+  }
+
+  const outrightMix = findOutrightMixConflict(round.legs, fixture.id, leg.id);
+  if (outrightMix) {
+    return NextResponse.json({ error: formatOutrightMixError(outrightMix) }, { status: 409 });
   }
 
   const quote = sortQuotesByBestOdds(selection.odds)[0];

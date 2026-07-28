@@ -1,5 +1,10 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
-import { accaSucceeded, groupAccaRoundPoints, type LegOutcome } from "@tiki-acca/shared";
+import {
+  accaSucceeded,
+  formatFixtureLabel,
+  groupAccaRoundPoints,
+  type LegOutcome,
+} from "@tiki-acca/shared";
 
 /**
  * System-message writers for the longstanding group chat (specs/group-chat.md).
@@ -16,6 +21,7 @@ type AnnouncedLeg = {
   id: string;
   roundId: string;
   userId: string;
+  fixtureId: string;
   homeTeam: string;
   awayTeam: string;
   selectionLabel: string;
@@ -64,9 +70,9 @@ async function createSystemMessage(
 
 export function formatLegSubmittedBody(
   name: string,
-  leg: Pick<AnnouncedLeg, "selectionLabel" | "homeTeam" | "awayTeam" | "odds">
+  leg: Pick<AnnouncedLeg, "selectionLabel" | "fixtureId" | "homeTeam" | "awayTeam" | "odds">
 ): string {
-  return `${name} locked in ${leg.selectionLabel} (${leg.homeTeam} v ${leg.awayTeam}) @ ${formatOdds(leg.odds)} 🔒`;
+  return `${name} locked in ${leg.selectionLabel} (${formatFixtureLabel(leg, "v")}) @ ${formatOdds(leg.odds)} 🔒`;
 }
 
 /** "Dan locked in BTTS (Spain v France) @ 1.80 🔒" */
@@ -97,15 +103,15 @@ export async function postLegChangedMessage(
     roundId: leg.roundId,
     eventType: "leg_changed",
     legId: leg.id,
-    body: `${name} changed their pick to ${leg.selectionLabel} (${leg.homeTeam} v ${leg.awayTeam}) @ ${formatOdds(leg.odds)} ✏️`,
+    body: `${name} changed their pick to ${leg.selectionLabel} (${formatFixtureLabel(leg, "v")}) @ ${formatOdds(leg.odds)} ✏️`,
   });
 }
 
 export function formatLegRemovedBody(
   name: string,
-  leg: Pick<AnnouncedLeg, "selectionLabel" | "homeTeam" | "awayTeam">
+  leg: Pick<AnnouncedLeg, "selectionLabel" | "fixtureId" | "homeTeam" | "awayTeam">
 ): string {
-  return `${name} removed ${leg.selectionLabel} (${leg.homeTeam} v ${leg.awayTeam}) from the acca 🗑️`;
+  return `${name} removed ${leg.selectionLabel} (${formatFixtureLabel(leg, "v")}) from the acca 🗑️`;
 }
 
 /** Removal messages preserve the event after the deleted leg relation is gone. */
@@ -153,7 +159,7 @@ export async function postLegResultMessage(
     roundId: leg.roundId,
     eventType: "leg_result",
     legId: leg.id,
-    body: `${name}'s ${leg.selectionLabel} (${leg.homeTeam} v ${leg.awayTeam}) ${verdict}`,
+    body: `${name}'s ${leg.selectionLabel} (${formatFixtureLabel(leg, "v")}) ${verdict}`,
   });
 }
 

@@ -1,6 +1,7 @@
 import type { Market } from "@tiki-acca/shared";
 import type { OddsApiBookmaker, OddsApiEvent } from "./api-types";
 import { isRetailBookmaker } from "./bookmakers";
+import { fillMarketsWithEstimates } from "./estimated-odds-fill";
 import {
   buildAlternateSpreadsMarkets,
   buildAlternateTeamTotalsMarkets,
@@ -16,9 +17,15 @@ function retailBookmakers(bookmakers: OddsApiBookmaker[]): OddsApiBookmaker[] {
   return bookmakers.filter((b) => isRetailBookmaker(b.key));
 }
 
+export type MapExtendedMarketsOptions = {
+  /** Backfill thin selections with median-haircut estimates. Off by default. */
+  fillEstimated?: boolean;
+};
+
 export function mapEventToExtendedMarkets(
   event: OddsApiEvent,
-  tierId: MarketTierId
+  tierId: MarketTierId,
+  options?: MapExtendedMarketsOptions
 ): Market[] {
   const tier = getMarketTier(tierId);
   const keys = new Set(tier.marketKeys);
@@ -127,5 +134,12 @@ export function mapEventToExtendedMarkets(
     );
   }
 
-  return markets.flatMap((m) => (Array.isArray(m) ? m : m ? [m] : []));
+  const flat = markets.flatMap((m) => (Array.isArray(m) ? m : m ? [m] : []));
+
+  if (!options?.fillEstimated) return flat;
+
+  return fillMarketsWithEstimates(
+    flat,
+    bookmakers.map((b) => ({ id: b.key, name: b.title }))
+  );
 }

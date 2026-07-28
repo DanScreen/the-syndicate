@@ -3,7 +3,7 @@ import { getMatchResultForLegFromDb } from "@/lib/results/match-store";
 import { resolveLegOutcome } from "@/lib/results/resolve-leg";
 import { prisma } from "@tiki-acca/database";
 import type { Leg } from "@prisma/client";
-import type { LegOutcome } from "@tiki-acca/shared";
+import { formatFixtureLabel, isOutrightFixtureId, type LegOutcome } from "@tiki-acca/shared";
 
 export type PendingLeg = { legId: string; reason: string };
 
@@ -18,6 +18,16 @@ export async function resolveRoundOutcomes(
   const pending: PendingLeg[] = [];
 
   for (const leg of legs) {
+    // Outrights have no match behind them and no feed that reports a league
+    // winner — an admin enters the result once the season finishes.
+    if (isOutrightFixtureId(leg.fixtureId)) {
+      pending.push({
+        legId: leg.id,
+        reason: `${formatFixtureLabel(leg)} — outright, awaiting manual settlement at season end`,
+      });
+      continue;
+    }
+
     const matchData = await getMatchResultForLegFromDb({
       id: leg.id,
       matchId: leg.matchId,
@@ -30,7 +40,7 @@ export async function resolveRoundOutcomes(
     if (!matchData) {
       pending.push({
         legId: leg.id,
-        reason: `No synced match for ${leg.homeTeam} vs ${leg.awayTeam} (${leg.competition})`,
+        reason: `No synced match for ${formatFixtureLabel(leg)} (${leg.competition})`,
       });
       continue;
     }

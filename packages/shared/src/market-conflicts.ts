@@ -1,3 +1,4 @@
+import { isOutrightFixtureId } from "./fixtures";
 import {
   embeddedOverUnderLineFromType,
   handicapLineFromType,
@@ -56,6 +57,32 @@ export function isFixtureTaken(
   excludeLegId?: string
 ): boolean {
   return findConflictingFixtureLeg(existingLegs, fixtureId, excludeLegId) !== null;
+}
+
+/**
+ * A season-long outright cannot share an acca with match bets: the round would
+ * stay unsettled for months while everyone waits on the league table. Rounds are
+ * therefore homogeneous — all outrights, or all fixtures.
+ */
+export function findOutrightMixConflict(
+  existingLegs: ReadonlyArray<MarketConflictLeg>,
+  fixtureId: string,
+  excludeLegId?: string
+): { candidateIsOutright: boolean } | null {
+  const candidateIsOutright = isOutrightFixtureId(fixtureId);
+  for (const leg of existingLegs) {
+    if (excludeLegId && leg.id === excludeLegId) continue;
+    if (isOutrightFixtureId(leg.fixtureId) !== candidateIsOutright) {
+      return { candidateIsOutright };
+    }
+  }
+  return null;
+}
+
+export function formatOutrightMixError(conflict: { candidateIsOutright: boolean }): string {
+  return conflict.candidateIsOutright
+    ? "This acca already has match picks. Outrights settle at the end of the season, so they can only be combined with other outrights."
+    : "This acca is an outrights acca. Outrights settle at the end of the season, so match picks can't be added to it.";
 }
 
 export function formatFixtureConflictError(conflict: MarketConflictLeg): string {

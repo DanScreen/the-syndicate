@@ -9,6 +9,8 @@ export type BookmakerQuote = {
   bookmakerName: string;
   odds: number;
   link?: string;
+  /** Present and `true` only on synthesised estimates; absent on all real quotes. */
+  estimated?: true;
 };
 
 export type MarketSelection = {

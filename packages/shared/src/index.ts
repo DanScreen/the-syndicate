@@ -11,6 +11,7 @@ export * from "./roles";
 export * from "./api-types";
 export * from "./brand";
 export * from "./bookmakers";
+export * from "./estimated-odds";
 export * from "./bookmaker-branding";
 export * from "./market-groups";
 export * from "./market-conflicts";

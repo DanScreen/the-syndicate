@@ -1,12 +1,19 @@
 import type { Fixture, Market } from "@tiki-acca/shared";
 import { getCompetitionById } from "@tiki-acca/shared";
 import { prisma } from "@tiki-acca/database";
-import { oddsCacheTtlMs, oddsApiRegions } from "./config";
+import {
+  oddsCacheTtlMs,
+  oddsApiRegions,
+  oddsOutrightCacheTtlMs,
+  oddsOutrightFailureTtlMs,
+} from "./config";
 import {
   fetchOddsApiFixturesLive,
   fetchOddsApiEventLive,
+  fetchOddsApiOutrightsLive,
 } from "./the-odds-api";
 import { mapEventToExtendedMarkets } from "./event-markets";
+import { estimatedOddsEffectivelyEnabled } from "./estimated-odds-runtime";
 import { getMarketTier, type MarketTierId } from "./market-tiers";
 
 export type OddsSnapshotMeta = {
@@ -76,7 +83,10 @@ export async function refreshBulkFixturesFromApi(competitionId: string): Promise
   if (!competition) return [];
 
   const regions = oddsApiRegions();
-  const fixtures = await fetchOddsApiFixturesLive(competition.oddsApiSport, competition.name);
+  const fillEstimated = await estimatedOddsEffectivelyEnabled();
+  const fixtures = await fetchOddsApiFixturesLive(competition.oddsApiSport, competition.name, {
+    fillEstimated,
+  });
   await writeBulkFixtures(competitionId, competition.oddsApiSport, regions, fixtures);
   return fixtures;
 }
@@ -146,19 +156,86 @@ export async function refreshEventMarketsFromApi(
     markets: tier.marketKeys.join(","),
     regions: tier.regions,
   });
-  const markets = event ? mapEventToExtendedMarkets(event, tierId) : [];
+  const fillEstimated = await estimatedOddsEffectivelyEnabled();
+  const markets = event ? mapEventToExtendedMarkets(event, tierId, { fillEstimated }) : [];
   await writeEventMarkets(competitionId, fixtureId, tierId, markets);
   return markets;
+}
+
+export async function readOutrightMarkets(
+  competitionId: string,
+  options?: { allowStale?: boolean }
+): Promise<{ markets: Market[]; meta: OddsSnapshotMeta } | null> {
+  const row = await prisma.outrightSnapshot.findUnique({
+    where: { competitionId },
+  });
+  if (!row) return null;
+
+  // A retuned `outrightOddsApiSport` makes the cached markets the wrong feed,
+  // not merely old — never serve them, stale-allowed or not.
+  const sport = getCompetitionById(competitionId)?.outrightOddsApiSport;
+  if (sport && row.sport !== sport) return null;
+
+  const stale = isExpired(row.expiresAt);
+  if (stale && !options?.allowStale) return null;
+
+  return {
+    markets: row.markets as Market[],
+    meta: {
+      fetchedAt: row.fetchedAt,
+      expiresAt: row.expiresAt,
+      stale,
+    },
+  };
+}
+
+export async function writeOutrightMarkets(
+  competitionId: string,
+  sport: string,
+  markets: Market[],
+  ttlMs: number = oddsOutrightCacheTtlMs()
+): Promise<void> {
+  const expiresAt = new Date(Date.now() + ttlMs);
+  await prisma.outrightSnapshot.upsert({
+    where: { competitionId },
+    create: { competitionId, sport, markets, expiresAt },
+    update: { sport, markets, fetchedAt: new Date(), expiresAt },
+  });
+}
+
+export async function refreshOutrightMarketsFromApi(competitionId: string): Promise<Market[]> {
+  const competition = getCompetitionById(competitionId);
+  if (!competition?.outrightOddsApiSport) return [];
+
+  try {
+    const markets = await fetchOddsApiOutrightsLive(competition.outrightOddsApiSport);
+    await writeOutrightMarkets(competitionId, competition.outrightOddsApiSport, markets);
+    return markets;
+  } catch (err) {
+    // Negative-cache the failure. An unconfigured or retired sport key 404s
+    // forever, and without this every page load for the competition re-hits the
+    // API. The short TTL lets a transient outage recover on its own.
+    console.error(`[odds] outright refresh failed for ${competitionId}:`, err);
+    await writeOutrightMarkets(
+      competitionId,
+      competition.outrightOddsApiSport,
+      [],
+      oddsOutrightFailureTtlMs()
+    );
+    return [];
+  }
 }
 
 export async function deleteExpiredOddsSnapshots(): Promise<{
   bulkDeleted: number;
   eventDeleted: number;
+  outrightDeleted: number;
 }> {
   const now = new Date();
-  const [bulk, event] = await Promise.all([
+  const [bulk, event, outright] = await Promise.all([
     prisma.oddsBulkSnapshot.deleteMany({ where: { expiresAt: { lt: now } } }),
     prisma.oddsEventSnapshot.deleteMany({ where: { expiresAt: { lt: now } } }),
+    prisma.outrightSnapshot.deleteMany({ where: { expiresAt: { lt: now } } }),
   ]);
-  return { bulkDeleted: bulk.count, eventDeleted: event.count };
+  return { bulkDeleted: bulk.count, eventDeleted: event.count, outrightDeleted: outright.count };
 }

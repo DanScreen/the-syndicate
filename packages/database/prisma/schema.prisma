@@ -205,6 +205,16 @@ model CompetitionSetting {
   updatedAt     DateTime @updatedAt
 }
 
+/// Generic admin-managed runtime toggles (smallest key/value store consistent
+/// with CompetitionSetting's pattern). Currently used for the estimated-odds
+/// fill runtime kill switch — see docs/specs/estimated-odds-fill.md §4.
+model PlatformSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
 /// Cached bulk fixture list (h2h, totals, spreads) per competition — refreshed by cron.
 model OddsBulkSnapshot {
   competitionId String   @id
@@ -227,6 +237,18 @@ model OddsEventSnapshot {
   expiresAt     DateTime
 
   @@id([competitionId, fixtureId, tierId])
+  @@index([expiresAt])
+}
+
+/// Cached outright/futures markets (e.g. league winner) per competition —
+/// refreshed by cron on a much longer interval than match odds.
+model OutrightSnapshot {
+  competitionId String   @id
+  sport         String
+  markets       Json
+  fetchedAt     DateTime @default(now())
+  expiresAt     DateTime
+
   @@index([expiresAt])
 }
 

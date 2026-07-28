@@ -133,6 +133,7 @@ export type BetslipLinks = {
 
 export type HistoryLeg = {
   id: string;
+  fixtureId: string;
   user: { id: string; name: string };
   homeTeam: string;
   awayTeam: string;

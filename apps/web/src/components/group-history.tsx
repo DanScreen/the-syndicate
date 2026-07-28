@@ -4,6 +4,7 @@ import { formatOdds } from "@tiki-acca/shared";
 
 import { PointsText, pointsTextClass } from "@/components/points-text";
 import {
+  formatFixtureLabel,
   formatLegPoints,
   formatRoundStatusBadge,
   groupAccaRoundPoints,
@@ -87,9 +88,7 @@ export function HistoryRoundCard({ round }: { round: HistoryRound }) {
                 <span className="font-medium text-foreground/80">{formatOdds(leg.odds)}</span>
               </div>
             </div>
-            <p className="mt-1 text-foreground">
-              {leg.homeTeam} vs {leg.awayTeam}
-            </p>
+            <p className="mt-1 text-foreground">{formatFixtureLabel(leg)}</p>
             <p className="text-muted">
               {leg.marketLabel}: {leg.selectionLabel}
             </p>

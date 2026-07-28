@@ -155,6 +155,8 @@ At lock, `Leg.betslipUrl` stores the chosen bookmaker's **real** outcome/event d
 
 Requires live odds (`ODDS_API_KEY`) — mock fixtures have no deeplinks. Odds are stored in **PostgreSQL** (`OddsBulkSnapshot`, `OddsEventSnapshot`) and refreshed by cron (`POST /api/internal/warm-odds-cache`). User picks read the DB; set `ODDS_DB_ONLY=true` in production to block live API calls from user traffic.
 
+**Estimated odds fill** (dormant — [specs/estimated-odds-fill.md](./specs/estimated-odds-fill.md)): thin selections (few real bookmaker quotes) can be backfilled with a haircut-median estimate (`estimated: true` on `BookmakerQuote`) so the comparison table stays visually full. Applied at market-build time in `mapOddsEventToFixture` / `mapEventToExtendedMarkets`, gated on `ESTIMATED_ODDS_ENABLED` (env, deploy-level) **and** an admin runtime toggle at `/admin/odds` (`PlatformSetting` row, `GET`/`PATCH /api/admin/estimated-odds`) — both must be on. `sortQuotesByBestOdds`/`topQuotes` (`packages/shared/src/bookmakers.ts`) exclude estimated quotes so leg creation, round lock, and acca maths stay real-only; `sortQuotesForDisplay` is the opt-in variant for the UI. Off by default in production.
+
 ### Odds API usage (summary)
 
 Full budgeting: [DEPLOYMENT.md — The Odds API](./DEPLOYMENT.md#the-odds-api--calls-credits--cron).
@@ -255,6 +257,8 @@ Protected routes enforced in `apps/web/src/middleware.ts` / `auth.config.ts`: `/
 Email and push notifications fire on **round locked**, **round settled**, and **pick reminders** (within 2h before first kickoff). Resend for email (`RESEND_API_KEY`, `EMAIL_FROM`); Expo Push API for mobile (`PushDevice` tokens). Per-user preferences at `/account` (web) and `(main)/account` (mobile). Deduped via `NotificationLog`; round-level `lockedNotificationSentAt` / `settledNotificationSentAt` set only when all members are satisfied (delivered or opted out). Failed lock/settle deliveries retried on `sync-matches` (5 min). Pick reminders cron: `POST /api/internal/round-reminders` every 15 min (Terraform). Notification times formatted in `Europe/London`. See [specs/notifications.md](./specs/notifications.md).
 
 **Early settle on loss.** As soon as one leg is `lost`, the round settles: group scores −1 and concluded legs award member points under the per-leg rule (won → odds−1, lost → −1, void → 0). If no other open or locked bet remains, the next open round starts automatically; otherwise members continue through the existing active bets and can create another when the owner’s cap permits. Remaining legs stay `pending` until match sync (or admin) resolves them via `applyDeferredLegOutcome()` — still exactly-once (pending → outcome claim).
+
+**Selection outcomes propagate across groups.** An outcome is a fact about a `(fixtureId, marketType, selectionId)`, not about one group's leg. When several groups back the same selection they get separate `Leg` rows, so admin manual settlement previously asked the same question once per group — and nothing prevented contradictory answers being stored for the same selection. `propagateSelectionOutcomes()` (`apps/web/src/lib/settlement/propagate-selection-outcome.ts`) applies each admin-entered outcome to every **other pending** leg on that selection, then `tryAutoSettleRound()` settles any round that is now fully resolved. Settled rounds route through `applyDeferredLegOutcome` (so deferred points are awarded); locked rounds use `persistResolvableLegOutcomes` — the same `pending → outcome` claim as the cron, so the `leg_result` chat message still posts exactly once. Scope is deliberately narrow: identical selection only, `locked`/`settled` rounds only (open rounds still lock at first kickoff), never overwrites a non-pending leg, and idempotent on re-run. Covered by `propagate-selection-outcome.test.ts` (requires local PostgreSQL).
 
 **Exactly-once settlement.** `applyRoundSettlement()` validates settleability, then runs in a `prisma.$transaction` with an atomic claim — `round.updateMany({ where: { status: "locked" }, data: { status: "settled" } })`. Overlapping settle attempts (e.g. two cron runs) can't double-count points: the loser matches zero rows and throws `RoundNotSettleableError`, treated as a benign `skipped` no-op.
 
@@ -408,7 +412,12 @@ Member summary **best / worst leg** = highest / lowest decimal odds across the m
 | `ODDS_API_SPORT` | No | Default `soccer_fifa_world_cup` (fallback only) |
 | `FOOTBALL_DATA_API_KEY` | No | Match sync |
 | `FOOTBALL_DATA_CACHE_TTL_MS` | No | In-memory cache TTL for football-data fetches (default 60s; bypassed on cron sync) |
-| `ODDS_API_CACHE_TTL_MS` | No | DB snapshot TTL for odds (default 30 min) |
+| `ODDS_API_CACHE_TTL_MS` | No | DB snapshot TTL for odds (code default 30 min; production 7 h — must exceed the 6 h warm cron when `ODDS_DB_ONLY=true`) |
+| `OUTRIGHTS_ENABLED` | No | Season-long outrights; off unless `"true"`. Dormant by design — [ODDS_PROVIDERS.md](./ODDS_PROVIDERS.md) |
+| `ESTIMATED_ODDS_ENABLED` | No | Median-backfill estimates for thin bookmaker tables; off unless `"true"`. Deploy-level gate — an admin runtime toggle (`/admin/odds`) additionally governs it once this is on. Dormant by design — [specs/estimated-odds-fill.md](./specs/estimated-odds-fill.md) |
+| `ESTIMATED_ODDS_MARGIN` | No | Haircut: estimate = median × (1 − margin). Default `0.05`; clamped to `[0.01, 0.5]`; ≤0 falls back to default |
+| `ESTIMATED_ODDS_MIN_REAL_QUOTES` | No | Minimum real quotes required before a selection is backfilled (default `2`) |
+| `ESTIMATED_ODDS_SKIP_AT` | No | Skip filling once real-quote count reaches this threshold (default `4`) |
 | `ODDS_DB_ONLY` | No | When `true`, user routes read odds DB only (cron must refresh) |
 | `ODDS_WARM_CORE_WITHIN_HOURS` | No | Cron prefetches core extended markets within N hours of kickoff (default 72) |
 | `CRON_SECRET` | No | Bearer token for `/api/internal/*` cron routes |
@@ -449,6 +458,7 @@ Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `Analytics
 - `Match` — canonical result per fixture (`externalDataId` from football-data.org).
 - `Round.accaBookmakerRankings` — JSON array of ranked bookmakers at lock.
 - `CompetitionSetting` — `competitionId` slug + `enabled` flag for leg-picker visibility (seeded: World Cup on, every other competition off; new catalogue entries are inserted off).
+- `PlatformSetting` — generic admin-managed key/value runtime toggle store; currently one row (`estimated_odds_enabled`) gating the estimated-odds fill at runtime alongside `ESTIMATED_ODDS_ENABLED`.
 - Groups always retain at least one open or locked round. At the default cap of 1, settlement opens the next automatically. At higher caps, members create additional bets explicitly; PostgreSQL advisory locks make cap/empty-bet checks atomic. Legacy groups without an active round get one on next load.
 - `Round.lockedNotificationSentAt` / `settledNotificationSentAt` — email dedup.
 

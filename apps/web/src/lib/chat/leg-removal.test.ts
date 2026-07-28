@@ -17,6 +17,7 @@ test("leg removal chat copy records the removed selection", () => {
   assert.equal(
     formatLegRemovedBody("Dan", {
       selectionLabel: "Over 2.5",
+      fixtureId: "evt-france-england",
       homeTeam: "France",
       awayTeam: "England",
     }),

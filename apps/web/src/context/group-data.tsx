@@ -95,6 +95,7 @@ export type GroupData = {
     createdAt: string;
     legs: {
       id: string;
+      fixtureId: string;
       user: { id: string; name: string };
       homeTeam: string;
       awayTeam: string;
