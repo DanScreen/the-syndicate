@@ -200,6 +200,47 @@ probe first, exactly as was done for The Odds API.
 
 ---
 
+## 3b. Sub-£50/month scan for match-market depth (2026-07-28)
+
+Separate question from outrights: **BTTS and extended markets are thin on The
+Odds API** (verified 2026-07-28: Lincoln Red Imps v Mjällby BTTS = 2 UK books,
+`eu` region adds nothing for UK bookmakers — see
+[specs/estimated-odds-fill.md](./specs/estimated-odds-fill.md)). Scanned the
+[Datarade "best sports betting APIs" list](https://datarade.ai/top-lists/best-sports-betting-apis)
+plus follow-ups for anything under **£50/month** that fills the gap.
+
+Most of the Datarade list is irrelevant: FantasyData ($599/mo, US sports),
+Sportradar/Gracenote (enterprise, sales-only pricing), Esports Charts and
+Shikenso (esports analytics, no odds), TheSports (custom pricing, no published
+odds depth), GoalServe (custom pricing; historically well over £50/mo).
+
+### Candidates under £50/month
+
+| Provider | ~£/mo | Bookmakers | BTTS | Notes |
+|---|---|---|---|---|
+| **TheStatsAPI** | **~£39** ($50 Starter, 100k req/mo) | 5: **bet365, Paddy Power, Betfair Sportsbook**, Pinnacle, Kambi | **Yes** (+ 1X2, AH, O/U, DNB, corners) | 150+ competitions; **7-day free trial, no card**. Bet365 + Paddy Power are exactly the books missing from The Odds API |
+| **API-Football** (API-SPORTS) | **~£15** ($19 Pro, 7.5k req/day) | ~20 aggregate feed incl. bet365, William Hill, Unibet | Yes (market in odds endpoint) | All endpoints on every tier incl. free; odds refresh cadence and per-fixture depth **unverified** |
+| **Sportmonks** | ~£45 (€29 Starter + €24 odds add-on) | 50+ | Yes (150+ markets) | **Starter caps at 5 leagues** — likely disqualifying for qualifier-class fixtures; no outrights (§2) |
+| **BetsAPI** (already open decision #3) | ~£8+ (from ~$10/mo) | ~5, full site depth incl. bet365 | Yes | $1 one-day trial; cheapest full-depth option on the table |
+
+### Assessment
+
+- **Yes, under £50/month is achievable.** TheStatsAPI is the best documented
+  fit for the specific gap (bet365 + Paddy Power BTTS on low-profile
+  fixtures), and its free trial makes probing cheap. BetsAPI remains the
+  cheapest full-depth option and its $1 trial is already open decision #3 —
+  trial both against the same qualifier-class fixture and compare.
+- **None of these replace The Odds API.** They have few or no deeplinks and a
+  narrower bookmaker spread; they would slot in as a **depth supplement**
+  (per rule: keep the fixture path, add a second source for the gap), the same
+  pattern proposed for outrights in §3.
+- **Nothing here is live-verified** (rule of thumb 2 — only trials count).
+  Specifically unverified: whether TheStatsAPI's "150+ competitions" includes
+  CL qualifiers; whether its bet365 prices are licensed or scraped (affects
+  reliability and ToS risk); API-Football's odds refresh frequency.
+
+---
+
 ## 4. Results coverage: the settlement gap
 
 ### What we cannot settle today
@@ -299,6 +340,7 @@ latter means keeping the manual queue as a fallback regardless.
 | 3 | Trial BetsAPI ($1/one-day) and probe id-mapping quality | **Open** |
 | 4 | Cards: booking-point approximation vs. keep manual | **Open** — decide deliberately, not by default |
 | 5 | Extend `MatchResult` beyond `{homeGoals, awayGoals, status}` | Blocked on #3 |
+| 6 | Trial TheStatsAPI (7-day free) for BTTS depth (bet365 + Paddy Power) alongside the BetsAPI trial — same qualifier-class fixture, compare | **Open** — see §3b |
 
 ---
 
@@ -328,6 +370,9 @@ latter means keeping the manual queue as a fallback regardless.
 - [Sportmonks plans & pricing](https://www.sportmonks.com/football-api/plans-pricing/) ·
   [premium odds feed](https://docs.sportmonks.com/v3/endpoints-and-entities/endpoints/premium-odds-feed)
 - [Betfair developer portal](https://developer.betfair.com/get-started/)
+- [Datarade — best sports betting APIs](https://datarade.ai/top-lists/best-sports-betting-apis) ·
+  [TheStatsAPI odds](https://www.thestatsapi.com/odds-api) ·
+  [API-Football pricing](https://www.api-football.com/pricing)
 - [SportsGameOdds pricing](https://sportsgameodds.com/pricing/) ·
   [OpticOdds](https://opticodds.com/sports/soccer) ·
   [LSports](https://www.lsports.eu/blog/sports-betting-apis/)
