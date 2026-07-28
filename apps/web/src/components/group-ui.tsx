@@ -27,7 +27,7 @@ import {
   bookmakerRankRowClass,
 } from "@/components/bookmaker-logo";
 import { useEffect, useMemo, useState } from "react";
-import { sortQuotesByBestOdds } from "@/lib/odds/bookmakers";
+import { sortQuotesByBestOdds, sortQuotesForDisplay } from "@/lib/odds/bookmakers";
 import { groupMarkets } from "@/lib/odds/market-groups";
 import { MARKET_TIERS } from "@/lib/odds/market-tiers";
 
@@ -687,11 +687,38 @@ export function SubmitLegForm({
       )}
 
       {selection && (
-        <p className="text-sm text-muted">
-          You&apos;ll submit at the best available odds (
-          {sortQuotesByBestOdds(selection.odds).map((q) => formatOdds(q.odds))[0] ?? "—"}). The group acca
-          bookmaker is chosen when all legs are in.
-        </p>
+        <div className="space-y-2">
+          <p className="text-sm text-muted">
+            You&apos;ll submit at the best available odds (
+            {sortQuotesByBestOdds(selection.odds).map((q) => formatOdds(q.odds))[0] ?? "—"}). The group acca
+            bookmaker is chosen when all legs are in.
+          </p>
+          {sortQuotesForDisplay(selection.odds).length > 0 && (
+            <ul className="space-y-1 rounded-lg border border-border bg-card px-3 py-2 text-xs">
+              {sortQuotesForDisplay(selection.odds).map((q) => (
+                <li
+                  key={q.bookmakerId}
+                  className={`flex items-center justify-between gap-2 ${
+                    q.estimated ? "italic text-muted" : ""
+                  }`}
+                >
+                  <span className="truncate">{q.bookmakerName}</span>
+                  <span className="flex items-center gap-1.5 tabular-nums">
+                    {q.estimated && (
+                      <span
+                        className="rounded border border-border px-1 py-0.5 text-[10px] font-semibold not-italic uppercase tracking-wide text-muted"
+                        title="Estimated from other bookmakers' prices — not a real quote, no link"
+                      >
+                        est.
+                      </span>
+                    )}
+                    {formatOdds(q.odds)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       )}
 
       {error && <p className="text-sm text-danger">{error}</p>}

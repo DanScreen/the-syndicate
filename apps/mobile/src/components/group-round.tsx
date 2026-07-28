@@ -39,6 +39,7 @@ import {
   pointsTone,
   pointsToneFromOutcome,
   sortQuotesByBestOdds,
+  sortQuotesForDisplay,
   type LegOutcome,
   type MarketConflictLeg,
 } from "@tiki-acca/shared";
@@ -921,7 +922,32 @@ export function SubmitLegForm({
       ) : null}
 
       {selection ? (
-        <Text style={styles.meta}>{copy.legPicker.bestOddsHint}</Text>
+        <View style={styles.stack}>
+          <Text style={styles.meta}>{copy.legPicker.bestOddsHint}</Text>
+          {sortQuotesForDisplay(selection.odds).length > 0 ? (
+            <View style={styles.oddsCompareCard}>
+              {sortQuotesForDisplay(selection.odds).map((q) => (
+                <View key={q.bookmakerId} style={styles.oddsCompareRow}>
+                  <Text style={[styles.oddsCompareName, q.estimated && styles.oddsCompareEstimatedText]}>
+                    {q.bookmakerName}
+                  </Text>
+                  <View style={styles.oddsCompareValue}>
+                    {q.estimated ? (
+                      <View style={styles.oddsCompareBadge}>
+                        <Text style={styles.oddsCompareBadgeText}>est.</Text>
+                      </View>
+                    ) : null}
+                    <Text
+                      style={[styles.oddsCompareOdds, q.estimated && styles.oddsCompareEstimatedText]}
+                    >
+                      {formatOdds(q.odds)}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          ) : null}
+        </View>
       ) : null}
 
       <ErrorText message={error} />
@@ -1128,6 +1154,54 @@ const styles = StyleSheet.create({
   meta: {
     color: colors.muted,
     fontSize: 14,
+  },
+  oddsCompareCard: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    borderRadius: 10,
+    padding: 10,
+    gap: 6,
+  },
+  oddsCompareRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 8,
+  },
+  oddsCompareName: {
+    color: colors.text,
+    fontSize: 13,
+    flexShrink: 1,
+  },
+  oddsCompareValue: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  oddsCompareOdds: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  oddsCompareEstimatedText: {
+    color: colors.muted,
+    fontStyle: "italic",
+    fontWeight: "400",
+  },
+  oddsCompareBadge: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 4,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+  },
+  oddsCompareBadgeText: {
+    color: colors.muted,
+    fontSize: 9,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   warnText: {
     color: colors.warning,
