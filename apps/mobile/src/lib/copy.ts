@@ -26,6 +26,10 @@ export const copy = {
     marketsError: "Failed to load markets",
     bestOddsHint:
       "You'll submit at the best available odds. The group acca bookmaker is chosen when all legs are in.",
+    multiLegFirst: (legsPerMember: number) =>
+      `You'll pick ${legsPerMember} legs from different fixtures — start with leg 1.`,
+    multiLegNext: (previousLeg: number, currentLeg: number) =>
+      `Leg ${previousLeg} saved. Pick a different fixture for leg ${currentLeg}.`,
   },
   stats: {
     noGroupRounds:

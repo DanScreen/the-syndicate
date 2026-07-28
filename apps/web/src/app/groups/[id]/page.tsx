@@ -11,7 +11,7 @@ import {
 import { RoundHistory } from "@/components/group-history";
 import { useGroupData } from "@/context/group-data";
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { RoundMessageDto } from "@tiki-acca/shared";
 
 function formatCutoff(date: Date) {
@@ -34,6 +34,12 @@ export default function GroupRoundPage() {
   const [selectedRoundId, setSelectedRoundId] = useState<string | null>(null);
   const [creatingRound, setCreatingRound] = useState(false);
   const [createRoundError, setCreateRoundError] = useState("");
+  const [legCelebration, setLegCelebration] = useState<"Leg added" | "All legs added" | null>(
+    null
+  );
+  const celebrationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const previousRoundRef = useRef<string | null>(null);
+  const previousUserLegCountRef = useRef(0);
 
   const activeRounds =
     data?.activeRounds?.length
@@ -125,6 +131,43 @@ export default function GroupRoundPage() {
       announcementByLegId.set(message.legId, message);
     }
   }
+
+  useEffect(() => {
+    if (previousRoundRef.current !== activeRound.id) {
+      previousRoundRef.current = activeRound.id;
+      previousUserLegCountRef.current = userLegs.length;
+      setLegCelebration(null);
+      return;
+    }
+
+    const previousCount = previousUserLegCountRef.current;
+    if (
+      activeRound.status === "open" &&
+      userLegs.length > previousCount &&
+      !editingLegId
+    ) {
+      const celebrationText: "Leg added" | "All legs added" =
+        userLegs.length >= legsPerMember ? "All legs added" : "Leg added";
+      setLegCelebration(celebrationText);
+      if (celebrationTimerRef.current) {
+        clearTimeout(celebrationTimerRef.current);
+      }
+      celebrationTimerRef.current = setTimeout(() => {
+        setLegCelebration(null);
+        celebrationTimerRef.current = null;
+      }, 1800);
+    }
+
+    previousUserLegCountRef.current = userLegs.length;
+  }, [activeRound.id, activeRound.status, editingLegId, legsPerMember, userLegs.length]);
+
+  useEffect(() => {
+    return () => {
+      if (celebrationTimerRef.current) {
+        clearTimeout(celebrationTimerRef.current);
+      }
+    };
+  }, []);
 
   async function removeLeg(legId: string, selectionLabel: string) {
     if (!window.confirm(`Remove ${selectionLabel} from this acca?`)) return;
@@ -297,19 +340,6 @@ export default function GroupRoundPage() {
         />
       )}
 
-      {canSubmitMore && !editingLegId && (
-        <SubmitLegForm
-          roundId={activeRound.id}
-          onSubmitted={reload}
-          existingLegs={activeRound.legs}
-          title={
-            legsPerMember > 1
-              ? `Submit leg ${nextSlot} of ${legsPerMember}`
-              : undefined
-          }
-        />
-      )}
-
       {userLegs.length > 0 && editWindowOpen && !editingLegId && (
         <div className="space-y-2 rounded-xl border border-border bg-card p-4">
           <p className="text-sm font-medium">Your picks</p>
@@ -351,6 +381,29 @@ export default function GroupRoundPage() {
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {canSubmitMore && !editingLegId && (
+        <div className="space-y-2">
+          {legCelebration && (
+            <div className="rounded-lg border border-accent/40 bg-accent-muted/40 px-4 py-2 text-center text-sm font-semibold text-accent animate-pulse">
+              {legCelebration}
+            </div>
+          )}
+          <SubmitLegForm
+            key={`submit-leg-${userLegs.length}`}
+            roundId={activeRound.id}
+            onSubmitted={reload}
+            existingLegs={activeRound.legs}
+            legSlot={nextSlot}
+            legsPerMember={legsPerMember}
+            title={
+              legsPerMember > 1
+                ? `Submit leg ${nextSlot} of ${legsPerMember}`
+                : undefined
+            }
+          />
         </div>
       )}
 
