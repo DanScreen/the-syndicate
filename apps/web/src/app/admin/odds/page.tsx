@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AdminEstimatedOddsToggle } from "@/components/admin-estimated-odds-toggle";
 import { AdminOddsDiagnosticsPanel } from "@/components/admin-odds-diagnostics";
 import { AdminPageShell } from "@/components/admin-page-shell";
 
@@ -14,7 +15,10 @@ export default function AdminOddsDiagnosticsPage() {
       description="Probe The Odds API and see how many fixtures survive each filter step."
       path="/admin/odds"
     >
-      <AdminOddsDiagnosticsPanel />
+      <div className="space-y-6">
+        <AdminEstimatedOddsToggle />
+        <AdminOddsDiagnosticsPanel />
+      </div>
     </AdminPageShell>
   );
 }

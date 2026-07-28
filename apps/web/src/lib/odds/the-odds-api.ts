@@ -9,6 +9,7 @@ import {
 import type { OddsApiBookmaker, OddsApiEvent } from "./api-types";
 import { isRetailBookmaker } from "./bookmakers";
 import { getCached, setCached } from "./cache";
+import { fillMarketsWithEstimates } from "./estimated-odds-fill";
 import { isQuotaExhaustedError, OddsApiQuotaExhaustedError, toOddsApiError } from "./errors";
 import { buildOutrightMarket, slugify } from "./market-builders";
 import { addQuote, resolveDeeplink } from "./quotes";
@@ -214,15 +215,30 @@ function buildSpreadsMarkets(event: OddsApiEvent, bookmakers: OddsApiBookmaker[]
   return markets.sort((a, b) => a.label.localeCompare(b.label));
 }
 
-export function mapOddsEventToFixture(event: OddsApiEvent): Fixture | null {
+export type MapOddsEventOptions = {
+  /** Backfill thin selections with median-haircut estimates. Off by default. */
+  fillEstimated?: boolean;
+};
+
+export function mapOddsEventToFixture(
+  event: OddsApiEvent,
+  options?: MapOddsEventOptions
+): Fixture | null {
   const bookmakers = retailBookmakers(event.bookmakers);
-  const markets = [
+  let markets = [
     buildH2hMarket(event, bookmakers),
     ...buildTotalsMarkets(bookmakers),
     ...buildSpreadsMarkets(event, bookmakers),
   ].filter((m): m is Market => m !== null);
 
   if (markets.length === 0) return null;
+
+  if (options?.fillEstimated) {
+    markets = fillMarketsWithEstimates(
+      markets,
+      bookmakers.map((b) => ({ id: b.key, name: b.title }))
+    );
+  }
 
   return {
     id: event.id,
@@ -236,7 +252,8 @@ export function mapOddsEventToFixture(event: OddsApiEvent): Fixture | null {
 
 export async function fetchOddsApiFixturesLive(
   sport: string = process.env.ODDS_API_SPORT ?? DEFAULT_ODDS_SPORT,
-  competitionName?: string
+  competitionName?: string,
+  options?: MapOddsEventOptions
 ): Promise<Fixture[]> {
   try {
     const { events } = await fetchOddsApiEventsRaw(sport, {
@@ -246,7 +263,7 @@ export async function fetchOddsApiFixturesLive(
     return filterUpcomingFixtures(
       events
         .map((event) => {
-          const fixture = mapOddsEventToFixture(event);
+          const fixture = mapOddsEventToFixture(event, options);
           if (!fixture) return null;
           return competitionName ? { ...fixture, competition: competitionName } : fixture;
         })

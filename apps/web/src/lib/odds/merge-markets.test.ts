@@ -113,3 +113,87 @@ test("preserves markets and selections that exist in only one feed", () => {
     ["match_winner", "both_teams_score"]
   );
 });
+
+test("a real quote always replaces an estimate for the same bookmaker, even at worse odds", () => {
+  const primaryWithEstimate: Market[] = [
+    {
+      type: "both_teams_score",
+      label: "Both Teams to Score",
+      selections: [
+        {
+          id: "yes",
+          label: "Yes",
+          odds: [
+            { bookmakerId: "coral", bookmakerName: "Coral", odds: 1.8 },
+            // Estimate happens to price higher than the real quote that later arrives.
+            { bookmakerId: "williamhill", bookmakerName: "William Hill", odds: 1.95, estimated: true },
+          ],
+        },
+      ],
+    },
+  ];
+  const additionalWithReal: Market[] = [
+    {
+      type: "both_teams_score",
+      label: "Both Teams to Score",
+      selections: [
+        {
+          id: "yes",
+          label: "Yes",
+          odds: [
+            {
+              bookmakerId: "williamhill",
+              bookmakerName: "William Hill",
+              odds: 1.7,
+              link: "https://example.com/williamhill/btts-yes",
+            },
+          ],
+        },
+      ],
+    },
+  ];
+
+  const merged = mergeMarketCollections(primaryWithEstimate, additionalWithReal);
+  const whQuote = merged[0]?.selections[0]?.odds.find((q) => q.bookmakerId === "williamhill");
+
+  assert.ok(whQuote);
+  assert.equal(whQuote!.estimated, undefined);
+  assert.equal(whQuote!.odds, 1.7);
+  assert.equal(whQuote!.link, "https://example.com/williamhill/btts-yes");
+});
+
+test("an estimate from a stale snapshot never overwrites a fresh real quote", () => {
+  const freshReal: Market[] = [
+    {
+      type: "both_teams_score",
+      label: "Both Teams to Score",
+      selections: [
+        {
+          id: "yes",
+          label: "Yes",
+          odds: [{ bookmakerId: "coral", bookmakerName: "Coral", odds: 1.8 }],
+        },
+      ],
+    },
+  ];
+  const staleEstimate: Market[] = [
+    {
+      type: "both_teams_score",
+      label: "Both Teams to Score",
+      selections: [
+        {
+          id: "yes",
+          label: "Yes",
+          odds: [{ bookmakerId: "coral", bookmakerName: "Coral", odds: 2.5, estimated: true }],
+        },
+      ],
+    },
+  ];
+
+  const merged = mergeMarketCollections(freshReal, staleEstimate);
+  const coralQuote = merged[0]?.selections[0]?.odds.find((q) => q.bookmakerId === "coral");
+
+  assert.ok(coralQuote);
+  assert.equal(coralQuote!.estimated, undefined);
+  assert.equal(coralQuote!.odds, 1.8);
+});

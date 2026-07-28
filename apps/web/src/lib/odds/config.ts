@@ -1,3 +1,9 @@
+import {
+  DEFAULT_ESTIMATED_ODDS_MARGIN,
+  DEFAULT_ESTIMATED_ODDS_MIN_REAL_QUOTES,
+  DEFAULT_ESTIMATED_ODDS_SKIP_AT,
+} from "@tiki-acca/shared";
+
 /** True when The Odds API key is present for live fixture/odds fetches. */
 export function isOddsApiConfigured(): boolean {
   const key = process.env.ODDS_API_KEY?.trim();
@@ -82,4 +88,38 @@ export function oddsWarmCoreWithinHours(): number {
 
 export function oddsApiRegions(): string {
   return process.env.ODDS_API_REGIONS ?? "uk";
+}
+
+/**
+ * Master switch for median-backfilled estimated odds on thin selections. **Off
+ * by default.** See docs/specs/estimated-odds-fill.md. This is the deploy-level
+ * kill switch / default-off gate; when it's `"true"`, the admin runtime toggle
+ * (`apps/web/src/lib/odds/estimated-odds-runtime.ts`) additionally governs
+ * whether the fill actually runs — both must be on.
+ */
+export function estimatedOddsEnabled(): boolean {
+  return process.env.ESTIMATED_ODDS_ENABLED === "true";
+}
+
+/** Haircut applied to the median of real quotes. Clamped to [0.01, 0.5]; a value <= 0 falls back to the default. */
+export function estimatedOddsMargin(): number {
+  const configured = Number(process.env.ESTIMATED_ODDS_MARGIN);
+  if (!Number.isFinite(configured) || configured <= 0) return DEFAULT_ESTIMATED_ODDS_MARGIN;
+  return Math.min(0.5, Math.max(0.01, configured));
+}
+
+/** Minimum real quotes required before a selection is backfilled with estimates. */
+export function estimatedOddsMinRealQuotes(): number {
+  const configured = Number(process.env.ESTIMATED_ODDS_MIN_REAL_QUOTES);
+  return Number.isFinite(configured) && configured > 0
+    ? Math.floor(configured)
+    : DEFAULT_ESTIMATED_ODDS_MIN_REAL_QUOTES;
+}
+
+/** Skip filling a selection once its real-quote count reaches this threshold. */
+export function estimatedOddsSkipAt(): number {
+  const configured = Number(process.env.ESTIMATED_ODDS_SKIP_AT);
+  return Number.isFinite(configured) && configured > 0
+    ? Math.floor(configured)
+    : DEFAULT_ESTIMATED_ODDS_SKIP_AT;
 }

@@ -1,5 +1,19 @@
 import type { BookmakerQuote, Market, MarketSelection } from "@tiki-acca/shared";
 
+/**
+ * A real quote always beats an estimate for the same bookmaker, regardless of
+ * price — estimates are display-only filler and must never survive a merge
+ * once a real price shows up (e.g. a fresh per-event fetch replacing a stale
+ * bulk-feed estimate). Between two quotes of the same realness, the better
+ * price wins, matching pre-estimate behaviour exactly.
+ */
+function betterQuote(existing: BookmakerQuote, incoming: BookmakerQuote): BookmakerQuote {
+  const existingReal = !existing.estimated;
+  const incomingReal = !incoming.estimated;
+  if (existingReal !== incomingReal) return incomingReal ? incoming : existing;
+  return incoming.odds > existing.odds ? incoming : existing;
+}
+
 function mergeQuotes(
   primary: BookmakerQuote[],
   additional: BookmakerQuote[]
@@ -13,11 +27,13 @@ function mergeQuotes(
       continue;
     }
 
-    const best = quote.odds > existing.odds ? quote : existing;
-    byBookmaker.set(quote.bookmakerId, {
-      ...best,
-      link: best.link ?? existing.link ?? quote.link,
-    });
+    const best = betterQuote(existing, quote);
+    byBookmaker.set(
+      quote.bookmakerId,
+      best.estimated
+        ? { ...best, link: undefined }
+        : { ...best, link: best.link ?? existing.link ?? quote.link }
+    );
   }
 
   return [...byBookmaker.values()].sort((a, b) => b.odds - a.odds);

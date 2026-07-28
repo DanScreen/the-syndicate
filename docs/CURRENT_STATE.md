@@ -155,6 +155,8 @@ At lock, `Leg.betslipUrl` stores the chosen bookmaker's **real** outcome/event d
 
 Requires live odds (`ODDS_API_KEY`) — mock fixtures have no deeplinks. Odds are stored in **PostgreSQL** (`OddsBulkSnapshot`, `OddsEventSnapshot`) and refreshed by cron (`POST /api/internal/warm-odds-cache`). User picks read the DB; set `ODDS_DB_ONLY=true` in production to block live API calls from user traffic.
 
+**Estimated odds fill** (dormant — [specs/estimated-odds-fill.md](./specs/estimated-odds-fill.md)): thin selections (few real bookmaker quotes) can be backfilled with a haircut-median estimate (`estimated: true` on `BookmakerQuote`) so the comparison table stays visually full. Applied at market-build time in `mapOddsEventToFixture` / `mapEventToExtendedMarkets`, gated on `ESTIMATED_ODDS_ENABLED` (env, deploy-level) **and** an admin runtime toggle at `/admin/odds` (`PlatformSetting` row, `GET`/`PATCH /api/admin/estimated-odds`) — both must be on. `sortQuotesByBestOdds`/`topQuotes` (`packages/shared/src/bookmakers.ts`) exclude estimated quotes so leg creation, round lock, and acca maths stay real-only; `sortQuotesForDisplay` is the opt-in variant for the UI. Off by default in production.
+
 ### Odds API usage (summary)
 
 Full budgeting: [DEPLOYMENT.md — The Odds API](./DEPLOYMENT.md#the-odds-api--calls-credits--cron).
@@ -412,6 +414,10 @@ Member summary **best / worst leg** = highest / lowest decimal odds across the m
 | `FOOTBALL_DATA_CACHE_TTL_MS` | No | In-memory cache TTL for football-data fetches (default 60s; bypassed on cron sync) |
 | `ODDS_API_CACHE_TTL_MS` | No | DB snapshot TTL for odds (code default 30 min; production 7 h — must exceed the 6 h warm cron when `ODDS_DB_ONLY=true`) |
 | `OUTRIGHTS_ENABLED` | No | Season-long outrights; off unless `"true"`. Dormant by design — [ODDS_PROVIDERS.md](./ODDS_PROVIDERS.md) |
+| `ESTIMATED_ODDS_ENABLED` | No | Median-backfill estimates for thin bookmaker tables; off unless `"true"`. Deploy-level gate — an admin runtime toggle (`/admin/odds`) additionally governs it once this is on. Dormant by design — [specs/estimated-odds-fill.md](./specs/estimated-odds-fill.md) |
+| `ESTIMATED_ODDS_MARGIN` | No | Haircut: estimate = median × (1 − margin). Default `0.05`; clamped to `[0.01, 0.5]`; ≤0 falls back to default |
+| `ESTIMATED_ODDS_MIN_REAL_QUOTES` | No | Minimum real quotes required before a selection is backfilled (default `2`) |
+| `ESTIMATED_ODDS_SKIP_AT` | No | Skip filling once real-quote count reaches this threshold (default `4`) |
 | `ODDS_DB_ONLY` | No | When `true`, user routes read odds DB only (cron must refresh) |
 | `ODDS_WARM_CORE_WITHIN_HOURS` | No | Cron prefetches core extended markets within N hours of kickoff (default 72) |
 | `CRON_SECRET` | No | Bearer token for `/api/internal/*` cron routes |
@@ -452,6 +458,7 @@ Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `Analytics
 - `Match` — canonical result per fixture (`externalDataId` from football-data.org).
 - `Round.accaBookmakerRankings` — JSON array of ranked bookmakers at lock.
 - `CompetitionSetting` — `competitionId` slug + `enabled` flag for leg-picker visibility (seeded: World Cup on, every other competition off; new catalogue entries are inserted off).
+- `PlatformSetting` — generic admin-managed key/value runtime toggle store; currently one row (`estimated_odds_enabled`) gating the estimated-odds fill at runtime alongside `ESTIMATED_ODDS_ENABLED`.
 - Groups always retain at least one open or locked round. At the default cap of 1, settlement opens the next automatically. At higher caps, members create additional bets explicitly; PostgreSQL advisory locks make cap/empty-bet checks atomic. Legacy groups without an active round get one on next load.
 - `Round.lockedNotificationSentAt` / `settledNotificationSentAt` — email dedup.
 

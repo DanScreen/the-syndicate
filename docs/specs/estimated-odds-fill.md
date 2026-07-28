@@ -139,6 +139,36 @@ Config in `apps/web/src/lib/odds/config.ts`, following the
 
 Add all four to `apps/web/.env.example` and the CURRENT_STATE env table.
 
+#### Admin runtime toggle
+
+In addition to the env flag, `/admin/odds` exposes an admin-only runtime
+toggle (`apps/web/src/components/admin-estimated-odds-toggle.tsx`,
+`GET`/`PATCH /api/admin/estimated-odds`) so the fill can be switched on or off
+without a redeploy. Precedence:
+
+```
+effective enablement = ESTIMATED_ODDS_ENABLED (env)  AND  admin toggle (DB)
+```
+
+`ESTIMATED_ODDS_ENABLED` stays the deploy-level kill switch and default-off
+gate — it must be `"true"` before the admin toggle has any effect at all.
+Once it is, the admin toggle (`PlatformSetting` row, key
+`estimated_odds_enabled`, default **on** when no row exists) governs the fill
+at runtime. `estimatedOddsEffectivelyEnabled()`
+(`apps/web/src/lib/odds/estimated-odds-runtime.ts`) computes this at the same
+choke point as the fill itself — the two market-build write paths in
+`odds-store.ts` (`refreshBulkFixturesFromApi`, `refreshEventMarketsFromApi`).
+
+**Caching caveat:** odds are cached in DB snapshots (`OddsBulkSnapshot`,
+`OddsEventSnapshot`). Flipping the admin toggle takes effect on the **next**
+snapshot refresh (cron warm or an on-demand fetch past TTL) — not instantly
+for reads served from an already-cached snapshot. This mirrors how
+`ODDS_API_CACHE_TTL_MS` already governs staleness for every other odds
+change.
+
+Uses the existing `requireAdmin()` authorization (no new auth logic) — the
+same gate protecting `/admin/competitions` and every other admin route.
+
 ### 5. Display — web + mobile
 
 - `apps/web/src/components/group-ui.tsx` — bookmaker table: estimates render
@@ -180,13 +210,16 @@ overwrite fresh real quotes. Add a test pinning this.
    `estimated: true` (integration-level assertion).
 8. Flag off ⇒ output byte-identical to today (mirrors
    `outrights-flag.test.ts`).
+9. Admin toggle off ⇒ no fill even with `ESTIMATED_ODDS_ENABLED="true"`;
+   toggle state persists across reads; effective enablement is the AND of
+   both gates (`estimated-odds-runtime.test.ts`).
 
 ## Delivery phases
 
 | Phase | Scope | Ship gate |
 |---|---|---|
 | 1 | Types + `fillEstimatedQuotes` + exclusion in shared, fully tested | Unit tests green; no behaviour change (flag off) |
-| 2 | Wiring in odds pipeline + config + merge-path test | `ESTIMATED_ODDS_ENABLED` still off in prod |
+| 2 | Wiring in odds pipeline + config + merge-path test + admin runtime toggle | `ESTIMATED_ODDS_ENABLED` still off in prod |
 | 3 | Web + mobile display (badge, muted style, no link) | Visual check on a thin market via mock provider |
 | 4 | Enable in prod; verify on a real qualifier fixture | Screenshot table before/after; confirm lock-round ignores estimates on a live round |
 

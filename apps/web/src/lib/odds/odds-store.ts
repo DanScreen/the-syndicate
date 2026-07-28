@@ -13,6 +13,7 @@ import {
   fetchOddsApiOutrightsLive,
 } from "./the-odds-api";
 import { mapEventToExtendedMarkets } from "./event-markets";
+import { estimatedOddsEffectivelyEnabled } from "./estimated-odds-runtime";
 import { getMarketTier, type MarketTierId } from "./market-tiers";
 
 export type OddsSnapshotMeta = {
@@ -82,7 +83,10 @@ export async function refreshBulkFixturesFromApi(competitionId: string): Promise
   if (!competition) return [];
 
   const regions = oddsApiRegions();
-  const fixtures = await fetchOddsApiFixturesLive(competition.oddsApiSport, competition.name);
+  const fillEstimated = await estimatedOddsEffectivelyEnabled();
+  const fixtures = await fetchOddsApiFixturesLive(competition.oddsApiSport, competition.name, {
+    fillEstimated,
+  });
   await writeBulkFixtures(competitionId, competition.oddsApiSport, regions, fixtures);
   return fixtures;
 }
@@ -152,7 +156,8 @@ export async function refreshEventMarketsFromApi(
     markets: tier.marketKeys.join(","),
     regions: tier.regions,
   });
-  const markets = event ? mapEventToExtendedMarkets(event, tierId) : [];
+  const fillEstimated = await estimatedOddsEffectivelyEnabled();
+  const markets = event ? mapEventToExtendedMarkets(event, tierId, { fillEstimated }) : [];
   await writeEventMarkets(competitionId, fixtureId, tierId, markets);
   return markets;
 }
