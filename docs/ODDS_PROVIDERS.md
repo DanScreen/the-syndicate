@@ -218,13 +218,29 @@ alternate_team_totals_corners, alternate_spreads_cards,
 alternate_totals_cards, to_qualify
 ```
 
-### Known bug (not yet fixed)
+### The `over_under_` guard is load-bearing — do not remove it
 
-`alternate_totals_corners` builds market types like `corners_over_under_25`.
-`resolve-leg.ts:127` guards with `leg.marketType.startsWith("over_under_")`, so
-corner and card totals fail the guard and return `null` — even though the
-line-parsing logic immediately above would handle them correctly. Fixing the
-guard makes these resolvable the moment corner/card stats are available.
+`resolve-leg.ts:127` reads:
+
+```ts
+const ouLine = overUnderLineFromType(leg.marketType);
+if (ouLine !== null && leg.marketType.startsWith("over_under_")) {
+  return overUnderOutcome(leg.selectionId, totalGoals, ouLine);
+}
+```
+
+`overUnderLineFromType` deliberately matches `over_under_*`,
+`corners_over_under_*` **and** `cards_over_under_*`, so it returns a line for
+corner and card totals too. The `startsWith` guard is what stops those falling
+into `overUnderOutcome`, which settles against **`totalGoals`**.
+
+Removing the guard would not "enable" corner settlement — it would silently
+settle *"Over 9.5 corners"* against the **goal** count, marking bets won and
+lost on the wrong statistic with no error. The guard is correct given that
+`MatchResult` carries only goals.
+
+Corners and cards need a new resolver branch reading new fields, not a relaxed
+guard.
 
 ### BetsAPI as a results source
 
@@ -279,7 +295,7 @@ latter means keeping the manual queue as a fallback regardless.
 |---|---|---|
 | 1 | Keep outrights dormant, drop the feature, or integrate a second provider | **Resolved** — kept, gated off behind `OUTRIGHTS_ENABLED` |
 | 1b | Fix `currentSeasonEndDate()` for non-league outrights (World Cup settles 2030, not next May) | **Open** — blocks enabling the flag |
-| 2 | Fix the `over_under_` guard bug in `resolve-leg.ts` | **Open** — self-contained, worth doing regardless of provider |
+| 2 | Corners/cards settlement — needs a stats source + resolver branches, **not** a guard change | **Open** |
 | 3 | Trial BetsAPI ($1/one-day) and probe id-mapping quality | **Open** |
 | 4 | Cards: booking-point approximation vs. keep manual | **Open** — decide deliberately, not by default |
 | 5 | Extend `MatchResult` beyond `{homeGoals, awayGoals, status}` | Blocked on #3 |
