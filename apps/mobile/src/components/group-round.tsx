@@ -572,6 +572,8 @@ export function SubmitLegForm({
   editLegId,
   onCancel,
   title,
+  legSlot,
+  legsPerMember,
   existingLegs = [],
 }: {
   roundId: string;
@@ -581,6 +583,10 @@ export function SubmitLegForm({
   editLegId?: string;
   onCancel?: () => void;
   title?: string;
+  /** 1-based slot for the leg being submitted (multi-leg rounds). */
+  legSlot?: number;
+  /** Group quota — used for multi-leg progress copy. */
+  legsPerMember?: number;
   /** Other legs already on this round — used to block occupied fixtures. */
   existingLegs?: MarketConflictLeg[];
 }) {
@@ -696,6 +702,22 @@ export function SubmitLegForm({
     isFixtureTaken(existingLegs, f.id, editLegId)
   );
 
+  function resetLegSelection() {
+    setFixtureId("");
+    setMarketType("");
+    setSelectionId("");
+    setFixtureMarkets([]);
+    setLoadedTiers([]);
+    setAvailableTiers([]);
+    setMarketsError("");
+    setError("");
+    if (competitions.length === 1) {
+      setCompetitionId(competitions[0]!.id);
+    } else {
+      setCompetitionId("");
+    }
+  }
+
   async function handleSubmit() {
     setLoading(true);
     setError("");
@@ -720,6 +742,9 @@ export function SubmitLegForm({
           token,
           body: JSON.stringify(body),
         });
+      }
+      if (!editLegId) {
+        resetLegSelection();
       }
       onSubmitted();
     } catch (e) {
@@ -759,6 +784,19 @@ export function SubmitLegForm({
       <Text style={styles.sectionTitle}>
         {title ?? (editLegId ? "Change your leg" : "Submit your leg")}
       </Text>
+
+      {!editLegId && legsPerMember != null && legsPerMember > 1 && legSlot != null ? (
+        <Text
+          style={[
+            styles.multiLegHint,
+            legSlot > 1 && styles.multiLegHintActive,
+          ]}
+        >
+          {legSlot === 1
+            ? copy.legPicker.multiLegFirst(legsPerMember)
+            : copy.legPicker.multiLegNext(legSlot - 1, legSlot)}
+        </Text>
+      ) : null}
 
       <Text style={styles.stepLabel}>1. Competition</Text>
       {competitions.map((c) => (
@@ -1077,6 +1115,22 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginTop: 8,
     marginBottom: 4,
+  },
+  multiLegHint: {
+    color: colors.muted,
+    fontSize: 14,
+    marginTop: 8,
+    marginBottom: 4,
+    lineHeight: 20,
+  },
+  multiLegHintActive: {
+    color: colors.text,
+    backgroundColor: colors.accentMuted,
+    borderColor: colors.accent,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
   fixtureRule: {
     color: colors.muted,

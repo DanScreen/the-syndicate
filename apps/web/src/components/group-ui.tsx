@@ -233,6 +233,8 @@ export function SubmitLegForm({
   editLegId,
   onCancel,
   title,
+  legSlot,
+  legsPerMember,
   existingLegs = [],
 }: {
   roundId: string;
@@ -242,6 +244,10 @@ export function SubmitLegForm({
   onCancel?: () => void;
   /** Override default heading (e.g. "Submit leg 2 of 3"). */
   title?: string;
+  /** 1-based slot for the leg being submitted (multi-leg rounds). */
+  legSlot?: number;
+  /** Group quota — used for multi-leg progress copy. */
+  legsPerMember?: number;
   /** Other legs already on this round — used to block occupied fixtures. */
   existingLegs?: MarketConflictLeg[];
 }) {
@@ -370,6 +376,22 @@ export function SubmitLegForm({
     isFixtureTaken(existingLegs, f.id, editLegId)
   );
 
+  function resetLegSelection() {
+    setFixtureId("");
+    setMarketType("");
+    setSelectionId("");
+    setFixtureMarkets([]);
+    setLoadedTiers([]);
+    setAvailableTiers([]);
+    setMarketsError("");
+    setError("");
+    if (competitions.length === 1) {
+      setCompetitionId(competitions[0]!.id);
+    } else {
+      setCompetitionId("");
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -401,6 +423,9 @@ export function SubmitLegForm({
       return;
     }
 
+    if (!editLegId) {
+      resetLegSelection();
+    }
     onSubmitted();
   }
 
@@ -437,6 +462,20 @@ export function SubmitLegForm({
           </span>
         )}
       </div>
+
+      {!editLegId && legsPerMember != null && legsPerMember > 1 && legSlot != null && (
+        <div
+          className={`rounded-lg border px-4 py-3 text-sm ${
+            legSlot > 1
+              ? "border-accent/40 bg-accent-muted/30 text-foreground"
+              : "border-border bg-background text-muted"
+          }`}
+        >
+          {legSlot === 1
+            ? `You'll pick ${legsPerMember} legs from different fixtures — start with leg 1.`
+            : `Leg ${legSlot - 1} saved. Pick a different fixture for leg ${legSlot}.`}
+        </div>
+      )}
 
       {source === "mock" && (
         <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">

@@ -13,10 +13,12 @@ import { Button, Card, ErrorText } from "@/components/ui";
 import { colors } from "@/config";
 import { useGroupData } from "@/context/group-data";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
   Alert,
+  Easing,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -47,6 +49,13 @@ export default function GroupRoundScreen() {
   const [selectedRoundId, setSelectedRoundId] = useState<string | null>(null);
   const [creatingRound, setCreatingRound] = useState(false);
   const [createRoundError, setCreateRoundError] = useState("");
+  const [legCelebration, setLegCelebration] = useState<"Leg added" | "All legs added" | null>(
+    null
+  );
+  const celebrationOpacity = useRef(new Animated.Value(0)).current;
+  const celebrationScale = useRef(new Animated.Value(0.92)).current;
+  const previousRoundRef = useRef<string | null>(null);
+  const previousLegCountRef = useRef(0);
 
   const activeRounds =
     data?.activeRounds?.length
@@ -174,6 +183,55 @@ export default function GroupRoundScreen() {
       announcementByLegId.set(message.legId, message);
     }
   }
+
+  useEffect(() => {
+    if (!round) return;
+    if (previousRoundRef.current !== round.id) {
+      previousRoundRef.current = round.id;
+      previousLegCountRef.current = myLegs.length;
+      setLegCelebration(null);
+      return;
+    }
+
+    const previousCount = previousLegCountRef.current;
+    if (round.status === "open" && myLegs.length > previousCount && !editingLegId) {
+      setLegCelebration(myLegs.length >= legsPerMember ? "All legs added" : "Leg added");
+    }
+    previousLegCountRef.current = myLegs.length;
+  }, [editingLegId, legsPerMember, myLegs.length, round]);
+
+  useEffect(() => {
+    if (!legCelebration) return;
+    celebrationOpacity.setValue(0);
+    celebrationScale.setValue(0.92);
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(celebrationOpacity, {
+          toValue: 1,
+          duration: 190,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(celebrationScale, {
+          toValue: 1,
+          duration: 240,
+          easing: Easing.out(Easing.back(1.3)),
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.delay(950),
+      Animated.timing(celebrationOpacity, {
+        toValue: 0,
+        duration: 220,
+        easing: Easing.in(Easing.quad),
+        useNativeDriver: true,
+      }),
+    ]).start(({ finished }) => {
+      if (finished) {
+        setLegCelebration(null);
+      }
+    });
+  }, [celebrationOpacity, celebrationScale, legCelebration]);
 
   return (
     <ScrollView
@@ -338,20 +396,6 @@ export default function GroupRoundScreen() {
         );
       })()}
 
-      {canSubmitMore && !editingLegId && round && token ? (
-        <SubmitLegForm
-          roundId={round.id}
-          token={token}
-          onSubmitted={reload}
-          existingLegs={round.legs}
-          title={
-            legsPerMember > 1
-              ? `Submit leg ${nextSlot} of ${legsPerMember}`
-              : undefined
-          }
-        />
-      ) : null}
-
       {myLegs.length > 0 && editWindowOpen && !editingLegId ? (
         <Card>
           <Text style={styles.editTitle}>Your picks</Text>
@@ -408,6 +452,35 @@ export default function GroupRoundScreen() {
         </Card>
       ) : null}
 
+      {canSubmitMore && !editingLegId && round && token ? (
+        <View style={styles.legSubmitWrap}>
+          {legCelebration ? (
+            <Animated.View
+              style={[
+                styles.legCelebration,
+                { opacity: celebrationOpacity, transform: [{ scale: celebrationScale }] },
+              ]}
+            >
+              <Text style={styles.legCelebrationText}>{legCelebration}</Text>
+            </Animated.View>
+          ) : null}
+          <SubmitLegForm
+            key={`submit-leg-${myLegs.length}`}
+            roundId={round.id}
+            token={token}
+            onSubmitted={reload}
+            existingLegs={round.legs}
+            legSlot={nextSlot}
+            legsPerMember={legsPerMember}
+            title={
+              legsPerMember > 1
+                ? `Submit leg ${nextSlot} of ${legsPerMember}`
+                : undefined
+            }
+          />
+        </View>
+      ) : null}
+
       {editingLegId && editWindowOpen && round && token ? (
         <SubmitLegForm
           roundId={round.id}
@@ -453,6 +526,21 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
   },
   section: { gap: 8 },
+  legSubmitWrap: { gap: 8 },
+  legCelebration: {
+    borderWidth: 1,
+    borderColor: colors.accent,
+    backgroundColor: colors.accentMuted,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    alignItems: "center",
+  },
+  legCelebrationText: {
+    color: colors.accent,
+    fontSize: 14,
+    fontWeight: "700",
+  },
   sectionTitle: { color: colors.text, fontSize: 18, fontWeight: "600" },
   meta: { color: colors.muted, fontSize: 13 },
   activeBetsHeader: {
