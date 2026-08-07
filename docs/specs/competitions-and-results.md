@@ -60,7 +60,7 @@ If no single bookmaker covers all legs → best-per-leg combined odds locked at 
 | `bundesliga` | Bundesliga | `soccer_germany_bundesliga` | `BL1` |
 | `world-cup` | FIFA World Cup | `soccer_fifa_world_cup` | `WC` |
 
-**Phase 1b (backlog):** FA Cup (`soccer_fa_cup` / `FAC`), EFL Cup.
+**Phase 1b:** Carabao Cup / EFL Cup (`efl-cup`, Odds API `soccer_england_efl_cup`, manual settlement — football-data `FLC` not on free tier) **shipped**. FA Cup (`soccer_fa_cup` / `FAC`) still backlog.
 
 ---
 

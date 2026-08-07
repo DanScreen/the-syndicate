@@ -128,6 +128,16 @@ export const COMPETITIONS: Competition[] = [
     footballDataCode: "",
     manualSettlement: true,
   },
+  {
+    id: "efl-cup",
+    name: "Carabao Cup",
+    // The Odds API title is "EFL Cup"; Carabao is the current sponsor name
+    // UK fans use. football-data.org code is FLC but it is not on the free
+    // tier (Tier 2+), so auto-sync is skipped — same pattern as Europa League.
+    oddsApiSport: "soccer_england_efl_cup",
+    footballDataCode: "",
+    manualSettlement: true,
+  },
 ];
 
 export const DEFAULT_COMPETITION_ID = "world-cup";

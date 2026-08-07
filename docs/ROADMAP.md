@@ -47,7 +47,7 @@ Core loop and MVP polish are **shipped**:
 | # | Feature | Type | Notes |
 |---|---------|------|-------|
 | 1 | **Validate with real users** | Product | Run 2–3 friend groups through full loop on prod |
-| 2 | **Season readiness (2026–27)** | Mostly ops | Leagues can be enabled via `/admin/competitions` when ready; remaining code: cups + quiet-period empty states — [specs/season-readiness.md](./specs/season-readiness.md) (absorbs old "FA Cup + EFL Cup" item) |
+| 2 | **Season readiness (2026–27)** | Mostly ops | Leagues can be enabled via `/admin/competitions` when ready; remaining code: FA Cup + quiet-period empty states (Carabao Cup / EFL Cup shipped, manual settlement) — [specs/season-readiness.md](./specs/season-readiness.md) |
 | 3 | **Live matchday** | Code | Per-leg result push + acca-won push + live round view — [specs/live-matchday.md](./specs/live-matchday.md) |
 | 4 | **Settle-day recap share card** | Code | Auto recap image per settled round; invite loop — [specs/settle-recap-share.md](./specs/settle-recap-share.md) |
 | 5 | **Affiliate links** | Code + ops | Bookmaker affiliate programmes (start applications early — approval takes weeks) — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md) Phase A |

@@ -1,6 +1,6 @@
 # Current state (as-built)
 
-Last updated 27 July 2026 (Android store-launch progress). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
+Last updated 7 August 2026 (Carabao Cup / EFL Cup catalogue entry). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
 
 Production: **https://www.tikiacca.com** (apex → 301 to www via Cloudflare).
 
@@ -137,7 +137,7 @@ Example: acca @ 3.44 (legs 1.6 × 2.15) → **2.44** group pts; members **0.6** 
 
 ## Odds & competitions
 
-Thirteen competitions in `packages/shared/src/competitions.ts`, covering every competition available from both configured provider accounts: EPL, Championship, La Liga, Ligue 1, Serie A, Bundesliga, Eredivisie, Primeira Liga, Brazil Série A, Champions League, European Championship, Copa Libertadores, and World Cup. **Admin toggles** which are visible in the leg picker (`CompetitionSetting` table; `/admin/competitions`). Default: **World Cup only**; newly discovered catalogue rows are created disabled. Match sync fetches enabled competitions plus any disabled competition that still has a pending leg, avoiding unnecessary football-data.org calls without stranding settlement.
+Sixteen competitions in `packages/shared/src/competitions.ts`: EPL, Championship, La Liga, Ligue 1, Serie A, Bundesliga, Eredivisie, Primeira Liga, Brazil Série A, Champions League, European Championship, Copa Libertadores, World Cup, Champions League Qualification, Europa League, and Carabao Cup (EFL Cup). **Admin toggles** which are visible in the leg picker (`CompetitionSetting` table; `/admin/competitions`). Default: **World Cup only**; newly discovered catalogue rows are created disabled. Match sync fetches enabled competitions plus any disabled competition that still has a pending leg, skipping `manualSettlement` competitions (CL Qualification, Europa League, Carabao Cup — not on football-data.org free tier).
 
 Fixture list uses The Odds API with `commenceTimeFrom` in `YYYY-MM-DDTHH:MM:SSZ` format (no milliseconds) and client-side upcoming filter. When `ODDS_API_KEY` is set, **no mock fallback** — empty list if the bookmaker feed has no upcoming fixtures. **Production never serves demo fixtures**; mock data is local dev only (`source: "mock"`). Check `GET /api/health` → `odds: "configured" | "missing"`.
 
@@ -514,7 +514,7 @@ Recent migrations include `20260718190000_concurrent_group_bets` and `2026071819
 
 ## Known limitations
 
-1. **football-data.org free tier:** All 13 catalogue competitions are exposed by the configured account. Match sync only requests enabled competitions and competitions with pending legs; EPL/Championship may be empty off-season.
+1. **football-data.org free tier:** Free-tier competitions auto-sync when enabled (or when they have pending legs). **Manual settlement** competitions (Champions League Qualification, Europa League, Carabao Cup / EFL Cup — football-data `FLC` needs Tier 2+) are skipped by match sync; admins settle those legs in `/admin/settlement`. EPL/Championship may be empty off-season.
 2. **Settlement is system-only** — auto-settle runs after match sync (every 5 min); leg outcomes update as matches finish; round settles when **any leg loses** or **all legs are won/void**. Remaining legs on an early loss keep resolving via `applyDeferredLegOutcome()`. Owners cannot settle (routes removed July 2026). Overlapping settle attempts are safe — transactional, exactly-once via an atomic `locked → settled` claim (see [Settlement](#settlement)). Rounds the system cannot resolve are handled by admins via the **settlement queue** (`/admin/settlement`) — pending legs 2h+ after kickoff (including leftovers after early settle) are flagged for intervention.
 3. **Email notifications** require Resend setup (`RESEND_API_KEY`, `EMAIL_FROM`); skipped if unset.
 4. **Auto-settle requires synced `Match` rows** — 5-min cron or manual `POST /api/internal/sync-matches`.
