@@ -34,9 +34,10 @@ The Admin catalogue also includes Eredivisie, Primeira Liga, Brazil Série A, Ch
 
 ## Workstream B — FA Cup + EFL Cup (code)
 
-- [ ] Add `fa_cup` and `efl_cup` to `packages/shared/src/competitions.ts` (Odds API sport keys: `soccer_fa_cup`, `soccer_england_efl_cup`; football-data.org: FA Cup `FAC` — **check EFL Cup availability on free tier**; if unsynced, legs resolve via admin settlement queue only → consider deferring EFL Cup).
-- [ ] Seed `CompetitionSetting` rows (disabled by default; admin enables when rounds are scheduled).
-- [ ] Verify team-name matching between Odds API and football-data.org for lower-league cup entrants (`lib/results/football-data.ts` matching).
+- [x] Add `efl-cup` (Carabao Cup) to `packages/shared/src/competitions.ts` — Odds API `soccer_england_efl_cup`. football-data.org code `FLC` is **not** on the free tier → `manualSettlement: true` (admin settlement queue), same pattern as Workstream B2.
+- [ ] Add `fa-cup` (`soccer_fa_cup` / `FAC`) — FA Cup is also absent from the free-tier coverage list; expect the same manual-settlement pattern unless the football-data plan is upgraded.
+- [x] `CompetitionSetting` rows auto-seed disabled via `ensureSettingsRows()` when the catalogue gains an entry; admin enables when rounds are scheduled.
+- [ ] Verify team-name matching between Odds API and football-data.org for lower-league cup entrants (`lib/results/football-data.ts` matching) — only needed if/when FA Cup / EFL Cup move off manual settlement.
 
 ## Workstream B2 — UEFA summer qualifiers (shipped, manual settlement)
 
@@ -71,7 +72,7 @@ Add to operator docs: each May/June, review competition end dates, plan the summ
 | Question | Recommendation |
 |----------|----------------|
 | Enable all five leagues at once or stagger? | Stagger — Championship + EPL first; add continental leagues when their seasons start (credits + picker noise) |
-| EFL Cup without free-tier results sync? | Defer EFL Cup unless football-data.org covers it; FA Cup first |
+| EFL Cup without free-tier results sync? | **Shipped with manual settlement** (`efl-cup` / Carabao Cup). Auto-sync deferred until football-data Tier 2+ (`FLC`) or another results source. FA Cup still backlog. |
 | Summer 2027 fallow gap | Out of scope; note in ROADMAP when 2026–27 season ships |
 
 ## Related docs
