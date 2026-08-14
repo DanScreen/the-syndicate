@@ -1,6 +1,6 @@
 # Current state (as-built)
 
-Last updated 7 August 2026 (Carabao Cup / EFL Cup catalogue entry). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
+Last updated 14 August 2026 (admin Warm odds cache button). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
 
 Production: **https://www.tikiacca.com** (apex → 301 to www via Cloudflare).
 
@@ -153,7 +153,7 @@ POST /api/legs                        → best retail quote; stores competitionI
 
 At lock, `Leg.betslipUrl` stores the chosen bookmaker's **real** outcome/event deeplink (never a generic football hub); `Leg.bookmakerLinks` maps retail bookmakers → Odds API links only. **Hub URLs** (`BOOKMAKER_HUB_URLS`) are a last-resort UI fallback and are tagged `linkQuality: "hub"`. Matching featured and alternate market lines (for example, standard + alternate Over 2.5 goals) merge bookmaker quotes by market type, selection, and bookmaker, retaining the best quote and available deeplink; this avoids losing broader alternate-feed coverage. New/edited picks enforce **one leg per fixture per round** because The Odds API exposes single-selection prices, not bookmaker correlation-adjusted bet-builder prices; combined odds therefore multiply legs from separate fixtures only. Occupied fixtures are disabled with a short accuracy explanation in both pickers, and the public homepage FAQ provides the full rationale. **While bet is open:** leg picker shows best odds only; **Compare bookmakers** shows a live current ranking + refreshed deeplinks from current quotes. **Once locked:** **final combined odds** + the **Compare bookmakers** ranking captured at lock (so members can pick the best bookmaker when placing the bet); primary CTA opens the best available deeplink (first pick when multi-leg) until the first result, then tracking only. Per-leg **Open** uses `bookmakerLinks[recommendedBookmaker]` when present.
 
-Requires live odds (`ODDS_API_KEY`) — mock fixtures have no deeplinks. Odds are stored in **PostgreSQL** (`OddsBulkSnapshot`, `OddsEventSnapshot`) and refreshed by cron (`POST /api/internal/warm-odds-cache`). User picks read the DB; set `ODDS_DB_ONLY=true` in production to block live API calls from user traffic.
+Requires live odds (`ODDS_API_KEY`) — mock fixtures have no deeplinks. Odds are stored in **PostgreSQL** (`OddsBulkSnapshot`, `OddsEventSnapshot`) and refreshed by cron (`POST /api/internal/warm-odds-cache`) or on demand from **Admin → Odds** (`POST /api/admin/warm-odds-cache` — same `warmOddsCache()` path). User picks read the DB; set `ODDS_DB_ONLY=true` in production to block live API calls from user traffic.
 
 **Estimated odds fill** (dormant — [specs/estimated-odds-fill.md](./specs/estimated-odds-fill.md)): thin selections (few real bookmaker quotes) can be backfilled with a haircut-median estimate (`estimated: true` on `BookmakerQuote`) so the comparison table stays visually full. Applied at market-build time in `mapOddsEventToFixture` / `mapEventToExtendedMarkets`, gated on `ESTIMATED_ODDS_ENABLED` (env, deploy-level) **and** an admin runtime toggle at `/admin/odds` (`PlatformSetting` row, `GET`/`PATCH /api/admin/estimated-odds`) — both must be on. `sortQuotesByBestOdds`/`topQuotes` (`packages/shared/src/bookmakers.ts`) exclude estimated quotes so leg creation, round lock, and acca maths stay real-only; `sortQuotesForDisplay` is the opt-in variant for the UI. Off by default in production.
 
@@ -227,7 +227,7 @@ Protected routes enforced in `apps/web/src/middleware.ts` / `auth.config.ts`: `/
 | `/admin/settlement` | **Admin** — settlement queue: locked rounds, overdue legs (2h+ after KO), manual settle |
 | `/admin/leaderboards` | **Admin** — group & player rankings by points |
 | `/admin/competitions` | **Admin** — enable/disable competitions in leg picker |
-| `/admin/odds` | **Admin** — Odds API diagnostics (fixture pipeline) |
+| `/admin/odds` | **Admin** — Odds API diagnostics + **Warm odds cache now** (same job as cron) |
 | `/groups/create` | Create group (auth required; legs-per-member picker) |
 | `/groups/join` | Join group — **public**; signed-out shows Sign in / Sign up (keeps `?code=`); signed-in auto-joins when `?code=` present |
 | `/groups/[id]` | **Round** tab — active-bet switcher, new-bet action, multi-leg picker, picks, lock, settle |
@@ -508,6 +508,7 @@ Recent migrations include `20260718190000_concurrent_group_bets` and `2026071819
 | `PATCH /api/admin/competitions` | Admin | Enable/disable competition for users |
 | `POST /api/admin/rounds/[id]/settle` | Admin | Manual settle (escape hatch for stuck rounds) |
 | `GET /api/admin/odds-diagnostics` | Admin | Probe Odds API pipeline (`?competition=`) |
+| `POST /api/admin/warm-odds-cache` | Admin | Manually run odds warm (same as cron; uses credits) |
 | `GET /api/health` | Public | Health check (+ `odds: configured|missing`) |
 
 ---
@@ -522,7 +523,7 @@ Recent migrations include `20260718190000_concurrent_group_bets` and `2026071819
 6. **Betslip deeplinks** — selection/event links from Odds API (`includeLinks`); hubs only as labelled last resort. **No one-click full multi-leg betslip** for most UK books — CTA opens first available pick; users add remaining legs via per-leg Open. Mock mode has hubs only.
 7. **The Odds API quota** — credits = `markets × regions`. Cron warm: **3** bulk + **5 × N** core per enabled competition every 6 h (`N` = fixtures within `ODDS_WARM_CORE_WITHIN_HOURS`, default 72). User “specials” tier = **7** per fixture on demand only. Set `ODDS_DB_ONLY=true` so users do not call the API. See [DEPLOYMENT.md](./DEPLOYMENT.md#the-odds-api--calls-credits--cron).
 8. **Terraform CI** needs `storage.objectAdmin` on the deploy SA for the GCS state bucket. If CI fails with `storage.objects.list` denied, grant bucket access once (see [infra/terraform/README.md](../infra/terraform/README.md#terraform-ci-state-bucket-access)), then re-run the workflow. `deploy.yml` bootstraps `CRON_SECRET` in Secret Manager from the GitHub secret when missing.
-9. **Odds snapshots in PostgreSQL** — shared across Cloud Run instances; refreshed by `POST /api/internal/warm-odds-cache` (Cloud Scheduler job in Terraform). Set `ODDS_DB_ONLY=true` so users never burn API credits. In-memory cache remains for quota block/snapshot and football-data only.
+9. **Odds snapshots in PostgreSQL** — shared across Cloud Run instances; refreshed by `POST /api/internal/warm-odds-cache` (Cloud Scheduler job in Terraform) or admin **Warm odds cache now** on `/admin/odds`. Set `ODDS_DB_ONLY=true` so users never burn API credits. In-memory cache remains for quota block/snapshot and football-data only.
 10. **Mobile app** — Native app code complete, feature parity across iOS/Android (single codebase, no platform forks). **iOS live in App Store Connect** (submitted, build 5). **Android** built and ready (Firebase push wired up) but not yet submitted — blocked on Play Console ID verification, see [ANDROID_LAUNCH.md](../apps/mobile/ANDROID_LAUNCH.md). Dev testing: Expo Go or `expo run:ios --device` ([DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md)); friend distribution via [FRIEND_TESTING.md](../apps/mobile/FRIEND_TESTING.md). Leg-edit parity shipped (same "Change my pick" flow as web). Admin pages are web-only by design.
 11. **Auth JWT** — middleware uses edge-safe `auth.config.ts` (no Prisma); `auth.ts` refreshes `role` from DB on each session update.
 12. **Chat realtime** — the permanent group thread polls every 20 seconds while the Chat tab is visible; no WebSocket/SSE, typing indicators, read receipts, media, or reaction notifications in v1. Chat push needs Expo/APNs/FCM setup on a physical device.

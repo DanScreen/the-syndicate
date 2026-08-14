@@ -12,7 +12,7 @@ export default function AdminOddsDiagnosticsPage() {
   return (
     <AdminPageShell
       title="Odds Diagnostics"
-      description="Probe The Odds API and see how many fixtures survive each filter step."
+      description="Warm DB odds snapshots for enabled competitions, or probe The Odds API pipeline."
       path="/admin/odds"
     >
       <div className="space-y-6">

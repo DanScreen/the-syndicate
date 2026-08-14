@@ -80,6 +80,7 @@ Settlement is system-only (owners cannot settle), so this page is the **escape h
 | `GET /api/admin/competitions` | Admin session | Catalogue + enabled flags |
 | `PATCH /api/admin/competitions` | Admin session | Toggle `{ competitionId, enabled }` |
 | `GET /api/admin/odds-diagnostics` | Admin session | Odds API probe (`?competition=world-cup`) |
+| `POST /api/admin/warm-odds-cache` | Admin session | Manually warm odds DB snapshots (same as cron) |
 | `POST /api/admin/rounds/[id]/settle` | Admin session | Manual settle — outcomes for every leg (escape hatch) |
 | `POST /api/analytics/events` | Web session / mobile bearer | Authenticated page/screen or foreground activity; server derives user, channel, and visit |
 
