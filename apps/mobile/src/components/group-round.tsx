@@ -681,14 +681,20 @@ export function SubmitLegForm({
         `/api/fixtures/${fixtureId}/markets?competition=${competitionId}&tier=${tierId}`,
         { token }
       );
+      const markets = data.markets ?? [];
       setFixtureMarkets((prev) => {
         const byType = new Map(prev.map((m) => [m.type, m]));
-        for (const market of data.markets ?? []) byType.set(market.type, market);
+        for (const market of markets) byType.set(market.type, market);
         return [...byType.values()];
       });
       setLoadedTiers((prev) => [...prev, tierId]);
+      if (markets.length === 0) {
+        const label =
+          availableTiers.find((t) => t.id === tierId)?.label ?? "Those markets";
+        setMarketsError(copy.legPicker.marketsEmptyTier(label));
+      }
     } catch {
-      setMarketsError("Failed to load markets");
+      setMarketsError(copy.legPicker.marketsError);
     } finally {
       setLoadingTierId("");
     }

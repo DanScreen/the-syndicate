@@ -355,12 +355,20 @@ export function SubmitLegForm({
         setMarketsError(data.error ?? "Failed to load markets");
         return;
       }
+      const markets = (data.markets ?? []) as Market[];
       setFixtureMarkets((prev) => {
         const byType = new Map(prev.map((m) => [m.type, m]));
-        for (const market of data.markets ?? []) byType.set(market.type, market);
+        for (const market of markets) byType.set(market.type, market);
         return [...byType.values()];
       });
       setLoadedTiers((prev) => [...prev, tierId]);
+      if (markets.length === 0) {
+        const label =
+          availableTiers.find((t) => t.id === tierId)?.label ?? "Those markets";
+        setMarketsError(
+          `${label} aren't available for this fixture from UK bookmakers right now.`
+        );
+      }
     } catch {
       setMarketsError("Failed to load markets");
     } finally {
