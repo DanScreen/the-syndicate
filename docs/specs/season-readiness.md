@@ -30,7 +30,7 @@ The **World Cup is the only competition enabled by default** (`CompetitionSettin
 - [ ] Disable World Cup once the final settles and all groups' World Cup rounds are resolved (competitions with pending legs keep syncing after they are disabled, so late settlement remains safe).
 - [ ] Confirm odds warm cron budget with multiple competitions re-enabled — see [DEPLOYMENT.md](../DEPLOYMENT.md#the-odds-api--calls-credits--cron); `3 × competitions + 5 × N` per run.
 
-The Admin catalogue also includes Eredivisie, Primeira Liga, Brazil Série A, Champions League, European Championship, and Copa Libertadores. These entries were added disabled and can be staged independently. Match sync only requests enabled competitions plus competitions with pending legs.
+The Admin catalogue also includes Eredivisie, Primeira Liga, Brazil Série A, Champions League, European Championship, Copa Libertadores, League One, and League Two. These entries were added disabled and can be staged independently. League One / League Two use `manualSettlement: true` (football-data `EL1`/`EL2` not on free tier). Match sync only requests enabled competitions plus competitions with pending legs.
 
 ## Workstream B — FA Cup + EFL Cup (code)
 
