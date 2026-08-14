@@ -58,6 +58,18 @@ type Diagnostics = {
   interpretation: string[];
 };
 
+type WarmCompetitionResult = {
+  competitionId: string;
+  bulk: { ok: boolean; fixtureCount: number; error?: string };
+  core: { warmed: number; skipped: number; errors: string[] };
+  outright: { ok: boolean; refreshed: boolean; error?: string };
+};
+
+type WarmResult = {
+  competitions: WarmCompetitionResult[];
+  cleanup: { bulkDeleted: number; eventDeleted: number; outrightDeleted: number };
+};
+
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="rounded-lg border border-border bg-card px-4 py-3">
@@ -83,6 +95,9 @@ export function AdminOddsDiagnosticsPanel() {
   const [diagnostics, setDiagnostics] = useState<Diagnostics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [warming, setWarming] = useState(false);
+  const [warmError, setWarmError] = useState("");
+  const [warmResult, setWarmResult] = useState<WarmResult | null>(null);
 
   const load = useCallback(
     async (probe: boolean) => {
@@ -106,8 +121,87 @@ export function AdminOddsDiagnosticsPanel() {
     void load(false);
   }, [load]);
 
+  async function runWarm() {
+    setWarming(true);
+    setWarmError("");
+    setWarmResult(null);
+    try {
+      const res = await fetch("/api/admin/warm-odds-cache", { method: "POST" });
+      const data = (await res.json().catch(() => ({}))) as {
+        warmed?: WarmResult;
+        error?: string;
+      };
+      if (!res.ok) {
+        setWarmError(data.error ?? "Warm failed");
+        return;
+      }
+      setWarmResult(data.warmed ?? null);
+      await load(false);
+    } catch {
+      setWarmError("Warm request failed — check the network or Cloud Run timeout");
+    } finally {
+      setWarming(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
+      <section className="rounded-xl border border-border bg-card p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="font-semibold">Warm odds cache</h2>
+            <p className="mt-1 text-sm text-muted">
+              Same job as the 6-hour cron: refresh DB snapshots for every{" "}
+              <span className="text-foreground">enabled</span> competition so the leg picker has
+              fixtures under <code className="text-foreground">ODDS_DB_ONLY</code>. Uses API
+              credits.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void runWarm()}
+            disabled={warming || loading}
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:bg-accent-bright disabled:opacity-50"
+          >
+            {warming ? "Warming…" : "Warm odds cache now"}
+          </button>
+        </div>
+        {warmError && (
+          <div className="mt-4 rounded-lg border border-danger-strong/40 bg-danger-strong/10 px-3 py-2 text-sm text-red-300">
+            {warmError}
+          </div>
+        )}
+        {warmResult && (
+          <div className="mt-4 space-y-2 text-sm">
+            <p className="text-muted">
+              Warmed {warmResult.competitions.length} competition
+              {warmResult.competitions.length === 1 ? "" : "s"}. Cleanup deleted{" "}
+              {warmResult.cleanup.bulkDeleted} bulk / {warmResult.cleanup.eventDeleted} event /{" "}
+              {warmResult.cleanup.outrightDeleted} outright snapshots.
+            </p>
+            <ul className="space-y-1">
+              {warmResult.competitions.map((entry) => (
+                <li key={entry.competitionId} className="rounded-lg border border-border px-3 py-2">
+                  <span className="font-medium">{entry.competitionId}</span>
+                  {entry.bulk.ok ? (
+                    <span className="ml-2 text-muted">
+                      {entry.bulk.fixtureCount} fixtures · core warmed {entry.core.warmed}
+                      {entry.core.errors.length > 0
+                        ? ` · ${entry.core.errors.length} core error(s)`
+                        : ""}
+                    </span>
+                  ) : (
+                    <span className="ml-2 text-red-300">
+                      bulk failed{entry.bulk.error ? `: ${entry.bulk.error}` : ""}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </section>
+
       <div className="flex flex-wrap items-end gap-3">
         <label className="text-sm">
           <span className="mb-1 block text-muted">Competition</span>
@@ -126,7 +220,7 @@ export function AdminOddsDiagnosticsPanel() {
         <button
           type="button"
           onClick={() => void load(false)}
-          disabled={loading}
+          disabled={loading || warming}
           className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-card disabled:opacity-50"
         >
           {loading ? "Loading…" : "Refresh cache info"}
@@ -134,8 +228,8 @@ export function AdminOddsDiagnosticsPanel() {
         <button
           type="button"
           onClick={() => void load(true)}
-          disabled={loading}
-          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:bg-accent-bright disabled:opacity-50"
+          disabled={loading || warming}
+          className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-card disabled:opacity-50"
         >
           {loading ? "Probing…" : "Probe API (uses credits)"}
         </button>
@@ -143,7 +237,9 @@ export function AdminOddsDiagnosticsPanel() {
 
       <p className="text-xs text-muted">
         Bulk fixture fetches cost several API credits per call. This page loads cache metadata by
-        default — only probe when you need a live check.
+        default — only probe when you need a live check. Prefer{" "}
+        <span className="text-foreground">Warm odds cache now</span> after enabling competitions so
+        users see fixtures without waiting for the next cron run.
       </p>
 
       {error && (
