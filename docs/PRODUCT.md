@@ -69,7 +69,7 @@ Platform admins (`ADMIN_EMAILS`) see an **Admin** tab in the header with `/admin
 - [x] Solo accas — one-member groups build up to 10 legs and lock manually (web + mobile)
 - [x] Concurrent group bets — owner cap 1–5, member creation guard, active-bet switcher (web + mobile; owner testing pending)
 - [x] Live odds (The Odds API) + extended markets
-- [x] Per-leg competition picker (EPL, Championship, top European leagues, World Cup)
+- [x] Per-leg competition picker (EPL, Championship, League One/Two, top European leagues, World Cup)
 - [x] One leg per fixture per round (avoids inaccurate same-match bet-builder multiplication)
 - [x] Leg submit, acca lock, acca bookmaker rankings
 - [x] Real bookmaker betslip deeplinks

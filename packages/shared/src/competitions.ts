@@ -43,6 +43,23 @@ export const COMPETITIONS: Competition[] = [
     footballDataCode: "ELC",
   },
   {
+    id: "league-one",
+    name: "League One",
+    oddsApiSport: "soccer_england_league1",
+    // football-data.org code is EL1 but it is not on the free tier, so
+    // auto-sync is skipped — same pattern as League Two / Carabao Cup.
+    footballDataCode: "",
+    manualSettlement: true,
+  },
+  {
+    id: "league-two",
+    name: "League Two",
+    oddsApiSport: "soccer_england_league2",
+    // football-data.org code is EL2 but it is not on the free tier.
+    footballDataCode: "",
+    manualSettlement: true,
+  },
+  {
     id: "la-liga",
     name: "La Liga",
     oddsApiSport: "soccer_spain_la_liga",
