@@ -694,6 +694,7 @@ export function SubmitLegForm({
     }
   }
 
+  const competition = competitions.find((c) => c.id === competitionId);
   const fixture = fixtures.find((f) => f.id === fixtureId);
   const allMarkets = useMemo(
     () => mergeMarkets(fixture?.markets ?? [], fixtureMarkets),
@@ -802,15 +803,46 @@ export function SubmitLegForm({
         </Text>
       ) : null}
 
-      <Text style={styles.stepLabel}>1. Competition</Text>
-      {competitions.map((c) => (
-        <OptionRow
-          key={c.id}
-          label={c.name}
-          selected={competitionId === c.id}
-          onPress={() => setCompetitionId(c.id)}
-        />
-      ))}
+      {!competitionId ? (
+        <>
+          <Text style={styles.stepLabel}>1. Competition</Text>
+          {competitions.map((c) => (
+            <OptionRow
+              key={c.id}
+              label={c.name}
+              selected={false}
+              onPress={() => {
+                setCompetitionId(c.id);
+                setFixtureId("");
+                setMarketType("");
+                setSelectionId("");
+              }}
+            />
+          ))}
+        </>
+      ) : null}
+
+      {competition ? (
+        <View style={styles.selectedMarket}>
+          <View style={styles.selectedMarketCopy}>
+            <Text style={styles.selectedMarketEyebrow}>1. Selected competition</Text>
+            <Text style={styles.selectedMarketLabel}>{competition.name}</Text>
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Change competition from ${competition.name}`}
+            onPress={() => {
+              setCompetitionId("");
+              setFixtureId("");
+              setMarketType("");
+              setSelectionId("");
+            }}
+            style={({ pressed }) => pressed && styles.pressed}
+          >
+            <Text style={styles.changeMarket}>Change competition</Text>
+          </Pressable>
+        </View>
+      ) : null}
 
       {competitionId && loadingFixtures ? (
         <ActivityIndicator color={colors.accent} style={{ marginVertical: 12 }} />

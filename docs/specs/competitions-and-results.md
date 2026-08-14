@@ -54,13 +54,15 @@ If no single bookmaker covers all legs → best-per-leg combined odds locked at 
 |------|--------------|--------------------------|----------------------|
 | `epl` | Premier League | `soccer_epl` | `PL` |
 | `championship` | Championship | `soccer_efl_champ` | `ELC` |
+| `league-one` | League One | `soccer_england_league1` | — (manual; `EL1` not on free tier) |
+| `league-two` | League Two | `soccer_england_league2` | — (manual; `EL2` not on free tier) |
 | `la-liga` | La Liga | `soccer_spain_la_liga` | `PD` |
 | `ligue-1` | Ligue 1 | `soccer_france_ligue_one` | `FL1` |
 | `serie-a` | Serie A | `soccer_italy_serie_a` | `SA` |
 | `bundesliga` | Bundesliga | `soccer_germany_bundesliga` | `BL1` |
 | `world-cup` | FIFA World Cup | `soccer_fifa_world_cup` | `WC` |
 
-**Phase 1b:** Carabao Cup / EFL Cup (`efl-cup`, Odds API `soccer_england_efl_cup`, manual settlement — football-data `FLC` not on free tier) **shipped**. FA Cup (`soccer_fa_cup` / `FAC`) still backlog.
+**Phase 1b:** Carabao Cup / EFL Cup (`efl-cup`, Odds API `soccer_england_efl_cup`, manual settlement — football-data `FLC` not on free tier) **shipped**. League One + League Two (`league-one` / `league-two`, Odds API `soccer_england_league1` / `soccer_england_league2`, manual settlement — `EL1`/`EL2` not on free tier) **shipped**. FA Cup (`soccer_fa_cup` / `FAC`) still backlog.
 
 ---
 
