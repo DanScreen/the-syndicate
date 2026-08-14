@@ -118,11 +118,17 @@ async function loadExtendedMarkets(
   // there's no per-event tier endpoint to call for them.
   if (isOutrightFixtureId(fixtureId)) return [];
 
-  let snapshot = await readEventMarkets(competitionId, fixtureId, tierId);
-  if (!snapshot && !oddsDbOnly()) {
+  const snapshot = await readEventMarkets(competitionId, fixtureId, tierId);
+  if (snapshot) return snapshot.markets;
+
+  // Specials (corners & cards) are never cron-warmed — always allow a live
+  // fetch on miss even when ODDS_DB_ONLY=true. Core stays DB-only so ordinary
+  // picks don't burn Odds API credits.
+  const canLiveFetch = !oddsDbOnly() || tierId === "specials";
+  if (canLiveFetch) {
     return refreshEventMarketsFromApi(competitionId, fixtureId, tierId);
   }
-  return snapshot?.markets ?? [];
+  return [];
 }
 
 export async function getExtendedMarketsForTier(

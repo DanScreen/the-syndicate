@@ -24,6 +24,8 @@ export const copy = {
     noFixturesMock: "No demo fixtures available.",
     loadingMarkets: "Loading popular markets…",
     marketsError: "Failed to load markets",
+    marketsEmptyTier: (label: string) =>
+      `${label} aren't available for this fixture from UK bookmakers right now.`,
     bestOddsHint:
       "You'll submit at the best available odds. The group acca bookmaker is chosen when all legs are in.",
     multiLegFirst: (legsPerMember: number) =>

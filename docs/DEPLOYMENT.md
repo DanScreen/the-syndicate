@@ -152,7 +152,7 @@ Each **`warm-odds-cache`** run (`apps/web/src/lib/odds/warm-cache.ts`), per **ad
 1. **Bulk fixtures** — one `GET /sports/{sport}/odds` with markets `h2h,spreads,totals` → **3 credits** (3 markets × 1 region).
 2. **Core extended markets** — one `GET /sports/{sport}/events/{id}/odds` per upcoming fixture kicking off within `ODDS_WARM_CORE_WITHIN_HOURS` (default **72 h**), markets `btts`, `double_chance`, `correct_score`, `alternate_spreads`, `alternate_totals` → **5 credits per fixture**.
 
-**Specials** (corners & cards, 7 credits per fixture) are **not** warmed by cron — only fetched when a user clicks “Load more markets” (or on cache miss if `ODDS_DB_ONLY` is unset).
+**Specials** (corners & cards, 7 credits per fixture) are **not** warmed by cron — fetched when a user clicks “Load more markets”. That on-demand live fetch is **allowed even when `ODDS_DB_ONLY=true`** (otherwise the button would always no-op); the result is written to `OddsEventSnapshot` for later reads.
 
 **Credits per warm run:**
 
@@ -174,9 +174,9 @@ Tune `warm_odds_cache_schedule`, `ODDS_WARM_CORE_WITHIN_HOURS`, and enabled comp
 
 ### User-facing calls (avoid in production)
 
-When `ODDS_DB_ONLY=true` (recommended), user routes read PostgreSQL only — **zero** Odds API calls from picks, fixture lists, or lock.
+When `ODDS_DB_ONLY=true` (recommended), bulk fixtures, core tiers, picks, and lock read PostgreSQL only — **zero** Odds API calls for those paths. **Specials** remain an intentional on-demand exception (see above).
 
-When `ODDS_DB_ONLY` is unset/false, the app may call the API on cache miss:
+When `ODDS_DB_ONLY` is unset/false, the app may call the API on cache miss for bulk/core as well:
 
 | Trigger | Endpoint / code path | Credits |
 |---------|----------------------|---------|
@@ -194,7 +194,7 @@ Round **lock** re-reads quotes from the DB via `findSelection` — it does not c
 
 | Setting | Value | Why |
 |---------|-------|-----|
-| `ODDS_DB_ONLY` | `true` | Users never burn credits |
+| `ODDS_DB_ONLY` | `true` | Bulk/core never burn credits; specials still on demand |
 | `ODDS_WARM_CORE_WITHIN_HOURS` | `72` (or lower near tournament) | Limits per-fixture core warms |
 | `warm_odds_cache_schedule` | `0 */6 * * *` or less frequent | Balance freshness vs quota |
 | Enabled competitions | Minimum needed | Each adds **3 credits** per warm run |
