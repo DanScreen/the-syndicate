@@ -90,7 +90,7 @@ Web uses Auth.js cookies; mobile uses a random **Bearer session token** on every
 | Group round | `group-ui.tsx` (full) | `groups/[id].tsx` + `components/group-round.tsx` |
 | Concurrent bets | Active-bet switcher + guarded member creation | Same switcher, stable Bet # labels, owner 1–5 setting |
 | Group chat | Dedicated permanent Chat tab + group-scoped API | Same longstanding Chat tab, Bet-labelled lifecycle events, reactions, unread badge |
-| Leg picker | Progressive 4-step + competition + market tiers | `SubmitLegForm` — competition, tiers (core + load more), grouped markets; selected market collapses into outcomes |
+| Leg picker | Progressive 4-step + competition + market tiers | `SubmitLegForm` — competition, tiers (core + load more), grouped markets; selected competition / fixture / market each collapse with Change controls |
 | Locked acca | `AccaSummary`, compare bookmakers until first result | `AccaSummary` + `LegsList` with outcomes; 60s poll when locked |
 | Group tabs | Round / Chat / History / Leaderboard / Performance | `groups/[id]/_layout.tsx` + tab screens |
 | Cross-group performance | `/performance` | `(main)/performance.tsx` |

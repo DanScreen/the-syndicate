@@ -368,6 +368,7 @@ export function SubmitLegForm({
     }
   }
 
+  const competition = competitions.find((c) => c.id === competitionId);
   const fixture = fixtures.find((f) => f.id === fixtureId);
   const allMarkets = useMemo(
     () => mergeMarkets(fixture?.markets ?? [], fixtureMarkets),
@@ -496,34 +497,52 @@ export function SubmitLegForm({
         </div>
       )}
 
-      <div className="space-y-2">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted">1. Pick a competition</p>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {competitions.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              aria-pressed={competitionId === c.id}
-              onClick={() => {
-                setCompetitionId(c.id);
-                setFixtureId("");
-                setMarketType("");
-                setSelectionId("");
-              }}
-              className={`rounded-lg border px-3 py-3 text-left text-sm transition-colors ${
-                competitionId === c.id
-                  ? "border-accent bg-accent-muted/30"
-                  : "border-border hover:border-accent/40"
-              }`}
-            >
-              <p className="flex items-center gap-1.5 font-medium">
-                {competitionId === c.id && <CheckIcon className="text-accent" />}
-                {c.name}
-              </p>
-            </button>
-          ))}
+      {!competitionId && (
+        <div className="space-y-2">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted">1. Pick a competition</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {competitions.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                aria-pressed={false}
+                onClick={() => {
+                  setCompetitionId(c.id);
+                  setFixtureId("");
+                  setMarketType("");
+                  setSelectionId("");
+                }}
+                className="rounded-lg border border-border px-3 py-3 text-left text-sm transition-colors hover:border-accent/40"
+              >
+                <p className="font-medium">{c.name}</p>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
+
+      {competition && (
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-accent/40 bg-accent-muted/20 px-3 py-3">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted">
+              1. Selected competition
+            </p>
+            <p className="mt-1 text-sm font-medium">{competition.name}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setCompetitionId("");
+              setFixtureId("");
+              setMarketType("");
+              setSelectionId("");
+            }}
+            className="shrink-0 text-sm font-medium text-accent hover:text-accent-bright"
+          >
+            Change competition
+          </button>
+        </div>
+      )}
 
       {competitionId && loadingFixtures && (
         <p className="text-sm text-muted">Loading fixtures...</p>

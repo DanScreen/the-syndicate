@@ -1,6 +1,6 @@
 # Current state (as-built)
 
-Last updated 14 August 2026 (League One + League Two catalogue). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
+Last updated 14 August 2026 (League One/Two + competition picker collapse). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
 
 Production: **https://www.tikiacca.com** (apex → 301 to www via Cloudflare).
 
@@ -198,7 +198,7 @@ Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_
 | `apps/web/src/lib/odds/bookmakers.ts` | Retail filter, sort best odds |
 | `packages/shared/src/bookmaker-branding.ts` | Favicon logo domains (incl. `sport888` → 888sport.com) |
 | `apps/web/src/components/bookmaker-logo.tsx` | Bookmaker logo + initials fallback (web) |
-| `apps/web/src/components/group-ui.tsx` | Progressive 4-step leg picker (fixture and market lists collapse after selection; **Change fixture** / **Change market** to browse again; multi-leg rounds reset picker after each submit, show leg progress copy, and trigger brief **Leg added** / **All legs added** celebrations), locked round picks, settle UI |
+| `apps/web/src/components/group-ui.tsx` | Progressive 4-step leg picker (competition, fixture, and market lists collapse after selection; **Change competition** / **Change fixture** / **Change market** to browse again; multi-leg rounds reset picker after each submit, show leg progress copy, and trigger brief **Leg added** / **All legs added** celebrations), locked round picks, settle UI |
 | `apps/web/src/components/app-nav.tsx` | Header nav (desktop): Home / About / Groups / Performance / Admin / Blog |
 | `apps/web/src/components/mobile-nav.tsx` | Compact hamburger menu below `md` for marketing + app headers |
 | `apps/web/src/app/account/page.tsx` | Account — profile, notification prefs, sign out (greeting in header links here) |
