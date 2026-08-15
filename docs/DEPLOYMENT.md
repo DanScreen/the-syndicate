@@ -463,6 +463,40 @@ One-off fixes (solo test rounds, re-settle after a bug) use `apps/web/scripts/da
 | Preview legs missing pick announcements (no betslip reactions) | `npm run db:maintenance -- preview-leg-announcements` |
 | Backfill `leg_submitted` messages for those legs | `npm run db:maintenance -- backfill-leg-announcements --execute` |
 
+### Backfill a leg missing from a locked round
+
+`scripts/backfill-missing-leg.ts` adds a leg to an already-locked round, for the case where the selection **is on the physical bookmaker slip** but never reached the database (e.g. a member locked out of their account at submission time). It deliberately bypasses the kickoff cutoff in `apps/web/src/lib/rounds/first-kickoff.ts`, so it must never be used to add a selection that was not actually struck with the bookmaker before kickoff.
+
+Unlike the tasks above it is not part of `data-maintenance.ts` — it is run directly with `tsx`.
+
+**Prerequisites — these are not permanent and must be re-added each time:**
+
+1. `cloud-sql-proxy` installed and running (see [Connect to Cloud SQL locally](#connect-to-cloud-sql-locally)).
+2. If driving this through Claude Code, the following rules must be present in `.claude/settings.local.json`. **They are intentionally removed after each use** — granting a session standing access to prod secrets is not a default worth leaving on:
+   ```json
+   "Bash(cloud-sql-proxy:*)",
+   "Bash(gcloud secrets versions access latest --secret=DATABASE_URL:*)"
+   ```
+   Scope the secrets rule to `DATABASE_URL` rather than using a wildcard, which would expose `AUTH_SECRET`, `RESEND_API_KEY` and every other project secret.
+
+The script passes `--local-proxy` to rewrite the secret's Cloud SQL socket host (`?host=/cloudsql/...`) to `127.0.0.1`, so no manual URL editing is needed:
+
+```bash
+DATABASE_URL="$(gcloud secrets versions access latest --secret=DATABASE_URL)" \
+  npx tsx scripts/backfill-missing-leg.ts --local-proxy \
+    --invite-code ABCD1234 \
+    --email member@example.com \
+    --home "Stoke City" --away "Swansea City" \
+    --fixture-id <odds-api-event-id> \
+    --kickoff 2026-08-15T14:00:00Z \
+    --leg-odds 1.72 \
+    --set-last-name Donnelly
+```
+
+Dry run by default; append `--apply` to commit. Bookmaker is inherited from the round's existing legs (it aborts if they disagree). The new acca price defaults to the **locked price × the new leg's odds** rather than recomputing the product of legs — the locked value is what the slip was struck at — and `--slip-odds` overrides with the figure printed on the slip. `--set-last-name` updates `User.lastName` and the derived `User.name` together, since the latter is what appears on leaderboards.
+
+After applying, verify independently: `Round.combinedOdds`, the leg's `matchId` (a `null` means no auto-settlement — settle by hand in `/admin/settlement`), and that `User.name` and `User.lastName` agree.
+
 **Solo round** = every leg in the round belongs to that email (typical single-player test accas).
 
 **Re-settle** reverses the old settlement, re-resolves legs from synced `Match` rows (with correct home/away alignment), then runs the normal settlement path again. Deploy the orientation fix before re-settling Norway vs England.
