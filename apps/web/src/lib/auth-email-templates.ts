@@ -31,6 +31,9 @@ export function resetPasswordEmail(params: { resetUrl: string }): EmailDocument 
       bodyHtml,
       ctaLabel: "Reset password",
       ctaUrl: params.resetUrl,
+      // A dead CTA here locks someone out of their account entirely, so the URL
+      // is repeated as text rather than living only in the plain-text part.
+      ctaFallbackUrl: params.resetUrl,
     }),
     text,
   };

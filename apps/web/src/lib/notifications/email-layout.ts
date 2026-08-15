@@ -1,7 +1,11 @@
 import { BRAND_COLORS } from "@tiki-acca/shared";
 
 export function appBaseUrl(): string {
-  return process.env.NEXTAUTH_URL ?? "https://www.tikiacca.com";
+  // `||` not `??`: NEXTAUTH_URL comes from a GitHub Actions variable, so a
+  // cleared or renamed variable deploys it as "" rather than undefined. An
+  // empty base silently makes every link and image in every email relative,
+  // which is near-impossible to diagnose from user reports.
+  return process.env.NEXTAUTH_URL?.trim() || "https://www.tikiacca.com";
 }
 
 /** Turf Green tokens for email HTML (table-based clients). */
@@ -50,6 +54,13 @@ type LayoutParams = {
   bodyHtml: string;
   ctaLabel: string;
   ctaUrl: string;
+  /**
+   * Renders the URL as selectable text under the button. Set it on emails where
+   * a non-rendering CTA leaves the recipient with no other route — the raw URL
+   * otherwise exists only in the plain-text alternative, which most clients
+   * never show.
+   */
+  ctaFallbackUrl?: string;
   footerNote?: string;
 };
 
@@ -69,6 +80,14 @@ export function renderEmailLayout(params: LayoutParams): string {
   const ctaUrl = params.ctaUrl;
   const footerNote = params.footerNote
     ? `<p style="margin:0 0 12px;font-size:12px;line-height:1.5;color:${c.muted};">${params.footerNote}</p>`
+    : "";
+  // word-break keeps long tokenised URLs inside the card instead of forcing the
+  // whole email to scroll sideways on mobile.
+  const ctaFallback = params.ctaFallbackUrl
+    ? `<p style="margin:16px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:${c.muted};">` +
+      `Button not working? Copy and paste this into your browser:<br/>` +
+      `<span style="color:${c.accentBright};word-break:break-all;">${escapeHtml(params.ctaFallbackUrl)}</span>` +
+      `</p>`
     : "";
 
   return `<!DOCTYPE html>
@@ -138,6 +157,7 @@ export function renderEmailLayout(params: LayoutParams): string {
                   </td>
                 </tr>
               </table>
+              ${ctaFallback}
             </td>
           </tr>
           <tr>
