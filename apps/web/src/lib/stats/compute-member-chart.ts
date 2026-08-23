@@ -1,8 +1,8 @@
 import {
   formatBetAxisLabel,
-  formatSettledDateLabel,
+  formatRoundDateLabel,
   memberPointsInRound,
-  sortedSettledRounds,
+  roundsForPerformanceStats,
   CHART_ORIGIN_LABEL,
   type RoundWithLegs,
 } from "./helpers";
@@ -25,18 +25,18 @@ export function computeMemberChart(
   rounds: RoundWithLegs[],
   members: MemberSeries[]
 ): MemberChartPoint[] {
-  const settled = sortedSettledRounds(rounds);
+  const performanceRounds = roundsForPerformanceStats(rounds);
   const cumulative = new Map<string, number>();
   for (const member of members) {
     cumulative.set(member.userId, 0);
   }
 
-  const points = settled.map((round, index) => {
+  const points = performanceRounds.map((round, index) => {
     const roundNumber = index + 1;
     const point: MemberChartPoint = {
       roundNumber,
       label: formatBetAxisLabel(roundNumber),
-      dateLabel: formatSettledDateLabel(round.settledAt) ?? "",
+      dateLabel: formatRoundDateLabel(round),
     };
 
     for (const member of members) {

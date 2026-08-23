@@ -1,8 +1,10 @@
 import {
   formatBetAxisLabel,
-  formatSettledDateLabel,
+  formatRoundDateLabel,
+  roundAccaDecided,
   roundAccaWon,
   roundGroupPoints,
+  roundsForPerformanceStats,
   sortedSettledRounds,
   CHART_ORIGIN_LABEL,
   type RoundWithLegs,
@@ -45,18 +47,20 @@ export function computeGroupStats(
   rounds: RoundWithLegs[],
   members: MemberSeries[] = []
 ): GroupStatsResult {
+  const performanceRounds = roundsForPerformanceStats(rounds);
   const settled = sortedSettledRounds(rounds);
-  const allLegs = settled.flatMap((r) => r.legs);
-  const accaWins = settled.filter((r) => roundAccaWon(r)).length;
-  const accaLosses = settled.length - accaWins;
-  const decidedAccas = accaWins + accaLosses;
+  const resolvedLegs = performanceRounds.flatMap((r) =>
+    r.legs.filter((l) => l.outcome !== "pending")
+  );
+  const decidedAccas = performanceRounds.filter((r) => roundAccaDecided(r));
+  const accaWins = decidedAccas.filter((r) => roundAccaWon(r)).length;
 
   const accaOdds = settled
     .map((r) => r.combinedOdds)
     .filter((o): o is number => o !== null);
 
   let cumulativePoints = 0;
-  const chartPoints: GroupStatsChartPoint[] = settled.map((round, index) => {
+  const chartPoints: GroupStatsChartPoint[] = performanceRounds.map((round, index) => {
     const roundNumber = index + 1;
     const roundPoints = roundGroupPoints(round);
     cumulativePoints += roundPoints;
@@ -64,7 +68,7 @@ export function computeGroupStats(
       roundNumber,
       roundId: round.id,
       label: formatBetAxisLabel(roundNumber),
-      dateLabel: formatSettledDateLabel(round.settledAt) ?? "",
+      dateLabel: formatRoundDateLabel(round),
       roundPoints: Number(roundPoints.toFixed(2)),
       cumulativePoints: Number(cumulativePoints.toFixed(2)),
     };
@@ -87,17 +91,21 @@ export function computeGroupStats(
   const netAccaPlGbp = settled.reduce((sum, r) => sum + (r.profitLossGbp ?? 0), 0);
 
   const activeMembers = members.filter((m) =>
-    allLegs.some((l) => l.userId === m.userId)
+    performanceRounds.some((r) =>
+      r.legs.some((l) => l.userId === m.userId && l.outcome !== "pending")
+    )
   );
 
   return {
     summary: {
       totalRounds: settled.length,
-      totalBets: allLegs.length,
+      totalBets: resolvedLegs.length,
       averageLegOdds:
-        allLegs.length > 0
+        resolvedLegs.length > 0
           ? Number(
-              (allLegs.reduce((sum, l) => sum + l.odds, 0) / allLegs.length).toFixed(2)
+              (
+                resolvedLegs.reduce((sum, l) => sum + l.odds, 0) / resolvedLegs.length
+              ).toFixed(2)
             )
           : null,
       averageAccaOdds:
@@ -105,12 +113,12 @@ export function computeGroupStats(
           ? Number((accaOdds.reduce((sum, o) => sum + o, 0) / accaOdds.length).toFixed(2))
           : null,
       netGroupPoints: Number(
-        settled.reduce((sum, r) => sum + roundGroupPoints(r), 0).toFixed(2)
+        performanceRounds.reduce((sum, r) => sum + roundGroupPoints(r), 0).toFixed(2)
       ),
       netAccaPlGbp: Number(netAccaPlGbp.toFixed(2)),
       winRate:
-        decidedAccas > 0
-          ? Number(((accaWins / decidedAccas) * 100).toFixed(1))
+        decidedAccas.length > 0
+          ? Number(((accaWins / decidedAccas.length) * 100).toFixed(1))
           : null,
     },
     chart,

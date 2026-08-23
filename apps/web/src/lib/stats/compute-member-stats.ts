@@ -6,11 +6,11 @@ import {
   bestWorstCategory,
   betTypeForLeg,
   formatBetAxisLabel,
-  formatSettledDateLabel,
+  formatRoundDateLabel,
   legPoints,
   memberPointsInRound,
   roundById,
-  sortedSettledRounds,
+  roundsForPerformanceStats,
   CHART_ORIGIN_LABEL,
   teamForLeg,
   type BestWorstInsight,
@@ -55,11 +55,11 @@ export function computeMemberStats(
   userId: string,
   rounds: RoundWithLegs[]
 ): MemberStatsResult {
-  const settled = sortedSettledRounds(rounds);
-  const roundMap = roundById(settled);
+  const performanceRounds = roundsForPerformanceStats(rounds);
+  const roundMap = roundById(performanceRounds);
   const legs: Leg[] = [];
 
-  for (const round of settled) {
+  for (const round of performanceRounds) {
     for (const leg of round.legs) {
       if (leg.userId === userId) legs.push(leg);
     }
@@ -81,14 +81,14 @@ export function computeMemberStats(
   );
 
   let cumulative = 0;
-  const chartPoints: MemberStatsChartPoint[] = settled.map((round, index) => {
+  const chartPoints: MemberStatsChartPoint[] = performanceRounds.map((round, index) => {
     const roundNumber = index + 1;
     const roundPoints = memberPointsInRound(round, userId);
     cumulative += roundPoints;
     return {
       roundNumber,
       label: formatBetAxisLabel(roundNumber),
-      dateLabel: formatSettledDateLabel(round.settledAt) ?? "",
+      dateLabel: formatRoundDateLabel(round),
       roundPoints: Number(roundPoints.toFixed(2)),
       cumulativePoints: Number(cumulative.toFixed(2)),
     };
@@ -107,7 +107,7 @@ export function computeMemberStats(
           ...chartPoints,
         ];
 
-  const { bestLeg, worstLeg } = bestWorstLegHighlights(legs);
+  const { bestLeg, worstLeg } = bestWorstLegHighlights(settledLegs);
 
   return {
     userId,
@@ -135,16 +135,16 @@ export function computeMemberStats(
     },
     chart,
     competition: {
-      favourite: favouriteCategory(legs, roundMap, (l) => l.competition),
-      bestWorst: bestWorstCategory(legs, roundMap, (l) => l.competition),
+      favourite: favouriteCategory(settledLegs, roundMap, (l) => l.competition),
+      bestWorst: bestWorstCategory(settledLegs, roundMap, (l) => l.competition),
     },
     market: {
-      favourite: favouriteCategory(legs, roundMap, betTypeForLeg),
-      bestWorst: bestWorstCategory(legs, roundMap, betTypeForLeg),
+      favourite: favouriteCategory(settledLegs, roundMap, betTypeForLeg),
+      bestWorst: bestWorstCategory(settledLegs, roundMap, betTypeForLeg),
     },
     team: {
-      favourite: favouriteCategory(legs, roundMap, teamForLeg),
-      bestWorst: bestWorstCategory(legs, roundMap, teamForLeg),
+      favourite: favouriteCategory(settledLegs, roundMap, teamForLeg),
+      bestWorst: bestWorstCategory(settledLegs, roundMap, teamForLeg),
     },
   };
 }

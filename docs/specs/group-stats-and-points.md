@@ -30,7 +30,7 @@ Implementation: `groupAccaRoundPoints()` and `memberAccaLegPoints()` in `package
 
 Member totals on a winning acca **do not** sum to the group total (e.g. legs 1.6 + 2.15 → members 0.6 + 1.15, group 2.44). On a losing acca the group is −1 while members who won their pick keep `odds − 1`.
 
-**Charts:** cumulative points after each settled round. In-progress leg outcomes on locked accas are visible on the Round tab but do not affect stats until the round settles. A losing leg settles the acca immediately (group −1; concluded legs score per-leg); later fixtures on that round keep resolving for individual outcomes/points.
+**Charts:** cumulative points after each performance round (settled + locked with at least one resolved leg). Resolved legs on locked accas update net points, win rate (when the acca outcome is decided), and charts immediately — group −1 on first lost leg; member points per resolved pick. In-progress accas still winning (no lost leg, fixtures pending) contribute **0** group points until the acca wins or loses. Early-settled bust accas: deferred legs add member points when they resolve; group total stays −1. Acca £ P/L (`profitLossGbp`) still sums only fully settled rounds.
 
 **Group chart:** `combinedOdds − 1` per winning acca round, `−1` per losing acca round (one unit stake on the group acca).  
 **Separate stat:** cumulative acca £ P/L from `Round.profitLossGbp` (£10 theoretical stake).
@@ -45,13 +45,13 @@ Member totals on a winning acca **do not** sum to the group total (e.g. legs 1.6
 
 | Stat | Definition |
 |------|------------|
-| Total rounds | Settled round count |
-| Total bets | Leg count in settled rounds |
+| Total rounds | Fully settled round count |
+| Total bets | Resolved leg count (includes in-progress locked accas) |
 | Average leg odds | Mean `Leg.odds` |
 | Average acca odds | Mean `Round.combinedOdds` |
 | Net group points | Sum of group acca points per round (`combinedOdds − 1` on win, `−1` on loss) |
 | Net acca P/L | Sum `profitLossGbp` |
-| Win rate | % settled accas won |
+| Win rate | % decided accas won (includes early-settled locked accas once a leg loses or all legs win) |
 
 **Chart:** cumulative group points vs round number/date (Recharts). Series prepend a **Start** point at 0 so the first settled round draws a line from zero.
 
@@ -62,7 +62,7 @@ Member totals on a winning acca **do not** sum to the group total (e.g. legs 1.6
 | Stat | Definition |
 |------|------------|
 | Net points | Sum of member leg points (`odds − 1` on won legs, `−1` on lost legs — including when the group acca loses) |
-| Legs played | Count in settled rounds |
+| Legs played | Count of resolved legs (won/lost/void), including on locked in-progress accas |
 | Win rate | Won / (won + lost) |
 | Average odds | Mean `Leg.odds` |
 | Best / worst leg | Highest-odds **won** leg / lowest-odds **lost** leg (with fixture + pick) |

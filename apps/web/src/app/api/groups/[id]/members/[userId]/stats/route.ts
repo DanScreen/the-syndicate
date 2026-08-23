@@ -1,5 +1,6 @@
 import { requireSession } from "@/lib/api-auth";
 import { computeMemberStats } from "@/lib/stats/compute-member-stats";
+import { statsRoundWhere } from "@/lib/stats/helpers";
 import { prisma } from "@tiki-acca/database";
 import { NextResponse } from "next/server";
 
@@ -31,9 +32,9 @@ export async function GET(_request: Request, { params }: Params) {
   }
 
   const rounds = await prisma.round.findMany({
-    where: { groupId, status: "settled" },
+    where: { groupId, ...statsRoundWhere },
     include: { legs: true },
-    orderBy: { settledAt: "asc" },
+    orderBy: [{ settledAt: "asc" }, { lockedAt: "asc" }, { createdAt: "asc" }],
   });
 
   return NextResponse.json({
