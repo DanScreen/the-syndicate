@@ -1,5 +1,6 @@
 import type { Leg, Round } from "@prisma/client";
 import {
+  accaHasLostLeg,
   accaSucceeded,
   groupAccaRoundPoints,
   memberAccaLegPoints,
@@ -9,23 +10,45 @@ import {
 
 export type RoundWithLegs = Round & { legs: Leg[] };
 
+/** Rounds included in live performance stats (settled + in-progress with results). */
+export const statsRoundWhere = {
+  OR: [
+    { status: "settled" as const },
+    {
+      status: "locked" as const,
+      legs: { some: { outcome: { not: "pending" } } },
+    },
+  ],
+};
+
 export function roundOutcomes(round: RoundWithLegs): LegOutcome[] {
   return round.legs.map((l) => l.outcome as LegOutcome);
 }
 
+export function roundHasResolvedLegs(round: RoundWithLegs): boolean {
+  return round.legs.some((l) => l.outcome !== "pending");
+}
+
+/** Acca outcome is known: busted on a lost leg, or every leg won/void. */
+export function roundAccaDecided(round: RoundWithLegs): boolean {
+  const outcomes = roundOutcomes(round);
+  return accaHasLostLeg(outcomes) || accaSucceeded(outcomes);
+}
+
 export function roundGroupPoints(round: RoundWithLegs): number {
-  if (round.status !== "settled") return 0;
   return groupAccaRoundPoints(roundOutcomes(round), round.combinedOdds ?? 1);
 }
 
-/** Cumulative acca points earned by the group across settled rounds. */
+/** Cumulative acca points earned by the group across performance rounds. */
 export function groupNetPoints(rounds: RoundWithLegs[]): number {
-  const total = sortedSettledRounds(rounds).reduce((sum, round) => sum + roundGroupPoints(round), 0);
+  const total = roundsForPerformanceStats(rounds).reduce(
+    (sum, round) => sum + roundGroupPoints(round),
+    0
+  );
   return Number(total.toFixed(2));
 }
 
 export function memberPointsInRound(round: RoundWithLegs, userId: string): number {
-  if (round.status !== "settled") return 0;
   const outcomes = roundOutcomes(round);
   const total = round.legs
     .filter((l) => l.userId === userId)
@@ -51,7 +74,7 @@ export function legPoints(leg: Leg, round?: RoundWithLegs): number {
 }
 
 export function roundAccaWon(round: RoundWithLegs): boolean {
-  if (round.status !== "settled") return false;
+  if (!roundAccaDecided(round)) return false;
   return accaSucceeded(roundOutcomes(round));
 }
 
@@ -60,12 +83,24 @@ export function roundById(rounds: RoundWithLegs[]): Map<string, RoundWithLegs> {
 }
 
 export function roundSortKey(round: Round): number {
-  return (round.settledAt ?? round.createdAt).getTime();
+  return (round.settledAt ?? round.lockedAt ?? round.createdAt).getTime();
 }
 
+/** Fully settled rounds only — e.g. acca £ P/L sums. */
 export function sortedSettledRounds(rounds: RoundWithLegs[]): RoundWithLegs[] {
   return rounds
     .filter((r) => r.status === "settled")
+    .sort((a, b) => roundSortKey(a) - roundSortKey(b));
+}
+
+/** Settled rounds plus locked rounds with at least one resolved leg. */
+export function roundsForPerformanceStats(rounds: RoundWithLegs[]): RoundWithLegs[] {
+  return rounds
+    .filter(
+      (r) =>
+        r.status === "settled" ||
+        (r.status === "locked" && roundHasResolvedLegs(r))
+    )
     .sort((a, b) => roundSortKey(a) - roundSortKey(b));
 }
 
@@ -91,17 +126,22 @@ export function formatSettledDateLabel(
   });
 }
 
+/** Tooltip date for a performance round — settledAt, or lockedAt while in play. */
+export function formatRoundDateLabel(round: Round): string {
+  return formatSettledDateLabel(round.settledAt ?? round.lockedAt) ?? "";
+}
+
 /** @deprecated Prefer formatBetAxisLabel + formatSettledDateLabel for charts. */
 export function formatRoundLabel(round: Round, roundNumber: number): string {
   return formatBetAxisLabel(roundNumber);
 }
 
-/** Sum of recomputed member points across settled rounds (matches Performance UI). */
+/** Sum of recomputed member points across performance rounds (matches Performance UI). */
 export function memberNetPointsAcrossRounds(
   rounds: RoundWithLegs[],
   userId: string
 ): number {
-  const total = sortedSettledRounds(rounds).reduce(
+  const total = roundsForPerformanceStats(rounds).reduce(
     (sum, round) => sum + memberPointsInRound(round, userId),
     0
   );

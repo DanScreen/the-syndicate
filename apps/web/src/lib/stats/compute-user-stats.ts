@@ -4,13 +4,15 @@ import {
   bestWorstCategory,
   favouriteCategory,
   formatBetAxisLabel,
-  formatSettledDateLabel,
+  formatRoundDateLabel,
   legPoints,
   memberNetPointsAcrossRounds,
   memberPointsInRound,
   roundAccaWon,
   roundById,
   roundSortKey,
+  roundsForPerformanceStats,
+  sortedSettledRounds,
   teamForLeg,
   CHART_ORIGIN_LABEL,
   type BestWorstInsight,
@@ -150,31 +152,37 @@ export function computeUserStats(
   const allRounds: RoundWithLegs[] = [];
 
   for (const membership of memberships) {
-    const settledRounds = membership.group.rounds.filter((r) => r.status === "settled");
-    const userLegs = settledRounds.flatMap((r) =>
+    const performanceRounds = roundsForPerformanceStats(membership.group.rounds);
+    const settledRounds = sortedSettledRounds(membership.group.rounds);
+    const userLegs = performanceRounds.flatMap((r) =>
       r.legs.filter((l) => l.userId === userId)
     );
-    const participatedRounds = settledRounds.filter((r) =>
-      r.legs.some((l) => l.userId === userId)
+    const participatedRounds = performanceRounds.filter((r) =>
+      r.legs.some((l) => l.userId === userId && l.outcome !== "pending")
     );
-    const roundMap = roundById(settledRounds);
+    const roundMap = roundById(performanceRounds);
     const legSummary = individualLegSummary(userLegs, roundMap);
-    const categories = categoryStats(userLegs, roundMap);
+    const categories = categoryStats(
+      userLegs.filter((l) => l.outcome !== "pending"),
+      roundMap
+    );
 
     groups.push({
       groupId: membership.groupId,
       groupName: membership.groupName,
-      netPoints: memberNetPointsAcrossRounds(settledRounds, userId),
+      netPoints: memberNetPointsAcrossRounds(membership.group.rounds, userId),
       legsPlayed: legSummary.legsPlayed,
-      settledRounds: participatedRounds.length,
+      settledRounds: settledRounds.filter((r) =>
+        r.legs.some((l) => l.userId === userId)
+      ).length,
       averagePointsPerLeg: legSummary.averagePointsPerLeg,
       winRate: legSummary.winRate,
       averageOdds: legSummary.averageOdds,
       ...categories,
     });
 
-    allUserLegs.push(...userLegs);
-    allRounds.push(...settledRounds);
+    allUserLegs.push(...userLegs.filter((l) => l.outcome !== "pending"));
+    allRounds.push(...performanceRounds);
 
     for (const round of participatedRounds) {
       userRoundEntries.push({
@@ -197,7 +205,7 @@ export function computeUserStats(
     return {
       roundNumber,
       label: formatBetAxisLabel(roundNumber),
-      dateLabel: formatSettledDateLabel(entry.round.settledAt) ?? "",
+      dateLabel: formatRoundDateLabel(entry.round),
       roundPoints: Number(roundPoints.toFixed(2)),
       cumulativePoints: Number(cumulativePoints.toFixed(2)),
       groupId: entry.groupId,
@@ -228,15 +236,20 @@ export function computeUserStats(
   const overall = individualLegSummary(allUserLegs, allRoundMap);
   const overallCategories = categoryStats(allUserLegs, allRoundMap);
 
-  const netAccaPlGbp = userRoundEntries.reduce(
-    (sum, e) => sum + (e.round.profitLossGbp ?? 0),
-    0
-  );
+  const netAccaPlGbp = sortedSettledRounds(
+    memberships.flatMap((m) => m.group.rounds)
+  )
+    .filter((r) => r.legs.some((l) => l.userId === userId))
+    .reduce((sum, r) => sum + (r.profitLossGbp ?? 0), 0);
+
+  const settledParticipatedCount = sortedSettledRounds(
+    memberships.flatMap((m) => m.group.rounds)
+  ).filter((r) => r.legs.some((l) => l.userId === userId)).length;
 
   return {
     summary: {
       groupCount: memberships.length,
-      settledRounds: userRoundEntries.length,
+      settledRounds: settledParticipatedCount,
       legsPlayed: overall.legsPlayed,
       netPoints: overall.netPoints,
       averagePointsPerLeg: overall.averagePointsPerLeg,

@@ -1,5 +1,6 @@
 import { requireSession } from "@/lib/api-auth";
 import { computeUserStats } from "@/lib/stats/compute-user-stats";
+import { statsRoundWhere } from "@/lib/stats/helpers";
 import { prisma } from "@tiki-acca/database";
 import { NextResponse } from "next/server";
 
@@ -15,9 +16,9 @@ export async function GET() {
       group: {
         include: {
           rounds: {
-            where: { status: "settled" },
+            where: statsRoundWhere,
             include: { legs: true },
-            orderBy: { settledAt: "asc" },
+            orderBy: [{ settledAt: "asc" }, { lockedAt: "asc" }, { createdAt: "asc" }],
           },
         },
       },

@@ -11,7 +11,7 @@ import { claimAndLockRound } from "@/lib/rounds/claim-lock-round";
 import { isPastKickoffCutoff } from "@/lib/rounds/first-kickoff";
 import { lockOpenRoundsAtKickoff } from "@/lib/rounds/lock-open-rounds-at-kickoff";
 import { openRound } from "@/lib/rounds/open-round";
-import { memberNetPointsAcrossRounds } from "@/lib/stats/helpers";
+import { memberNetPointsAcrossRounds, statsRoundWhere } from "@/lib/stats/helpers";
 import { prisma } from "@tiki-acca/database";
 import { Prisma } from "@prisma/client";
 import type { AccaBookmakerRanking } from "@tiki-acca/shared";
@@ -222,7 +222,7 @@ export async function GET(_request: Request, { params }: Params) {
       include: recentRoundInclude,
     }),
     prisma.round.findMany({
-      where: { groupId: id, status: "settled" },
+      where: { groupId: id, ...statsRoundWhere },
       include: { legs: true },
     }),
   ]);
