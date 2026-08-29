@@ -401,7 +401,16 @@ Mobile uses Bearer tokens, not browser cookies. If API CORS is tightened, ensure
 
 ## Cost optimization
 
-GCP billing is typically dominated by **Cloud SQL** (~90% of forecast at current scale). Cloud Run with `min_instances = 0` is low cost.
+At steady state the bill is roughly **two Cloud SQL instances plus whatever Cloud Run
+is doing**. Cloud Run is only cheap when CPU is throttled — `min_instances = 0` alone is
+**not** enough to guarantee it scales to zero.
+
+> **Learned the hard way (Aug 2026):** the service ran with `--no-cpu-throttling` (CPU
+> always allocated), set out-of-band via `gcloud` and not represented in Terraform. That
+> pins an instance alive: `billable_instance_time` sat at exactly **86,400 s/day** (24h)
+> serving only **~1-3 requests/min**, about **£36/month** — roughly 70% of the total GCP
+> bill, and ~111x the equivalent Scorers service. Fixed by `cpu_idle = true` in
+> `cloud-run.tf`. Verify with the query below before assuming Cloud Run is cheap.
 
 ### Check current spend
 
@@ -410,7 +419,25 @@ gcloud billing accounts list
 gcloud billing budgets list --billing-account=BILLING_ACCOUNT_ID
 ```
 
-In GCP Console → **Billing → Reports**, filter by service to confirm Cloud SQL share.
+In GCP Console → **Billing → Reports**, filter by service to confirm the Cloud SQL share.
+
+**Check Cloud Run is actually scaling to zero** — this is the single highest-signal
+number, and billing reports lag it by a day:
+
+```bash
+TOK=$(gcloud auth print-access-token)
+curl -s -H "Authorization: Bearer $TOK" -G \
+  "https://monitoring.googleapis.com/v3/projects/PROJECT_ID/timeSeries" \
+  --data-urlencode 'filter=metric.type="run.googleapis.com/container/billable_instance_time"' \
+  --data-urlencode "interval.startTime=$(date -u -v-7d +%Y-%m-%dT%H:%M:%SZ)" \
+  --data-urlencode "interval.endTime=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+  --data-urlencode 'aggregation.alignmentPeriod=86400s' \
+  --data-urlencode 'aggregation.perSeriesAligner=ALIGN_SUM' \
+  --data-urlencode 'aggregation.crossSeriesReducer=REDUCE_SUM'
+```
+
+Anything approaching **86,400 s/day means an instance is pinned 24/7**. At our traffic
+the healthy figure is a few hundred to a few thousand seconds/day.
 
 ### Terraform defaults (`infra/terraform/`)
 
@@ -419,7 +446,9 @@ In GCP Console → **Billing → Reports**, filter by service to confirm Cloud S
 | Cloud SQL | `db-f1-micro`, zonal, Enterprise | Main cost driver |
 | PITR | Enabled in prod (`cloud-sql.tf`) | Adds storage cost |
 | Backups | Enabled | Retention affects storage |
-| Cloud Run | `min_instances = 0` | Scales to zero |
+| Cloud Run | `min_instances = 0` | Scales to zero **only if `cpu_idle = true`** |
+| Cloud Run CPU | `cpu_idle = true` (`cloud-run.tf`) | Request-based billing; usually inside the free tier |
+| Cloud Run startup | `startup_cpu_boost = true` | Offsets cold starts from scaling to zero |
 
 ### Options to reduce cost
 
@@ -427,7 +456,14 @@ In GCP Console → **Billing → Reports**, filter by service to confirm Cloud S
 2. **Disable PITR** — if point-in-time recovery is not needed, set `point_in_time_recovery_enabled = false` in `cloud-sql.tf`.
 3. **Reduce backup retention** — lower `backup_retention_days` if acceptable.
 4. **Migrate database** — Neon, Supabase, or Railway can be cheaper at low traffic; requires `DATABASE_URL` change and connection string updates in deploy.
-5. **Keep Cloud Run at min 0** — only raise `min_instances` if cold starts become a user-facing problem.
+5. **Keep Cloud Run at min 0 _and_ `cpu_idle = true`** — only raise `min_instances` if cold
+   starts become a user-facing problem. Never set `--no-cpu-throttling` unless the app
+   genuinely needs post-response background work; today it does not.
+6. **Prune Artifact Registry** — untagged image layers accumulate (the repo reached
+   ~11.7 GB). Add a cleanup policy keeping the most recent handful of tags.
+7. **Change infra in Terraform, not `gcloud`** — the throttling bug above went unnoticed
+   for months precisely because it lived only in the deployed service. `deploy.yml` does
+   not pass any CPU flags, so `gcloud run deploy` preserves whatever Terraform sets.
 
 App deploy and match sync are unaffected by DB tier changes — only connection string and migration step need updating.
 
