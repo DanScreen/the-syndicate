@@ -459,8 +459,20 @@ the healthy figure is a few hundred to a few thousand seconds/day.
 5. **Keep Cloud Run at min 0 _and_ `cpu_idle = true`** — only raise `min_instances` if cold
    starts become a user-facing problem. Never set `--no-cpu-throttling` unless the app
    genuinely needs post-response background work; today it does not.
-6. **Prune Artifact Registry** — untagged image layers accumulate (the repo reached
-   ~11.7 GB). Add a cleanup policy keeping the most recent handful of tags.
+6. **Prune Artifact Registry** — done: `artifact-registry.tf` keeps the 5 most recent
+   versions plus anything under 30 days, and deletes the rest. Every push to main
+   publishes an image and nothing collected them, so the repo had reached ~11.7 GB.
+
+**Do _not_ switch Cloud SQL from SSD to HDD.** Storage type is fixed at creation
+([instance settings](https://cloud.google.com/sql/docs/postgres/instance-settings) marks
+it non-modifiable, and `gcloud sql instances patch` has no `--storage-type` flag). Changing
+`disk_type` in Terraform forces **destroy-and-recreate of the instance**, i.e. total data
+loss. It would only be worth ~£1/month; not a trade worth making. `deletion_protection_enabled`
+is on in prod, which would block the destroy — but do not rely on that as the safety net.
+
+**Keep PITR enabled.** Disabling it saves roughly £1/month and drops recovery granularity
+from any-point-in-time to the last daily backup (up to 24h of lost data). Not worth it for
+a live app with real users.
 7. **Change infra in Terraform, not `gcloud`** — the throttling bug above went unnoticed
    for months precisely because it lived only in the deployed service. `deploy.yml` does
    not pass any CPU flags, so `gcloud run deploy` preserves whatever Terraform sets.
