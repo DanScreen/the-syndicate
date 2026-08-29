@@ -86,6 +86,18 @@ resource "google_cloud_run_v2_service" "web" {
           cpu    = "1"
           memory = "512Mi"
         }
+
+        # Bill CPU only while a request is in flight, and let idle instances be
+        # reclaimed so min_instance_count = 0 actually takes effect. This was
+        # previously false (set out-of-band via gcloud), which pinned one
+        # instance at 86,400 billable seconds/day against ~1-3 requests/min.
+        # Safe here: the app does no post-response background work (no after(),
+        # no waitUntil, no server-side timers, no ISR regeneration).
+        cpu_idle = true
+
+        # Full CPU during container start to offset cold starts now that the
+        # service scales to zero.
+        startup_cpu_boost = true
       }
     }
   }
