@@ -43,6 +43,12 @@ resource "google_project_iam_member" "github_deploy_roles" {
     # Without this the apply fails with "Error creating NotificationChannel:
     # googleapi: Error 403: Permission denied".
     "roles/monitoring.editor",
+    # monitoring.tf's policies use log-match conditions, which Google implements
+    # as Cloud Logging notification rules — a separate permission surface from
+    # Monitoring. Without this the alert policies (not the channel) fail with
+    # "Permission 'logging.notificationRules.create' denied". configWriter is
+    # the narrowest predefined role that grants it; logging.admin also would.
+    "roles/logging.configWriter",
   ])
 
   project = var.project_id
