@@ -39,6 +39,10 @@ resource "google_project_iam_member" "github_deploy_roles" {
     "roles/resourcemanager.projectIamAdmin",
     "roles/cloudscheduler.admin",
     "roles/storage.objectAdmin",
+    # Manage the alert policies and notification channel in monitoring.tf.
+    # Without this the apply fails with "Error creating NotificationChannel:
+    # googleapi: Error 403: Permission denied".
+    "roles/monitoring.editor",
   ])
 
   project = var.project_id
