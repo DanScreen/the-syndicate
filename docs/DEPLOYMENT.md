@@ -399,6 +399,35 @@ Universal links (`https://www.tikiacca.com/groups/join?code=`) open the website 
 
 Mobile uses Bearer tokens, not browser cookies. If API CORS is tightened, ensure mobile origins are not blocked for any Expo web preview; native apps are not subject to browser CORS.
 
+## Terraform vs deploy.yml: who owns what
+
+Both Terraform and `deploy.yml` write to the same Cloud Run service, so the split
+matters:
+
+| Owned by | What |
+|----------|------|
+| `deploy.yml` (`gcloud run deploy`) | The container **image** and the **entire runtime env** (~15 vars from GitHub secrets: `ODDS_API_KEY`, `FOOTBALL_DATA_API_KEY`, `RESEND_API_KEY`, `EMAIL_FROM`, `ADMIN_EMAILS`, `ORIGIN_AUTH_SECRET`, the `ODDS_*` flags) |
+| Terraform (`cloud-run.tf`) | Everything else — scaling, CPU, volumes, service account, and the 6 baseline env vars it declares |
+
+`cloud-run.tf` therefore lists **both** `image` and `env` in `lifecycle.ignore_changes`.
+Without the `env` entry, any Terraform apply that touches the container template
+reconciles it back to the file and **silently deletes every deploy-managed variable**.
+
+> **Incident, 2026-08-29.** A CPU-throttling apply did exactly that: revision `00187`
+> came up with 6 env vars instead of 15. Match-result syncing broke —
+> `/api/internal/sync-matches` returned 503 every 5 minutes and the logs filled with
+> `[odds] ODDS_API_KEY is not configured in production` — and email, admin roles and
+> origin auth were down too. It went unnoticed for ~28h because nothing alerts on
+> scheduler failures. Recovery was a re-run of `deploy.yml`.
+
+**If runtime env vars ever go missing:** run `deploy.yml` (it now has a
+`workflow_dispatch` trigger, or re-run the last successful run). It re-asserts every
+variable from GitHub secrets. Do not hand-set them with `gcloud` — the next deploy
+overwrites them anyway.
+
+**Adding a new env var:** add it to `deploy.yml`'s `--set-env-vars`, not to
+`cloud-run.tf` (which is ignored). Record it in [CURRENT_STATE.md](CURRENT_STATE.md).
+
 ## Cost optimization
 
 At steady state the bill is roughly **two Cloud SQL instances plus whatever Cloud Run
