@@ -128,3 +128,9 @@ variable "enable_round_reminders_job" {
   type        = bool
   default     = true
 }
+
+variable "alert_email" {
+  description = "Address that Cloud Monitoring alerts are emailed to"
+  type        = string
+  default     = "danieljamesscreen@gmail.com"
+}

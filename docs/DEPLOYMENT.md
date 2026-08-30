@@ -428,6 +428,33 @@ overwrites them anyway.
 **Adding a new env var:** add it to `deploy.yml`'s `--set-env-vars`, not to
 `cloud-run.tf` (which is ignored). Record it in [CURRENT_STATE.md](CURRENT_STATE.md).
 
+## Alerting
+
+Cloud Monitoring emails **danieljamesscreen@gmail.com** (`alert_email` in
+`variables.tf`) on two conditions, defined in `infra/terraform/monitoring.tf`:
+
+| Policy | Fires when | Why |
+|--------|-----------|-----|
+| `Cloud Scheduler job failed` | `resource.type="cloud_scheduler_job" AND severity>=ERROR` | Covers `sync-matches`, `round-reminders` and `warm-odds-cache` in one condition — broader and more durable than watching a specific endpoint path. |
+| `Cloud Run 5xx responses` | `httpRequest.status>=500` on `the-syndicate-web` | Catches user-facing regressions the scheduler alert would miss. |
+
+Both are rate-limited to **one email per 30 minutes**, so a 5-minutely cron can't send
+12 emails an hour during an outage. Both carry `documentation` with triage commands,
+included in the alert email.
+
+**Why log-match conditions, not metric conditions:** log matches return no data points,
+so they avoid the per-point alerting charge, and `cloudscheduler.googleapis.com/*`
+metrics are not published in this project (all 1,992 available metric descriptors were
+checked) — only logs. Cost is currently **£0**: alerting is not yet billed, and log
+volume is ~0.11 GB/month against a 50 GiB free allotment. If per-condition charging
+begins it is roughly $0.10/condition/month.
+
+> Added 2026-08-30 because of the 2026-08-29 env-wipe incident, which ran for ~28 hours
+> undetected: `/api/internal/sync-matches` returned 503 every 5 minutes and the project
+> had no notification channels or alert policies at all. The first thing to check when
+> the scheduler alert fires is whether the Cloud Run service still has its full set of
+> runtime env vars — if not, run `deploy.yml` to re-assert them.
+
 ## Cost optimization
 
 At steady state the bill is roughly **two Cloud SQL instances plus whatever Cloud Run

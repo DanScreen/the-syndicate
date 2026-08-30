@@ -10,6 +10,7 @@ resource "google_project_service" "required" {
     "compute.googleapis.com",
     "servicenetworking.googleapis.com",
     "cloudscheduler.googleapis.com",
+    "monitoring.googleapis.com",
   ])
 
   project            = var.project_id
