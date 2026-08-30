@@ -107,10 +107,22 @@ resource "google_cloud_run_v2_service" "web" {
     percent = 100
   }
 
-  # GitHub Actions deploy.yml updates the container image on each release
+  # deploy.yml owns the deployed image AND the full runtime env: it sets ~15
+  # variables via `gcloud run deploy --set-env-vars` (ODDS_API_KEY,
+  # FOOTBALL_DATA_API_KEY, RESEND_API_KEY, ADMIN_EMAILS, ORIGIN_AUTH_SECRET,
+  # the ODDS_* tuning flags...) sourced from GitHub secrets. This resource
+  # declares only the handful below, so Terraform MUST ignore env — otherwise
+  # any apply that touches the template reconciles the container back to this
+  # file and silently deletes every deploy-managed variable.
+  #
+  # That is exactly what happened on 2026-08-29: a CPU-throttling apply created
+  # revision 00187 with 6 env vars instead of 15, and match-result syncing broke
+  # (`[odds] ODDS_API_KEY is not configured in production`, 503s on
+  # /api/internal/sync-matches) until deploy.yml was re-run.
   lifecycle {
     ignore_changes = [
       template[0].containers[0].image,
+      template[0].containers[0].env,
     ]
   }
 }

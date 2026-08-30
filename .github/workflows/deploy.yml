@@ -11,6 +11,10 @@ on:
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/deploy.yml"
+  # Manual trigger: deploy.yml is the only thing that sets the runtime env vars,
+  # so it doubles as the recovery path if they are ever lost. There was no way to
+  # run it by hand during the 2026-08-29 env-wipe incident.
+  workflow_dispatch:
 
 env:
   GCP_REGION: ${{ vars.GCP_REGION || 'europe-west2' }}
