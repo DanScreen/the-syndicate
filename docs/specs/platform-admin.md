@@ -48,7 +48,8 @@ Protected by middleware (`/admin/*` requires login) + `requireAdminPage()` (redi
 |-------|---------|
 | `/admin` | Platform overview — users, groups, picks, accas, activity |
 | `/admin/activity` | Searchable per-user web/mobile login, visit, view, and recency report |
-| `/admin/settlement` | Settlement queue — locked rounds, overdue-leg flags, manual settle |
+| `/admin/settlement` | Settlement queue — locked rounds, overdue-leg flags, manual settle, outcome correction |
+| `/admin/results` | Match results — override FT score (locks against feed), correct leg outcomes |
 | `/admin/leaderboards` | Group + player rankings by points |
 | `/admin/competitions` | Enable/disable competitions in the leg picker |
 | `/admin/odds` | Odds API diagnostics — raw events, filter pipeline, quota |
@@ -60,14 +61,25 @@ Admin pages are **web-only** — no admin surface in the mobile app (by design).
 Settlement is system-only (owners cannot settle), so this page is the **escape hatch** for rounds the cron cannot resolve:
 
 - Lists all `locked` rounds (rounds needing attention first, then oldest lock).
-- A pending leg is flagged **overdue** when unresolved **2+ hours after its scheduled kickoff** (`OVERDUE_AFTER_HOURS` in `compute-settlement-queue.ts`) — highlights matches that likely finished but couldn't be auto-resolved (unrecognised market, missing match data).
-- Admin picks won/lost/void for each pending leg (system-resolved outcomes are pre-filled and shown as badges) and settles the round via `POST /api/admin/rounds/[id]/settle`.
+- A pending leg is flagged **overdue** when unresolved **3+ hours after its scheduled kickoff** (`OVERDUE_AFTER_HOURS` in `compute-settlement-queue.ts`) — covers typical match length plus the 1h FT confirmation window.
+- Admin picks won/lost/void for each pending leg (system-resolved outcomes are pre-filled; already-resolved legs can be **corrected**) and settles the round via `POST /api/admin/rounds/[id]/settle`.
 - Locked rounds: outcomes must cover every leg; reuses `applyRoundSettlement()` — the same exactly-once `locked → settled` claim as the cron; a lost race returns 409.
 - Settled rounds that still have pending legs (early loss): queue lists them; admin submits outcomes only for remaining pending legs → `applyDeferredLegOutcome()`.
 
-**Nav:** Admin users see **Admin** in `AppNav`. Sub-nav: Overview | Activity | Settlement | Leaderboards | Competitions | Odds (`AdminNav`).
+**Nav:** Admin users see **Admin** in `AppNav`. Sub-nav: Overview | Activity | Settlement | Results | Leaderboards | Competitions | Odds (`AdminNav`).
 
 **SEO:** `robots: noindex` on admin pages.
+
+### Match results (`/admin/results`)
+
+Wrong FT scores (provisional feed results, disallowed goals) are fixed here:
+
+- Lists recent matches with linked legs (last 7 days).
+- Admin enters home/away goals → **Override & lock** (`PATCH /api/admin/matches/[id]`) sets `Match.scoreLocked`, stamps `finishedAt`, and re-resolves every linked leg (correcting wrong outcomes via points delta).
+- Per-leg **Correct outcome** (`POST /api/admin/legs/[id]/correct-outcome`) for locked or settled rounds without changing the Match row.
+- Settlement queue cards also expose a **Correct…** control on already-resolved legs.
+
+**FT confirmation (automated):** auto-settle waits `RESULT_CONFIRMATION_MS` (1 hour) after first observing `FINISHED` before writing outcomes, so feed corrections within that window win. Admin lock confirms immediately.
 
 ---
 
@@ -82,6 +94,8 @@ Settlement is system-only (owners cannot settle), so this page is the **escape h
 | `GET /api/admin/odds-diagnostics` | Admin session | Odds API probe (`?competition=world-cup`) |
 | `POST /api/admin/warm-odds-cache` | Admin session | Manually warm odds DB snapshots (same as cron) |
 | `POST /api/admin/rounds/[id]/settle` | Admin session | Manual settle — outcomes for every leg (escape hatch) |
+| `PATCH /api/admin/matches/[id]` | Admin session | Override FT score + lock; re-resolve linked legs |
+| `POST /api/admin/legs/[id]/correct-outcome` | Admin session | Correct a resolved (or pending) leg outcome with points delta |
 | `POST /api/analytics/events` | Web session / mobile bearer | Authenticated page/screen or foreground activity; server derives user, channel, and visit |
 
 Non-admin → `403 Forbidden`. Unauthenticated → `401`.

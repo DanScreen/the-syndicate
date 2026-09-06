@@ -40,6 +40,7 @@ function SettleRoundCard({ round }: { round: SettlementQueueRound }) {
     )
   );
   const [loading, setLoading] = useState(false);
+  const [correctingId, setCorrectingId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   const allChosen = actionableLegs.every((l) => outcomes[l.id]);
@@ -64,6 +65,27 @@ function SettleRoundCard({ round }: { round: SettlementQueueRound }) {
 
     if (!res.ok) {
       setError(typeof data.error === "string" ? data.error : "Failed to settle round");
+      return;
+    }
+
+    router.refresh();
+  }
+
+  async function handleCorrect(legId: string, outcome: string) {
+    if (!outcome || outcome === "pending") return;
+    setCorrectingId(legId);
+    setError("");
+
+    const res = await fetch(`/api/admin/legs/${legId}/correct-outcome`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ outcome }),
+    });
+    const data = await res.json();
+    setCorrectingId(null);
+
+    if (!res.ok) {
+      setError(typeof data.error === "string" ? data.error : "Failed to correct outcome");
       return;
     }
 
@@ -125,11 +147,35 @@ function SettleRoundCard({ round }: { round: SettlementQueueRound }) {
               </p>
             </div>
             {leg.outcome !== "pending" ? (
-              <span
-                className={`rounded border px-2 py-0.5 text-xs font-medium ${outcomeBadgeClass(leg.outcome)}`}
-              >
-                {leg.outcome}
-              </span>
+              <div className="flex items-center gap-2">
+                <span
+                  className={`rounded border px-2 py-0.5 text-xs font-medium ${outcomeBadgeClass(leg.outcome)}`}
+                >
+                  {leg.outcome}
+                </span>
+                <select
+                  defaultValue=""
+                  disabled={correctingId === leg.id}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value) void handleCorrect(leg.id, value);
+                    e.target.value = "";
+                  }}
+                  className="rounded border border-border bg-background px-2 py-1 text-xs"
+                  aria-label={`Correct outcome for ${leg.selectionLabel}`}
+                >
+                  <option value="" disabled>
+                    Correct…
+                  </option>
+                  {(["won", "lost", "void"] as const)
+                    .filter((o) => o !== leg.outcome)
+                    .map((o) => (
+                      <option key={o} value={o}>
+                        → {o}
+                      </option>
+                    ))}
+                </select>
+              </div>
             ) : (
               <select
                 value={outcomes[leg.id] ?? ""}
@@ -151,22 +197,24 @@ function SettleRoundCard({ round }: { round: SettlementQueueRound }) {
       </ul>
 
       {error && <p className="mt-3 text-sm text-danger">{error}</p>}
-      <button
-        type="button"
-        onClick={handleSettle}
-        disabled={loading || !allChosen}
-        className="mt-4 w-full rounded-lg border border-accent py-2 text-sm font-medium text-accent hover:bg-accent-muted/30 disabled:opacity-50"
-      >
-        {loading
-          ? earlySettled
-            ? "Resolving…"
-            : "Settling…"
-          : allChosen
+      {actionableLegs.length > 0 && (
+        <button
+          type="button"
+          onClick={handleSettle}
+          disabled={loading || !allChosen}
+          className="mt-4 w-full rounded-lg border border-accent py-2 text-sm font-medium text-accent hover:bg-accent-muted/30 disabled:opacity-50"
+        >
+          {loading
             ? earlySettled
-              ? "Resolve remaining legs & award points"
-              : "Settle round & award points"
-            : "Choose an outcome for every pending leg"}
-      </button>
+              ? "Resolving…"
+              : "Settling…"
+            : allChosen
+              ? earlySettled
+                ? "Resolve remaining legs & award points"
+                : "Settle round & award points"
+              : "Choose an outcome for every pending leg"}
+        </button>
+      )}
     </div>
   );
 }
@@ -175,7 +223,8 @@ export function AdminSettlement({ rounds }: { rounds: SettlementQueueRound[] }) 
   if (rounds.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-card p-6 text-sm text-muted">
-        No rounds waiting on results — the settlement cron is keeping up.
+        No rounds waiting on results — the settlement cron is keeping up. Wrong scores?
+        Use <span className="text-foreground">Admin → Results</span> to override a match.
       </div>
     );
   }

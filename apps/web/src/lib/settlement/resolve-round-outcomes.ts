@@ -1,9 +1,15 @@
 import { postLegResultMessage } from "@/lib/chat/system-messages";
 import { getMatchResultForLegFromDb } from "@/lib/results/match-store";
+import { isMatchResultConfirmed } from "@/lib/results/result-confirmation";
 import { resolveLegOutcome } from "@/lib/results/resolve-leg";
 import { prisma } from "@tiki-acca/database";
 import type { Leg } from "@prisma/client";
-import { formatFixtureLabel, isOutrightFixtureId, type LegOutcome } from "@tiki-acca/shared";
+import {
+  formatFixtureLabel,
+  isOutrightFixtureId,
+  RESULT_CONFIRMATION_MS,
+  type LegOutcome,
+} from "@tiki-acca/shared";
 
 export type PendingLeg = { legId: string; reason: string };
 
@@ -41,6 +47,17 @@ export async function resolveRoundOutcomes(
       pending.push({
         legId: leg.id,
         reason: `No synced match for ${formatFixtureLabel(leg)} (${leg.competition})`,
+      });
+      continue;
+    }
+
+    // Hold auto-settle until the feed's FT score has had time to stabilise
+    // (disallowed goals / VAR corrections often land within the first hour).
+    if (!isMatchResultConfirmed(matchData.match)) {
+      const mins = Math.ceil(RESULT_CONFIRMATION_MS / 60_000);
+      pending.push({
+        legId: leg.id,
+        reason: `Result confirming for ${formatFixtureLabel(leg)} — waiting up to ${mins}m after FT for feed corrections`,
       });
       continue;
     }

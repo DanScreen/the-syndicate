@@ -7,6 +7,7 @@ const links = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/activity", label: "Activity" },
   { href: "/admin/settlement", label: "Settlement" },
+  { href: "/admin/results", label: "Results" },
   { href: "/admin/leaderboards", label: "Leaderboards" },
   { href: "/admin/competitions", label: "Competitions" },
   { href: "/admin/odds", label: "Odds" },
