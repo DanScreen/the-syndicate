@@ -45,7 +45,7 @@ flowchart TB
 | **GroupMember** | Membership, group role, group-scoped points, chat `lastReadMessageAt` |
 | **Round** | One acca: group-scoped `betNumber`; open → locked → settled; `legsPerMember` snapshot; `accaBookmakerRankings` JSON at lock |
 | **Leg** | Pick slot (`legIndex` 1..quota) per member: fixture, `competitionId`, market, odds, outcome |
-| **Match** | Canonical fixture result (football-data.org sync); reused for auto-settle |
+| **Match** | Canonical fixture result (football-data.org sync); `finishedAt` + 1h confirmation window; `scoreLocked` for admin overrides; reused for auto-settle |
 | **AnalyticsEvent** | Product analytics: `sign_up`, `login`, `page_view` |
 | **RoundMessage** | Group-scoped user/system chat message; optional `roundId` for bet context and `legId` for pick announcements |
 | **MessageReaction** | Constrained emoji reaction, unique per message/user/emoji |

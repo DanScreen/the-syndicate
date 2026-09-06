@@ -4,10 +4,12 @@ import {
   syncDateRange,
   type FootballDataMatch,
 } from "@/lib/results/football-data";
+import { isTerminalMatchStatus } from "@/lib/results/result-confirmation";
 import { getEnabledCompetitions } from "@/lib/competitions/settings";
 import { prisma } from "@tiki-acca/database";
 import {
   COMPETITIONS,
+  RESULT_CONFIRMATION_MS,
   competitionNeedsManualSettlement,
   type Competition,
 } from "@tiki-acca/shared";
@@ -31,6 +33,8 @@ function matchDataFromFootballData(competitionId: string, match: FootballDataMat
     awayGoals: regulation.away,
     externalDataId: match.id,
     lastSyncedAt: now,
+    /** Set by upsert when first observing a terminal status. */
+    isTerminal: isTerminalMatchStatus(match.status),
   };
 }
 
@@ -41,19 +45,46 @@ async function upsertFootballDataMatch(
   const data = matchDataFromFootballData(competitionId, match);
   if (!data) return "skipped";
 
+  const { isTerminal, ...syncFields } = data;
   const existing = await prisma.match.findUnique({
     where: { externalDataId: match.id },
   });
 
   if (existing) {
+    // Admin override wins — keep status/score/finishedAt, only bump lastSyncedAt.
+    if (existing.scoreLocked) {
+      await prisma.match.update({
+        where: { id: existing.id },
+        data: { lastSyncedAt: syncFields.lastSyncedAt },
+      });
+      return "updated";
+    }
+
+    const finishedAt =
+      existing.finishedAt ??
+      (isTerminal
+        ? // Already terminal before finishedAt existed → treat as confirmed.
+          isTerminalMatchStatus(existing.status)
+          ? new Date(syncFields.lastSyncedAt.getTime() - RESULT_CONFIRMATION_MS)
+          : syncFields.lastSyncedAt
+        : null);
+
     await prisma.match.update({
       where: { id: existing.id },
-      data,
+      data: {
+        ...syncFields,
+        finishedAt,
+      },
     });
     return "updated";
   }
 
-  await prisma.match.create({ data });
+  await prisma.match.create({
+    data: {
+      ...syncFields,
+      finishedAt: isTerminal ? syncFields.lastSyncedAt : null,
+    },
+  });
   return "created";
 }
 

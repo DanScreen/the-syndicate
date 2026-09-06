@@ -178,6 +178,12 @@ model Match {
   status         String    @default("SCHEDULED")
   homeGoals      Int?
   awayGoals      Int?
+  /// First time we observed FINISHED (or equivalent) from the results feed.
+  /// Auto-settle waits RESULT_CONFIRMATION_MS after this so late score
+  /// corrections (VAR / disallowed goals) can land before we write outcomes.
+  finishedAt     DateTime?
+  /// When true, sync will not overwrite status/score — admin override wins.
+  scoreLocked    Boolean   @default(false)
   externalOddsId String?   @unique
   externalDataId Int?      @unique
   lastSyncedAt   DateTime?

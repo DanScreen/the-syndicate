@@ -9,6 +9,14 @@ export const POINTS = {
 
 export const DEFAULT_STAKE_GBP = 10;
 
+/**
+ * How long after we first observe a FINISHED match before auto-settle writes
+ * leg outcomes. football-data.org (and similar feeds) sometimes publish a
+ * provisional FT score and correct it minutes later (disallowed goals / VAR).
+ * During this window we keep syncing the latest score and hold settlement.
+ */
+export const RESULT_CONFIRMATION_MS = 60 * 60 * 1000;
+
 /** Owner-selectable legs each member submits per round. */
 export const LEGS_PER_MEMBER_OPTIONS = [1, 2, 3] as const;
 export type LegsPerMember = (typeof LEGS_PER_MEMBER_OPTIONS)[number];

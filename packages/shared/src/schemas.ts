@@ -131,6 +131,20 @@ export const adminSettleRoundSchema = z.object({
     .min(1),
 });
 
+/** Admin override of a synced match score (locks the row against feed overwrites). */
+export const adminOverrideMatchScoreSchema = z.object({
+  homeGoals: z.number().int().min(0).max(99),
+  awayGoals: z.number().int().min(0).max(99),
+  status: z.enum(["FINISHED", "POSTPONED", "CANCELLED", "SUSPENDED", "AWARDED"]).optional(),
+  /** Default true — stop the cron overwriting this score. */
+  lockScore: z.boolean().optional().default(true),
+});
+
+/** Admin correction of an already-resolved (or still pending) leg outcome. */
+export const adminCorrectLegOutcomeSchema = z.object({
+  outcome: z.enum(["won", "lost", "void"]),
+});
+
 export const pushTokenSchema = z.object({
   token: z.string().min(10),
   platform: z.enum(["ios", "android"]),

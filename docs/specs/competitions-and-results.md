@@ -39,6 +39,7 @@ If no single bookmaker covers all legs → best-per-leg combined odds locked at 
 - `POST /api/internal/sync-matches` (Bearer `CRON_SECRET`)
 - Sync **bypasses** football-data in-memory cache (`bypassCache: true`) for fresh results every cron run
 - Stores **90-minute (regulation)** scores via `score.regularTime` when extra time is played; otherwise `fullTime`
+- Stamps `Match.finishedAt` on first terminal status; auto-settle waits `RESULT_CONFIRMATION_MS` (1h) so provisional FT corrections win; `scoreLocked` admin overrides skip feed overwrites and confirm immediately
 - Auto-settle reads from `Match` table via `match-store.ts` (UTC kickoff day matching)
 - Cloud Scheduler: every 5 min UTC in production (`europe-west2`, job `sync-matches`)
 - **Progressive outcomes:** `persistResolvableLegOutcomes()` updates leg `outcome` as matches finish; round settles when all legs ready
@@ -99,6 +100,8 @@ model Match {
   status          String    @default("SCHEDULED")
   homeGoals       Int?
   awayGoals       Int?
+  finishedAt      DateTime? // first observed FINISHED; confirmation window starts here
+  scoreLocked     Boolean   @default(false) // admin override — sync won't overwrite score
   externalOddsId  String?   @unique
   externalDataId  Int?      @unique
   lastSyncedAt    DateTime?
@@ -136,6 +139,8 @@ flowchart LR
 | `POST /api/legs` | ✅ Validates `competitionId` |
 | `POST /api/internal/sync-matches` | ✅ Cron sync |
 | `PATCH /api/legs/[id]` | ✅ Edit own leg until first kickoff (locked rounds reprice) |
+| `PATCH /api/admin/matches/[id]` | ✅ Admin score override + lock |
+| `POST /api/admin/legs/[id]/correct-outcome` | ✅ Admin outcome correction |
 
 ---
 
