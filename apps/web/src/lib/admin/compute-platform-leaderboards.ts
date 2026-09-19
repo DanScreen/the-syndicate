@@ -1,4 +1,9 @@
 import { prisma } from "@tiki-acca/database";
+import {
+  groupNetPoints,
+  statsRoundWhere,
+  type RoundWithLegs,
+} from "@/lib/stats/helpers";
 
 export type GroupLeaderboardEntry = {
   rank: number;
@@ -26,6 +31,42 @@ export type PlatformLeaderboards = {
   players: PlayerLeaderboardEntry[];
 };
 
+export type GroupLeaderboardSource = {
+  id: string;
+  name: string;
+  ownerName: string;
+  members: Array<{ legsWon: number; legsLost: number }>;
+  rounds: RoundWithLegs[];
+};
+
+/**
+ * Rank groups by group acca points (`groupNetPoints`) — the same metric as
+ * group Performance / dashboard "Group points". Do not sum member leg points:
+ * on a win, member totals do not equal the group total; on a loss the group
+ * is −1 while winning members can still be positive.
+ */
+export function rankGroupsByAccaPoints(
+  groups: GroupLeaderboardSource[]
+): GroupLeaderboardEntry[] {
+  const rows = groups
+    .map((g) => ({
+      groupId: g.id,
+      name: g.name,
+      ownerName: g.ownerName,
+      memberCount: g.members.length,
+      totalPoints: groupNetPoints(g.rounds),
+      legsWon: g.members.reduce((sum, m) => sum + m.legsWon, 0),
+      legsLost: g.members.reduce((sum, m) => sum + m.legsLost, 0),
+    }))
+    .filter((g) => g.memberCount > 0)
+    .sort((a, b) => b.totalPoints - a.totalPoints || a.name.localeCompare(b.name));
+
+  return rows.map((row, i) => ({
+    rank: i + 1,
+    ...row,
+  }));
+}
+
 export async function computePlatformLeaderboards(): Promise<PlatformLeaderboards> {
   const [groupRecords, users] = await Promise.all([
     prisma.group.findMany({
@@ -34,7 +75,11 @@ export async function computePlatformLeaderboards(): Promise<PlatformLeaderboard
         name: true,
         owner: { select: { name: true } },
         members: {
-          select: { points: true, legsWon: true, legsLost: true },
+          select: { legsWon: true, legsLost: true },
+        },
+        rounds: {
+          where: statsRoundWhere,
+          include: { legs: true },
         },
       },
     }),
@@ -51,23 +96,15 @@ export async function computePlatformLeaderboards(): Promise<PlatformLeaderboard
     }),
   ]);
 
-  const groupRows = groupRecords
-    .map((g) => ({
-      groupId: g.id,
+  const groups = rankGroupsByAccaPoints(
+    groupRecords.map((g) => ({
+      id: g.id,
       name: g.name,
       ownerName: g.owner.name,
-      memberCount: g.members.length,
-      totalPoints: g.members.reduce((sum, m) => sum + m.points, 0),
-      legsWon: g.members.reduce((sum, m) => sum + m.legsWon, 0),
-      legsLost: g.members.reduce((sum, m) => sum + m.legsLost, 0),
+      members: g.members,
+      rounds: g.rounds,
     }))
-    .filter((g) => g.memberCount > 0)
-    .sort((a, b) => b.totalPoints - a.totalPoints);
-
-  const groups: GroupLeaderboardEntry[] = groupRows.map((row, i) => ({
-    rank: i + 1,
-    ...row,
-  }));
+  );
 
   const players: PlayerLeaderboardEntry[] = users.map((u, i) => ({
     rank: i + 1,

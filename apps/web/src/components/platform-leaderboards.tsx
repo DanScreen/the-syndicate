@@ -53,7 +53,7 @@ export function PlatformLeaderboards({ data }: { data: PlatformLeaderboards }) {
       <div className="grid gap-8 lg:grid-cols-2">
         <LeaderboardTable
           title="Group leaderboard"
-          description="Ranked by combined member points in each group."
+          description="Ranked by group acca points (same as group Performance)."
           headers={["#", "Group", "Owner", "Members", "Points", "Record"]}
           rows={data.groups.map((row) => (
             <tr key={row.groupId} className="border-b border-border/60 last:border-0">

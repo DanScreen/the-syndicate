@@ -1,6 +1,6 @@
 # Current state (as-built)
 
-Last updated 6 September 2026 (admin match score override + 1h FT result confirmation). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
+Last updated 19 September 2026 (admin group leaderboard uses group acca points). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
 
 Production: **https://www.tikiacca.com** (apex → 301 to www via Cloudflare).
 
@@ -128,7 +128,7 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 
 Example: acca @ 3.44 (legs 1.6 × 2.15) → **2.44** group pts; members **0.6** and **1.15** (not split). If that acca loses because one leg fails, the winning member still keeps `odds − 1` while the losing member gets `−1` (group still `−1`).
 
-**Stats:** `groupAccaRoundPoints()` for group totals; `memberAccaLegPoints()` for members. Dashboard “Your points”, group leaderboard, and Performance tabs **recompute live** from resolved leg outcomes — including legs on **locked in-progress accas** (not only when the round fully settles). Group −1 applies as soon as a leg loses; member points accrue per resolved leg; charts include the in-progress bet with partial totals (tooltip date uses `lockedAt` until `settledAt`). Fully settled rounds still drive acca £ P/L sums and “total rounds” counts. Helpers: `apps/web/src/lib/stats/helpers.ts` (`roundsForPerformanceStats`, `statsRoundWhere`). Denormalized `Leg.pointsAwarded`, `GroupMember.points`/`legsWon`/`legsLost` and `User.totalPoints`/`legsWon`/`legsLost` are written incrementally at settlement/deferred resolution and were **backfilled** by migration `20260716120000_backfill_member_leg_points`. Admin platform leaderboards (`compute-platform-leaderboards.ts`) read stored columns directly. Performance charts use bet number on the X-axis (`Bet N` / `Start`); settlement/lock date in tooltips (`dateLabel`).
+**Stats:** `groupAccaRoundPoints()` for group totals; `memberAccaLegPoints()` for members. Dashboard “Your points”, group leaderboard, and Performance tabs **recompute live** from resolved leg outcomes — including legs on **locked in-progress accas** (not only when the round fully settles). Group −1 applies as soon as a leg loses; member points accrue per resolved leg; charts include the in-progress bet with partial totals (tooltip date uses `lockedAt` until `settledAt`). Fully settled rounds still drive acca £ P/L sums and “total rounds” counts. Helpers: `apps/web/src/lib/stats/helpers.ts` (`roundsForPerformanceStats`, `statsRoundWhere`). Denormalized `Leg.pointsAwarded`, `GroupMember.points`/`legsWon`/`legsLost` and `User.totalPoints`/`legsWon`/`legsLost` are written incrementally at settlement/deferred resolution and were **backfilled** by migration `20260716120000_backfill_member_leg_points`. Admin platform **group** leaderboard recomputes live via `groupNetPoints()` (same as group Performance — not the sum of `GroupMember.points`). Admin **player** leaderboard still reads `User.totalPoints` / W-L columns. Performance charts use bet number on the X-axis (`Bet N` / `Start`); settlement/lock date in tooltips (`dateLabel`).
 
 **Points-first UX:** Points are the **primary metric** across performance pages, leaderboards, share cards, and round history. Users convert points to money with `profitFromPoints(points, stake)` — profit = points × stake (£). UI: `StakeProfit` component (default stake £10). **Group / acca points** use `pointsTone()` (negative → red). **Individual pick rows** use `pointsToneFromOutcome()` (won → green, lost → red).
 
@@ -356,7 +356,7 @@ Platform admins (`User.role = admin`) see an **Admin** area including Overview, 
 
 | Leaderboard | Ranked by |
 |-------------|-----------|
-| Groups | Sum of `GroupMember.points` per group; columns: name, **owner**, members, points, W/L record |
+| Groups | `groupNetPoints()` (group acca points — same as group Performance); columns: name, **owner**, members, points, W/L record |
 | Players | `User.totalPoints` (all groups); **all registered users** listed (0 pts if no groups) |
 
 Admin-only for now; public rollout planned when user base grows.
