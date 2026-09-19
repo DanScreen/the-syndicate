@@ -4,7 +4,10 @@ import {
   syncDateRange,
   type FootballDataMatch,
 } from "@/lib/results/football-data";
-import { isTerminalMatchStatus } from "@/lib/results/result-confirmation";
+import {
+  isTerminalMatchStatus,
+  matchScoreChanged,
+} from "@/lib/results/result-confirmation";
 import { getEnabledCompetitions } from "@/lib/competitions/settings";
 import { prisma } from "@tiki-acca/database";
 import {
@@ -38,12 +41,19 @@ function matchDataFromFootballData(competitionId: string, match: FootballDataMat
   };
 }
 
+export type UpsertMatchResult = {
+  action: "created" | "updated" | "skipped";
+  matchId?: string;
+  /** True when terminal FT goals changed (or status newly became terminal). */
+  scoreChanged: boolean;
+};
+
 async function upsertFootballDataMatch(
   competitionId: string,
   match: FootballDataMatch
-): Promise<"created" | "updated" | "skipped"> {
+): Promise<UpsertMatchResult> {
   const data = matchDataFromFootballData(competitionId, match);
-  if (!data) return "skipped";
+  if (!data) return { action: "skipped", scoreChanged: false };
 
   const { isTerminal, ...syncFields } = data;
   const existing = await prisma.match.findUnique({
@@ -57,8 +67,18 @@ async function upsertFootballDataMatch(
         where: { id: existing.id },
         data: { lastSyncedAt: syncFields.lastSyncedAt },
       });
-      return "updated";
+      return { action: "updated", matchId: existing.id, scoreChanged: false };
     }
+
+    const becomingTerminal =
+      isTerminal && !isTerminalMatchStatus(existing.status);
+    const scoreChanged =
+      becomingTerminal ||
+      (isTerminal &&
+        matchScoreChanged(
+          { homeGoals: existing.homeGoals, awayGoals: existing.awayGoals },
+          { homeGoals: syncFields.homeGoals, awayGoals: syncFields.awayGoals }
+        ));
 
     const finishedAt =
       existing.finishedAt ??
@@ -69,23 +89,45 @@ async function upsertFootballDataMatch(
           : syncFields.lastSyncedAt
         : null);
 
+    let scoreStableSince = existing.scoreStableSince;
+    if (!isTerminal) {
+      scoreStableSince = null;
+    } else if (scoreChanged) {
+      // FT goals changed (or newly terminal) → restart the stability clock.
+      scoreStableSince = syncFields.lastSyncedAt;
+    } else if (!scoreStableSince) {
+      // Deploy / schema backfill: align with finishedAt so already-stable
+      // terminal rows do not re-enter the confirmation window.
+      scoreStableSince = finishedAt;
+    }
+
     await prisma.match.update({
       where: { id: existing.id },
       data: {
         ...syncFields,
         finishedAt,
+        scoreStableSince,
       },
     });
-    return "updated";
+    return {
+      action: "updated",
+      matchId: existing.id,
+      scoreChanged: isTerminal && scoreChanged,
+    };
   }
 
-  await prisma.match.create({
+  const created = await prisma.match.create({
     data: {
       ...syncFields,
       finishedAt: isTerminal ? syncFields.lastSyncedAt : null,
+      scoreStableSince: isTerminal ? syncFields.lastSyncedAt : null,
     },
   });
-  return "created";
+  return {
+    action: "created",
+    matchId: created.id,
+    scoreChanged: isTerminal,
+  };
 }
 
 export type SyncMatchesResult = {
@@ -100,6 +142,8 @@ export type SyncMatchesResult = {
   totalCreated: number;
   totalUpdated: number;
   totalSkipped: number;
+  /** Match IDs whose terminal score changed this sync (candidates for reconcile). */
+  scoreChangedMatchIds: string[];
 };
 
 async function getCompetitionsToSync(): Promise<Competition[]> {
@@ -132,6 +176,7 @@ export async function syncAllCompetitionMatches(): Promise<SyncMatchesResult> {
     totalCreated: 0,
     totalUpdated: 0,
     totalSkipped: 0,
+    scoreChangedMatchIds: [],
   };
 
   for (const competition of competitions) {
@@ -150,16 +195,19 @@ export async function syncAllCompetitionMatches(): Promise<SyncMatchesResult> {
       entry.total = matches.length;
 
       for (const match of matches) {
-        const action = await upsertFootballDataMatch(competition.id, match);
-        if (action === "created") {
+        const upsert = await upsertFootballDataMatch(competition.id, match);
+        if (upsert.action === "created") {
           entry.created++;
           result.totalCreated++;
-        } else if (action === "updated") {
+        } else if (upsert.action === "updated") {
           entry.updated++;
           result.totalUpdated++;
         } else {
           entry.skipped++;
           result.totalSkipped++;
+        }
+        if (upsert.scoreChanged && upsert.matchId) {
+          result.scoreChangedMatchIds.push(upsert.matchId);
         }
       }
     } catch (err) {

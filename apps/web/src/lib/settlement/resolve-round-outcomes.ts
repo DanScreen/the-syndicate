@@ -51,13 +51,13 @@ export async function resolveRoundOutcomes(
       continue;
     }
 
-    // Hold auto-settle until the feed's FT score has had time to stabilise
-    // (disallowed goals / VAR corrections often land within the first hour).
+    // Hold auto-settle until the feed's FT score has been stable long enough
+    // (disallowed goals / VAR corrections reset the stability clock).
     if (!isMatchResultConfirmed(matchData.match)) {
       const mins = Math.ceil(RESULT_CONFIRMATION_MS / 60_000);
       pending.push({
         legId: leg.id,
-        reason: `Result confirming for ${formatFixtureLabel(leg)} — waiting up to ${mins}m after FT for feed corrections`,
+        reason: `Result confirming for ${formatFixtureLabel(leg)} — waiting for FT score to stay unchanged for ${mins}m`,
       });
       continue;
     }
