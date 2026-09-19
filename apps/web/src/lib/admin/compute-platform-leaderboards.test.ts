@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { Leg, Round } from "@prisma/client";
 
-import { rankGroupsByAccaPoints } from "./compute-platform-leaderboards";
+import {
+  rankGroupsByAccaPoints,
+  rankPlayersByPoints,
+} from "./compute-platform-leaderboards";
 
 type TestLeg = Pick<Leg, "id" | "roundId" | "userId" | "outcome" | "odds">;
 type TestRound = Pick<
@@ -119,5 +122,74 @@ describe("rankGroupsByAccaPoints", () => {
       },
     ]);
     assert.equal(ranked.length, 0);
+  });
+
+  it("excludes the marketing demo group by invite code and owner email", () => {
+    const real = {
+      id: "g-real",
+      name: "Real Group",
+      ownerName: "Eve",
+      ownerEmail: "eve@example.com",
+      inviteCode: "REAL01",
+      members: [{ legsWon: 1, legsLost: 0 }],
+      rounds: [
+        round("r1", "settled", [leg("l1", "u1", "won", 2.0)], 2.0),
+      ] as never,
+    };
+    const byInvite = {
+      id: "g-demo-invite",
+      name: "The Thursday Club",
+      ownerName: "Danny Walsh",
+      ownerEmail: "danny@demo.tikiacca.com",
+      inviteCode: "DEMO24",
+      members: [{ legsWon: 5, legsLost: 0 }],
+      rounds: [
+        round("r-demo", "settled", [leg("l2", "u2", "won", 5.0)], 5.0),
+      ] as never,
+    };
+    const byOwner = {
+      id: "g-demo-owner",
+      name: "Other Demo",
+      ownerName: "Sarah",
+      ownerEmail: "sarah@demo.tikiacca.com",
+      inviteCode: "OTHER1",
+      members: [{ legsWon: 2, legsLost: 0 }],
+      rounds: [] as never,
+    };
+
+    const ranked = rankGroupsByAccaPoints([byInvite, real, byOwner]);
+    assert.equal(ranked.length, 1);
+    assert.equal(ranked[0]?.groupId, "g-real");
+    assert.equal(ranked[0]?.rank, 1);
+  });
+});
+
+describe("rankPlayersByPoints", () => {
+  it("excludes @demo.tikiacca.com accounts and re-ranks", () => {
+    const ranked = rankPlayersByPoints([
+      {
+        id: "demo",
+        name: "Danny Walsh",
+        email: "danny@demo.tikiacca.com",
+        totalPoints: 99,
+        legsWon: 10,
+        legsLost: 0,
+        groupCount: 1,
+      },
+      {
+        id: "real",
+        name: "Real User",
+        email: "real@example.com",
+        totalPoints: 5,
+        legsWon: 2,
+        legsLost: 1,
+        groupCount: 1,
+      },
+    ]);
+
+    assert.equal(ranked.length, 1);
+    assert.equal(ranked[0]?.userId, "real");
+    assert.equal(ranked[0]?.rank, 1);
+    assert.equal(ranked[0]?.totalPoints, 5);
   });
 });

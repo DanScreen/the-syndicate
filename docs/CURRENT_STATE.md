@@ -1,6 +1,6 @@
 # Current state (as-built)
 
-Last updated 19 September 2026 (admin group leaderboard uses group acca points). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
+Last updated 19 September 2026 (admin leaderboards: group acca points + exclude demo accounts). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
 
 Production: **https://www.tikiacca.com** (apex → 301 to www via Cloudflare).
 
@@ -356,8 +356,8 @@ Platform admins (`User.role = admin`) see an **Admin** area including Overview, 
 
 | Leaderboard | Ranked by |
 |-------------|-----------|
-| Groups | `groupNetPoints()` (group acca points — same as group Performance); columns: name, **owner**, members, points, W/L record |
-| Players | `User.totalPoints` (all groups); **all registered users** listed (0 pts if no groups) |
+| Groups | `groupNetPoints()` (group acca points — same as group Performance); columns: name, **owner**, members, points, W/L record. Marketing demo group (`DEMO24` / `@demo.tikiacca.com` owner) excluded |
+| Players | `User.totalPoints` (all groups); **all registered users** listed (0 pts if no groups), except `@demo.tikiacca.com` marketing accounts |
 
 Admin-only for now; public rollout planned when user base grows.
 
@@ -373,7 +373,8 @@ Admin-only for now; public rollout planned when user base grows.
 | `apps/web/src/lib/auth.ts` | Credentials sign-in, JWT role refresh |
 | `apps/web/src/lib/admin.ts` | `requireAdmin`, `ADMIN_EMAILS` promotion |
 | `apps/web/src/lib/admin/compute-admin-stats.ts` | Overview aggregates |
-| `apps/web/src/lib/admin/compute-platform-leaderboards.ts` | Leaderboard queries |
+| `apps/web/src/lib/admin/compute-platform-leaderboards.ts` | Leaderboard queries (excludes marketing demo accounts) |
+| `apps/web/src/lib/admin/demo-accounts.ts` | `@demo.tikiacca.com` / `DEMO24` filters for admin leaderboards |
 | `apps/web/src/lib/analytics.ts` | `recordAnalyticsEvent` |
 | `apps/web/src/components/admin-page-shell.tsx` | Admin layout + nav |
 | `apps/web/src/components/admin-stats.tsx` | Overview UI |
