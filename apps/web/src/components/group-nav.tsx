@@ -18,18 +18,8 @@ export function GroupNav({
   const tabs = [
     {
       href: base,
-      label: "Round",
+      label: "Bet",
       active: pathname === base,
-    },
-    {
-      href: `${base}/chat`,
-      label: unreadMessageCount > 0 ? `Chat (${unreadMessageCount})` : "Chat",
-      active: pathname === `${base}/chat`,
-    },
-    {
-      href: `${base}/history`,
-      label: "History",
-      active: pathname === `${base}/history`,
     },
     {
       href: `${base}/leaderboard`,
@@ -37,9 +27,14 @@ export function GroupNav({
       active: pathname === `${base}/leaderboard`,
     },
     {
-      href: `${base}/performance`,
-      label: "Performance",
-      active: pathname === `${base}/performance`,
+      href: `${base}/history`,
+      label: "History",
+      active: pathname === `${base}/history`,
+    },
+    {
+      href: `${base}/chat`,
+      label: unreadMessageCount > 0 ? `Chat (${unreadMessageCount})` : "Chat",
+      active: pathname === `${base}/chat`,
     },
     ...(showSettings
       ? [

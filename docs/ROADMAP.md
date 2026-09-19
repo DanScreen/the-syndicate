@@ -26,7 +26,7 @@ Core loop and MVP polish are **shipped**:
 - **Unit-stake points** (win: `odds−1`, loss: `−1`, void: `0`)
 - **Group stats** + **member stats** (charts, favourites, best/worst)
 - **Cross-group performance** page (`/performance`) + share cards
-- **Split app layout** — Groups home, Performance nav, group tabs (Round / Leaderboard / Performance)
+- **Split app layout** — Groups home, Performance nav, group tabs (Bet / Leaderboard / History / Chat)
 - Locked round UX: in-progress leg results, locked odds only (no bookmaker comparison after lock)
 - **Early settle on first lost leg** — group −1 immediately; remaining legs resolve afterward
 - **Auto-settle reliability** — 5-min match sync, cache bypass on cron, progressive leg outcomes before acca settles
