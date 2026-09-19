@@ -47,13 +47,13 @@ export function PlatformLeaderboards({ data }: { data: PlatformLeaderboards }) {
       <p className="rounded-xl border border-border bg-card/50 px-4 py-3 text-sm text-muted">
         Rankings use <strong className="text-foreground">unit-stake points</strong>. Users can
         convert points to profit on performance pages by entering their bet stake (points ×
-        stake).
+        stake). Marketing demo accounts (@demo.tikiacca.com / The Thursday Club) are excluded.
       </p>
 
       <div className="grid gap-8 lg:grid-cols-2">
         <LeaderboardTable
           title="Group leaderboard"
-          description="Ranked by combined member points in each group."
+          description="Ranked by group acca points (same as group Performance)."
           headers={["#", "Group", "Owner", "Members", "Points", "Record"]}
           rows={data.groups.map((row) => (
             <tr key={row.groupId} className="border-b border-border/60 last:border-0">

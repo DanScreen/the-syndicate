@@ -124,8 +124,8 @@ Non-admin → `403 Forbidden`. Unauthenticated → `401`.
 
 | Leaderboard | Sort key | Notes |
 |-------------|----------|-------|
-| **Groups** | Sum of `GroupMember.points` per group | Owner name, member count + W/L shown |
-| **Players** | `User.totalPoints` | All registered users; group count + W/L shown |
+| **Groups** | `groupNetPoints()` — group acca points (same as group Performance; **not** sum of member leg points). Excludes marketing demo group (`DEMO24` / `@demo.tikiacca.com` owner) | Owner name, member count + W/L shown |
+| **Players** | `User.totalPoints`. Excludes `@demo.tikiacca.com` marketing accounts | All other registered users; group count + W/L shown |
 
 **Future:** Roll out public `/leaderboards` when user base grows — reuse `computePlatformLeaderboards()` and `PlatformLeaderboards` component.
 
@@ -180,6 +180,7 @@ Login recording is fire-and-forget (`recordAnalyticsEventAsync`). Client activit
 | `apps/web/src/lib/auth.ts` | Credentials provider, role refresh in JWT callback |
 | `apps/web/src/lib/admin/compute-admin-stats.ts` | Overview aggregates |
 | `apps/web/src/lib/admin/compute-platform-leaderboards.ts` | Leaderboard queries |
+| `apps/web/src/lib/admin/demo-accounts.ts` | Marketing demo email domain / invite code filters |
 | `apps/web/src/lib/analytics.ts` | `recordAnalyticsEvent` |
 | `apps/web/src/components/analytics/authenticated-page-tracker.tsx` | Global authenticated web navigation tracker |
 | `apps/mobile/src/analytics/activity-tracker.tsx` | Global mobile route and foreground tracker |

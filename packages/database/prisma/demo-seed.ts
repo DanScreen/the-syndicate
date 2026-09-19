@@ -2,6 +2,7 @@
  * Demo seed for marketing screenshots. Creates a presentable group with a
  * settled acca (history + leaderboard) and a current locked acca (hero shot).
  * Login: danny@demo.tikiacca.com / DemoPass123!
+ * Admin platform leaderboards omit these accounts (see apps/web/src/lib/admin/demo-accounts.ts).
  *
  * Run: npx tsx prisma/demo-seed.ts   (from packages/database)
  */
