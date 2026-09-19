@@ -39,7 +39,8 @@ If no single bookmaker covers all legs → best-per-leg combined odds locked at 
 - `POST /api/internal/sync-matches` (Bearer `CRON_SECRET`)
 - Sync **bypasses** football-data in-memory cache (`bypassCache: true`) for fresh results every cron run
 - Stores **90-minute (regulation)** scores via `score.regularTime` when extra time is played; otherwise `fullTime`
-- Stamps `Match.finishedAt` on first terminal status; auto-settle waits `RESULT_CONFIRMATION_MS` (1h) so provisional FT corrections win; `scoreLocked` admin overrides skip feed overwrites and confirm immediately
+- Stamps `Match.finishedAt` + `Match.scoreStableSince` on first terminal status; auto-settle waits until the FT score is unchanged for `RESULT_CONFIRMATION_MS` (1h), capped by `RESULT_CONFIRMATION_MAX_MS` (4h); feed score changes restart the stability clock; `scoreLocked` admin overrides skip feed overwrites and confirm immediately
+- Cron reconciles Match score → leg outcomes for `RESULT_RECONCILE_MS` (24h) after FT so late VAR / disallowed-goal corrections auto-fix settled legs
 - Auto-settle reads from `Match` table via `match-store.ts` (UTC kickoff day matching)
 - Cloud Scheduler: every 5 min UTC in production (`europe-west2`, job `sync-matches`)
 - **Progressive outcomes:** `persistResolvableLegOutcomes()` updates leg `outcome` as matches finish; round settles when all legs ready
@@ -100,7 +101,8 @@ model Match {
   status          String    @default("SCHEDULED")
   homeGoals       Int?
   awayGoals       Int?
-  finishedAt      DateTime? // first observed FINISHED; confirmation window starts here
+  finishedAt      DateTime? // first observed FINISHED
+  scoreStableSince DateTime? // last FT score change; confirmation waits 1h from here
   scoreLocked     Boolean   @default(false) // admin override — sync won't overwrite score
   externalOddsId  String?   @unique
   externalDataId  Int?      @unique
@@ -118,7 +120,9 @@ Full schema: `packages/database/prisma/schema.prisma`
 ```mermaid
 flowchart LR
   FD[football-data.org] -->|cron every 5 min| Match[(Match)]
+  Match --> Reconcile[reconcileMatchLegOutcomes]
   Match --> Resolve[resolveLegOutcome]
+  Leg --> Reconcile
   Leg --> Resolve
 ```
 

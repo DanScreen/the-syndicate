@@ -689,9 +689,16 @@ async function main() {
         break;
       }
       const { syncAllCompetitionMatches } = await import("../src/lib/results/sync-matches");
+      const { reconcileRecentMatchOutcomes } = await import(
+        "../src/lib/results/reconcile-match-legs"
+      );
       const result = await syncAllCompetitionMatches();
       console.log(
         `Synced: ${result.totalCreated} created, ${result.totalUpdated} updated, ${result.totalSkipped} skipped`
+      );
+      const reconcile = await reconcileRecentMatchOutcomes();
+      console.log(
+        `Reconciled: checked ${reconcile.matchesChecked}, touched ${reconcile.matchesTouched}, corrected ${reconcile.legsCorrected}, resolved ${reconcile.legsResolved}, settled ${reconcile.roundsSettled}`
       );
       break;
     }

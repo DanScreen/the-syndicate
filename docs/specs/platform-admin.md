@@ -79,7 +79,7 @@ Wrong FT scores (provisional feed results, disallowed goals) are fixed here:
 - Per-leg **Correct outcome** (`POST /api/admin/legs/[id]/correct-outcome`) for locked or settled rounds without changing the Match row.
 - Settlement queue cards also expose a **Correct…** control on already-resolved legs.
 
-**FT confirmation (automated):** auto-settle waits `RESULT_CONFIRMATION_MS` (1 hour) after first observing `FINISHED` before writing outcomes, so feed corrections within that window win. Admin lock confirms immediately.
+**FT confirmation (automated):** auto-settle waits until the FT score has been stable for `RESULT_CONFIRMATION_MS` (1 hour) — each feed score change resets the clock — capped at `RESULT_CONFIRMATION_MAX_MS` (4h) from first FINISHED. For 24h after FT (`RESULT_RECONCILE_MS`), the sync cron re-checks Match score vs leg outcomes and auto-corrects mismatches (disallowed goals / VAR that land late). Admin lock confirms immediately and skips further feed overwrites.
 
 ---
 

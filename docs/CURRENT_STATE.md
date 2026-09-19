@@ -1,6 +1,6 @@
 # Current state (as-built)
 
-Last updated 19 September 2026 (group tabs: Bet / Leaderboard / History / Chat; Performance merged into Leaderboard). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
+Last updated 19 September 2026 (FT score stability + auto-reconcile for disallowed goals / VAR; group tabs: Bet / Leaderboard / History / Chat). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
 
 Production: **https://www.tikiacca.com** (apex → 301 to www via Cloudflare).
 
@@ -253,12 +253,12 @@ Protected routes enforced in `apps/web/src/middleware.ts` / `auth.config.ts`: `/
 
 | Method | Route | Notes |
 |--------|-------|-------|
-| Auto (hands-off) | Via `POST /api/internal/sync-matches` | Cron sync → waits up to 1h after first FINISHED observation for feed score corrections → settles locked rounds when any leg loses **or** all legs are won/void; continues resolving pending legs on early-settled losses |
+| Auto (hands-off) | Via `POST /api/internal/sync-matches` | Cron sync → wait for FT score stability (1h unchanged, max 4h) → settle locked rounds when any leg loses **or** all legs are won/void; reconcile feed score corrections for 24h after FT; continue resolving pending legs on early-settled losses |
 | Admin (escape hatch) | `POST /api/admin/rounds/[id]/settle` | Platform admin settles stuck locked rounds, or remaining pending legs after an early loss — see `/admin/settlement` |
 | Admin score override | `PATCH /api/admin/matches/[id]` | Correct FT score, lock against feed overwrites, re-resolve/correct linked legs — see `/admin/results` |
 | Admin outcome correction | `POST /api/admin/legs/[id]/correct-outcome` | Fix a wrong won/lost/void on locked or settled rounds (points delta + chat correction) |
 
-**FT confirmation window.** When match sync first observes `FINISHED`, it stamps `Match.finishedAt`. Auto-settle holds leg outcomes for `RESULT_CONFIRMATION_MS` (1 hour, `packages/shared/src/constants.ts`) so football-data.org can correct provisional scores (disallowed goals / VAR). During the window the Match row keeps updating to the latest feed score; once the window elapses, settlement uses whatever score is then stored. Admin score overrides set `scoreLocked` and confirm immediately. Existing FINISHED rows are backfilled so a deploy does not re-open the window.
+**FT confirmation window.** When match sync first observes `FINISHED`, it stamps `Match.finishedAt` and `Match.scoreStableSince`. Auto-settle holds leg outcomes until the FT score has been **unchanged for** `RESULT_CONFIRMATION_MS` (1 hour, `packages/shared/src/constants.ts`), capped at `RESULT_CONFIRMATION_MAX_MS` (4 hours) from first FINISHED — so football-data.org can correct provisional scores (disallowed goals / VAR). Each feed score change resets `scoreStableSince` and restarts the 1h stability clock. During the wait the Match row keeps updating to the latest feed score. **After outcomes are written**, the same cron keeps reconciling for `RESULT_RECONCILE_MS` (24 hours): if the feed score later disagrees with a leg’s won/lost/void, outcomes and points are auto-corrected via `reconcileMatchLegOutcomes()` (chat correction + P/L delta) — no admin required. Admin score overrides set `scoreLocked` and confirm immediately. Existing FINISHED rows are backfilled so a deploy does not re-open the window.
 
 Email and push notifications fire on **round locked**, **round settled**, and **pick reminders** (within 2h before first kickoff). Resend for email (`RESEND_API_KEY`, `EMAIL_FROM`); Expo Push API for mobile (`PushDevice` tokens). Per-user preferences at `/account` (web) and `(main)/account` (mobile). Deduped via `NotificationLog`; round-level `lockedNotificationSentAt` / `settledNotificationSentAt` set only when all members are satisfied (delivered or opted out). Failed lock/settle deliveries retried on `sync-matches` (5 min). Pick reminders cron: `POST /api/internal/round-reminders` every 15 min (Terraform). Notification times formatted in `Europe/London`. See [specs/notifications.md](./specs/notifications.md).
 
@@ -288,7 +288,7 @@ Members can change **their own leg** via `PATCH /api/legs/[id]` while the round 
 
 | Route | Role |
 |-------|------|
-| `POST /api/internal/sync-matches` | football-data.org → `Match` table; locks open rounds at first kickoff; auto-settles locked rounds (incl. early loss); awards deferred legs on settled rounds; retries pending lock/settle notifications |
+| `POST /api/internal/sync-matches` | football-data.org → `Match` table; reconcile recent FT score corrections → leg outcomes; locks open rounds at first kickoff; auto-settles locked rounds (incl. early loss); awards deferred legs on settled rounds; retries pending lock/settle notifications |
 | `POST /api/internal/round-reminders` | Pick reminder emails/push (T−2h before kickoff) |
 | `POST /api/internal/warm-odds-cache` | Refresh odds snapshots in DB |
 
@@ -308,9 +308,10 @@ Members can change **their own leg** via `PATCH /api/legs/[id]` while the round 
 | `apps/web/src/lib/settlement/resolve-round-outcomes.ts` | Match → leg outcomes (gated on FT confirmation); `persistResolvableLegOutcomes()` |
 | `apps/web/src/lib/settlement/correct-leg-outcome.ts` | Points-aware outcome correction for locked/settled rounds |
 | `apps/web/src/lib/settlement/apply-round-settlement.ts` | Atomic settle + `applyDeferredLegOutcome()` |
-| `apps/web/src/lib/results/result-confirmation.ts` | `isMatchResultConfirmed` / confirmation window helpers |
-| `apps/web/src/lib/results/override-match-score.ts` | Admin override + leg re-resolution |
-| `apps/web/src/lib/results/sync-matches.ts` | Upsert matches; respects `scoreLocked`; stamps `finishedAt` |
+| `apps/web/src/lib/results/result-confirmation.ts` | `isMatchResultConfirmed` / score-stability confirmation helpers |
+| `apps/web/src/lib/results/reconcile-match-legs.ts` | Feed score → leg outcome reconciliation (cron + admin override) |
+| `apps/web/src/lib/results/override-match-score.ts` | Admin override + lock; delegates re-resolution to reconcile |
+| `apps/web/src/lib/results/sync-matches.ts` | Upsert matches; respects `scoreLocked`; stamps `finishedAt` / `scoreStableSince` |
 | `apps/web/src/lib/notifications/dispatch.ts` | Central notification dispatcher |
 | `apps/web/src/lib/notifications/send-pick-reminders.ts` | Pick reminder cron logic |
 | `apps/web/src/lib/notifications/retry-pending-round-notifications.ts` | Retry failed lock/settle notifications |
@@ -532,7 +533,7 @@ Recent migrations include `20260718190000_concurrent_group_bets` and `2026071819
 ## Known limitations
 
 1. **football-data.org free tier:** Free-tier competitions auto-sync when enabled (or when they have pending legs). **Manual settlement** competitions (League One, League Two, Champions League Qualification, Europa League, Carabao Cup / EFL Cup — football-data `EL1`/`EL2`/`FLC` need Tier 2+) are skipped by match sync; admins settle those legs in `/admin/settlement`. EPL/Championship may be empty off-season.
-2. **Settlement is system-only** — auto-settle runs after match sync (every 5 min); leg outcomes update once a FINISHED score has been confirming for 1h (or immediately after an admin score lock); round settles when **any leg loses** or **all legs are won/void**. Remaining legs on an early loss keep resolving via `applyDeferredLegOutcome()`. Owners cannot settle (routes removed July 2026). Overlapping settle attempts are safe — transactional, exactly-once via an atomic `locked → settled` claim (see [Settlement](#settlement)). Rounds the system cannot resolve are handled by admins via the **settlement queue** (`/admin/settlement`) — pending legs 3h+ after kickoff (including leftovers after early settle) are flagged for intervention. Wrong FT scores: **Admin → Results** to override and lock, or correct individual outcomes.
+2. **Settlement is system-only** — auto-settle runs after match sync (every 5 min); leg outcomes update once a FINISHED score has been stable for 1h (or immediately after an admin score lock), with automatic reconciliation for 24h if the feed later corrects the score; round settles when **any leg loses** or **all legs are won/void**. Remaining legs on an early loss keep resolving via `applyDeferredLegOutcome()`. Owners cannot settle (routes removed July 2026). Overlapping settle attempts are safe — transactional, exactly-once via an atomic `locked → settled` claim (see [Settlement](#settlement)). Rounds the system cannot resolve are handled by admins via the **settlement queue** (`/admin/settlement`) — pending legs 3h+ after kickoff (including leftovers after early settle) are flagged for intervention. Wrong FT scores: usually self-heal via reconcile; escape hatch is **Admin → Results** to override and lock, or correct individual outcomes.
 3. **Email notifications** require Resend setup (`RESEND_API_KEY`, `EMAIL_FROM`); skipped if unset.
 4. **Auto-settle requires synced `Match` rows** — 5-min cron or manual `POST /api/internal/sync-matches`.
 5. **Cross-competition acca** — often no single bookmaker; best-per-leg odds locked at submission; per-leg deeplinks when Odds API provides them.

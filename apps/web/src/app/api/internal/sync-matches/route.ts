@@ -5,6 +5,7 @@ import {
   autoSettleLockedRounds,
   resolvePendingLegsOnSettledRounds,
 } from "@/lib/settlement/auto-settle-round";
+import { reconcileRecentMatchOutcomes } from "@/lib/results/reconcile-match-legs";
 import { syncAllCompetitionMatches } from "@/lib/results/sync-matches";
 import { NextResponse } from "next/server";
 
@@ -20,6 +21,9 @@ export async function POST(request: Request) {
   }
 
   const sync = await syncAllCompetitionMatches();
+  // After feed upserts: correct any leg outcomes that still disagree with the
+  // Match score (late VAR / disallowed-goal corrections past the 1h window).
+  const reconcile = await reconcileRecentMatchOutcomes();
   const kickoffLock = await lockOpenRoundsAtKickoff();
   const autoSettle = await autoSettleLockedRounds();
   const deferredLegs = await resolvePendingLegsOnSettledRounds();
@@ -29,6 +33,13 @@ export async function POST(request: Request) {
     console.info(
       "sync-matches: locked at kickoff",
       JSON.stringify(kickoffLock.locked)
+    );
+  }
+
+  if (reconcile.matchesTouched > 0) {
+    console.info(
+      "sync-matches: reconciled feed score corrections",
+      JSON.stringify(reconcile)
     );
   }
 
@@ -48,6 +59,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     sync,
+    reconcile,
     kickoffLock,
     autoSettle,
     deferredLegs,

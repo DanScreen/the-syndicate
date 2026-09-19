@@ -95,8 +95,9 @@ function MatchOverrideCard({ match }: { match: AdminResultsMatch }) {
           </p>
           {confirming && (
             <p className="mt-1 text-xs text-accent">
-              Confirming FT result — auto-settle waits ~{remainingMins}m for feed
-              corrections
+              Waiting for FT score to stay unchanged ~{remainingMins}m (VAR /
+              disallowed goals). Late feed corrections still auto-reconcile for
+              24h.
             </p>
           )}
         </div>

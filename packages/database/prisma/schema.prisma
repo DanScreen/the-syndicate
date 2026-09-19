@@ -179,9 +179,12 @@ model Match {
   homeGoals      Int?
   awayGoals      Int?
   /// First time we observed FINISHED (or equivalent) from the results feed.
-  /// Auto-settle waits RESULT_CONFIRMATION_MS after this so late score
-  /// corrections (VAR / disallowed goals) can land before we write outcomes.
   finishedAt     DateTime?
+  /// Last time the terminal FT score (homeGoals/awayGoals) changed from the
+  /// feed. Auto-settle waits RESULT_CONFIRMATION_MS after this (capped by
+  /// RESULT_CONFIRMATION_MAX_MS from finishedAt) so VAR / disallowed-goal
+  /// corrections can land before we write outcomes.
+  scoreStableSince DateTime?
   /// When true, sync will not overwrite status/score — admin override wins.
   scoreLocked    Boolean   @default(false)
   externalOddsId String?   @unique
