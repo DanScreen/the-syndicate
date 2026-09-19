@@ -1,6 +1,6 @@
 # Current state (as-built)
 
-Last updated 19 September 2026 (admin leaderboards: group acca points + exclude demo accounts). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
+Last updated 19 September 2026 (group tabs: Bet / Leaderboard / History / Chat; Performance merged into Leaderboard). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
 
 Production: **https://www.tikiacca.com** (apex → 301 to www via Cloudflare).
 
@@ -128,7 +128,7 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 
 Example: acca @ 3.44 (legs 1.6 × 2.15) → **2.44** group pts; members **0.6** and **1.15** (not split). If that acca loses because one leg fails, the winning member still keeps `odds − 1` while the losing member gets `−1` (group still `−1`).
 
-**Stats:** `groupAccaRoundPoints()` for group totals; `memberAccaLegPoints()` for members. Dashboard “Your points”, group leaderboard, and Performance tabs **recompute live** from resolved leg outcomes — including legs on **locked in-progress accas** (not only when the round fully settles). Group −1 applies as soon as a leg loses; member points accrue per resolved leg; charts include the in-progress bet with partial totals (tooltip date uses `lockedAt` until `settledAt`). Fully settled rounds still drive acca £ P/L sums and “total rounds” counts. Helpers: `apps/web/src/lib/stats/helpers.ts` (`roundsForPerformanceStats`, `statsRoundWhere`). Denormalized `Leg.pointsAwarded`, `GroupMember.points`/`legsWon`/`legsLost` and `User.totalPoints`/`legsWon`/`legsLost` are written incrementally at settlement/deferred resolution and were **backfilled** by migration `20260716120000_backfill_member_leg_points`. Admin platform **group** leaderboard recomputes live via `groupNetPoints()` (same as group Performance — not the sum of `GroupMember.points`). Admin **player** leaderboard still reads `User.totalPoints` / W-L columns. Performance charts use bet number on the X-axis (`Bet N` / `Start`); settlement/lock date in tooltips (`dateLabel`).
+**Stats:** `groupAccaRoundPoints()` for group totals; `memberAccaLegPoints()` for members. Dashboard “Your points”, group leaderboard (ranking + stats), and cross-group Performance **recompute live** from resolved leg outcomes — including legs on **locked in-progress accas** (not only when the round fully settles). Group −1 applies as soon as a leg loses; member points accrue per resolved leg; charts include the in-progress bet with partial totals (tooltip date uses `lockedAt` until `settledAt`). Fully settled rounds still drive acca £ P/L sums and “total rounds” counts. Helpers: `apps/web/src/lib/stats/helpers.ts` (`roundsForPerformanceStats`, `statsRoundWhere`). Denormalized `Leg.pointsAwarded`, `GroupMember.points`/`legsWon`/`legsLost` and `User.totalPoints`/`legsWon`/`legsLost` are written incrementally at settlement/deferred resolution and were **backfilled** by migration `20260716120000_backfill_member_leg_points`. Admin platform **group** leaderboard recomputes live via `groupNetPoints()` (same as group Performance — not the sum of `GroupMember.points`). Admin **player** leaderboard still reads `User.totalPoints` / W-L columns. Performance charts use bet number on the X-axis (`Bet N` / `Start`); settlement/lock date in tooltips (`dateLabel`).
 
 **Points-first UX:** Points are the **primary metric** across performance pages, leaderboards, share cards, and round history. Users convert points to money with `profitFromPoints(points, stake)` — profit = points × stake (£). UI: `StakeProfit` component (default stake £10). **Group / acca points** use `pointsTone()` (negative → red). **Individual pick rows** use `pointsToneFromOutcome()` (won → green, lost → red).
 
@@ -203,7 +203,7 @@ Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_
 | `apps/web/src/components/app-nav.tsx` | Header nav (desktop): Home / About / Groups / Performance / Admin / Blog |
 | `apps/web/src/components/mobile-nav.tsx` | Compact hamburger menu below `md` for marketing + app headers |
 | `apps/web/src/app/account/page.tsx` | Account — profile, notification prefs, sign out (greeting in header links here) |
-| `apps/web/src/components/group-nav.tsx` | Group tabs: Round / Chat / History / Leaderboard / Performance |
+| `apps/web/src/components/group-nav.tsx` | Group tabs: Bet / Leaderboard / History / Chat (/ Settings for owners) |
 | `apps/web/src/components/group-layout-client.tsx` | Shared group shell + `GroupDataProvider` |
 | `apps/web/src/context/group-data.tsx` | Group data context for sub-pages |
 
@@ -234,11 +234,11 @@ Protected routes enforced in `apps/web/src/middleware.ts` / `auth.config.ts`: `/
 | `/groups/join` | Join group — **public**; signed-out shows Sign in / Sign up (keeps `?code=`); signed-in auto-joins when `?code=` present |
 | `/groups/[id]` | **Round** tab — active-bet switcher, new-bet action, multi-leg picker, picks, lock, settle |
 | `/groups/[id]/history` | **History** tab — every settled acca with fixtures, markets, outcomes |
-| `/groups/[id]/leaderboard` | Points leaderboard |
-| `/groups/[id]/performance` | Group stats (`GroupStats`) — charts, member breakdown |
+| `/groups/[id]/leaderboard` | **Leaderboard** tab — ranked members + group stats/charts (`GroupStats`); former Performance content |
+| `/groups/[id]/performance` | Redirects → `/groups/[id]/leaderboard` |
 | `/groups/[id]/settings` | **Owner** — legs per member (all eligible open bets immediately) + maximum active bets (1–5) |
 
-**Navigation:** Logo + **Social Group Betting** tagline (tagline hidden below `md`). Logo and **Home** → `/`. `AppNav` order: Home → About → Groups → Performance → Admin (admins) → **Blog** (rightmost). Below `md`, inline links collapse into `MobileNav` (hamburger) — signed-out: Home / About / Blog / Sign in / Sign up as peer links; signed-in adds **Account · {firstName}** → `/account`. Desktop greeting **Hi, {firstName}** → `/account` (notifications + sign out). Legacy `/settings/notifications` redirects to `/account#notifications`. Marketing pages use `SessionAwareMarketingHeader` (client `useSession`) so statically generated `/blog` still shows signed-in chrome. Inside a group, `GroupNav` tabs (Round / Chat / History / Leaderboard / Performance / **Settings** for owners) share data via `GroupDataProvider` (fetched once in group layout; polls every 60s while acca locked). Chat unread counts appear on the Chat tab, which polls its permanent group thread every 20 seconds while visible.
+**Navigation:** Logo + **Social Group Betting** tagline (tagline hidden below `md`). Logo and **Home** → `/`. `AppNav` order: Home → About → Groups → Performance → Admin (admins) → **Blog** (rightmost). Below `md`, inline links collapse into `MobileNav` (hamburger) — signed-out: Home / About / Blog / Sign in / Sign up as peer links; signed-in adds **Account · {firstName}** → `/account`. Desktop greeting **Hi, {firstName}** → `/account` (notifications + sign out). Legacy `/settings/notifications` redirects to `/account#notifications`. Marketing pages use `SessionAwareMarketingHeader` (client `useSession`) so statically generated `/blog` still shows signed-in chrome. Inside a group, `GroupNav` tabs (Bet / Leaderboard / History / Chat / **Settings** for owners) share data via `GroupDataProvider` (fetched once in group layout; polls every 60s while acca locked). Chat unread counts appear on the Chat tab, which polls its permanent group thread every 20 seconds while visible.
 
 **Group cards (web + mobile):** one active bet keeps the detailed current betslip. Two or more active bets switch to a compact, action-first overview: up to three **Bet #N** rows with Open / Locked / In play status, pick or settlement progress, the current member's missing-pick warning, and combined odds when available; additional bets collapse into **+N more**. `GET /api/groups` exposes `activeBets` summaries for mobile, and the server-rendered web dashboard uses the same shared display helpers.
 

@@ -92,7 +92,7 @@ Web uses Auth.js cookies; mobile uses a random **Bearer session token** on every
 | Group chat | Dedicated permanent Chat tab + group-scoped API | Same longstanding Chat tab, Bet-labelled lifecycle events, reactions, unread badge |
 | Leg picker | Progressive 4-step + competition + market tiers | `SubmitLegForm` — competition, tiers (core + load more), grouped markets; selected competition / fixture / market each collapse with Change controls |
 | Locked acca | `AccaSummary`, compare bookmakers until first result | `AccaSummary` + `LegsList` with outcomes; 60s poll when locked |
-| Group tabs | Round / Chat / History / Leaderboard / Performance | `groups/[id]/_layout.tsx` + tab screens |
+| Group tabs | Bet / Leaderboard / History / Chat (+ Settings for owners) | `groups/[id]/_layout.tsx` + tab screens |
 | Cross-group performance | `/performance` | `(main)/performance.tsx` |
 | Admin | `/admin/*` | **Out of scope** |
 
@@ -189,7 +189,7 @@ Checklist for implementation. Web route → API → mobile screen.
 ### Phase 3 — Stats and navigation
 
 - [x] Persistent member navigation: bottom tabs for Groups / Performance / Account; compact logo-only top header
-- [x] Group tabs: Round / Leaderboard / Performance (`group-nav.tsx`, nested routes)
+- [x] Group tabs: Bet / Leaderboard / History / Chat (`group-nav.tsx`, nested routes; Performance merged into Leaderboard)
 - [x] Cross-group performance screen (`GET /api/user/stats` → `(main)/performance.tsx`)
 - [x] Round / bet history (`RoundHistory` + History tab via `GET /api/groups/[id]/history`)
 - [x] Group performance tab (`GET /api/groups/[id]/stats`, member drill-down)

@@ -80,7 +80,7 @@ Members edit their own leg via `PATCH /api/legs/[id]` while the round is `open` 
 → `packages/shared/src/scoring.ts` · [specs/platform-admin.md](./specs/platform-admin.md)
 
 ### Stats
-Computed on read from settled rounds. Group + member + **cross-group user** APIs; Recharts on group Performance tab and `/performance` page. Share cards for copy/Web Share.
+Computed on read from settled rounds. Group + member + **cross-group user** APIs; Recharts on group Leaderboard (stats section) and `/performance` page. Share cards for copy/Web Share.
 
 → `apps/web/src/lib/stats/`
 

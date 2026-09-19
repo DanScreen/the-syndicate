@@ -4,11 +4,10 @@ import { router, useLocalSearchParams, useSegments } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text } from "react-native";
 
 const BASE_TABS = [
-  { segment: "index", label: "Round" },
-  { segment: "chat", label: "Chat" },
-  { segment: "history", label: "History" },
+  { segment: "index", label: "Bet" },
   { segment: "leaderboard", label: "Leaderboard" },
-  { segment: "performance", label: "Performance" },
+  { segment: "history", label: "History" },
+  { segment: "chat", label: "Chat" },
 ] as const;
 
 export function GroupNav() {

@@ -163,7 +163,7 @@ Login recording is fire-and-forget (`recordAnalyticsEventAsync`). Client activit
 |---------|----------------|
 | Leg points | `legPointsForOutcome()` — win `odds−1`, loss `−1`, void `0` |
 | Profit equivalent | `profitFromPoints(points, stakeGbp)` → `points × stake` |
-| UI converter | `StakeProfit` component on `/performance` and group Performance tab |
+| UI converter | `StakeProfit` component on `/performance` and group Leaderboard (stats section) |
 
 **Removed from primary UI:** Acca P/L cards on performance pages; round history shows round points not £ P/L.
 
