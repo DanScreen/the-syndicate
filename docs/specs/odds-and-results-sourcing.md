@@ -346,8 +346,15 @@ Rule of thumb #2: only trials count. Nothing below has been probed live, because
   - TheStatsAPI (7 days);
   - UK Odds API Starter (ask for a trial and confirm **which** 10 bookmakers).
 - [ ] Fixed probe set, used for every source: 1 EPL, 1 Championship, 1 League Two, 1 Europa or Conference League, 1 Eredivisie, and 1 cup tie that goes to **extra time**. Include both upcoming fixtures (odds) and finished ones (results).
-- [ ] Dev-only script `scripts/probe-sources.ts` that writes a markdown report for each source × fixture:
-  - **Odds:** UK-licensed bookmakers per market family, whether bet365 is present, deeplink presence, quote age, market count.
+- [x] **Probe v1:** `node scripts/probe-sources.mjs`, dev-only and read-only. It reads keys from the environment or `apps/web/.env.local` and never prints them. It reports:
+  - **The Odds API** (~20 credits a run):
+    - every soccer sport key (the list itself is free);
+    - `/scores` for a few keys, including Nations League when active;
+    - UK bookmakers per market for sample fixtures (h2h, BTTS, corners, cards, goalscorer).
+  - **football-data.org:** the competitions per plan tier.
+  - **API-Football:** plan and quota, the bookmaker list with UK brands flagged, and coverage flags for the §3.7 competitions. It also samples current-season Premier League odds, which on the free plan just reports the plan restriction.
+- [ ] **Probe v2**, once Pro is bought, per source × fixture:
+  - **Odds:** quote age.
   - **Results:** latency from FT to a terminal observation, 90' vs AET correctness, corners/cards presence for League Two, card-event detail types, and automatic mapping rate against The Odds API event ids.
 - [ ] Check The Odds API `/scores` coverage for each enabled sport key and its extra-time behaviour.
 - [ ] Record the numbers (not impressions) in [ODDS_PROVIDERS §7](../ODDS_PROVIDERS.md#7-september-2026-re-evaluation) and decide open decision 1.
