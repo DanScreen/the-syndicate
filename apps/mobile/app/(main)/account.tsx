@@ -1,5 +1,7 @@
 import { ApiError, api } from "@/api/client";
 import { useAuth } from "@/auth/AuthProvider";
+import { AgeVerificationCard } from "@/components/age-verification";
+import { GambleResponsiblyFooter } from "@/components/compliance";
 import { Button, Card, ErrorText, Field, Title } from "@/components/ui";
 import { colors, WEB_URL } from "@/config";
 import { copy } from "@/lib/copy";
@@ -246,6 +248,8 @@ export default function AccountScreen() {
         {user?.email ? <Text style={styles.hint}>{user.email}</Text> : null}
       </Card>
 
+      <AgeVerificationCard />
+
       <Text style={styles.sectionHeading}>Notifications</Text>
       <Text style={styles.intro}>
         Get reminded to pick before kickoff, and when accas lock or settle.
@@ -387,6 +391,8 @@ export default function AccountScreen() {
           />
         )}
       </Card>
+
+      <GambleResponsiblyFooter />
     </ScrollView>
   );
 }

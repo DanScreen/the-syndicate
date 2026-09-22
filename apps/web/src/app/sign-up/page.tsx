@@ -2,7 +2,12 @@
 
 import { Logo } from "@/components/logo";
 import { safeCallbackUrl, withCallbackUrl } from "@/lib/callback-url";
-import { MIN_SIGN_UP_AGE } from "@tiki-acca/shared";
+import {
+  AGE_CHECK_EXPLAINER,
+  MIN_SIGN_UP_AGE,
+  UNDER_AGE_MESSAGE,
+  meetsMinimumAge,
+} from "@tiki-acca/shared";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
@@ -21,15 +26,23 @@ function SignUpForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Latest date allowed in the picker: today minus the minimum sign-up age.
-  const maxDateOfBirth = (() => {
-    const d = new Date();
-    d.setFullYear(d.getFullYear() - MIN_SIGN_UP_AGE);
-    return d.toISOString().slice(0, 10);
-  })();
+  // Today, so no one can claim a future birthday. Deliberately not capped at
+  // "18 years ago": an under-age date can be entered and the gate then explains
+  // the rejection, rather than the check being silently unreachable.
+  const maxDateOfBirth = new Date().toISOString().slice(0, 10);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!dateOfBirth) {
+      setError("Enter your date of birth to confirm you're 18 or over.");
+      return;
+    }
+    // Client-side 18+ gate, using the same shared rule the API enforces on the
+    // sign-up request, so the rejection is immediate and explained.
+    if (!meetsMinimumAge(dateOfBirth)) {
+      setError(UNDER_AGE_MESSAGE);
+      return;
+    }
     setLoading(true);
     setError("");
 
@@ -113,7 +126,9 @@ function SignUpForm() {
           />
         </div>
         <div>
-          <label htmlFor="signup-dob" className="text-sm text-muted">Date of birth</label>
+          <label htmlFor="signup-dob" className="text-sm text-muted">
+            Date of birth — {MIN_SIGN_UP_AGE}+ only
+          </label>
           <input
             id="signup-dob"
             type="date"
@@ -124,7 +139,7 @@ function SignUpForm() {
             className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2"
             required
           />
-          <p className="mt-1 text-xs text-muted">You must be {MIN_SIGN_UP_AGE} or over to play.</p>
+          <p className="mt-1 text-xs text-muted">{AGE_CHECK_EXPLAINER}</p>
         </div>
         <div>
           <label htmlFor="signup-password" className="text-sm text-muted">Password (min 8 chars)</label>

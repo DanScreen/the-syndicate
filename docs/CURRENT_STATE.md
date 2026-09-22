@@ -112,6 +112,7 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 | Blog (file-based MDX, static, `/blog`) + sitemap.xml + robots.txt | ✅ |
 | Longstanding group Chat tab + Bet-labelled lifecycle messages + reactions (web + mobile) | ✅ |
 | Chat unread badges + batched push preference | ✅ |
+| 18+ age gate: labelled DOB check at sign-up (client + server) **and** Account → Age verification status, with in-app confirmation for accounts with no DOB on file (web + mobile) | ✅ |
 
 \*Asian handicap only from exchange bookmakers in current World Cup UK feed — filtered out; handicap UI empty for those fixtures.
 
@@ -202,7 +203,8 @@ Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_
 | `apps/web/src/components/group-ui.tsx` | Progressive 4-step leg picker (competition, fixture, and market lists collapse after selection; **Change competition** / **Change fixture** / **Change market** to browse again; multi-leg rounds reset picker after each submit, show leg progress copy, and trigger brief **Leg added** / **All legs added** celebrations), locked round picks, settle UI |
 | `apps/web/src/components/app-nav.tsx` | Header nav (desktop): Home / About / Groups / Performance / Admin / Blog |
 | `apps/web/src/components/mobile-nav.tsx` | Compact hamburger menu below `md` for marketing + app headers |
-| `apps/web/src/app/account/page.tsx` | Account — profile, notification prefs, sign out (greeting in header links here) |
+| `apps/web/src/app/account/page.tsx` | Account — profile, age verification, notification prefs, sign out (greeting in header links here) |
+| `apps/web/src/components/age-verification.tsx` | Age verification panel (web); mobile twin `apps/mobile/src/components/age-verification.tsx` |
 | `apps/web/src/components/group-nav.tsx` | Group tabs: Bet / Leaderboard / History / Chat (/ Settings for owners) |
 | `apps/web/src/components/group-layout-client.tsx` | Shared group shell + `GroupDataProvider` |
 | `apps/web/src/context/group-data.tsx` | Group data context for sub-pages |
@@ -219,7 +221,7 @@ Protected routes enforced in `apps/web/src/middleware.ts` / `auth.config.ts`: `/
 | `/about` | Product story, what we are/aren’t, responsible gambling (reachable when signed in) |
 | `/blog`, `/blog/[slug]` | File-based MDX blog (static; drafts hidden in prod) |
 | `/sign-in`, `/sign-up` | Auth — sign-up collects **first name** + **last name**; both preserve `callbackUrl` (e.g. invite return) |
-| `/account` | Account — profile, notification prefs, sign out (via header greeting) |
+| `/account` | Account — profile, **age verification (18+ status / DOB on file)**, notification prefs, sign out (via header greeting) |
 | `/settings/notifications` | Redirect → `/account#notifications` (legacy / List-Unsubscribe) |
 | `/dashboard` | **Groups home** — list of user's groups; **group/your points**; **current betslip** legs (fixture, market, selection, odds); waiting status if you haven't picked |
 | `/performance` | Cross-group stats (`DashboardStats`) — group filter dropdown, charts, share cards |
@@ -507,6 +509,7 @@ Recent migrations include `20260718190000_concurrent_group_bets` and `2026071819
 | `GET /api/groups/[id]/members/[userId]/stats` | Member | Member breakdown + favourites |
 | `GET /api/user/stats` | Session | Cross-group performance stats |
 | `GET/PATCH /api/user/notification-preferences` | Session | Notification toggles |
+| `GET/PATCH /api/user/date-of-birth` | Session / mobile bearer | Age verification: read the DOB on file; `PATCH` sets it **once** for accounts that have none (18+ enforced by `dateOfBirthSchema`; already-set DOB returns 409) |
 | `POST /api/analytics/events` | Session / mobile bearer | Record an authenticated page/screen view or mobile foreground event; derives channel and 30-minute visits server-side |
 | `POST /api/auth/mobile/sign-in` | Public (rate-limited) | Create revocable persistent mobile session |
 | `POST /api/auth/mobile/refresh` | Mobile bearer | Upgrade a valid legacy JWT to a persistent session (persistent tokens pass through) |

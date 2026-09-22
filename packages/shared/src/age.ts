@@ -61,3 +61,36 @@ export function meetsMinimumAge(dob: string, today: Date = new Date()): boolean 
   const age = ageInYears(dob, today);
   return age !== null && age >= MIN_SIGN_UP_AGE;
 }
+
+const MONTH_NAMES = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+] as const;
+
+/**
+ * `YYYY-MM-DD` rendered as `14 March 1994` for the age-verification panels.
+ * Built from the date parts rather than `toLocaleDateString` so the displayed
+ * birthday is identical on the server, the web app, and every device timezone.
+ * Returns null if the date string is not a valid calendar date.
+ */
+export function formatDateOfBirth(dob: string): string | null {
+  const parsed = parseCalendarDate(dob);
+  if (!parsed) return null;
+  return `${parsed.d} ${MONTH_NAMES[parsed.m - 1]} ${parsed.y}`;
+}
+
+/** Shown wherever the age gate blocks a sign-up (web, mobile, API messages). */
+export const UNDER_AGE_MESSAGE = `You must be ${MIN_SIGN_UP_AGE} or over to use Tiki Acca.`;
+
+/** Explains the gate on the sign-up form and the account age-verification panel. */
+export const AGE_CHECK_EXPLAINER = `Tiki Acca is strictly ${MIN_SIGN_UP_AGE}+. We collect your date of birth when you create an account and check it on our servers.`;

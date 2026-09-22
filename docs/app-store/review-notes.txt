@@ -17,10 +17,22 @@ NOT A GAMBLING OPERATOR
 
 AGE AND RESPONSIBLE GAMBLING
 
-- Sign-up requires date of birth; 18+ is enforced server-side.
+The 18+ age check can be seen in two places, both without creating an account:
+
+1. Signed in with the demo account below: tap ACCOUNT in the bottom tab bar.
+   The second card is AGE VERIFICATION — it shows the 18+ status and the date
+   of birth held for the account. (If an account has no date of birth on file,
+   the same card asks for it and rejects any date under 18.)
+2. Signed out: tap CREATE ACCOUNT and select a date of birth under 18. Sign-up
+   is blocked with "You must be 18 or over to use Tiki Acca."
+
+The rule is enforced server-side on the registration request as well, so it
+cannot be bypassed by the client. The date of birth is self-declared; the app
+does not perform identity verification or age estimation.
+
 - Age rating is set to 18+.
 - Responsible gambling guidance (BeGambleAware) is shown in the app, with a
-  link to begambleaware.org.
+  link to begambleaware.org, including at the foot of the Account screen.
 
 USER-GENERATED CONTENT (GROUP CHAT)
 

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   ageInYears,
+  formatDateOfBirth,
   isValidDateOfBirth,
   meetsMinimumAge,
   MIN_SIGN_UP_AGE,
@@ -41,4 +42,12 @@ test("enforces the minimum sign-up age", () => {
   assert.equal(meetsMinimumAge("2015-01-01", TODAY), false);
   // Invalid date is never treated as meeting the age gate.
   assert.equal(meetsMinimumAge("2001-02-29", TODAY), false);
+});
+
+test("formats a date of birth for display", () => {
+  assert.equal(formatDateOfBirth("1994-03-14"), "14 March 1994");
+  // Leading zeros dropped from the day; month spelled out in full.
+  assert.equal(formatDateOfBirth("2000-01-01"), "1 January 2000");
+  assert.equal(formatDateOfBirth("1988-12-31"), "31 December 1988");
+  assert.equal(formatDateOfBirth("bad-date"), null);
 });

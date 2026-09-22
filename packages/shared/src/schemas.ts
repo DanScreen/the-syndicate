@@ -6,7 +6,21 @@ import {
   MAX_ACTIVE_BETS_OPTIONS,
 } from "./constants";
 import { containsProfanity } from "./profanity";
-import { isValidDateOfBirth, meetsMinimumAge, MIN_SIGN_UP_AGE } from "./age";
+import { isValidDateOfBirth, meetsMinimumAge, UNDER_AGE_MESSAGE } from "./age";
+
+/**
+ * `YYYY-MM-DD` as produced by an HTML date input. Must be a real date and 18+.
+ * Shared by sign-up and the account age-confirmation endpoint so both surfaces
+ * enforce the same gate with the same message.
+ */
+export const dateOfBirthSchema = z
+  .string()
+  .refine(isValidDateOfBirth, { message: "Enter a valid date of birth" })
+  .refine((v) => meetsMinimumAge(v), { message: UNDER_AGE_MESSAGE });
+
+export const confirmDateOfBirthSchema = z.object({
+  dateOfBirth: dateOfBirthSchema,
+});
 
 export const signUpSchema = z.object({
   firstName: z
@@ -27,13 +41,7 @@ export const signUpSchema = z.object({
     }),
   email: z.string().email(),
   password: z.string().min(8).max(100),
-  // `YYYY-MM-DD` as produced by an HTML date input. Must be a real date and 18+.
-  dateOfBirth: z
-    .string()
-    .refine(isValidDateOfBirth, { message: "Enter a valid date of birth" })
-    .refine((v) => meetsMinimumAge(v), {
-      message: `You must be at least ${MIN_SIGN_UP_AGE} to sign up`,
-    }),
+  dateOfBirth: dateOfBirthSchema,
 });
 
 /** Full display name stored on User.name for groups, emails, and leaderboards. */
@@ -165,6 +173,7 @@ export const notificationPreferencesSchema = z.object({
 });
 
 export type SignUpInput = z.infer<typeof signUpSchema>;
+export type ConfirmDateOfBirthInput = z.infer<typeof confirmDateOfBirthSchema>;
 export type SignInInput = z.infer<typeof signInSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;

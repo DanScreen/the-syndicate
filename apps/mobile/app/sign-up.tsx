@@ -4,6 +4,12 @@ import { LogoMark } from "@/components/logo";
 import { Button, ErrorText, Field, LinkText, Screen, Subtitle, Title } from "@/components/ui";
 import { colors } from "@/config";
 import { redirectAfterAuth } from "@/lib/auth-redirect";
+import {
+  AGE_CHECK_EXPLAINER,
+  MIN_SIGN_UP_AGE,
+  UNDER_AGE_MESSAGE,
+  meetsMinimumAge,
+} from "@tiki-acca/shared";
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
@@ -17,8 +23,6 @@ import {
   Text,
   View,
 } from "react-native";
-
-const MIN_SIGN_UP_AGE = 18;
 
 /** Local (not UTC) `YYYY-MM-DD` — matches what an HTML date input submits. */
 function toISODate(d: Date): string {
@@ -47,9 +51,14 @@ export default function SignUpScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // The latest date a signer-up can be born, and a sensible starting point so
-  // the picker doesn't open on today's date (an obviously invalid DOB).
-  const maxDate = useMemo(() => {
+  // Today, so no one can claim a future birthday. Deliberately NOT capped at
+  // "18 years ago": an under-18 date can be selected, and the age gate then
+  // rejects it with UNDER_AGE_MESSAGE, so the check is visible to the user
+  // (and demonstrable to App Review) rather than silently unreachable.
+  const maxDate = useMemo(() => new Date(), []);
+
+  // Where the picker opens — the newest date that passes the 18+ gate.
+  const initialPickerDate = useMemo(() => {
     const d = new Date();
     d.setFullYear(d.getFullYear() - MIN_SIGN_UP_AGE);
     return d;
@@ -65,6 +74,17 @@ export default function SignUpScreen() {
   }
 
   async function handleSubmit() {
+    if (!dob) {
+      setError("Enter your date of birth to confirm you're 18 or over.");
+      return;
+    }
+    // Client-side 18+ gate, using the same shared rule the server enforces on
+    // the sign-up request — so an under-age sign-up is blocked and explained
+    // here, then blocked again server-side even if this screen is bypassed.
+    if (!meetsMinimumAge(toISODate(dob))) {
+      setError(UNDER_AGE_MESSAGE);
+      return;
+    }
     setLoading(true);
     setError("");
     try {
@@ -73,7 +93,7 @@ export default function SignUpScreen() {
         lastName.trim(),
         email.trim(),
         password,
-        dob ? toISODate(dob) : ""
+        toISODate(dob)
       );
       redirectAfterAuth();
     } catch (e) {
@@ -110,17 +130,23 @@ export default function SignUpScreen() {
           onChangeText={setEmail}
         />
 
+        <Text style={styles.fieldLabel}>
+          Date of birth — {MIN_SIGN_UP_AGE}+ only
+        </Text>
         <Pressable
           style={styles.dateField}
           onPress={() => setShowPicker((s) => !s)}
+          accessibilityRole="button"
+          accessibilityLabel={`Date of birth. You must be ${MIN_SIGN_UP_AGE} or over to use Tiki Acca.`}
         >
           <Text style={dob ? styles.dateValue : styles.datePlaceholder}>
-            {dob ? formatDisplay(dob) : "Date of birth"}
+            {dob ? formatDisplay(dob) : "Tap to select your date of birth"}
           </Text>
         </Pressable>
+        <Text style={styles.fieldHint}>{AGE_CHECK_EXPLAINER}</Text>
         {showPicker ? (
           <DateTimePicker
-            value={dob ?? maxDate}
+            value={dob ?? initialPickerDate}
             mode="date"
             display={Platform.OS === "ios" ? "inline" : "default"}
             maximumDate={maxDate}
@@ -145,6 +171,19 @@ export default function SignUpScreen() {
 }
 
 const styles = StyleSheet.create({
+  fieldLabel: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: "600",
+    marginBottom: 6,
+  },
+  fieldHint: {
+    color: colors.muted,
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: -6,
+    marginBottom: 12,
+  },
   dateField: {
     borderWidth: 1,
     borderColor: colors.border,

@@ -107,3 +107,31 @@ camera/location/photos permissions · brand assets current.
 - [x] 3. Push prompt gating (silent token refresh at launch; prompt only from Account)
 - [x] 4. Terms page (/terms) + support contact (in-app + footer)
 - [ ] 5–9. Store setup (owner: Daniel, at submission time) — copy-paste pack drafted in [app-store/](./app-store/README.md)
+
+---
+
+## Review rounds (actual)
+
+### 1.0 (5) — rejected 21 September 2026, Guideline 2.3.6 (Accurate Metadata)
+
+Age Rating declared **In-App Controls**, but the reviewer could find neither
+Parental Controls nor Age Assurance in the app. Cause: the only age check lived
+on the sign-up form, which a reviewer signing in with the demo account never
+sees — and its date picker was capped at "18 years ago", so the 18+ rule could
+never be triggered or observed.
+
+Fixed in code (next build):
+
+- **Account → Age verification** card (mobile + web): 18+ status, DOB on file,
+  and how the check is enforced — visible while signed in. Accounts with no DOB
+  on file get an in-app "Confirm I am 18 or over" control
+  (`PATCH /api/user/date-of-birth`, 18+ enforced server-side, set once).
+- **Sign-up** labels the field "Date of birth — 18+ only", explains the rule,
+  and lets an under-18 date be entered so the gate visibly blocks it.
+- Review notes now tell the reviewer exactly where to look.
+
+Metadata decision and both reply drafts:
+[app-store/review-reply-2.3.6-age-assurance.md](./app-store/review-reply-2.3.6-age-assurance.md).
+The recommendation is to set **Age Assurance → None** (the DOB check is
+self-declared, and the 18+ rating comes from the gambling answers), which
+resolves 2.3.6 in one round.

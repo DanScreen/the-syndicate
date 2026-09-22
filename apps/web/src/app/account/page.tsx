@@ -1,3 +1,4 @@
+import { AgeVerification } from "@/components/age-verification";
 import { DeleteAccount } from "@/components/delete-account";
 import { AppHeader } from "@/components/header";
 import { NotificationSettings } from "@/components/notification-settings";
@@ -45,6 +46,18 @@ export default async function AccountPage() {
               </div>
             ) : null}
           </dl>
+        </section>
+
+        <section
+          id="age-verification"
+          className="mt-6 scroll-mt-24 rounded-xl border border-border bg-card p-5"
+        >
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
+            Age verification
+          </h2>
+          <div className="mt-3">
+            <AgeVerification />
+          </div>
         </section>
 
         <section id="notifications" className="mt-10 scroll-mt-24">

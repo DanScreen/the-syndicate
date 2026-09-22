@@ -10,6 +10,7 @@ Everything Apple needs, in the format they need it. Companion to
 | [compliance-statement.md](./compliance-statement.md) | Held in reserve — export to **PDF** and attach in Resolution Center **only if** App Review raises Guideline 5.3 / licensing questions | PDF attachment |
 | [privacy-labels-worksheet.md](./privacy-labels-worksheet.md) | App Store Connect → App Privacy | Questionnaire answers (no document upload) |
 | [age-rating-worksheet.md](./age-rating-worksheet.md) | App Store Connect → Age Rating | Questionnaire answers (no document upload) |
+| [review-reply-2.3.6-age-assurance.md](./review-reply-2.3.6-age-assurance.md) | Resolution Center — reply to the 2.3.6 Age Rating rejection of 1.0 (5) | Pasted reply text + the Age Rating change to make first |
 | [listing-metadata.md](./listing-metadata.md) | App Store Connect → App Information / version page | Text fields |
 | Privacy Policy | Already live: https://www.tikiacca.com/privacy | Public URL (required field) |
 | Terms | Already live: https://www.tikiacca.com/terms | Public URL; Apple's standard EULA applies by default — no upload needed unless you want a custom EULA |

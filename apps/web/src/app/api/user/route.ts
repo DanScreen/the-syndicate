@@ -17,6 +17,7 @@ export async function GET() {
       lastName: true,
       name: true,
       email: true,
+      dateOfBirth: true,
       totalPoints: true,
       legsWon: true,
       legsLost: true,
@@ -28,7 +29,18 @@ export async function GET() {
     },
   });
 
-  return NextResponse.json({ user });
+  if (!user) return NextResponse.json({ user: null });
+
+  // DOB goes out as the `YYYY-MM-DD` calendar string the shared age helpers
+  // expect, not a timestamp — the column is DATE and clients must not shift it.
+  return NextResponse.json({
+    user: {
+      ...user,
+      dateOfBirth: user.dateOfBirth
+        ? user.dateOfBirth.toISOString().slice(0, 10)
+        : null,
+    },
+  });
 }
 
 const deleteAccountSchema = z.object({ password: z.string().min(1) });
