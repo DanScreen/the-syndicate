@@ -8,6 +8,8 @@ Visual identity for Tiki Acca.
 
 **Messaging & copy direction:** [MARKETING_BRIEF.md](./MARKETING_BRIEF.md) — positioning territories, tagline options, homepage/about page structure (draft, tagline decision open).
 
+**Video advertising:** [VIDEO_AD_BRIEF.md](./VIDEO_AD_BRIEF.md) — "The Rondo", an AI-generated floodlit tiki-taka spot; setting, cast, kits, shot list, generation prompts, and UK CAP compliance rules.
+
 ---
 
 ## Positioning

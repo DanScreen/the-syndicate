@@ -39,6 +39,7 @@ npm run dev   # http://localhost:3000
 | Product intent & user flows | [PRODUCT.md](./PRODUCT.md) |
 | Brand, logo, design | [BRAND.md](./BRAND.md) |
 | Positioning, taglines, marketing copy | [MARKETING_BRIEF.md](./MARKETING_BRIEF.md) |
+| Video ad production (AI-generated) | [VIDEO_AD_BRIEF.md](./VIDEO_AD_BRIEF.md) |
 | Platform admin & analytics | [specs/platform-admin.md](./specs/platform-admin.md) |
 | **Add an odds market or change odds provider** | [ODDS_PROVIDERS.md](./ODDS_PROVIDERS.md) — verified coverage limits; read before adding outrights |
 | Deploy, infra, or reduce GCP costs | [DEPLOYMENT.md](./DEPLOYMENT.md), [infra/terraform/README.md](../infra/terraform/README.md) |
@@ -80,6 +81,7 @@ docs/
 ├── DEPLOYMENT.md          ← GCP, CI, cron, cost optimization
 ├── ODDS_PROVIDERS.md      ← odds/results provider evaluation, verified coverage limits
 ├── MARKETING_BRIEF.md     ← positioning, taglines, homepage/about copy (draft)
+├── VIDEO_AD_BRIEF.md      ← AI-generated video ad: concept, shot list, prompts, compliance
 └── specs/
     ├── competitions-and-results.md   ← Phases A–C done; Phase 1b backlog
     ├── group-stats-and-points.md     ← Phases 1–4 done
