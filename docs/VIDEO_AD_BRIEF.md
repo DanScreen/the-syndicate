@@ -208,10 +208,10 @@ ones the app would produce.
 | R3 | `match_winner` | Home win, mid-price | 3.25 | **Won** | **+2.25** |
 | **R4** | `match_winner` | **Coventry to win** | **6.00 (5/1)** | **Lost** | **−1.00** |
 
-**Combined odds after three legs: 9.56. After R4's leg: 57.33.** Round points for the
+**Combined odds after three legs: 9.55. After R4's leg: 57.33.** Round points for the
 group: **−1.00.**
 
-**That jump is the story.** R4's single leg multiplies the badge by six — 9.56 becomes
+**That jump is the story.** R4's single leg multiplies the badge by six — 9.55 becomes
 57.33 — and 57.33 is a number that hurts to look at. The odds badge does the
 characterisation for you: you can watch the recklessness arrive, and you can see
 exactly how much was riding on it when it dies.
@@ -250,7 +250,7 @@ Match the app's own odds format in the capture rather than hand-writing fraction
 **Coventry to win at 5/1.** This is better than a novelty market, and better than the
 "obviously idiotic bet" framing in the previous draft, for a reason worth stating
 plainly: **a 5/1 away win is not a stupid pick — it's a greedy one.** Three bankers are
-already in at 9.56, and R4 swings for the fences anyway — sending the badge to 57.33 on
+already in at 9.55, and R4 swings for the fences anyway — sending the badge to 57.33 on
 his own.
 Every group has done exactly this, which is why it will land harder than anything
 absurd would.
@@ -372,8 +372,8 @@ Capture on a real device against the seeded demo data. Do **not** generate or mo
 |---|------|---------|--------------|
 | S1 | Thumb taps **Submit your leg**, R1's Over 1.5 at 1.40 visible | Close on device, real thumb, dark room | Shot 3 |
 | S2 | **Submitting…** → **Submitted**, R2's BTTS at 2.10 | The state flip, slowed 50% | Shot 4 |
-| S3 | **Combined odds** settling at 9.56 after R3's leg | The badge before the damage. This is the "before" | Shot 5 |
-| S4 | **R4's pick, held long enough to read** | Coventry to win, 6.00 — and the badge jumping 9.56 → **57.33**. The single most important frame in the ad | Shot 6 |
+| S3 | **Combined odds** settling at 9.55 after R3's leg | The badge before the damage. This is the "before" | Shot 5 |
+| S4 | **R4's pick, held long enough to read** | Coventry to win, 6.00 — and the badge jumping 9.55 → **57.33**. The single most important frame in the ad | Shot 6 |
 | S5 | Leg marked **Lost** — red state | The acca dies | Shot 8 |
 | S6 | **R4's points: −1.00**, and his row dropping on the group leaderboard | The cost, in points | Shot 10 |
 | S7 | Blue group's legs landing **Won** in sequence | Green state, one after another | Shots 12–14 |
@@ -384,7 +384,7 @@ Shoot everything **in a dark room** so the screen glow matches the floodlit nigh
 and the cuts don't jar.
 
 **S4 is the joke.** Give it more frames than feels comfortable in the edit — the
-audience needs time to read the price, watch the badge leap from 9.56 to 57.33, and get
+audience needs time to read the price, watch the badge leap from 9.55 to 57.33, and get
 there half a beat before the shot is skied.
 
 **S6 and S9 are the payoff, and they are points, never money.** The reward the ad shows
@@ -402,8 +402,8 @@ is a number going up on a leaderboard and a row moving. Nothing else. See §9.
 | 0:02 | **2** Establisher through the fence | Boots on wet astro |
 | 0:05 | **3** R1 first touch → **S1** Submit, 1.40 | Ball strike lands *on* the tap. Music in |
 | 0:09 | **4** R2 nutmeg → **S2** Submitted, 2.10 | Tempo lifts |
-| 0:13 | **5** R3 no-look → **S3** combined odds settle at 9.56 | Fastest section. Everything is going right |
-| 0:16 | **6** R4 receives, unmarked man in frame → **S4 Coventry 6.00, badge jumps 9.56 → 57.33** | **Music thins.** Hold the screenshot |
+| 0:13 | **5** R3 no-look → **S3** combined odds settle at 9.55 | Fastest section. Everything is going right |
+| 0:16 | **6** R4 receives, unmarked man in frame → **S4 Coventry 6.00, badge jumps 9.55 → 57.33** | **Music thins.** Hold the screenshot |
 | 0:19 | **7** The sky (slow motion) | Boot through ball. Music stops dead |
 | 0:22 | **8** Over the fence, into the black | Silence. One long beat on empty sky |
 | 0:25 | **S5** Leg marked **Lost** | A single low note |
