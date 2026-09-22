@@ -81,7 +81,7 @@ docs/
 ├── DEPLOYMENT.md          ← GCP, CI, cron, cost optimization
 ├── ODDS_PROVIDERS.md      ← odds/results provider evaluation, verified coverage limits
 ├── MARKETING_BRIEF.md     ← positioning, taglines, homepage/about copy (draft)
-├── VIDEO_AD_BRIEF.md      ← AI-generated video ad: concept, shot list, prompts, compliance
+├── VIDEO_AD_BRIEF.md      ← AI-generated video ad "The Cage": concept, shot list, prompts, compliance
 └── specs/
     ├── competitions-and-results.md   ← Phases A–C done; Phase 1b backlog
     ├── group-stats-and-points.md     ← Phases 1–4 done
