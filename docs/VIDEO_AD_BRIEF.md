@@ -1,10 +1,10 @@
 # Tiki Acca — AI video ad production brief
 
-> **Concept:** "The Cage." Two acts on a floodlit 5-a-side pitch. Every pass is a
-> member submitting their leg to the Tiki Acca app. One team's acca dies on the last
-> leg because someone picked something stupid; the other team's acca lands. Produced
-> entirely with generative AI video plus real screen recordings — no live-action shoot,
-> no crew, no budget.
+> **Concept:** "The Cage." Two acts on a floodlit 5-a-side pitch, watched from a
+> neutral touchline. Every pass is a member submitting their leg to the Tiki Acca app.
+> One group's acca dies on the last leg because someone got greedy; the other group's
+> acca lands and their points go up. Produced entirely with generative AI video plus
+> real screen recordings — no live-action shoot, no crew, no budget.
 
 | Field | Value |
 |-------|-------|
@@ -26,17 +26,31 @@ percent about the second half of that sentence.
 
 Two attacks. Two accas.
 
-**Act 1 — the acca that dies.** Four red players. The first three submit smart picks and
-the football is gorgeous: one-touch passing, a nutmeg, a no-look flick. The fourth
-submits something idiotic, and skies his shot over the fence into the dark. The other
-three turn and give him the full treatment — hands on heads, a slow clap, one of them
-genuinely unable to stop laughing.
+**Act 1 — the acca that dies.** Four red players. The first three submit sensible picks
+and the football is gorgeous: one-touch passing, a nutmeg, a no-look flick. The fourth
+gets greedy — a 5/1 punt with three bankers already in the bag — and, with a teammate
+completely unmarked beside him, tries to smash it himself and skies it over the fence
+into the dark. The other three turn and give him the full treatment: hands on heads, a
+slow clap, one of them genuinely unable to stop laughing.
 
 **Act 2 — the acca that lands.** Four blue players. Everyone delivers. The move is
-clean, fast and inevitable, and it ends in the net.
+clean, fast and inevitable, it ends in the net, and their points go up.
 
 The gag in Act 1 is the reason anyone remembers the ad. Act 2 is the reason they
 download it.
+
+### The spine: the shot *is* the bet
+
+The first three red players play simple passes and take sensible prices. R4 has a
+simple pass on — and goes for the worldie instead. That is precisely what a 5/1 last
+leg on an otherwise safe acca *is*, and it is why the teasing is justified. Keep the
+unmarked teammate visible in frame when R4 shoots. Without him it's bad luck; with
+him it's a crime.
+
+**Point of view is neutral throughout.** The camera watches both teams from the
+touchline and takes no side. Neither team is "the Tiki Acca team" — both groups are
+users, the ad is a spectator at someone else's Tuesday night, and the audience is
+free to recognise themselves in either one.
 
 ### The structural rule
 
@@ -70,7 +84,9 @@ better on every axis:
    the two things Tiki Acca explicitly is not.
 2. **The joke lives here.** Tiki-taka is elite Barcelona football. Performed by eight
    blokes in a council cage, and then ruined by one of them, is funny, warm and
-   self-aware. In a stadium it's just football and the gag evaporates.
+   self-aware. In a stadium it's just football and the gag evaporates. A neutral
+   touchline POV also only makes sense somewhere you could actually stand and watch —
+   which is a cage, not a stadium.
 3. **The skied shot needs a fence.** Ball over the cage, into the dark, gone. That beat
    is the punchline and the cage is what makes it read instantly.
 4. **AI hit rate.** Crowds are where generative video fails hardest — repeating faces,
@@ -115,15 +131,16 @@ across the eight, a spread of ability that reads on screen.
 
 | # | Character | Role in Act 1 |
 |---|-----------|---------------|
-| R1 | **The organiser.** Calm, competent, the one who set the round up | Receives first, one-touch pass. His pick is the sensible one |
+| R1 | **The organiser.** Calm, competent, the one who set the round up | Receives first, one-touch pass. His pick is the safe banker |
 | R2 | **The show-off.** Quick, technical, enjoys himself too much | The nutmeg. Celebrates his own pass |
 | R3 | **The quiet one.** Genuinely the best player, says nothing | The no-look flick. Doesn't react to it at all |
-| R4 | **The liability.** Everyone has one. Enthusiastic, overconfident, out of his depth | The daft pick. Skies the shot. Gets the treatment |
+| R4 | **The liability.** Everyone has one. Enthusiastic, overconfident, allergic to the simple option | The greedy pick. Ignores the unmarked man, skies the shot. Gets the treatment |
 
 **R4 is the most important character in the ad.** He is the reason the product exists.
 Build him first and build him hardest: he needs to be instantly likeable, visibly
 pleased with himself in the run-up, and completely deflated in the aftermath. He's not
-the villain — he's the mate. The teasing has to land as affection, not contempt.
+the villain — he's the mate, and on another night his 5/1 comes in and he's a legend.
+The teasing has to land as affection, not contempt.
 
 ### Ages
 
@@ -137,7 +154,7 @@ CAP Code bars anyone who **is or seems** under 25 (§9). Treat 27–30 as the ta
 
 | Team | Kit | Notes |
 |------|-----|-------|
-| **Red (the team we follow)** | **Deep claret-red** bibs over plain dark tops | Target ~`#7f1d1d`–`#991b1b` |
+| Red | **Deep claret-red** bibs over plain dark tops | Target ~`#7f1d1d`–`#991b1b` |
 | Blue | **Pale powder blue** bibs over plain dark tops | Target ~`#93c5fd` |
 
 Bibs, not kits — that's what 5-a-side actually looks like, it's cheaper to keep
@@ -145,20 +162,16 @@ consistent than a full strip, and it lets both teams wear the same base layer.
 Mismatched shorts and boots. One player in a long-sleeve base layer. **No club badges,
 no sponsor logos, no real kit designs.**
 
-> **Two brand notes, flagged and proceeding as directed.**
+> **Brand note.** Red is a semantic colour in this product — `#f87171` means a lost
+> leg. That now works *for* the ad rather than against it, since red is the team whose
+> acca dies, but keep the bibs a **deep claret**, visibly darker and browner than the
+> danger red, so the UI's own red stays unambiguous. **Sky blue stays the app's**,
+> carried by the floodlights, the UI and the grade, so `#38bdf8` reads as Tiki Acca on
+> screen even with powder blue on a team.
 >
-> **Red is a semantic colour in this product** — `#f87171` means a lost leg. Putting the
-> team we follow in red sits against that system. Mitigations are baked into the specs
-> above: the bibs are a **deep claret**, visibly darker and browner than the danger red;
-> and **sky blue stays the app's**, carried by the floodlights, the UI and the grade, so
-> `#38bdf8` still reads as Tiki Acca on screen even with blue on the other team.
->
-> **"Our team" now means the team we follow, not the team that wins.** Red loses the
-> gag and blue scores the goal. That is the right way round: the audience identifies
-> with the funny team, and self-deprecation is the house voice. But it does mean the ad
-> should not badge either side as the Tiki Acca team — both teams are users, and the
-> product's own framing is that everybody in the cage is in a group. Don't put the
-> rondo on a bib.
+> **Neither team is badged as ours.** No rondo on a bib, no wordmark in the cage. The
+> POV is a neutral spectator and both groups are users; the brand appears only on the
+> phone screens and the end card.
 
 ---
 
@@ -167,37 +180,73 @@ no sponsor logos, no real kit designs.**
 The picks are the script. They appear as real screenshots (§7), held long enough to
 read — roughly 12–15 frames each, which is about half a second.
 
-| Player | Pick | Odds shown | Result |
-|--------|------|-----------|--------|
-| R1 | Sensible, short-odds, plausible | ~1.40 | Won |
-| R2 | Sensible, mid-odds | ~2.10 | Won |
-| R3 | Sharp, slightly clever | ~3.25 | Won |
-| **R4** | **Obviously, visibly stupid** | **~34.00** | **Lost** |
-| B1–B4 | All plausible, escalating odds | 1.50 → 2.00 → 2.75 → 4.50 | All Won |
+### Markets
 
-### R4's pick — get this right
+Only the six markets the product actually offers (`MARKET_TYPES` in
+`packages/shared/src/constants.ts`) may appear on screen:
 
-The bet has to read as idiotic **in under a second, on a phone, to someone half paying
-attention.** "Man United to win" is not quite there — they're often favourites, so the
-joke needs a beat of thought. Sharpen it to something self-evidently daft. Options, best
-first:
+`match_winner` · `both_teams_score` · `over_under_15` · `over_under_25` ·
+`over_under_35` · `double_chance`
 
-- **"Man Utd to keep a clean sheet"** — instantly funny, needs no football knowledge
-  beyond the punchline, and the long odds sell it
-- **"Man Utd to win the league"** — the classic, and the odds do the work
-- **"Man Utd to win 4–0"** — daft scoreline, reads fast
-- A wildly long-odds scorecast or first-goalscorer on a defender
+There is **no clean-sheet market**, so R4's pick is a `match_winner` longshot. Spreading
+the other picks across the remaining markets is worth doing for its own sake — it shows
+the product's real range without a word of copy.
 
-**On naming a real club:** this is fine, and lower-risk than it sounds. UK betting ads
-name teams constantly, and nominative use of a club name in betslip text to describe a
-market is standard practice. The line that matters is elsewhere: **no club badge, no
-kit, no crest, no stadium, and no real player's face or likeness anywhere in frame.**
-Keep the club to text on a screen and the exposure stays small. See §9.
+### The picks table
+
+Points follow `legPointsForOutcome` in `packages/shared/src/scoring.ts` exactly:
+**won = `odds − 1`, lost = `−1`**. A round with any lost leg scores **`−1`** for the
+whole group (`groupAccaRoundPoints`). Use these numbers on screen; they are the real
+ones the app would produce.
+
+**Red — the acca that dies**
+
+| Player | Market | Pick | Odds | Result | Points |
+|--------|--------|------|------|--------|--------|
+| R1 | `over_under_15` | Over 1.5 goals | 1.40 | **Won** | **+0.40** |
+| R2 | `both_teams_score` | Both teams to score | 2.10 | **Won** | **+1.10** |
+| R3 | `match_winner` | Home win, mid-price | 3.25 | **Won** | **+2.25** |
+| **R4** | `match_winner` | **Coventry to win** | **6.00 (5/1)** | **Lost** | **−1.00** |
+
+Combined odds at lock: **57.33.** Round points for the group: **−1.00.**
+
+**Blue — the acca that lands**
+
+| Player | Market | Pick | Odds | Result | Points |
+|--------|--------|------|------|--------|--------|
+| B1 | `over_under_15` | Over 1.5 goals | 1.50 | **Won** | **+0.50** |
+| B2 | `double_chance` | Home or draw | 1.80 | **Won** | **+0.80** |
+| B3 | `both_teams_score` | Both teams to score | 2.00 | **Won** | **+1.00** |
+| B4 | `match_winner` | Home win | 2.50 | **Won** | **+1.50** |
+
+Combined odds at lock: **13.50.** Round points for the group: **+12.50.**
+
+Match the app's own odds format in the capture rather than hand-writing fractions.
+
+### R4's pick — the joke is greed, not stupidity
+
+**Coventry to win at 5/1.** This is better than a novelty market, and better than the
+"obviously idiotic bet" framing in the previous draft, for a reason worth stating
+plainly: **a 5/1 away win is not a stupid pick — it's a greedy one.** Three bankers are
+already in, the combined odds badge reads 57.33, and R4 swings for the fences anyway.
+Every group has done exactly this, which is why it will land harder than anything
+absurd would.
+
+It also aligns the football perfectly. R1–R3 played simple passes and took sensible
+prices. R4 had a simple pass on and went for the worldie. **The shot is the bet.** The
+unmarked teammate in frame is what turns it from bad luck into a crime.
+
+**Alternative, if Coventry doesn't suit:** Man Utd to win. It works, but it's weaker on
+both counts — United are frequently favourites, so the price won't carry the "greedy"
+read, and a globally famous club is a materially worse strong-appeal risk under the CAP
+rules than a Championship side (§9). **Recommendation: Coventry.**
+
+**Club naming throughout:** prefer Championship and League One sides for every pick and
+avoid the big six entirely. It costs nothing, it reads more authentically like a real
+group's betslip, and it keeps the under-18 appeal argument well away from the ad.
 
 The dialogue-free tease works better than a line read, but if you do add VO or a
-caption, the line is *"Mate."* — nothing more.
-
----
+caption, the line is *"Five to one."* — nothing more.
 
 ## 5. Tool stack
 
@@ -230,8 +279,8 @@ reference still. Numbering is edit order.
 | 3 | **R1 — the first touch** | 4s | Close on boots. R1 receives, kills it dead, side-foots it away. Spray off the surface |
 | 4 | **R2 — the nutmeg** | 4s | Mid, camera tracks right. R2 slips it through a blue player's legs and grins at his own audacity |
 | 5 | **R3 — the no-look** | 3s | Tight. R3 flicks it with the outside of his boot, already looking the other way. No reaction |
-| 6 | **R4 receives** | 3s | R4 takes the ball on the edge of the box. Sets himself. Visibly, fatally confident |
-| 7 | **The sky** | 3s | Slow motion. R4 leans back and absolutely launches it. Boot through the ball, wrong shape, wrong everything |
+| 6 | **R4 receives** | 3s | R4 takes the ball on the edge of the box. Sets himself. Visibly, fatally confident. **A red teammate is unmarked and free in the same frame, arms up, calling for it** |
+| 7 | **The sky** | 3s | Slow motion. R4 ignores him, leans back and absolutely launches it. Boot through the ball, wrong shape, wrong everything |
 | 8 | **Over the fence** | 3s | Low and wide. The ball clears the cage, clears the floodlight, disappears into the black. Hold on the empty sky one beat too long |
 | 9 | **The treatment** | 5s | Handheld mid. R1 hands on head. R2 doubled over laughing. R3 slow-clapping, deadpan. All three turned toward R4 |
 | 10 | **R4 deflated** | 3s | Close. Hands up, sheepish half-grin, mouths an apology nobody accepts |
@@ -298,21 +347,25 @@ Capture on a real device against the seeded demo data. Do **not** generate or mo
 
 | # | Beat | Capture | Cuts against |
 |---|------|---------|--------------|
-| S1 | Thumb taps **Submit your leg**, R1's sensible pick visible | Close on device, real thumb, dark room | Shot 3 |
-| S2 | **Submitting…** → **Submitted**, R2's pick | The state flip, slowed 50% | Shot 4 |
-| S3 | **Combined odds** ticking up as R3's leg lands | The odds badge building | Shot 5 |
-| S4 | **R4's pick, held long enough to read** | The daft bet at ~34.00. This is the single most important frame in the ad | Shot 6 |
+| S1 | Thumb taps **Submit your leg**, R1's Over 1.5 at 1.40 visible | Close on device, real thumb, dark room | Shot 3 |
+| S2 | **Submitting…** → **Submitted**, R2's BTTS at 2.10 | The state flip, slowed 50% | Shot 4 |
+| S3 | **Combined odds** climbing as R3's 3.25 lands | The odds badge building toward 57.33 | Shot 5 |
+| S4 | **R4's pick, held long enough to read** | Coventry to win, 6.00. Combined odds now 57.33 beside it. The single most important frame in the ad | Shot 6 |
 | S5 | Leg marked **Lost** — red state | The acca dies | Shot 8 |
-| S6 | Blue group's legs all landing **Won** in sequence | Green state, one after another | Shots 12–14 |
-| S7 | **Acca locked** / round card, all four legs Won | The payoff | Shot 16 |
-| S8 | **Group leaderboard** — R4 at the bottom | The callback. Optional but very strong | End card |
+| S6 | **R4's points: −1.00**, and his row dropping on the group leaderboard | The cost, in points | Shot 10 |
+| S7 | Blue group's legs landing **Won** in sequence | Green state, one after another | Shots 12–14 |
+| S8 | **Acca locked**, all four Won, combined odds 13.50 | The payoff | Shot 16 |
+| S9 | **Points ticking up** — each blue member's total rising, then the **group leaderboard** reordering | Counting animation on the numbers if the UI has one; otherwise cut the before and after | Shot 17 / end card |
 
 Shoot everything **in a dark room** so the screen glow matches the floodlit night grade
 and the cuts don't jar.
 
 **S4 is the joke.** Give it more frames than feels comfortable in the edit — the
-audience needs time to read it, register it, and get there half a beat before the
-shot is skied.
+audience needs time to read the price, register it against a combined 57.33, and get
+there half a beat before the shot is skied.
+
+**S6 and S9 are the payoff, and they are points, never money.** The reward the ad shows
+is a number going up on a leaderboard and a row moving. Nothing else. See §9.
 
 ---
 
@@ -324,20 +377,20 @@ shot is skied.
 |------|---------|-------|
 | 0:00 | **1** Floodlights snap on | Ballast hum, a distant shout |
 | 0:02 | **2** Establisher through the fence | Boots on wet astro |
-| 0:05 | **3** R1 first touch → **S1** Submit | Ball strike lands *on* the tap. Music in |
-| 0:09 | **4** R2 nutmeg → **S2** Submitted | Tempo lifts |
-| 0:13 | **5** R3 no-look → **S3** odds climbing | Fastest section. Everything is going right |
-| 0:16 | **6** R4 receives → **S4 the daft pick** | **Music thins.** Hold the screenshot |
+| 0:05 | **3** R1 first touch → **S1** Submit, 1.40 | Ball strike lands *on* the tap. Music in |
+| 0:09 | **4** R2 nutmeg → **S2** Submitted, 2.10 | Tempo lifts |
+| 0:13 | **5** R3 no-look → **S3** combined odds climbing | Fastest section. Everything is going right |
+| 0:16 | **6** R4 receives, unmarked man in frame → **S4 Coventry 6.00, combined 57.33** | **Music thins.** Hold the screenshot |
 | 0:19 | **7** The sky (slow motion) | Boot through ball. Music stops dead |
 | 0:22 | **8** Over the fence, into the black | Silence. One long beat on empty sky |
 | 0:25 | **S5** Leg marked **Lost** | A single low note |
 | 0:26 | **9** The treatment | Laughter. No music |
-| 0:31 | **10** R4 deflated | The laughter tails off |
+| 0:31 | **10** R4 deflated → **S6 −1.00**, his row slides down | The laughter tails off |
 | 0:33 | **11** Blue turnover | **Music returns, different, driving** |
-| 0:35 | **12–14** Blue move → **S6** legs landing Won | Fast cuts, accelerating |
-| 0:40 | **15** The finish → **S7 Acca locked** | Hard cut on the strike |
+| 0:35 | **12–14** Blue move → **S7** legs landing Won | Fast cuts, accelerating |
+| 0:40 | **15** The finish → **S8 Acca locked**, 13.50 | Hard cut on the strike |
 | 0:42 | **16** The net + **17** pile-on | Music full |
-| 0:44 | End card (+ **S8** leaderboard behind it) | Settles |
+| 0:44 | **S9** Points ticking up, leaderboard reorders → end card | Settles |
 
 **The three rules that make this work:**
 
@@ -350,6 +403,10 @@ shot is skied.
 3. **Act 2 must be shorter than Act 1.** Roughly 11 seconds against 28. The failure is
    the story; the success is the resolution. If Act 2 runs long the ad becomes a
    product demo and loses its nerve.
+4. **The last thing on screen before the end card is a leaderboard, not a betslip.**
+   The ad resolves on standing, not on a return. That is both the compliance position
+   (§9) and the more interesting promise: the reward for being right is that everyone
+   can see you were right.
 
 ### End card
 
@@ -361,7 +418,7 @@ shot is skied.
 
 Headline is the locked homepage line from [MARKETING_BRIEF.md](./MARKETING_BRIEF.md).
 Given this cut, the Territory A line lands harder than ever — *every leg counts* is
-literally the plot. Test *"Whose leg lost the acca? Now there's proof."* as the paid
+literally the plot, and R4's **−1.00** is the proof. Test *"Whose leg lost the acca? Now there's proof."* as the paid
 variant; this ad is the thirty-second version of that sentence.
 
 ### Cutdowns
@@ -383,9 +440,9 @@ UK gambling advertising rules govern this ad. Get these wrong and it gets pulled
 | Rule | What it means here |
 |------|--------------------|
 | **CAP 16.3.14 — under-25s** | Nobody who **is or seems** under 25 may play a significant role. AI renders young: prompt "late twenties" with explicit maturity markers and **bin any generation where a face could read as 22**. When in doubt, cut it |
-| **Strong appeal to under-18s** | No real footballers, no lookalikes, no club badges, kits, crests or stadiums. The ASA has ruled against ads featuring current top-flight players on social. A club **name in betslip text** is standard practice and materially lower risk — but keep it to text, and keep it to one pick |
+| **Strong appeal to under-18s** | No real footballers, no lookalikes, no club badges, kits, crests or stadiums. The ASA has ruled against ads featuring current top-flight players on social. A club **name in betslip text** is standard practice and materially lower risk — keep it to text. **Prefer Championship and League One clubs and avoid the big six entirely** (§4): Coventry carries far less under-18 appeal than Man Utd, at no cost to the joke |
 | **Trademark** | No club badge, sponsor logo, real kit design, competition branding or trophy in frame |
-| **No win-promise** | Act 2 must not imply that using Tiki Acca makes you win money. **Never show a cash return figure** — no "£420 returned", no stake, no payout. Show **Won**, **Acca locked**, **Points** and the **leaderboard**. [MARKETING_BRIEF.md](./MARKETING_BRIEF.md) is explicit: no promise of profit, no claim of lasting skill from a short sample |
+| **No win-promise** | Act 2 must not imply that using Tiki Acca makes you win money. **Never show a cash return figure, stake, payout, balance or currency symbol at any point.** The reward shown is **points** — individual totals rising (S9), a row climbing the **group leaderboard**, plus **Won** and **Acca locked**. [MARKETING_BRIEF.md](./MARKETING_BRIEF.md) is explicit: no promise of profit, no claim of lasting skill from a short sample. Combined odds (57.33, 13.50) are a factual product display and are fine; a cash equivalent beside them is not |
 | **ASA monitoring** | The ASA began active monitoring of gambling ads on social media in June 2026. Assume scrutiny |
 | **Not a bookmaker** | The trust line stays in the cut: *not a bookmaker, 18+, GambleAware*. Same wording as the homepage trust strip |
 | **Platform rules** | Meta and TikTok both require a gambling advertiser permit **and** age-gating before this can run as paid media |
@@ -396,8 +453,9 @@ UK gambling advertising rules govern this ad. Get these wrong and it gets pulled
 - [ ] Every visible face reads unambiguously 25+
 - [ ] No badge, sponsor mark, crest or real kit design anywhere in frame
 - [ ] No real player likeness
-- [ ] No cash figure, stake or return shown at any point
-- [ ] Club name appears only as betslip text, in one pick
+- [ ] No cash figure, stake, payout, balance or currency symbol shown at any point
+- [ ] The payoff reads as points and leaderboard standing, not returns
+- [ ] Club names appear only as betslip text, and none are big-six clubs
 - [ ] Trust line legible for ≥3s on the end card
 - [ ] 18+ and GambleAware present
 - [ ] AI-generated label applied on every platform
@@ -432,8 +490,9 @@ A 6-second vertical punchline loop alone can still be produced on a single £20 
 2. **Remaining seven characters** — four red in full detail, four blue built lighter.
 3. **Look development** — one hero still of the cage. Iterate until it's right; it
    becomes the style reference for all 17 shots.
-4. **Screen recordings** — S1–S8 against the demo seed, R4's daft pick first. Cheap,
-   fast, and they set the timing the AI shots must cut against.
+4. **Screen recordings** — S1–S9 against the demo seed, R4's Coventry pick first.
+   Cheap, fast, and they set the timing the AI shots must cut against. Check the demo
+   seed can produce a −1.00 leg and a rising leaderboard before you shoot.
 5. **Shot 9 (the treatment) next.** It is the hardest shot in the film and the one the
    whole concept rests on. If three genuine simultaneous reactions can't be generated to
    standard, the comedy needs rethinking before any more spend.
@@ -448,10 +507,11 @@ A 6-second vertical punchline loop alone can still be produced on a single £20 
 
 | Item | Owner | Status |
 |------|-------|--------|
-| R4's exact pick — clean sheet vs win-the-league vs 4–0 | — | Open; §4 recommends the clean sheet |
+| R4's exact pick — Coventry 5/1 vs Man Utd to win | — | §4 recommends Coventry: greedier read, lower under-18 exposure |
+| Whether the demo seed can show a rising leaderboard and a −1.00 leg | — | Verify before shooting S6 and S9 |
 | Which generator wins shot 9 (Veo vs Kling vs Runway) | — | Decide after step 5 |
-| VO *"Mate."* or silent | — | Open — silent is funnier and safer |
-| Whether S8 (leaderboard callback) makes the hero cut | — | Shoot it; decide in the edit |
+| VO *"Five to one."* or silent | — | Open — silent is funnier and safer |
+| Whether the S9 leaderboard reorder needs a UI counting animation | — | Check what the app does today; cut before/after if not |
 | Campaign line: Territory A vs *"Whose leg lost the acca?"* | — | Test both as paid variants |
 | Whether the 9:16 cutdown needs its own native generations | — | Assume yes; budget for it |
 
