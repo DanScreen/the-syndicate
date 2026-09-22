@@ -423,7 +423,7 @@ A small portfolio does, for roughly £40–£90/month. The plan in
 [specs/odds-and-results-sourcing.md](./specs/odds-and-results-sourcing.md):
 
 - **API-Football** for results, with its odds as the default depth feed.
-- **The Odds API**, right-sized, for UK retail prices and deeplinks.
+- **The Odds API**, bulk markets only, for its breadth of UK bookmakers. Betslip deeplinks are low priority (owner decision, 2026-09-22).
 - **Consensus settlement** across API-Football, The Odds API `/scores` and football-data.org.
 - **An AI resolver** for ties only.
 - **A bake-off** that picks at most one extra depth feed.

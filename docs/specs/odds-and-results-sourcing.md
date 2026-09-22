@@ -4,6 +4,7 @@
 |-------|-------|
 | **Status** | Proposed. Research complete 2026-09-22; **nothing has been live-trialled yet** (Phase 0 is the trial) |
 | **Budget** | ≤ £100/month for odds **and** results combined (owner hard cap) |
+| **Owner decisions** | 2026-09-22: betslip deeplinks are **low priority**. Keep them where a source already provides them; never pay for them or pick a source because of them |
 | **Depends on** | — |
 | **Related** | [ODDS_PROVIDERS.md](../ODDS_PROVIDERS.md) (provider research, §7 is the September 2026 re-evaluation), [competitions-and-results.md](./competitions-and-results.md), [live-matchday.md](./live-matchday.md), [estimated-odds-fill.md](./estimated-odds-fill.md), [affiliate-and-betslips.md](./affiliate-and-betslips.md), [season-readiness.md](./season-readiness.md) |
 
@@ -11,7 +12,7 @@
 
 ## TL;DR
 
-- **Stop looking for one provider.** Nothing under £100/month has everything we need in one feed: UK bookmakers, bet365, deep markets, deeplinks, and results with stats. A small portfolio of providers does, for roughly **£40–£90/month** (§5).
+- **Stop looking for one provider.** Nothing under £100/month has everything we need in one feed: UK bookmakers, bet365, deep markets, and results with stats. A small portfolio of providers does, for roughly **£40–£90/month** (§5).
 - **Results → API-Football Pro ($19/month)** as the primary feed for every competition. It covers 1,200+ leagues and cups, gives the 90-minute score separately from extra time, corners and cards statistics, card-type and goal events, and live scores. This:
   - removes manual settlement for League One, League Two, the Carabao Cup, the Europa League and CL qualifiers;
   - unblocks the FA Cup;
@@ -23,10 +24,12 @@
   - football-data.org free (12 competitions).
 
   An **AI resolver** (Claude with web search) only breaks ties or fills silence. It never settles on its own.
-- **Odds → keep The Odds API for UK retail prices and deeplinks, and add a depth feed.**
+- **Odds → keep The Odds API (bulk markets only) for UK bookmaker breadth, and add a depth feed.**
+  - Betslip links are low priority (owner, 2026-09-22), so The Odds API earns its place only through the number of UK bookmakers it prices.
   - API-Football's odds come in the same subscription at no extra cost: bet365, William Hill and others, 100+ bet types, refreshed every 3 hours.
   - In parallel, trial the three sub-£50 feeds that claim UK depth (OddsPapi, UK Odds API Starter, TheStatsAPI) and adopt **at most one**.
-- **Moving extended markets off The Odds API cuts its credit burn by ~85%** in a peak-season, 20-competition scenario (§5.1). The plan can then drop from 100K ($59) to 20K ($30), which pays for the new sources.
+- **Moving extended markets off The Odds API cuts its credit burn by ~90%** in a peak-season, 20-competition scenario (§5.1). The plan can then drop from 100K ($59) to 20K ($30), which pays for the new sources.
+- **API calls scale with competitions, not visitors** (§5.3). The site reads odds and results from Postgres; only crons call providers. The plan leaves ~5× headroom on API-Football even with the catalogue doubled to 40 competitions.
 - **Not recommended:**
   - scraping bookmakers or Oddschecker;
   - the Betfair and Smarkets exchange APIs, which aren't licensed for commercial display (this **corrects** ODDS_PROVIDERS §3);
@@ -66,7 +69,7 @@
 | R1 | Total spend on odds + results ≤ **£100/month**. Plan for ≤ ~£80 so VAT and FX swings don't break the cap |
 | R2 | Auto-settle **every** competition we offer, including every market we sell. A market we can't settle isn't offered in that competition |
 | R3 | More bookmakers (bet365 at minimum) and more markets in the picker, **UK-licensed bookmakers only** anywhere a user sees or locks a price |
-| R4 | Keep real betslip deeplinks wherever a source provides them. Hub links stay a labelled last resort (current behaviour) |
+| R4 | Betslip deeplinks are **nice-to-have** (owner, 2026-09-22): keep them where a source already provides them, but never pay for them or choose a source because of them. Hub links stay a labelled last resort (current behaviour) |
 | R5 | More leagues, added by config: a catalogue entry plus an admin toggle |
 | R6 | No new manual toil. The admin queue stays the escape hatch, not the workflow |
 | R7 | Follow the [ODDS_PROVIDERS rules of thumb](../ODDS_PROVIDERS.md#6-rules-of-thumb): trial before committing, negative-cache failures, don't trust vendor marketing |
@@ -156,17 +159,17 @@ Changes:
    - New rule: when two sources' `fetchedAt` differ by more than 30 min, the fresher quote wins.
    - Otherwise keep today's better-price rule.
    - Always keep a real deeplink for that bookmaker and selection.
-6. **Fixture identity.** The Odds API event id stays the fixture id wherever The Odds API covers the competition, for deeplinks and `/scores`. Other sources attach through the §3.2 mapping. For competitions The Odds API doesn't cover, use the API-Football fixture id with an `af:` prefix, like outright ids.
+6. **Fixture identity.** The Odds API event id stays the fixture id wherever The Odds API covers the competition, for `/scores` and continuity with existing legs. Other sources attach through the §3.2 mapping. For competitions The Odds API doesn't cover, use the API-Football fixture id with an `af:` prefix, like outright ids.
 7. **Offer only what we can settle.** Every new market type ships with its resolver, `tierForMarketType()` and `marketGroupId()` entries, and unit tests in the same PR (R2).
 
 **Which source serves which market (target):**
 
 | Market family | Source(s) | Why |
 |---|---|---|
-| 1X2, goal totals, Asian handicap (featured) | The Odds API bulk (UK books + deeplinks) **merged with** the depth feed (bet365 + extra books) | Breadth *and* links |
-| BTTS, double chance, correct score, alt lines, DNB | Depth feed. The Odds API core tier kept only for deeplink-priority fixtures (e.g. EPL/UCL within 24h) | This is where The Odds API's UK books are thin, and it's what burns credits |
+| 1X2, goal totals, Asian handicap (featured) | The Odds API bulk (~17 UK retail books) **merged with** the depth feed (bet365 + extra books) | Bookmaker breadth |
+| BTTS, double chance, correct score, alt lines, DNB | Depth feed. The Odds API core tier is retired | This is where The Odds API's UK books are thin, and it's what burns credits |
 | Half-time, HT/FT, team goals, win to nil, combos | Depth feed | Not in The Odds API's UK feed today |
-| Corners & cards | Depth feed + The Odds API specials on demand | Now settleable (§3.3) |
+| Corners & cards | Depth feed. The Odds API specials tier is retired, so no user click calls a provider (§5.3) | Now settleable (§3.3) |
 | Goalscorers | Depth feed | UK bookmakers absent from The Odds API's soccer props |
 
 "Depth feed" means API-Football odds by default, or the bake-off winner if one is adopted (§6, Phase 0).
@@ -200,9 +203,50 @@ Changes:
 - **Adding a league** means a catalogue row plus the admin toggle:
   - Results auto-settle via API-Football.
   - Odds come from The Odds API when it has a sport key. Verify the key with `/v4/sports?all=true` first ([rule #1](../ODDS_PROVIDERS.md#6-rules-of-thumb)).
-  - Otherwise odds are API-Football-only: no deeplinks, labelled hub link.
-- **First candidates** (all on API-Football): FA Cup (Odds API key `soccer_fa_cup`, already in the backlog), Europa Conference League, Scottish Premiership, second tiers (Ligue 2, Serie B, 2. Bundesliga, La Liga 2), MLS for the summer gap.
+  - Otherwise odds are API-Football-only: fewer UK bookmakers, and no deeplinks (acceptable per R4).
+- **Candidates:** see §3.7.
 - **Per-competition health on `/admin/odds`:** % of fixtures mapped across providers, median UK bookmakers per market family, % results confirmed by C2 vs C1 vs admin.
+
+### 3.7 Candidate competitions, internationals and friendlies
+
+**How to check availability before adding anything:**
+
+- **The Odds API:** `GET /v4/sports?all=true` lists every sport key and doesn't use credits ([rule #1](../ODDS_PROVIDERS.md#6-rules-of-thumb)).
+- **API-Football:** `GET /leagues?current=true` (1 request) lists every competition with coverage flags saying whether it has odds, events and statistics.
+
+"Confirmed" below means the league appeared on The Odds API's published list during this research. "Verify" means the key still needs the check above.
+
+| Group | Competitions | Odds from | Notes |
+|---|---|---|---|
+| UK & Ireland | FA Cup, Scottish Premiership, League of Ireland | The Odds API + depth feed | Scottish Premiership and League of Ireland confirmed. FA Cup key `soccer_fa_cup` already in the backlog |
+| UK lower / women's | National League, Scottish Championship, Women's Super League | API-Football only (check odds flag) | Fewer UK bookmakers |
+| UEFA club | Europa Conference League | The Odds API (verify) + depth feed | Thursday fixtures alongside the Europa League |
+| Europe, second tiers | Ligue 2, Serie B, 2. Bundesliga, La Liga 2 | The Odds API (verify) + depth feed | Adds weekend and midweek volume |
+| Europe, other top flights | Belgium, Turkey, Greece, Austria, Switzerland, Denmark, Poland, Norway (Eliteserien), Sweden (Allsvenskan) | The Odds API (Eliteserien and Allsvenskan confirmed; verify the rest) + depth feed | The Nordic leagues run through the summer |
+| Americas, Asia, Oceania | MLS, Liga MX, Argentina, Brazil Série B, Copa Sudamericana, J1 League, K League 1, A-League, Saudi Pro League | The Odds API (Liga MX confirmed; verify the rest) + depth feed | Summer-gap bridges |
+| National teams | UEFA Nations League, Euro 2028 qualifiers, other confederations' tournaments. World Cup and Euros are already in the catalogue | The Odds API (verify keys) + depth feed | See below |
+| Friendlies | International friendlies; club (pre-season) friendlies | API-Football (check odds flag) | See below |
+
+**Internationals: add the Nations League first. The timing is now.**
+
+- **This break is long.** FIFA's 2026–2030 calendar merged the September and October windows. The current break runs **21 September – 6 October 2026**, up to 4 matches per nation, so there's roughly three weeks with no Premier League.
+- **Nations League dates.** The 2026–27 league phase plays matchdays 1–4 on 24 September – 6 October and 5–6 on 12–17 November.
+- **Next up.** Euro 2028 qualifying runs March–November 2027 (draw on 6 December 2026).
+- **Results.** API-Football covers national-team competitions. The Nations League isn't on football-data's free tier, so **until Phase 1 ships** it would settle manually, like CL qualifiers today.
+
+**Friendlies**
+
+- **International friendlies: yes, after Phase 1.**
+  - API-Football lists them as a competition. Its odds coverage for them is unconfirmed, and it's not confirmed that The Odds API carries them.
+  - Settle on 90 minutes, as bookmakers do. Hold for admin when a match is shortened or abandoned.
+  - Useful for international breaks and the June windows.
+- **Club friendlies (pre-season): no.**
+  - Odds exist mainly for big clubs and cover few markets.
+  - Formats are often non-standard (e.g. 3 × 30 minutes, rolling substitutions, split squads).
+  - Results are sometimes reported late or not at all, which undermines R2.
+  - At most, a hand-picked set of big-club tour games.
+
+**Summer 2027** has no tournament ([season-readiness.md](./season-readiness.md) flags it as a fallow gap). Bridge it with MLS, the Nordic leagues, J1, Brazil, League of Ireland and the June international window.
 
 ---
 
@@ -211,7 +255,7 @@ Changes:
 | Idea | Verdict | Why |
 |---|---|---|
 | **API-Football** (results + stats + odds) | **Adopt** | $19/month (Pro, 7,500 requests/day). 1,200+ competitions. 90' split, statistics, events, live scores. Odds from ~15–20 bookmakers incl. bet365, 3-hourly. The free plan only serves seasons 2022–2024, so trials need the paid month |
-| **The Odds API** (current) | **Keep, right-size** | The only verified deeplink source, and broad UK bookmakers. `/scores` gives id-keyed results for 2 credits a call (with `daysFrom`) |
+| **The Odds API** (current) | **Keep, bulk markets only** | The broadest UK bookmaker list we've verified (~17 retail books). Its deeplinks are a bonus, not the reason to keep it (R4). `/scores` gives id-keyed results for 2 credits a call (with `daysFrom`) |
 | **football-data.org free** | **Keep as second opinion** | 12 competitions, £0. Upgrading is poor value: Standard €49/month buys 25 competitions, and stats are a paid add-on on top |
 | OddsPapi | **Trial (Phase 0)** | Claims 350+ bookmakers and 460+ markets, with `includeLinks` returning event, market and betslip links where available. Free tier 250 requests/month; paid "from ~$49". Unverified and a newer vendor |
 | UK Odds API | **Trial Starter (Phase 0)** | Purpose-built for UK. Starter £49/month for 10 UK bookmakers (core markets). Pro £149 for all 34 is over budget |
@@ -242,10 +286,12 @@ Scenario: peak-season weekend, 20 enabled competitions, 150 fixtures inside the 
 | Usage | Today's design | After Phase 3 |
 |---|---|---|
 | Bulk (3 credits per competition per run) | 3 × 20 × 4 × 30 = 7,200 | 7,200 |
-| Core tier (5 credits per fixture per run) | 5 × 150 × 4 × 30 = 90,000 | Deeplink-priority fixtures only (~10/day × 5 × 2 runs) ≈ 3,000 |
-| Specials on demand (7 credits) | Occasional | ~350 |
+| Core tier (5 credits per fixture per run) | 5 × 150 × 4 × 30 = 90,000 | Retired: 0 |
+| Specials on demand (7 credits) | Occasional | Retired: 0 |
 | `/scores` (2 credits, only competitions with pending legs, KO+100m…KO+4h) | — | ~1,000–5,000 |
-| **Total / month** | **~97,000 → needs 100K ($59), no headroom** | **~12,000–16,000 → fits 20K ($30)** |
+| **Total / month** | **~97,000 → needs 100K ($59), no headroom** | **~8,000–12,000 → fits 20K ($30)** |
+
+Doubling the catalogue to 40 competitions doubles bulk to 14,400/month (~15–19K with `/scores`). That still fits 20K at today's 6-hourly refresh. Refreshing every 3h, or going well past 40 competitions, needs the 100K plan ($59); Target A then becomes ~£62/month.
 
 ### 5.2 Monthly cost by stage
 
@@ -260,7 +306,31 @@ Scenario: peak-season weekend, 20 enabled competitions, 150 fixtures inside the 
 
 - **Incremental cost of Phases 1–2** over today is **$19 + AI ≈ £15–18**, if you're already on the 100K plan.
 - **Target B with UK Odds API Starter** sits close to the cap once VAT is added. Choose it only if VAT is reclaimable or its bookmaker list clearly beats the others.
-- **API-Football Ultra ($29, 75K requests/day)** is only needed if live polling moves to every minute or the catalogue grows a lot. The §6 request budget shows Pro is ample.
+- **API-Football Ultra ($29, 75K requests/day)** is only needed if the catalogue grows a lot or we poll individual fixtures every minute. §5.3 shows Pro is ample.
+
+### 5.3 Is that enough API calls to serve the website?
+
+Yes, and the answer doesn't depend on how many people use the site.
+
+- **No page load calls a provider.** Odds are read from Postgres snapshots (`ODDS_DB_ONLY=true` in production) and results from the `Match` table. Crons fill both on a schedule.
+- **The one exception today** is the "Corners & cards" tier. It's fetched live on the first click per fixture and cached for 7h, so it scales with fixtures, not users. Phase 3 retires it (the depth feed serves corners and cards), after which **no user action calls a provider**.
+- **So API usage scales with competitions × refresh frequency.** Ten users or 100,000 cost the same calls. Growth only raises the bill when we add competitions or refresh more often.
+
+**Daily budget with the catalogue doubled to 40 competitions (busy Saturday):**
+
+| Provider | Job | Usage |
+|---|---|---|
+| API-Football Pro | Live scores: `fixtures?live=all` returns every live fixture in one call, polled once a minute over ~12h of football | ~720 calls |
+| | Full-time details (events, stats) for matches with legs: `fixtures?ids=`, 20 per call | ~50–100 calls |
+| | Fixture lists: `fixtures?date=` for the next 14 days, once a day | 14 calls |
+| | Odds: 40 competitions × ~2 pages × every 3h | ~640 calls |
+| | **Total vs allowance** | **~1,500 of 7,500/day (~5× headroom)** |
+| The Odds API 20K | Bulk odds: 3 credits × 40 competitions × 4 runs | 480 credits/day |
+| | `/scores` for competitions with pending legs | ~30–150 credits/day |
+| | **Total vs allowance** | **~15–19K of 20K/month.** Move to 100K ($59) for 3-hourly refresh or > 40 competitions |
+| AI resolver | Tie-breaks only | ≤ 50/month (hard cap) |
+
+Bake-off candidates: TheStatsAPI Starter (100K requests/month) would comfortably carry a depth feed. OddsPapi's free 250 requests/month is enough for Phase 0 only; its paid quotas are unpublished. UK Odds API Starter's quota is unpublished ("solid hourly quota"). Confirm both in Phase 0.
 
 ---
 
@@ -331,7 +401,7 @@ Rule of thumb #2: only trials count. Nothing below has been probed live, because
 - [ ] `source` and `fetchedAt` on quotes; freshness-aware `mergeQuotes()` with unit tests
 - [ ] New markets, each with resolver and tests: HT result, HT/FT, team goals, win to nil / clean sheet, result + BTTS
 - [ ] **Phase 3b:** anytime / first goalscorer (player mapping + lineups + void rule)
-- [ ] Re-tier The Odds API as in §5.1. After one month of metered usage fits, downgrade to 20K
+- [ ] Retire The Odds API core and specials tiers (bulk only), as in §5.1. After one month of metered usage fits, downgrade to 20K
 - [ ] Measure the share of displayed quotes that are `estimated` before and after. Real coverage is the honest fix for the thin tables that [estimated-odds fill](./estimated-odds-fill.md) papers over
 
 ### Phase 4: AI resolver
@@ -401,7 +471,7 @@ Catalogue fields: `apiFootballLeagueId?`, `fixtureSource?` (§3.6). Quote fields
 | ET and penalties semantics | Rule 6: only providers exposing the regulation split vote. `to_qualify` uses the final result |
 | AI hallucination | Corroboration rule, evidence stored, never the sole basis, offline eval gate |
 | Cost overrun | Per-provider daily caps and quota snapshots. Extend the existing Odds API quota display on `/admin/odds` to every provider |
-| A bookmaker with no deeplink (e.g. bet365 via API-Football) tops the acca ranking | Existing labelled hub fallback. Open decision 6 |
+| A bookmaker with no deeplink (e.g. bet365 via API-Football) tops the acca ranking | Accepted (owner, 2026-09-22): deeplinks are low priority. The existing labelled hub fallback stays |
 
 ## 9. Open decisions
 
@@ -412,9 +482,11 @@ Catalogue fields: `apiFootballLeagueId?`, `fixtureSource?` (§3.6). Quote fields
 | 3 | Cards settlement convention ([ODDS_PROVIDERS #4](../ODDS_PROVIDERS.md#5-open-decisions)) | Manual |
 | 4 | Offer goalscorer markets (Phase 3b) | Not before Phase 3 ships |
 | 5 | Faster confirmation when two sources agree (e.g. 20 min instead of 1h) | Off; decide after a month of observation data |
-| 6 | Can a bookmaker without deeplinks be the recommended acca bookmaker? | Yes, with the existing hub labelling |
+| 6 | Can a bookmaker without deeplinks be the recommended acca bookmaker? | **Decided 2026-09-22 (owner): yes.** Deeplinks are low priority |
 | 7 | AI resolver: auto-accept, or suggest-only | Suggest-only until the eval passes |
 | 8 | Kambi public-API experiment | No |
+| 9 | Friendlies | International friendlies: yes, once Phase 1 auto-settles them. Club friendlies: no (§3.7) |
+| 10 | Add the Nations League before Phase 1 ships, with manual settlement, to cover the 21 Sept – 6 Oct break | Owner's call. Verify the Odds API key first |
 
 ## 10. Verification status and sources
 
@@ -432,6 +504,9 @@ Nothing in this spec was probed live. The research session's network egress bloc
 | Betfair: delayed key is for development and personal betting; commercial use needs approval; vendor licence £999 | High (Betfair support pages) |
 | Google Custom Search closed to new customers, ends 2027-01-01 | High (Google docs) |
 | Claude: Opus 5 $5/$25 per MTok; web search $10 per 1,000 | High (Anthropic pricing, cached 2026-06) |
+| The Odds API lists Scottish Premiership, League of Ireland, Liga MX, Eliteserien and Allsvenskan; the other §3.7 keys are unverified | Medium: from The Odds API's published pages; verify with `/v4/sports?all=true` |
+| International window 21 Sept – 6 Oct 2026; Nations League MD1–4 24 Sept – 6 Oct, MD5–6 12–17 Nov; Euro 2028 qualifying March–November 2027 | High (UEFA, multiple outlets) |
+| API-Football lists international and club friendlies as competitions; odds coverage for them unknown | Medium |
 
 **Sources:**
 
@@ -450,3 +525,5 @@ Nothing in this spec was probed live. The research session's network egress bloc
 - SERP APIs: [SerpApi sports results](https://serpapi.com/sports-results), [Serper](https://serper.dev/)
 - UK scraping law: [Bird & Bird on scraping](https://www.twobirds.com/en/insights/2021/global/legal-weapons-in-the-fight-against-data-scraping), [Pinsent Masons on Ryanair](https://www.pinsentmasons.com/out-law/news/website-operators-can-prohibit-screen-scraping-of-unprotected-data-via-terms-and-conditions-says-eu-court-in-ryanair-case)
 - FX: [GBP/USD](https://tradingeconomics.com/united-kingdom/currency)
+- International calendar: [2026/27 Nations League fixtures](https://www.uefa.com/uefanationsleague/news/02a2-1fea18abbcbc-456e846509e7-1000--2026-27-uefa-nations-league-all-the-league-phase-fixtures/), [why this break is longer](https://www.beinsports.com/en-us/soccer/articles/when-is-the-next-fifa-international-break-and-why-is-it-longer-than-usual-2026-08-24), [Euro 2028 qualifying draw](https://www.uefa.com/euro2028/news/029f-1f2ff991e87b-345fffcd69c3-1000--uefa-euro-2028-qualifying-draw-to-take-place-in-belfast/)
+- The Odds API sports list: [Sports APIs](https://the-odds-api.com/sports-odds-data/sports-apis.html)
