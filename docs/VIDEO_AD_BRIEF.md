@@ -28,7 +28,7 @@ Two attacks. Two accas.
 
 **Act 1 — the acca that dies.** Four red players. The first three submit sensible picks
 and the football is gorgeous: one-touch passing, a nutmeg, a no-look flick. The fourth
-gets greedy — a 5/1 punt with three bankers already in the bag — and, with a teammate
+gets greedy — a 5/1 punt on top of a dull 3.15 treble — and, with a teammate
 completely unmarked beside him, tries to smash it himself and skies it over the fence
 into the dark. The other three turn and give him the full treatment: hands on heads, a
 slow clap, one of them genuinely unable to stop laughing.
@@ -43,7 +43,7 @@ download it.
 
 The first three red players play simple passes and take sensible prices. R4 has a
 simple pass on — and goes for the worldie instead. That is precisely what a 5/1 last
-leg on an otherwise safe acca *is*, and it is why the teasing is justified. Keep the
+leg on top of a 3.15 treble *is*, and it is why the teasing is justified. Keep the
 unmarked teammate visible in frame when R4 shoots. Without him it's bad luck; with
 him it's a crime.
 
@@ -203,12 +203,24 @@ ones the app would produce.
 
 | Player | Market | Pick | Odds | Result | Points |
 |--------|--------|------|------|--------|--------|
-| R1 | `over_under_15` | Over 1.5 goals | 1.40 | **Won** | **+0.40** |
-| R2 | `both_teams_score` | Both teams to score | 2.10 | **Won** | **+1.10** |
-| R3 | `match_winner` | Home win, mid-price | 3.25 | **Won** | **+2.25** |
+| R1 | `over_under_15` | Over 1.5 goals | 1.25 | **Won** | **+0.25** |
+| R2 | `double_chance` | Home or draw | 1.40 | **Won** | **+0.40** |
+| R3 | `both_teams_score` | Both teams to score | 1.80 | **Won** | **+0.80** |
 | **R4** | `match_winner` | **Coventry to win** | **6.00 (5/1)** | **Lost** | **−1.00** |
 
-Combined odds at lock: **57.33.** Round points for the group: **−1.00.**
+**Combined odds after three legs: 3.15. After R4's leg: 18.90.** Round points for the
+group: **−1.00.**
+
+**That jump is the story.** Three disciplined legs make a 3.15 treble — genuinely
+sensible, genuinely boring. R4's single leg then sends the badge to 18.90, a six-fold
+increase from one pick. The odds badge does the characterisation for you: you can see
+the recklessness arrive.
+
+The earlier draft of this brief had the first three legs at 1.40 / 2.10 / 3.25, a 9.56
+treble, for a combined 57.33. That was wrong — not arithmetically, but dramatically. If
+R1–R3 are already running an 8/1 treble, R4's 5/1 is in keeping with how his mates bet
+and the teasing isn't earned. **The first three legs have to be visibly, provably dull
+for the fourth to be a crime.**
 
 **Blue — the acca that lands**
 
@@ -221,6 +233,12 @@ Combined odds at lock: **57.33.** Round points for the group: **−1.00.**
 
 Combined odds at lock: **13.50.** Round points for the group: **+12.50.**
 
+Note that blue's combined odds (13.50) come in *below* red's (18.90). The acca that
+landed was the less greedy one. Let the numbers carry that — never say it in copy, and
+don't imply short prices are a strategy; it's one round, and
+[MARKETING_BRIEF.md](./MARKETING_BRIEF.md) rules out claiming lasting skill from a
+short sample.
+
 Match the app's own odds format in the capture rather than hand-writing fractions.
 
 ### R4's pick — the joke is greed, not stupidity
@@ -228,7 +246,8 @@ Match the app's own odds format in the capture rather than hand-writing fraction
 **Coventry to win at 5/1.** This is better than a novelty market, and better than the
 "obviously idiotic bet" framing in the previous draft, for a reason worth stating
 plainly: **a 5/1 away win is not a stupid pick — it's a greedy one.** Three bankers are
-already in, the combined odds badge reads 57.33, and R4 swings for the fences anyway.
+already in at a modest 3.15, and R4 swings for the fences anyway — taking the badge to
+18.90 on his own.
 Every group has done exactly this, which is why it will land harder than anything
 absurd would.
 
@@ -347,10 +366,10 @@ Capture on a real device against the seeded demo data. Do **not** generate or mo
 
 | # | Beat | Capture | Cuts against |
 |---|------|---------|--------------|
-| S1 | Thumb taps **Submit your leg**, R1's Over 1.5 at 1.40 visible | Close on device, real thumb, dark room | Shot 3 |
-| S2 | **Submitting…** → **Submitted**, R2's BTTS at 2.10 | The state flip, slowed 50% | Shot 4 |
-| S3 | **Combined odds** climbing as R3's 3.25 lands | The odds badge building toward 57.33 | Shot 5 |
-| S4 | **R4's pick, held long enough to read** | Coventry to win, 6.00. Combined odds now 57.33 beside it. The single most important frame in the ad | Shot 6 |
+| S1 | Thumb taps **Submit your leg**, R1's Over 1.5 at 1.25 visible | Close on device, real thumb, dark room | Shot 3 |
+| S2 | **Submitting…** → **Submitted**, R2's double chance at 1.40 | The state flip, slowed 50% | Shot 4 |
+| S3 | **Combined odds** settling at 3.15 after R3's leg | The badge, unremarkable. This is the "before" | Shot 5 |
+| S4 | **R4's pick, held long enough to read** | Coventry to win, 6.00 — and the badge jumping 3.15 → **18.90**. The single most important frame in the ad | Shot 6 |
 | S5 | Leg marked **Lost** — red state | The acca dies | Shot 8 |
 | S6 | **R4's points: −1.00**, and his row dropping on the group leaderboard | The cost, in points | Shot 10 |
 | S7 | Blue group's legs landing **Won** in sequence | Green state, one after another | Shots 12–14 |
@@ -361,7 +380,7 @@ Shoot everything **in a dark room** so the screen glow matches the floodlit nigh
 and the cuts don't jar.
 
 **S4 is the joke.** Give it more frames than feels comfortable in the edit — the
-audience needs time to read the price, register it against a combined 57.33, and get
+audience needs time to read the price, watch the badge leap from 3.15 to 18.90, and get
 there half a beat before the shot is skied.
 
 **S6 and S9 are the payoff, and they are points, never money.** The reward the ad shows
@@ -377,10 +396,10 @@ is a number going up on a leaderboard and a row moving. Nothing else. See §9.
 |------|---------|-------|
 | 0:00 | **1** Floodlights snap on | Ballast hum, a distant shout |
 | 0:02 | **2** Establisher through the fence | Boots on wet astro |
-| 0:05 | **3** R1 first touch → **S1** Submit, 1.40 | Ball strike lands *on* the tap. Music in |
-| 0:09 | **4** R2 nutmeg → **S2** Submitted, 2.10 | Tempo lifts |
-| 0:13 | **5** R3 no-look → **S3** combined odds climbing | Fastest section. Everything is going right |
-| 0:16 | **6** R4 receives, unmarked man in frame → **S4 Coventry 6.00, combined 57.33** | **Music thins.** Hold the screenshot |
+| 0:05 | **3** R1 first touch → **S1** Submit, 1.25 | Ball strike lands *on* the tap. Music in |
+| 0:09 | **4** R2 nutmeg → **S2** Submitted, 1.40 | Tempo lifts |
+| 0:13 | **5** R3 no-look → **S3** combined odds settle at 3.15 | Fastest section. Everything is going right |
+| 0:16 | **6** R4 receives, unmarked man in frame → **S4 Coventry 6.00, badge jumps 3.15 → 18.90** | **Music thins.** Hold the screenshot |
 | 0:19 | **7** The sky (slow motion) | Boot through ball. Music stops dead |
 | 0:22 | **8** Over the fence, into the black | Silence. One long beat on empty sky |
 | 0:25 | **S5** Leg marked **Lost** | A single low note |
@@ -442,7 +461,7 @@ UK gambling advertising rules govern this ad. Get these wrong and it gets pulled
 | **CAP 16.3.14 — under-25s** | Nobody who **is or seems** under 25 may play a significant role. AI renders young: prompt "late twenties" with explicit maturity markers and **bin any generation where a face could read as 22**. When in doubt, cut it |
 | **Strong appeal to under-18s** | No real footballers, no lookalikes, no club badges, kits, crests or stadiums. The ASA has ruled against ads featuring current top-flight players on social. A club **name in betslip text** is standard practice and materially lower risk — keep it to text. **Prefer Championship and League One clubs and avoid the big six entirely** (§4): Coventry carries far less under-18 appeal than Man Utd, at no cost to the joke |
 | **Trademark** | No club badge, sponsor logo, real kit design, competition branding or trophy in frame |
-| **No win-promise** | Act 2 must not imply that using Tiki Acca makes you win money. **Never show a cash return figure, stake, payout, balance or currency symbol at any point.** The reward shown is **points** — individual totals rising (S9), a row climbing the **group leaderboard**, plus **Won** and **Acca locked**. [MARKETING_BRIEF.md](./MARKETING_BRIEF.md) is explicit: no promise of profit, no claim of lasting skill from a short sample. Combined odds (57.33, 13.50) are a factual product display and are fine; a cash equivalent beside them is not |
+| **No win-promise** | Act 2 must not imply that using Tiki Acca makes you win money. **Never show a cash return figure, stake, payout, balance or currency symbol at any point.** The reward shown is **points** — individual totals rising (S9), a row climbing the **group leaderboard**, plus **Won** and **Acca locked**. [MARKETING_BRIEF.md](./MARKETING_BRIEF.md) is explicit: no promise of profit, no claim of lasting skill from a short sample. Combined odds (18.90, 13.50) are a factual product display and are fine; a cash equivalent beside them is not |
 | **ASA monitoring** | The ASA began active monitoring of gambling ads on social media in June 2026. Assume scrutiny |
 | **Not a bookmaker** | The trust line stays in the cut: *not a bookmaker, 18+, GambleAware*. Same wording as the homepage trust strip |
 | **Platform rules** | Meta and TikTok both require a gambling advertiser permit **and** age-gating before this can run as paid media |
