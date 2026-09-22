@@ -17,6 +17,8 @@
     "marketing:build": "node marketing-posts/scripts/make-posts.mjs",
     "marketing:gallery": "node marketing-posts/scripts/build-gallery.mjs",
     "marketing:x-header": "node marketing-posts/scripts/make-x-header.mjs",
+    "video-ad:seed": "cd packages/database && npx tsx prisma/video-ad-seed.ts",
+    "video-ad:capture": "node marketing-posts/scripts/capture-video-ad.mjs",
     "db:generate": "npm run generate --workspace=@tiki-acca/database",
     "db:migrate": "npm run migrate --workspace=@tiki-acca/database",
     "db:migrate:deploy": "npm run migrate:deploy --workspace=@tiki-acca/database",

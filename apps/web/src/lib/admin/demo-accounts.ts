@@ -1,6 +1,7 @@
 /**
- * Marketing / App Store reviewer accounts from `packages/database/prisma/demo-seed.ts`.
- * Keep in sync with that seed (email domain + invite code).
+ * Marketing / App Store reviewer accounts from `packages/database/prisma/demo-seed.ts`
+ * and the video ad cast from `packages/database/prisma/video-ad-seed.ts`
+ * (`cage.*@demo.tikiacca.com`). Keep in sync with those seeds (email domain + invite code).
  */
 export const DEMO_EMAIL_DOMAIN = "demo.tikiacca.com";
 export const DEMO_GROUP_INVITE_CODE = "DEMO24";
