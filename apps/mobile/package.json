@@ -19,8 +19,6 @@
     "tag:release": "node scripts/tag-release.js",
     "update:preview": "eas update --branch preview",
     "update:production": "eas update --branch production",
-    "sync:native-version": "node scripts/sync-native-version.js",
-    "eas-build-post-install": "node scripts/sync-native-version.js",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
