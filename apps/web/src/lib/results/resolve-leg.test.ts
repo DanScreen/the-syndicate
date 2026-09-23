@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { handicapMarketType, overUnderMarketType } from "@/lib/odds/market-builders";
 import { alignResultToLeg } from "./match-store";
 import { resolveLegOutcome, type MatchResult } from "./resolve-leg";
 
@@ -102,5 +103,53 @@ describe("alignResultToLeg", () => {
       ),
       null
     );
+  });
+});
+
+describe("whole-number lines", () => {
+  const goals = (homeGoals: number, awayGoals: number): MatchResult => ({
+    homeGoals,
+    awayGoals,
+    status: "FINISHED",
+  });
+
+  it("settles goal O/U against the real line, pushing on the number", () => {
+    const marketType = overUnderMarketType("", 2)!;
+    assert.equal(marketType, "over_under_20");
+
+    // The old "over_under_2" decoded to 0.2, so Over won on a single goal.
+    assert.equal(resolveLegOutcome({ marketType, selectionId: "over" }, goals(1, 0)), "lost");
+    assert.equal(resolveLegOutcome({ marketType, selectionId: "under" }, goals(1, 0)), "won");
+    assert.equal(resolveLegOutcome({ marketType, selectionId: "over" }, goals(1, 1)), "void");
+    assert.equal(resolveLegOutcome({ marketType, selectionId: "over" }, goals(2, 1)), "won");
+  });
+
+  it("leaves half goal lines unchanged", () => {
+    const marketType = overUnderMarketType("", 2.5)!;
+    assert.equal(marketType, "over_under_25");
+    assert.equal(resolveLegOutcome({ marketType, selectionId: "over" }, goals(2, 1)), "won");
+    assert.equal(resolveLegOutcome({ marketType, selectionId: "over" }, goals(1, 1)), "lost");
+  });
+
+  it("settles whole asian handicaps from the selection point", () => {
+    const marketType = handicapMarketType("asian", -1)!;
+    assert.equal(marketType, "asian_handicap_m10");
+    assert.equal(resolveLegOutcome({ marketType, selectionId: "home_-1" }, goals(2, 1)), "void");
+    assert.equal(resolveLegOutcome({ marketType, selectionId: "home_-1" }, goals(3, 1)), "won");
+    assert.equal(resolveLegOutcome({ marketType, selectionId: "away_1" }, goals(1, 1)), "won");
+  });
+
+  it("settles total corners O/U 10 against 10, not 1.0", () => {
+    const marketType = overUnderMarketType("corners", 10)!;
+    assert.equal(marketType, "corners_over_under_100");
+    assert.equal(resolveLegOutcome(leg(marketType, "over"), finished({ home: 6, away: 4 })), "void");
+    assert.equal(resolveLegOutcome(leg(marketType, "over"), finished({ home: 5, away: 4 })), "lost");
+    assert.equal(resolveLegOutcome(leg(marketType, "over"), finished({ home: 7, away: 4 })), "won");
+  });
+
+  it("settles whole team corners lines", () => {
+    const marketType = "team_corners__manchester_city__40";
+    assert.equal(resolveLegOutcome(leg(marketType, "over"), finished({ home: 6, away: 4 })), "void");
+    assert.equal(resolveLegOutcome(leg(marketType, "under"), finished({ home: 6, away: 3 })), "won");
   });
 });

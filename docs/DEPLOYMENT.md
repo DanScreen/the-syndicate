@@ -575,6 +575,8 @@ One-off fixes (solo test rounds, re-settle after a bug) use `apps/web/scripts/da
 | Fix historical duplicate markets (keep earliest leg) | `npm run db:maintenance -- fix-duplicate-markets --execute` |
 | Preview legs missing pick announcements (no betslip reactions) | `npm run db:maintenance -- preview-leg-announcements` |
 | Backfill `leg_submitted` messages for those legs | `npm run db:maintenance -- backfill-leg-announcements --execute` |
+| Preview legs with legacy whole-number line keys (e.g. `over_under_2`) | `npm run db:maintenance -- preview-line-keys` |
+| Rewrite them to the tenths encoding, then `resettle-round` each settled round it lists | `npm run db:maintenance -- fix-line-keys --execute` |
 
 ### Backfill a leg missing from a locked round
 

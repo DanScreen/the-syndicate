@@ -1,5 +1,5 @@
 import type { BookmakerQuote, Fixture, Market, MarketSelection } from "@tiki-acca/shared";
-import { filterUpcomingFixtures } from "@tiki-acca/shared";
+import { decodeLineKey, filterUpcomingFixtures } from "@tiki-acca/shared";
 import {
   formatCommenceTimeFrom,
   ODDS_QUOTA_BLOCK_CACHE_KEY,
@@ -11,7 +11,12 @@ import { isRetailBookmaker } from "./bookmakers";
 import { getCached, setCached } from "./cache";
 import { fillMarketsWithEstimates } from "./estimated-odds-fill";
 import { isQuotaExhaustedError, OddsApiQuotaExhaustedError, toOddsApiError } from "./errors";
-import { buildOutrightMarket, slugify } from "./market-builders";
+import {
+  buildOutrightMarket,
+  handicapMarketType,
+  overUnderMarketType,
+  slugify,
+} from "./market-builders";
 import { addQuote, resolveDeeplink } from "./quotes";
 import { recordOddsApiQuota } from "./quota-snapshot";
 
@@ -76,15 +81,6 @@ function totalsSelectionId(outcomeName: string): string | null {
   return null;
 }
 
-function overUnderType(line: number): string {
-  return `over_under_${String(line).replace(".", "")}`;
-}
-
-function asianHandicapType(homePoint: number): string {
-  const encoded = homePoint < 0 ? `m${String(Math.abs(homePoint)).replace(".", "")}` : String(homePoint).replace(".", "");
-  return `asian_handicap_${encoded}`;
-}
-
 function buildH2hMarket(event: OddsApiEvent, bookmakers: OddsApiBookmaker[]): Market | null {
   const quoteMap = new Map<string, BookmakerQuote[]>();
 
@@ -117,6 +113,9 @@ function buildTotalsMarketForLine(
   bookmakers: OddsApiBookmaker[],
   line: number
 ): Market | null {
+  const type = overUnderMarketType("", line);
+  if (type === null) return null;
+
   const quoteMap = new Map<string, BookmakerQuote[]>();
 
   for (const bookmaker of bookmakers) {
@@ -144,7 +143,7 @@ function buildTotalsMarketForLine(
   if (selections.length === 0) return null;
 
   return {
-    type: overUnderType(line),
+    type,
     label: `Over/Under ${line} Goals`,
     selections,
   };
@@ -171,7 +170,8 @@ function buildSpreadsMarkets(event: OddsApiEvent, bookmakers: OddsApiBookmaker[]
       if (!isHome && !isAway) continue;
 
       const homePoint = isHome ? outcome.point : -outcome.point;
-      const type = asianHandicapType(homePoint);
+      const type = handicapMarketType("asian", homePoint);
+      if (type === null) continue;
       const quoteMap = lineMaps.get(type) ?? new Map<string, BookmakerQuote[]>();
       const selectionId = isHome ? `home_${outcome.point}` : `away_${outcome.point}`;
       const link = resolveDeeplink(outcome, market, bookmaker.link, bookmaker.key);
@@ -183,9 +183,7 @@ function buildSpreadsMarkets(event: OddsApiEvent, bookmakers: OddsApiBookmaker[]
   const markets: Market[] = [];
 
   for (const [type, quoteMap] of lineMaps) {
-    const homePoint = type.includes("m")
-      ? -Number(type.replace("asian_handicap_m", "")) / 10
-      : Number(type.replace("asian_handicap_", "")) / 10;
+    const homePoint = decodeLineKey(type.replace("asian_handicap_", ""));
     const awayPoint = -homePoint;
     const homeLabel = `${event.home_team} ${homePoint > 0 ? "+" : ""}${homePoint}`;
     const awayLabel = `${event.away_team} ${awayPoint > 0 ? "+" : ""}${awayPoint}`;
