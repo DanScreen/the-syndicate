@@ -1,4 +1,5 @@
 import { requireSession } from "@/lib/api-auth";
+import { serialized } from "@/lib/api-response";
 import { serializeMessage } from "@/lib/chat/serialize";
 import { mapHistoryRound } from "@/lib/groups/map-history-round";
 import { buildRoundBetslipLinks } from "@/lib/odds/betslip-links";
@@ -14,7 +15,11 @@ import { openRound } from "@/lib/rounds/open-round";
 import { memberNetPointsAcrossRounds, statsRoundWhere } from "@/lib/stats/helpers";
 import { prisma } from "@tiki-acca/database";
 import { Prisma } from "@prisma/client";
-import type { AccaBookmakerRanking } from "@tiki-acca/shared";
+import type {
+  AccaBookmakerRanking,
+  GroupDetailResponse,
+  RoundStatus,
+} from "@tiki-acca/shared";
 import {
   allMembersFilledQuota,
   countLegsByUser,
@@ -96,6 +101,8 @@ async function activeRoundForClient(round: ActiveRoundRecord) {
 
   return {
     ...round,
+    // Prisma stores status as a string; rounds loaded here are open or locked.
+    status: round.status as RoundStatus,
     legs,
     combinedOdds:
       round.status === "open" && previewCombinedOdds != null
@@ -292,34 +299,36 @@ export async function GET(_request: Request, { params }: Params) {
     },
   });
 
-  return NextResponse.json({
-    group: {
-      id: group.id,
-      name: group.name,
-      inviteCode: group.inviteCode,
-      status: activeRound?.status ?? group.status,
-      legsPerMember: group.legsPerMember,
-      maxActiveBets: group.maxActiveBets,
-      owner: group.owner,
-      memberCount: group.members.length,
-      unreadMessageCount,
-      members: group.members.map((m) => ({
-        id: m.user.id,
-        name: m.user.name,
-        role: m.role,
-      })),
-    },
-    leaderboard,
-    activeRound,
-    activeRounds: activeRoundViews,
-    betslipLink: activeRound?.betslipLink ?? null,
-    betslipLinks: activeRound?.betslipLinks ?? null,
-    legAnnouncements: latestAnnouncements.map((message) =>
-      serializeMessage(message, session!.user!.id)
-    ),
-    isOwner: membership.role === "owner",
-    recentRounds: recentSettled.map(mapHistoryRound),
-  });
+  return NextResponse.json(
+    serialized({
+      group: {
+        id: group.id,
+        name: group.name,
+        inviteCode: group.inviteCode,
+        status: activeRound?.status ?? group.status,
+        legsPerMember: group.legsPerMember,
+        maxActiveBets: group.maxActiveBets,
+        owner: group.owner,
+        memberCount: group.members.length,
+        unreadMessageCount,
+        members: group.members.map((m) => ({
+          id: m.user.id,
+          name: m.user.name,
+          role: m.role,
+        })),
+      },
+      leaderboard,
+      activeRound,
+      activeRounds: activeRoundViews,
+      betslipLink: activeRound?.betslipLink ?? null,
+      betslipLinks: activeRound?.betslipLinks ?? null,
+      legAnnouncements: latestAnnouncements.map((message) =>
+        serializeMessage(message, session!.user!.id)
+      ),
+      isOwner: membership.role === "owner",
+      recentRounds: recentSettled.map(mapHistoryRound),
+    }) satisfies GroupDetailResponse
+  );
 }
 
 /**

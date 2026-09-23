@@ -2,7 +2,7 @@
 
 import { CheckIcon } from "./round-helpers";
 import { formatKickoff } from "@tiki-acca/shared";
-import type { Leg, Member } from "./round-helpers";
+import type { GroupLeg as Leg, GroupMember as Member } from "@tiki-acca/shared";
 
 export function RoundProgress({
   members,

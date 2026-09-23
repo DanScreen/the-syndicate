@@ -21,3 +21,4 @@ export * from "./chat";
 export * from "./group-summary-display";
 export * from "./legs-quota";
 export * from "./round-display";
+export * from "./stats-display";

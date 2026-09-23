@@ -1,8 +1,12 @@
 "use client";
 
-import type { GroupStatsChartPoint, GroupStatsSummary } from "@/lib/stats/compute-group-stats";
-import type { MemberChartPoint, MemberSeries } from "@/lib/stats/compute-member-chart";
-import type { MemberStatsResult } from "@/lib/stats/compute-member-stats";
+import type {
+  GroupStatsChartPoint,
+  GroupStatsResponse,
+  MemberChartPoint,
+  MemberSeries,
+  MemberStatsResponse,
+} from "@tiki-acca/shared";
 import { ShareCard } from "@/components/share-card";
 import { StakeProfit } from "@/components/stake-profit";
 import { BRAND_COLORS, formatLegHighlight, formatLegPoints } from "@tiki-acca/shared";
@@ -32,15 +36,6 @@ const MEMBER_COLORS = [
   "#2dd4bf",
   BRAND_COLORS.danger,
 ];
-
-type GroupStatsData = {
-  summary: GroupStatsSummary;
-  chart: GroupStatsChartPoint[];
-  members: MemberSeries[];
-  memberChart: MemberChartPoint[];
-};
-
-type MemberStatsData = MemberStatsResult & { name: string };
 
 function StatCard({
   label,
@@ -175,7 +170,7 @@ function MemberBreakdown({
   groupId: string;
   member: MemberSeries;
 }) {
-  const [data, setData] = useState<MemberStatsData | null>(null);
+  const [data, setData] = useState<MemberStatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -258,7 +253,7 @@ function MemberBreakdown({
 }
 
 export function GroupStats({ groupId, groupName }: { groupId: string; groupName?: string }) {
-  const [data, setData] = useState<GroupStatsData | null>(null);
+  const [data, setData] = useState<GroupStatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);

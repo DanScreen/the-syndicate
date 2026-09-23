@@ -5,7 +5,7 @@ import type { ReactionEmoji, RoundMessageDto } from "@tiki-acca/shared";
 import { ReactionBar } from "@/components/group/chat";
 import { legOutcomeClass } from "./round-helpers";
 import { legOutcomeLabel } from "@tiki-acca/shared";
-import type { Leg } from "./round-helpers";
+import type { GroupLeg as Leg } from "@tiki-acca/shared";
 
 export function LegsList({
   legs,

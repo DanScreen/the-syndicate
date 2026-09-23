@@ -1,52 +1,26 @@
 import {
-  formatBetAxisLabel,
   formatRoundDateLabel,
   roundAccaDecided,
   roundAccaWon,
   roundGroupPoints,
   roundsForPerformanceStats,
   sortedSettledRounds,
-  CHART_ORIGIN_LABEL,
   type RoundWithLegs,
 } from "./helpers";
+import { computeMemberChart } from "./compute-member-chart";
 import {
-  computeMemberChart,
-  type MemberChartPoint,
+  CHART_ORIGIN_LABEL,
+  formatBetAxisLabel,
+  type GroupStatsChartPoint,
+  type GroupStatsResponse,
+  type GroupStatsSummary,
   type MemberSeries,
-} from "./compute-member-chart";
-
-export type GroupStatsSummary = {
-  totalRounds: number;
-  totalBets: number;
-  averageLegOdds: number | null;
-  averageAccaOdds: number | null;
-  netGroupPoints: number;
-  netAccaPlGbp: number;
-  winRate: number | null;
-};
-
-export type GroupStatsChartPoint = {
-  roundNumber: number;
-  roundId: string;
-  /** Unique X-axis category, e.g. "Bet 3" or "Start". */
-  label: string;
-  /** Settlement date for tooltips; empty at origin. */
-  dateLabel: string;
-  roundPoints: number;
-  cumulativePoints: number;
-};
-
-export type GroupStatsResult = {
-  summary: GroupStatsSummary;
-  chart: GroupStatsChartPoint[];
-  members: MemberSeries[];
-  memberChart: MemberChartPoint[];
-};
+} from "@tiki-acca/shared";
 
 export function computeGroupStats(
   rounds: RoundWithLegs[],
   members: MemberSeries[] = []
-): GroupStatsResult {
+): GroupStatsResponse {
   const performanceRounds = roundsForPerformanceStats(rounds);
   const settled = sortedSettledRounds(rounds);
   const resolvedLegs = performanceRounds.flatMap((r) =>
