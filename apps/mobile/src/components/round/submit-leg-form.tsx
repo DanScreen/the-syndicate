@@ -6,15 +6,19 @@ import {
   View,
 } from "react-native";
 import {
+  copy,
   findOutrightMixConflict,
   formatFixtureLabel,
+  formatKickoff,
   formatOdds,
   isFixtureTaken,
   isOutrightFixtureId,
   sortQuotesByBestOdds,
   sortQuotesForDisplay,
 } from "@tiki-acca/shared";
-import type { MarketConflictLeg } from "@tiki-acca/shared";
+import type {
+  MarketConflictLeg,
+} from "@tiki-acca/shared";
 import { useApiFetcher } from "@/api/use-api-fetcher";
 import {
   Button,
@@ -23,8 +27,6 @@ import {
   OptionRow,
 } from "@/components/ui";
 import { colors } from "@/config";
-import { copy } from "@tiki-acca/shared";
-import { formatKickoff } from "@tiki-acca/shared";
 import { styles } from "./styles";
 
 export function SubmitLegForm({

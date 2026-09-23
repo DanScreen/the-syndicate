@@ -1,24 +1,24 @@
-import { formatOdds } from "@tiki-acca/shared";
-import { api } from "@/api/client";
-import type {
-  GroupSummary,
-  GroupSummaryActiveBet,
-  GroupsListResponse,
-} from "@tiki-acca/shared";
 import {
   activeBetProgressLabel,
   activeBetStatusLabel,
+  copy,
   formatActiveLegSummary,
   formatLegPoints,
+  formatOdds,
   formatRoundStatusBadge,
   legOutcomeShortLabel,
   pointsTone,
   yourLegStatusMessage,
 } from "@tiki-acca/shared";
+import type {
+  GroupsListResponse,
+  GroupSummary,
+  GroupSummaryActiveBet,
+} from "@tiki-acca/shared";
+import { api } from "@/api/client";
 import { useAuth } from "@/auth/AuthProvider";
 import { Button, Card, Screen, Title } from "@/components/ui";
 import { colors } from "@/config";
-import { copy } from "@tiki-acca/shared";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import {

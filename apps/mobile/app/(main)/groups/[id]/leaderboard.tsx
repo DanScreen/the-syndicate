@@ -15,7 +15,7 @@ export default function GroupLeaderboardScreen() {
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Leaderboard</Text>
       <Text style={styles.subtitle}>
-        Who's ahead in this group — points from settled and in-progress legs.
+        Who&apos;s ahead in this group — points from settled and in-progress legs.
       </Text>
       <Leaderboard entries={data.leaderboard} />
 

@@ -2,8 +2,10 @@ import { useApiFetcher } from "@/api/use-api-fetcher";
 import { GroupNav } from "@/components/group-nav";
 import { ErrorText } from "@/components/ui";
 import { colors, WEB_URL } from "@/config";
-import { copy } from "@tiki-acca/shared";
-import { formatRoundStatusBadge } from "@tiki-acca/shared";
+import {
+  copy,
+  formatRoundStatusBadge,
+} from "@tiki-acca/shared";
 import { GroupDataProvider, useGroupData } from "@tiki-acca/client";
 import { router, Slot, useLocalSearchParams } from "expo-router";
 import { ActivityIndicator, Pressable, Share, StyleSheet, Text, View } from "react-native";

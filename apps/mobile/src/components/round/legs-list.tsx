@@ -4,7 +4,11 @@ import {
   Text,
   View,
 } from "react-native";
-import { formatFixtureLabel, formatOdds } from "@tiki-acca/shared";
+import {
+  formatFixtureLabel,
+  formatOdds,
+  legOutcomeLabel,
+} from "@tiki-acca/shared";
 import type {
   BetslipLinks,
   GroupLeg,
@@ -15,7 +19,6 @@ import { useApiFetcher } from "@/api/use-api-fetcher";
 import { toggleReaction } from "@tiki-acca/client";
 import { ReactionBar } from "@/components/group-chat";
 import { outcomeColors } from "./helpers";
-import { legOutcomeLabel } from "@tiki-acca/shared";
 import { styles } from "./styles";
 
 export function LegsList({

@@ -2,23 +2,23 @@ import { ApiError, api } from "@/api/client";
 import { MemberPointsChart, PointsLineChart } from "@/components/points-chart";
 import { Button, Card, EmptyState, ErrorText, OptionRow } from "@/components/ui";
 import { colors } from "@/config";
-import { copy } from "@tiki-acca/shared";
-import type {
-  GroupStatsChartPoint,
-  GroupStatsResponse,
-  MemberSeries,
-  MemberStatsResponse,
-  UserStatsResponse,
-} from "@tiki-acca/shared";
 import {
   buildShareText,
+  copy,
   filterUserStatsByGroup,
   formatLegHighlight,
   formatLegPoints,
   formatProfitGbp,
   profitFromPoints,
 } from "@tiki-acca/shared";
-import type { LegHighlight } from "@tiki-acca/shared";
+import type {
+  GroupStatsChartPoint,
+  GroupStatsResponse,
+  LegHighlight,
+  MemberSeries,
+  MemberStatsResponse,
+  UserStatsResponse,
+} from "@tiki-acca/shared";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
