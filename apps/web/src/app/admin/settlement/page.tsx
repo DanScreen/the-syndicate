@@ -1,5 +1,5 @@
-import { AdminPageShell } from "@/components/admin-page-shell";
-import { AdminSettlement } from "@/components/admin-settlement";
+import { AdminPageShell } from "@/components/admin/page-shell";
+import { AdminSettlement } from "@/components/admin/settlement";
 import {
   computeSettlementQueue,
   OVERDUE_AFTER_HOURS,

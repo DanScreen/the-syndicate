@@ -1,5 +1,5 @@
 import { useAuth } from "@/auth/AuthProvider";
-import { Leaderboard } from "@/components/group-round";
+import { Leaderboard } from "@/components/round/leaderboard";
 import { GroupStatsPanel } from "@/components/stats";
 import { colors } from "@/config";
 import { useGroupData } from "@/context/group-data";

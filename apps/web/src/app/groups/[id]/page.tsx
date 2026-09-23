@@ -1,26 +1,15 @@
 "use client";
 
-import {
-  AccaSummary,
-  LegsList,
-  RoundProgress,
-  SubmitLegForm,
-} from "@/components/group-ui";
-import { RoundHistory } from "@/components/group-history";
+import { AccaSummary } from "@/components/group/acca-summary";
+import { LegsList } from "@/components/group/legs-list";
+import { RoundProgress } from "@/components/group/round-progress";
+import { SubmitLegForm } from "@/components/group/submit-leg-form";
+import { RoundHistory } from "@/components/group/history";
 import { useGroupData } from "@/context/group-data";
 import { useSession } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
 import { SOLO_MAX_LEGS, type RoundMessageDto } from "@tiki-acca/shared";
-
-function formatCutoff(date: Date) {
-  return date.toLocaleString("en-GB", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+import { formatKickoff } from "@tiki-acca/shared";
 
 export default function GroupRoundPage() {
   const { data: session } = useSession();
@@ -61,19 +50,65 @@ export default function GroupRoundPage() {
     setLegAnnouncements(data?.legAnnouncements ?? []);
   }, [data?.legAnnouncements]);
 
-  if (!data || activeRounds.length === 0) return null;
-
-  const activeRound =
+  // Derived before the early return so the hooks below run on every render.
+  const selectedRound =
     activeRounds.find((round) => round.id === selectedRoundId) ??
-    activeRounds[0]!;
+    activeRounds[0] ??
+    null;
   const userId = session?.user?.id;
+  const isSolo = Boolean(selectedRound?.unlimitedLegs);
+  const legsPerMember = isSolo
+    ? SOLO_MAX_LEGS
+    : (selectedRound?.legsPerMember ?? data?.group.legsPerMember ?? 1);
+  const userLegCount =
+    selectedRound?.legs.filter((l) => l.user.id === userId).length ?? 0;
+  const selectedRoundKey = selectedRound?.id ?? null;
+  const selectedRoundStatus = selectedRound?.status ?? null;
+
+  useEffect(() => {
+    if (!selectedRoundKey) return;
+    if (previousRoundRef.current !== selectedRoundKey) {
+      previousRoundRef.current = selectedRoundKey;
+      previousUserLegCountRef.current = userLegCount;
+      setLegCelebration(null);
+      return;
+    }
+
+    const previousCount = previousUserLegCountRef.current;
+    if (
+      selectedRoundStatus === "open" &&
+      userLegCount > previousCount &&
+      !editingLegId
+    ) {
+      const celebrationText: "Leg added" | "All legs added" =
+        userLegCount >= legsPerMember ? "All legs added" : "Leg added";
+      setLegCelebration(celebrationText);
+      if (celebrationTimerRef.current) {
+        clearTimeout(celebrationTimerRef.current);
+      }
+      celebrationTimerRef.current = setTimeout(() => {
+        setLegCelebration(null);
+        celebrationTimerRef.current = null;
+      }, 1800);
+    }
+
+    previousUserLegCountRef.current = userLegCount;
+  }, [selectedRoundKey, selectedRoundStatus, editingLegId, legsPerMember, userLegCount]);
+
+  useEffect(() => {
+    return () => {
+      if (celebrationTimerRef.current) {
+        clearTimeout(celebrationTimerRef.current);
+      }
+    };
+  }, []);
+
+  if (!data || !selectedRound) return null;
+
+  const activeRound = selectedRound;
   const { group } = data;
   const betslipLink = activeRound.betslipLink ?? data.betslipLink;
   const betslipLinks = activeRound.betslipLinks ?? data.betslipLinks;
-  const isSolo = Boolean(activeRound.unlimitedLegs);
-  const legsPerMember = isSolo
-    ? SOLO_MAX_LEGS
-    : (activeRound.legsPerMember ?? group.legsPerMember ?? 1);
   const userLegs = activeRound.legs.filter((l) => l.user.id === userId);
   const canSubmitMore =
     Boolean(userId) &&
@@ -134,43 +169,6 @@ export default function GroupRoundPage() {
       announcementByLegId.set(message.legId, message);
     }
   }
-
-  useEffect(() => {
-    if (previousRoundRef.current !== activeRound.id) {
-      previousRoundRef.current = activeRound.id;
-      previousUserLegCountRef.current = userLegs.length;
-      setLegCelebration(null);
-      return;
-    }
-
-    const previousCount = previousUserLegCountRef.current;
-    if (
-      activeRound.status === "open" &&
-      userLegs.length > previousCount &&
-      !editingLegId
-    ) {
-      const celebrationText: "Leg added" | "All legs added" =
-        userLegs.length >= legsPerMember ? "All legs added" : "Leg added";
-      setLegCelebration(celebrationText);
-      if (celebrationTimerRef.current) {
-        clearTimeout(celebrationTimerRef.current);
-      }
-      celebrationTimerRef.current = setTimeout(() => {
-        setLegCelebration(null);
-        celebrationTimerRef.current = null;
-      }, 1800);
-    }
-
-    previousUserLegCountRef.current = userLegs.length;
-  }, [activeRound.id, activeRound.status, editingLegId, legsPerMember, userLegs.length]);
-
-  useEffect(() => {
-    return () => {
-      if (celebrationTimerRef.current) {
-        clearTimeout(celebrationTimerRef.current);
-      }
-    };
-  }, []);
 
   async function removeLeg(legId: string, selectionLabel: string) {
     if (!window.confirm(`Remove ${selectionLabel} from this acca?`)) return;
@@ -365,7 +363,7 @@ export default function GroupRoundPage() {
           <p className="mt-1 text-sm text-muted">
             You can change {isOpen ? "or remove " : ""}your pick
             {userLegs.length === 1 ? "" : "s"} until the first kickoff
-            {firstKickoff ? ` (${formatCutoff(firstKickoff)})` : ""}.
+            {firstKickoff ? ` (${formatKickoff(firstKickoff)})` : ""}.
             {isLocked && " Changing a pick reprices the whole acca at current odds."}
           </p>
         )}

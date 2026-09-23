@@ -1,6 +1,6 @@
 "use client";
 
-import { GroupThread } from "@/components/group-chat";
+import { GroupThread } from "@/components/group/chat";
 import { useGroupData } from "@/context/group-data";
 import { useSession } from "next-auth/react";
 

@@ -14,6 +14,8 @@
  *   npx tsx apps/web/scripts/data-maintenance.ts resync-matches --execute
  *   npx tsx apps/web/scripts/data-maintenance.ts preview-leg-announcements
  *   npx tsx apps/web/scripts/data-maintenance.ts backfill-leg-announcements --execute
+ *   npx tsx apps/web/scripts/data-maintenance.ts preview-line-keys
+ *   npx tsx apps/web/scripts/data-maintenance.ts fix-line-keys --execute
  */
 import { prisma } from "@tiki-acca/database";
 import { Prisma, type Leg, type Round } from "@prisma/client";
@@ -29,11 +31,12 @@ import {
   calculateGroupProfitLoss,
   deriveCombinedOddsFromLegs,
   pointsForMemberLeg,
-} from "../src/lib/settlement";
+} from "../src/lib/settlement/points";
 import { applyRoundSettlement } from "../src/lib/settlement/apply-round-settlement";
 import { resolveRoundOutcomes } from "../src/lib/settlement/resolve-round-outcomes";
 import { openRound } from "../src/lib/rounds/open-round";
 import { formatLegSubmittedBody } from "../src/lib/chat/system-messages";
+import { repairLegLineKey } from "../src/lib/legs/repair-line-keys";
 
 type RoundWithLegs = Round & {
   legs: (Leg & { user: { email: string; name: string } })[];
@@ -646,6 +649,70 @@ async function backfillLegAnnouncements() {
   console.log(`Created ${created} leg_submitted announcements.`);
 }
 
+/**
+ * Legs minted before whole-number line keys were fixed (e.g. `over_under_2`,
+ * `corners_over_under_10`) decode to the wrong line. Rewrites marketType from the
+ * line in the stored labels and lists settled rounds that need `resettle-round`.
+ */
+async function fixLineKeys() {
+  const legs = await prisma.leg.findMany({
+    where: {
+      OR: [
+        { marketType: { contains: "over_under_" } },
+        { marketType: { contains: "_handicap_" } },
+        { marketType: { contains: "__" } },
+      ],
+    },
+    select: {
+      id: true,
+      roundId: true,
+      marketType: true,
+      marketLabel: true,
+      selectionId: true,
+      selectionLabel: true,
+      outcome: true,
+      round: { select: { status: true } },
+    },
+    orderBy: { createdAt: "asc" },
+  });
+
+  let fixes = 0;
+  const roundsToResettle = new Set<string>();
+
+  for (const leg of legs) {
+    const repair = repairLegLineKey(leg);
+    if (!repair || repair.status === "ok") continue;
+
+    const where = `[${leg.id}] round=${leg.roundId} (${leg.round.status}, ${leg.outcome}) ${leg.marketType} · ${leg.marketLabel} · ${leg.selectionLabel}`;
+    if (repair.status === "unparseable") {
+      console.log(`  ?? ${where} — no line in labels, check by hand`);
+      continue;
+    }
+    if (repair.status === "unsupported") {
+      console.log(`  !! ${where} — quarter line ${repair.line} cannot be settled automatically`);
+      continue;
+    }
+
+    fixes++;
+    console.log(`  ${where} → ${repair.marketType} (line ${repair.line})`);
+    if (leg.outcome !== "pending" && leg.round.status === "settled") {
+      roundsToResettle.add(leg.roundId);
+    }
+    if (execute) {
+      await prisma.leg.update({ where: { id: leg.id }, data: { marketType: repair.marketType } });
+    }
+  }
+
+  console.log(
+    `\n${fixes} leg(s) ${execute ? "rewritten" : "would be rewritten"} (${legs.length} line-bearing legs scanned).`
+  );
+  if (!execute && fixes > 0) console.log("Dry run only. Pass --execute with fix-line-keys to apply.");
+  if (roundsToResettle.size > 0) {
+    console.log("Settled rounds with rewritten legs — after --execute, run preview-resettle / resettle-round:");
+    for (const id of roundsToResettle) console.log(`  --round-id ${id}`);
+  }
+}
+
 async function main() {
   if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL is required");
@@ -714,10 +781,14 @@ async function main() {
     case "backfill-leg-announcements":
       await backfillLegAnnouncements();
       break;
+    case "preview-line-keys":
+    case "fix-line-keys":
+      await fixLineKeys();
+      break;
     default:
       console.error(`Unknown command: ${command ?? "(none)"}`);
       console.error(
-        "Commands: preview-solo-rounds, remove-solo-rounds, find-rounds, preview-resettle, resettle-round, preview-duplicate-markets, fix-duplicate-markets, reconcile-points, rescore-member-legs, resync-matches, preview-leg-announcements, backfill-leg-announcements"
+        "Commands: preview-solo-rounds, remove-solo-rounds, find-rounds, preview-resettle, resettle-round, preview-duplicate-markets, fix-duplicate-markets, reconcile-points, rescore-member-legs, resync-matches, preview-leg-announcements, backfill-leg-announcements, preview-line-keys, fix-line-keys"
       );
       process.exit(1);
   }

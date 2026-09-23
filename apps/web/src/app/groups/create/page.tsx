@@ -1,6 +1,6 @@
 "use client";
 
-import { AppHeader } from "@/components/header";
+import { AppHeader } from "@/components/layout/header";
 import {
   DEFAULT_LEGS_PER_MEMBER,
   DEFAULT_MAX_ACTIVE_BETS,

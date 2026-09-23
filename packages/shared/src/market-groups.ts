@@ -6,9 +6,30 @@ export type MarketGroup = {
   markets: Market[];
 };
 
-function decodeLineKey(encoded: string): number {
+/**
+ * Lines are embedded in market types as tenths: 2.5 → "25", 2 → "20", 10 → "100",
+ * -1.5 → "m15". Zero is "0" and 0.5 is "05" so every half-line key minted before
+ * whole lines were fixed stays byte-identical.
+ *
+ * Only whole and half lines are supported. Quarter (split) lines such as 2.25 would
+ * need half-won / half-void settlement, which legs cannot represent — returns null
+ * so builders skip those markets.
+ */
+export function encodeLineKey(line: number): string | null {
+  if (!isSupportedLine(line)) return null;
+  const tenths = Math.round(Math.abs(line) * 10);
+  const digits = tenths === 0 ? "0" : String(tenths).padStart(2, "0");
+  return line < 0 ? `m${digits}` : digits;
+}
+
+export function decodeLineKey(encoded: string): number {
   if (encoded.startsWith("m")) return -Number(encoded.slice(1)) / 10;
   return Number(encoded) / 10;
+}
+
+/** Whole or half line (…, -1, -0.5, 0, 0.5, 1, 1.5, …). */
+export function isSupportedLine(line: number): boolean {
+  return Number.isFinite(line) && Number.isInteger(line * 2);
 }
 
 function marketGroupId(type: string): string {

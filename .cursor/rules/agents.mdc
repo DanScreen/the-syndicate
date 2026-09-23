@@ -1,0 +1,9 @@
+---
+description: Project instructions live in AGENTS.md
+globs:
+alwaysApply: true
+---
+
+Read and follow **AGENTS.md** at the repo root. It is the single source for
+agent instructions: doc routing, documentation maintenance, commands, and
+web / API / mobile conventions. Do not add rules here; edit AGENTS.md.

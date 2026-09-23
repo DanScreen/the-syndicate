@@ -1,5 +1,5 @@
 import { DeleteAccount } from "@/components/delete-account";
-import { AppHeader } from "@/components/header";
+import { AppHeader } from "@/components/layout/header";
 import { NotificationSettings } from "@/components/notification-settings";
 import { SignOutButton } from "@/components/sign-out-button";
 import { auth } from "@/lib/auth";

@@ -1,0 +1,66 @@
+{
+  "$comment": "Single source of truth for the 'The Cage' video ad (docs/VIDEO_AD_BRIEF.md). Read by packages/database/prisma/video-ad-seed.ts and tools/marketing/scripts/capture-video-ad.mjs. Fixtures are plausible placeholders: swap in real fixtures from the capture weekend before capturing.",
+  "password": "DemoPass123!",
+  "bookmaker": { "id": "bet365", "name": "Bet365" },
+  "groups": [
+    {
+      "key": "reds",
+      "name": "Tuesday Reds",
+      "inviteCode": "CAGE01",
+      "team": "red",
+      "members": [
+        {
+          "key": "rob", "role": "R1", "firstName": "Rob", "lastName": "Hale", "dob": "1996-04-18",
+          "pick": { "home": "Brighton", "away": "Brentford", "competitionId": "epl", "competition": "Premier League", "marketType": "over_under_15", "marketLabel": "Over/Under 1.5 Goals", "selectionLabel": "Over 1.5", "odds": 1.4, "outcome": "won" }
+        },
+        {
+          "key": "jay", "role": "R2", "firstName": "Jay", "lastName": "Mensah", "dob": "1997-09-02",
+          "pick": { "home": "Everton", "away": "Crystal Palace", "competitionId": "epl", "competition": "Premier League", "marketType": "both_teams_score", "marketLabel": "Both Teams to Score", "selectionLabel": "Yes", "odds": 2.1, "outcome": "won" }
+        },
+        {
+          "key": "nadia", "role": "R3", "firstName": "Nadia", "lastName": "Kaur", "dob": "1996-12-09",
+          "pick": { "home": "Ipswich", "away": "Newcastle", "competitionId": "epl", "competition": "Premier League", "marketType": "match_winner", "marketLabel": "Match Result", "selectionLabel": "Ipswich", "odds": 3.25, "outcome": "won" }
+        },
+        {
+          "key": "kev", "role": "R4", "firstName": "Kev", "lastName": "Doyle", "dob": "1997-02-27",
+          "pick": { "home": "Aston Villa", "away": "Coventry", "competitionId": "epl", "competition": "Premier League", "marketType": "match_winner", "marketLabel": "Match Result", "selectionLabel": "Coventry", "odds": 6.0, "outcome": "lost" }
+        }
+      ]
+    },
+    {
+      "key": "blues",
+      "name": "Tuesday Blues",
+      "inviteCode": "CAGE02",
+      "team": "blue",
+      "members": [
+        {
+          "key": "tom", "role": "B1", "firstName": "Tom", "lastName": "Barker", "dob": "1997-06-21",
+          "pick": { "home": "Hull", "away": "Sunderland", "competitionId": "epl", "competition": "Premier League", "marketType": "over_under_15", "marketLabel": "Over/Under 1.5 Goals", "selectionLabel": "Over 1.5", "odds": 1.5, "outcome": "won" }
+        },
+        {
+          "key": "aisha", "role": "B2", "firstName": "Aisha", "lastName": "Rahman", "dob": "1996-08-14",
+          "pick": { "home": "Stoke", "away": "Norwich", "competitionId": "championship", "competition": "Championship", "marketType": "double_chance", "marketLabel": "Double Chance", "selectionLabel": "Stoke or Draw", "odds": 1.8, "outcome": "won" }
+        },
+        {
+          "key": "callum", "role": "B3", "firstName": "Callum", "lastName": "Reid", "dob": "1998-01-30",
+          "pick": { "home": "Bournemouth", "away": "Nottingham Forest", "competitionId": "epl", "competition": "Premier League", "marketType": "both_teams_score", "marketLabel": "Both Teams to Score", "selectionLabel": "Yes", "odds": 2.0, "outcome": "won" }
+        },
+        {
+          "key": "femi", "role": "B4", "firstName": "Femi", "lastName": "Adeyemi", "dob": "1996-10-05",
+          "pick": { "home": "Middlesbrough", "away": "QPR", "competitionId": "championship", "competition": "Championship", "marketType": "match_winner", "marketLabel": "Match Result", "selectionLabel": "Middlesbrough", "odds": 2.5, "outcome": "won" }
+        }
+      ]
+    }
+  ],
+  "stages": [
+    { "name": "red-1",        "beat": "S1", "group": "reds",  "submitted": 1, "status": "open",    "resolved": 0, "loginAs": "kev",   "view": "betslip" },
+    { "name": "red-2",        "beat": "S2", "group": "reds",  "submitted": 2, "status": "open",    "resolved": 0, "loginAs": "kev",   "view": "betslip" },
+    { "name": "red-3",        "beat": "S3", "group": "reds",  "submitted": 3, "status": "open",    "resolved": 0, "loginAs": "kev",   "view": "betslip" },
+    { "name": "red-locked",   "beat": "S4", "group": "reds",  "submitted": 4, "status": "locked",  "resolved": 0, "loginAs": "rob",   "view": "betslip" },
+    { "name": "red-settled",  "beat": "S5", "group": "reds",  "submitted": 4, "status": "settled", "resolved": 4, "loginAs": "rob",   "view": "history" },
+    { "name": "blue-won-1",   "beat": "S6", "group": "blues", "submitted": 4, "status": "locked",  "resolved": 1, "loginAs": "tom",   "view": "betslip" },
+    { "name": "blue-won-2",   "beat": "S6", "group": "blues", "submitted": 4, "status": "locked",  "resolved": 2, "loginAs": "tom",   "view": "betslip" },
+    { "name": "blue-won-3",   "beat": "S6", "group": "blues", "submitted": 4, "status": "locked",  "resolved": 3, "loginAs": "tom",   "view": "betslip" },
+    { "name": "blue-settled", "beat": "S7", "group": "blues", "submitted": 4, "status": "settled", "resolved": 4, "loginAs": "tom",   "view": "history" }
+  ]
+}

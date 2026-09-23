@@ -1,4 +1,5 @@
 import { getCached, setCached } from "@/lib/odds/cache";
+import type { ProviderReading } from "./observations";
 import type { MatchResult } from "./resolve-leg";
 
 const API_BASE = "https://api.football-data.org/v4";
@@ -18,6 +19,7 @@ export type FootballDataMatch = {
   score: {
     duration?: string;
     fullTime: { home: number | null; away: number | null };
+    halfTime?: { home: number | null; away: number | null };
     regularTime?: { home: number | null; away: number | null };
   };
 };
@@ -125,6 +127,42 @@ export function regulationScore(
   }
 
   return null;
+}
+
+/**
+ * football-data.org match → results observation (its own orientation).
+ * The 90' score is `regularTime`, or `fullTime` when the match did not go to
+ * extra time. Extra time without `regularTime` → null (the feed abstains).
+ */
+export function footballDataReading(match: FootballDataMatch): ProviderReading {
+  const duration = match.score.duration ?? "REGULAR";
+  const extraTime = duration !== "REGULAR";
+  const reg = match.score.regularTime;
+  const ft = match.score.fullTime;
+  const ht = match.score.halfTime;
+  const isNum = (v: number | null | undefined): v is number => typeof v === "number";
+
+  let homeGoals90: number | null = null;
+  let awayGoals90: number | null = null;
+  if (isNum(reg?.home) && isNum(reg?.away)) {
+    homeGoals90 = reg.home;
+    awayGoals90 = reg.away;
+  } else if (!extraTime && isNum(ft.home) && isNum(ft.away)) {
+    homeGoals90 = ft.home;
+    awayGoals90 = ft.away;
+  }
+
+  return {
+    status: match.status,
+    homeGoals90,
+    awayGoals90,
+    homeGoalsEnd: isNum(ft.home) ? ft.home : null,
+    awayGoalsEnd: isNum(ft.away) ? ft.away : null,
+    homeGoalsHt: isNum(ht?.home) ? ht.home : null,
+    awayGoalsHt: isNum(ht?.away) ? ht.away : null,
+    extraTime,
+    stats: null,
+  };
 }
 
 function formatDate(d: Date): string {

@@ -71,11 +71,11 @@ All of `docs/` (14 files), `AGENTS.md`, root `README.md`, `.cursor/rules/*.mdc`,
 | 1 | `npm run build` (includes typecheck/lint) | **DONE** — green on `rename/tiki-acca` |
 | 2 | Zero-leftovers grep (`syndicate` only allowlisted) | **DONE** — only GCP/SecureStore/docs chronicle/`archive.ts`/Terraform defaults |
 | 3 | Boot local stack + drive full loop (mock odds): sign-up → group → invite → legs → lock → edit | **DONE** — mock server `:3010` (`ODDS_API_KEY=`): locked + repriced after edit. Admin settle skipped (test users not in `ADMIN_EMAILS`) |
-| 4 | Headless screenshots: homepage / sign-in / about / header wordmark | **DONE** — `docs/brand/rename-verify/*.png` (Tiki Acca visible; no “The Syndicate”) |
+| 4 | Headless screenshots: homepage / sign-in / about / header wordmark | **DONE** — screenshots were in `docs/brand/rename-verify/` (removed later; see commit `9809a75`) (Tiki Acca visible; no “The Syndicate”) |
 | 5 | Email templates brand + `www.tikiacca.com` links | **DONE** — templates say Tiki Acca; `appBaseUrl()` fallback `https://www.tikiacca.com` |
 | 6 | Push deep link `tikiacca://groups/...` matches `app.json` scheme | **DONE** — both `tikiacca` |
 
-Allowed `syndicate` leftovers: GCP/Terraform resource names, SecureStore keys, migration/history notes, MARKETING_BRIEF/BRAND/DEPLOYMENT rename chronicle, `lib/brand/archive.ts`.
+Allowed `syndicate` leftovers: GCP/Terraform resource names, SecureStore keys, migration/history notes, MARKETING_BRIEF/BRAND/DEPLOYMENT rename chronicle, `lib/brand/archive.ts` (since removed).
 
 ### Local notes after verification
 - Docker compose DB `tiki-acca-db` / `tiki_acca` already running; migrations applied.

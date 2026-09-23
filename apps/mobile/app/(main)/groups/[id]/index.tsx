@@ -1,13 +1,11 @@
 import { SOLO_MAX_LEGS, formatOdds } from "@tiki-acca/shared";
 import { ApiError, api } from "@/api/client";
 import { useAuth } from "@/auth/AuthProvider";
-import {
-  AccaSummary,
-  LegsList,
-  RoundHistory,
-  RoundProgress,
-  SubmitLegForm,
-} from "@/components/group-round";
+import { AccaSummary } from "@/components/round/acca-summary";
+import { RoundHistory } from "@/components/round/history";
+import { LegsList } from "@/components/round/legs-list";
+import { RoundProgress } from "@/components/round/round-progress";
+import { SubmitLegForm } from "@/components/round/submit-leg-form";
 import type { RoundMessageDto } from "@tiki-acca/shared";
 import { Button, Card, ErrorText } from "@/components/ui";
 import { colors } from "@/config";
@@ -26,16 +24,7 @@ import {
   Text,
   View,
 } from "react-native";
-
-function formatCutoff(date: Date) {
-  return date.toLocaleString("en-GB", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+import { formatKickoff } from "@tiki-acca/shared";
 
 export default function GroupRoundScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -461,7 +450,7 @@ export default function GroupRoundScreen() {
           <Text style={styles.editTitle}>Your picks</Text>
           <Text style={styles.editMeta}>
             You can change {isOpen ? "or remove " : ""}them until the first kickoff
-            {firstKickoff ? ` — ${formatCutoff(firstKickoff)}` : ""}.
+            {firstKickoff ? ` — ${formatKickoff(firstKickoff)}` : ""}.
             {isLocked ? " Changing a pick reprices the whole acca at current odds." : ""}
           </Text>
           <ErrorText message={removeError} />

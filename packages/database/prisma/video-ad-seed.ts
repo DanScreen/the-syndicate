@@ -3,7 +3,7 @@
  * groups — Tuesday Reds and Tuesday Blues — at a named stage of the story so
  * each betslip state can be screen-captured exactly as the app renders it.
  *
- * Cast, picks, odds and stages live in marketing-posts/video-ad/scenario.json.
+ * Cast, picks, odds and stages live in tools/marketing/video-ad/scenario.json.
  * Every account uses the @demo.tikiacca.com domain, so admin platform
  * leaderboards already omit them (apps/web/src/lib/admin/demo-accounts.ts).
  *
@@ -70,7 +70,8 @@ const SCENARIO_PATH = join(
   "..",
   "..",
   "..",
-  "marketing-posts",
+  "tools",
+  "marketing",
   "video-ad",
   "scenario.json"
 );

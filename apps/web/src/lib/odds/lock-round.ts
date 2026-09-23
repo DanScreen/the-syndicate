@@ -7,7 +7,7 @@ import {
 } from "@/lib/odds/acca";
 import { estimatedOddsEffectivelyEnabled } from "@/lib/odds/estimated-odds-runtime";
 import { buildRoundBetslipLinks, isBookmakerHubUrl } from "@/lib/odds/betslip-links";
-import { sortQuotesByBestOdds } from "@/lib/odds/bookmakers";
+import { sortQuotesByBestOdds } from "@tiki-acca/shared";
 import { bookmakerLinksFromQuotes } from "@/lib/odds/quotes";
 import { prisma } from "@tiki-acca/database";
 import type { AccaBookmakerRanking, BookmakerQuote } from "@tiki-acca/shared";

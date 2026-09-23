@@ -30,9 +30,11 @@ npm run db:generate
 npm run dev                   # http://localhost:3000
 ```
 
-Omit `ODDS_API_KEY` for mock fixtures. Add `FOOTBALL_DATA_API_KEY` + `CRON_SECRET` to test match sync locally. Set `ADMIN_EMAILS` to enable the Admin tab.
+Omit `ODDS_API_KEY` for mock fixtures. Add `FOOTBALL_DATA_API_KEY` and/or `API_FOOTBALL_KEY` + `CRON_SECRET` to test match sync locally. Set `ADMIN_EMAILS` to enable the Admin tab.
 
 ### Deploy
+
+PRs and pushes to `main` → `.github/workflows/ci.yml`: lint, typecheck, tests against Postgres.
 
 Push to `main` → GitHub Actions (`.github/workflows/deploy.yml`): build → `db:migrate:deploy` → Cloud Run.
 
@@ -49,22 +51,22 @@ Match sync + odds warm: Cloud Scheduler (Terraform) → `POST /api/internal/sync
 | Odds | `apps/web/src/lib/odds/` |
 | Settlement | `apps/web/src/lib/settlement/`, `apps/web/src/lib/results/` |
 | Stats | `apps/web/src/lib/stats/` |
-| Group chat | Dedicated web/mobile Chat tabs, `apps/web/src/components/group-chat.tsx`, `apps/mobile/src/components/group-chat.tsx`, APIs under `api/groups/[id]/messages` + `api/messages/[id]`, lifecycle writers/tests in `apps/web/src/lib/chat/`, shared contract `packages/shared/src/chat.ts` |
+| Group chat | Dedicated web/mobile Chat tabs, `apps/web/src/components/group/chat.tsx`, `apps/mobile/src/components/group-chat.tsx`, APIs under `api/groups/[id]/messages` + `api/messages/[id]`, lifecycle writers/tests in `apps/web/src/lib/chat/`, shared contract `packages/shared/src/chat.ts` |
 | Notifications | `apps/web/src/lib/notifications/` (branded email templates + layout; logo at `public/brand/email-logo.png`) |
 | Auth | `apps/web/src/lib/auth.ts`, `apps/web/src/lib/auth.config.ts` |
 | Settlement (auto) | `apps/web/src/lib/settlement/auto-settle-round.ts` |
 | Round lifecycle | `apps/web/src/lib/rounds/open-round.ts`, `create-additional-round.ts`, `claim-lock-round.ts`, `lock-open-rounds-at-kickoff.ts`, `first-kickoff.ts` |
-| Group UI | `apps/web/src/components/group-ui.tsx`, `group-stats.tsx` |
-| App navigation | `apps/web/src/components/app-nav.tsx`, `mobile-nav.tsx`, `group-nav.tsx`, `header.tsx` |
-| Logo & marketing | `apps/web/src/components/logo.tsx`, `components/marketing/` (`marketing-shell.tsx`, `session-aware-marketing-header.tsx`, `marketing-header.tsx`, `marketing-ctas.tsx`), `lib/marketing-content.ts`; reusable social assets, X profile header, and capture/composer workflow in `marketing-posts/`; video ad screen captures via `npm run video-ad:seed` / `video-ad:capture` (`packages/database/prisma/video-ad-seed.ts`, `marketing-posts/scripts/capture-video-ad.mjs`, scenario in `marketing-posts/video-ad/scenario.json` — see [VIDEO_AD_BRIEF.md](./VIDEO_AD_BRIEF.md) §7) |
+| Group UI | `apps/web/src/components/group/` — round screen split into `submit-leg-form.tsx`, `acca-summary.tsx`, `legs-list.tsx`, `round-progress.tsx`, `leaderboard.tsx` (+ `round-helpers.tsx`); `stats.tsx`, `history.tsx`, `chat.tsx`. Mobile equivalent: `apps/mobile/src/components/round/`. Shared display helpers (`formatKickoff`, `legOutcomeLabel`, `mergeFixtureMarkets`): `packages/shared/src/round-display.ts` |
+| App navigation | `apps/web/src/components/layout/` (`app-nav.tsx`, `mobile-nav.tsx`, `app-tab-bar.tsx`, `header.tsx`, `site-footer.tsx`), `components/group/nav.tsx` |
+| Logo & marketing | `apps/web/src/components/logo.tsx`, `components/marketing/` (`marketing-shell.tsx`, `session-aware-marketing-header.tsx`, `marketing-header.tsx`, `marketing-ctas.tsx`), `lib/marketing-content.ts`; reusable social assets, X profile header, and capture/composer workflow in `tools/marketing/`; video ad screen captures via `npm run video-ad:seed` / `video-ad:capture` (`packages/database/prisma/video-ad-seed.ts`, `tools/marketing/scripts/capture-video-ad.mjs`, scenario in `tools/marketing/video-ad/scenario.json` — see [VIDEO_AD_BRIEF.md](./VIDEO_AD_BRIEF.md) §7) |
 | Blog | `apps/web/content/blog/*.mdx` (posts), `apps/web/src/lib/blog.ts`, `app/blog/` — publish = git push; `draft: true` hides in prod. SEO frontmatter-driven (canonical, OG image, `BlogPosting` JSON-LD, tag hubs). Strict authoring standards: [BLOG.md](./BLOG.md) |
 | SEO | `apps/web/src/app/sitemap.ts`, `robots.ts` — public pages set self-referencing `alternates.canonical` (`/`, `/about`, `/privacy`, `/cookies`, `/terms`, `/support`, blog). Auth/account routes are `noindex` and listed in `robots` disallow. Canonical host is `https://www.tikiacca.com` (`metadataBase`). Apex/`*.run.app` redirects or 403s in Search Console are expected (www via Cloudflare; origin auth blocks direct Cloud Run crawls). |
 | Favicon / app icons | `apps/web/src/app/icon.svg`, `favicon.ico` (16/32/48), `apple-icon.tsx` (`lib/brand/rondo-icon.tsx`) — extra-wide apex-up Triangle rondo disc; glyph source in `logo.tsx`. Metadata URLs use `?v=` cache-bust (`layout.tsx`) — bump when the mark changes |
-| Brand archive | `apps/web/src/lib/brand/archive.ts`, `logo-alternatives.tsx` (unused alternatives), `docs/brand/logo-archive/v6-wide-apex-up/` (previous live logo vectors + rollback instructions) |
-| Group layout | `apps/web/src/app/groups/[id]/layout.tsx`, `group-layout-client.tsx`, `context/group-data.tsx` |
+| Brand archive | `docs/brand/logo-archive/v6-wide-apex-up/` (previous live logo vectors + rollback instructions); rejected explorations live in git history — see [BRAND.md](./BRAND.md#archived-explorations) |
+| Group layout | `apps/web/src/app/groups/[id]/layout.tsx`, `components/group/layout-client.tsx`, `context/group-data.tsx` |
 | Scoring | `packages/shared/src/scoring.ts` |
 | Competitions catalogue | `packages/shared/src/competitions.ts` |
-| Platform admin | `apps/web/src/lib/admin.ts`, `lib/admin/`, `lib/competitions/settings.ts`, `app/admin/`, `components/admin-*` |
+| Platform admin | `apps/web/src/lib/admin/` (`auth.ts` = `requireAdmin` / `ADMIN_EMAILS`), `lib/competitions/settings.ts`, `app/admin/`, `components/admin/` |
 | Analytics | `apps/web/src/lib/analytics.ts`, global web tracker in `components/analytics/authenticated-page-tracker.tsx`, mobile tracker in `apps/mobile/src/analytics/activity-tracker.tsx`, admin report at `/admin/activity` |
 
 ### What's next (July 2026)
@@ -91,7 +93,8 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 | Acca lock: best combined bookmaker across all legs | ✅ |
 | Acca bookmaker rankings (best odds first, stored at lock) | ✅ |
 | Real bookmaker betslip deeplinks (The Odds API) | ✅ |
-| Match table + football-data.org sync cron | ✅ |
+| Match table + two-source results sync cron (football-data.org + API-Football consensus) | ✅ |
+| Auto-settle corners markets from API-Football match stats | ✅ |
 | Hands-off auto-settle (5-min cron; early settle on first loss; deferred remaining legs) | ✅ |
 | Email + push notifications (lock, settle, pick reminders) | ✅ |
 | System-only settlement (owner settle removed July 2026) | ✅ |
@@ -114,6 +117,8 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 | Chat unread badges + batched push preference | ✅ |
 
 \*Asian handicap only from exchange bookmakers in current World Cup UK feed — filtered out; handicap UI empty for those fixtures.
+
+**Line keys in market types.** Lines are embedded in `marketType` (`over_under_<k>`, `corners_over_under_<k>`, `cards_over_under_<k>`, `<prefix>_handicap_<k>`, and `…__<k>` player/team totals) as **tenths**: `encodeLineKey()` / `decodeLineKey()` in `packages/shared/src/market-groups.ts` are the single codec (`lineKey()` in `market-builders.ts` delegates). 2.5 → `25`, 2 → `20`, 10 → `100`, −1.5 → `m15`; 0 stays `0` and 0.5 stays `05`, so half-line keys are unchanged from before. **Quarter lines (2.25, −0.75, …) are skipped** by every builder — split-stake settlement (half won / half void) cannot be represented on a leg. Before September 2026 whole lines were encoded without the tenths digit (`over_under_2` → decoded as 0.2), so whole-line goal O/U, total-corners O/U and team-corners legs auto-settled against the wrong line; legacy rows are repaired with `npm run db:maintenance -- preview-line-keys` / `fix-line-keys --execute` (reads the real line from `marketLabel` / `selectionLabel`, since legacy `10` meant line 10 but now means 1.0) and then `resettle-round` for each settled round it lists. Tests: `packages/shared/src/market-groups.test.ts`, `apps/web/src/lib/odds/market-builders.test.ts`, `apps/web/src/lib/results/resolve-leg.test.ts`, `apps/web/src/lib/legs/repair-line-keys.test.ts`.
 
 ---
 
@@ -138,7 +143,7 @@ Example: acca @ 3.44 (legs 1.6 × 2.15) → **2.44** group pts; members **0.6** 
 
 ## Odds & competitions
 
-Eighteen competitions in `packages/shared/src/competitions.ts`: EPL, Championship, League One, League Two, La Liga, Ligue 1, Serie A, Bundesliga, Eredivisie, Primeira Liga, Brazil Série A, Champions League, European Championship, Copa Libertadores, World Cup, Champions League Qualification, Europa League, and Carabao Cup (EFL Cup). **Admin toggles** which are visible in the leg picker (`CompetitionSetting` table; `/admin/competitions`). Default: **World Cup only**; newly discovered catalogue rows are created disabled. Match sync fetches enabled competitions plus any disabled competition that still has a pending leg, skipping `manualSettlement` competitions (League One, League Two, CL Qualification, Europa League, Carabao Cup — not on football-data.org free tier).
+Twenty competitions in `packages/shared/src/competitions.ts`: EPL, Championship, League One, League Two, La Liga, Ligue 1, Serie A, Bundesliga, Eredivisie, Primeira Liga, Brazil Série A, Champions League, European Championship, Copa Libertadores, World Cup, Champions League Qualification, Europa League, Carabao Cup (EFL Cup), UEFA Nations League, and FA Cup (Odds API inactive until the first round in November). **Admin toggles** which are visible in the leg picker (`CompetitionSetting` table; `/admin/competitions`). Default: **World Cup only**; newly discovered catalogue rows are created disabled. Match sync covers enabled competitions plus any disabled competition that still has a pending leg. Every competition has an `apiFootballLeagueId`; the free-tier football-data.org ones also have a `footballDataCode`. League One, League Two, CL Qualification, Europa League, Carabao Cup, Nations League and FA Cup are **API-Football only** — they auto-settle when `API_FOOTBALL_KEY` is set and show as manual settlement in `/admin/competitions` when it isn't (see [Results sources](#results-sources-consensus)).
 
 Fixture list uses The Odds API with `commenceTimeFrom` in `YYYY-MM-DDTHH:MM:SSZ` format (no milliseconds) and client-side upcoming filter. When `ODDS_API_KEY` is set, **no mock fallback** — empty list if the bookmaker feed has no upcoming fixtures. **Production never serves demo fixtures**; mock data is local dev only (`source: "mock"`). Check `GET /api/health` → `odds: "configured" | "missing"`.
 
@@ -168,7 +173,7 @@ Full budgeting: [DEPLOYMENT.md — The Odds API](./DEPLOYMENT.md#the-odds-api--c
 | Core extended | `btts`, `double_chance`, `correct_score`, `alternate_spreads`, `alternate_totals` | **5** per fixture | Cron + auto on fixture pick; extra goal handicaps & O/U lines |
 | Specials | corners/cards (7 keys) | **7** per fixture | User only (“Load more markets”); not cron-warmed |
 
-**Cron:** `warm-odds-cache` every **6 h UTC** → `3 × competitions + 5 × N` credits per run (`N` = fixtures in warm window). `sync-matches` (every 5 min) uses football-data.org, **not** The Odds API.
+**Cron:** `warm-odds-cache` every **6 h UTC** → `3 × competitions + 5 × N` credits per run (`N` = fixtures in warm window). `sync-matches` (every 5 min) uses football-data.org + API-Football, **not** The Odds API.
 
 **Production target:** `ODDS_DB_ONLY=true` so bulk/core user routes do not call the API (specials still may on demand).
 
@@ -176,7 +181,7 @@ Full budgeting: [DEPLOYMENT.md — The Odds API](./DEPLOYMENT.md#the-odds-api--c
 
 At lock, `rankAccaBookmakers()` in `apps/web/src/lib/odds/acca.ts` ranks all retail bookmakers by combined acca odds. Stored as `Round.accaBookmakerRankings` (JSON). Older locked rounds backfill lazily on `GET /api/groups/[id]`. **Open rounds** use a live current ranking for the Compare UI. **Locked rounds** show the ranking captured at lock. Web and mobile display the top three by default, with **Show all {N} bookmakers** / **Show top 3** controls for the complete ranking. `GET /api/groups/[id]` refreshes Odds API deeplinks for the CTA and per-leg Open (odds remain frozen at lock). Multi-leg CTAs label **Open first pick** (or **Open {bookmaker}** for hubs) — UK books rarely expose a one-click full-acca URL.
 
-**Bookmaker logos** (Compare / rankings UI): Google favicons via `packages/shared/src/bookmaker-branding.ts` (`BOOKMAKER_DOMAINS` → `bookmakerLogoUrl`). Web: `apps/web/src/components/bookmaker-logo.tsx`; mobile: same helper in `group-round.tsx`. Odds API key for 888sport is `sport888` — mapped to `888sport.com` (naive guess would hit `sport888.com` and show a generic globe).
+**Bookmaker logos** (Compare / rankings UI): Google favicons via `packages/shared/src/bookmaker-branding.ts` (`BOOKMAKER_DOMAINS` → `bookmakerLogoUrl`). Web: `apps/web/src/components/bookmaker-logo.tsx`; mobile: `apps/mobile/src/components/round/bookmaker-logo.tsx`. Odds API key for 888sport is `sport888` — mapped to `888sport.com` (naive guess would hit `sport888.com` and show a generic globe).
 
 Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_rankings`.
 
@@ -190,21 +195,22 @@ Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_
 | `apps/web/src/lib/odds/event-markets.ts` | Per-event markets (BTTS, props, corners, etc.) |
 | `apps/web/src/lib/odds/odds-store.ts` | PostgreSQL odds snapshots (bulk + per-event tiers) |
 | `apps/web/src/lib/odds/warm-cache.ts` | Cron odds refresh logic |
-| `apps/web/src/lib/odds/market-builders.ts` | Odds API → app market mappers |
+| `apps/web/src/lib/odds/market-builders.ts` | Odds API → app market mappers (`lineKey` → shared `encodeLineKey`; quarter lines skipped) |
+| `apps/web/src/lib/legs/repair-line-keys.ts` | Legacy whole-line `marketType` repair (used by `db:maintenance fix-line-keys`) |
 | `apps/web/src/lib/odds/merge-markets.ts` | Merge matching featured + alternate market quote coverage |
 | `apps/web/src/lib/odds/quotes.ts` | Quote helpers + deeplink resolution (no hub fallback) |
 | `apps/web/src/lib/odds/betslip-links.ts` | Ranked/per-leg links; hub detection; CTA link quality |
 | `apps/web/src/lib/odds/acca.ts` | Acca bookmaker ranking + best combined |
 | `apps/web/src/lib/odds/lock-round.ts` | Lock + reprice + store deeplinks; live link enrichment |
-| `apps/web/src/lib/odds/bookmakers.ts` | Retail filter, sort best odds |
+| `packages/shared/src/bookmakers.ts` | Retail filter, sort best odds |
 | `packages/shared/src/bookmaker-branding.ts` | Favicon logo domains (incl. `sport888` → 888sport.com) |
 | `apps/web/src/components/bookmaker-logo.tsx` | Bookmaker logo + initials fallback (web) |
-| `apps/web/src/components/group-ui.tsx` | Progressive 4-step leg picker (competition, fixture, and market lists collapse after selection; **Change competition** / **Change fixture** / **Change market** to browse again; multi-leg rounds reset picker after each submit, show leg progress copy, and trigger brief **Leg added** / **All legs added** celebrations), locked round picks, settle UI |
-| `apps/web/src/components/app-nav.tsx` | Header nav (desktop): Home / About / Groups / Performance / Admin / Blog |
-| `apps/web/src/components/mobile-nav.tsx` | Compact hamburger menu below `md` for marketing + app headers |
+| `apps/web/src/components/group/submit-leg-form.tsx` | Progressive 4-step leg picker (competition, fixture, and market lists collapse after selection; **Change competition** / **Change fixture** / **Change market** to browse again; multi-leg rounds reset picker after each submit, show leg progress copy, and trigger brief **Leg added** / **All legs added** celebrations), locked round picks, settle UI |
+| `apps/web/src/components/layout/app-nav.tsx` | Header nav (desktop): Home / About / Groups / Performance / Admin / Blog |
+| `apps/web/src/components/layout/mobile-nav.tsx` | Compact hamburger menu below `md` for marketing + app headers |
 | `apps/web/src/app/account/page.tsx` | Account — profile, notification prefs, sign out (greeting in header links here) |
-| `apps/web/src/components/group-nav.tsx` | Group tabs: Bet / Leaderboard / History / Chat (/ Settings for owners) |
-| `apps/web/src/components/group-layout-client.tsx` | Shared group shell + `GroupDataProvider` |
+| `apps/web/src/components/group/nav.tsx` | Group tabs: Bet / Leaderboard / History / Chat (/ Settings for owners) |
+| `apps/web/src/components/group/layout-client.tsx` | Shared group shell + `GroupDataProvider` |
 | `apps/web/src/context/group-data.tsx` | Group data context for sub-pages |
 
 ---
@@ -247,6 +253,26 @@ Protected routes enforced in `apps/web/src/middleware.ts` / `auth.config.ts`: `/
 
 ---
 
+## Results sources (consensus)
+
+Spec: [specs/odds-and-results-sourcing.md](./specs/odds-and-results-sourcing.md) (Phases 1–2). `Match` stays the canonical result that settlement reads; each provider's latest reading is a `MatchObservation` row (`provider` = `football_data` | `api_football`, oriented to the Match's home/away).
+
+1. **Link legs to Matches** — `ensureMatchesForLockedLegs()` gives every pending leg in a locked/settled round a `Match` (adopting one football-data created, by competition + kickoff ±3h + team names, or creating one keyed by `externalOddsId`). Outrights are skipped.
+2. **football-data.org** (`syncAllCompetitionMatches`, free-tier codes only) — maps each fixture to a Match by `externalDataId`, else by kickoff + team names (`mapFixture`), else creates one; records an observation.
+3. **API-Football** (`syncApiFootballResults`) — for Matches with locked legs and no API-Football observation: one `fixtures?date=` lookup per UTC date (all leagues, filtered by `apiFootballLeagueId`), `mapFixture` against kickoff ±3h + team names (static aliases e.g. Türkiye/Turkey, learned `TeamAlias` rows; ambiguous → no guess). Unmapped Matches retry hourly (`apiFootballCheckedAt`). Mapped fixtures are polled with `fixtures?ids=` (≤20 per request, includes statistics) from KO−10 min until finished, then every 15 min for 24h so stats corrections land.
+4. **Consensus** (`resolveMatchConsensus` → `applyMatchConsensus`) writes `Match`:
+   - `agreed` — all terminal feeds match on status + 90' score.
+   - `single` — one terminal feed (the other is missing or still live) → settles normally.
+   - `conflict` — terminal feeds disagree (score, or FINISHED vs POSTPONED) → Match score untouched, auto-settle **held**; amber warning in `/admin/results`.
+   - `abstain` — no feed can give a 90' score (e.g. extra time without a regulation split) → held likewise.
+   - Admin override (`scoreLocked`) always wins and releases a hold.
+   Half-time, `wentToExtraTime` and `stats` (corners / yellow / red, API-Football only) are also written; `statsStableSince` resets whenever stats change.
+5. **Corners markets** (`corners_1x2`, `corners_over_under_*`, `corners_handicap_*`, `team_corners__*`) settle from `Match.stats.corners` once the result is confirmed **and** stats have been unchanged for `STATS_CONFIRMATION_MS` (2h). Extra-time matches, missing stats and unmatched team-corners slugs stay pending for admin (bookmakers settle corners on 90', our stats cover the whole match). Cards and `to_qualify` legs remain admin-settled.
+
+`/admin/results` shows each Match's per-source readings (status, 90' score, final/AET, corners, last change) plus "sources agree" / "went to extra time" tags. `/admin/competitions` shows each competition's active results feeds.
+
+**API-Football budget:** Pro plan 7,500 requests/day. Typical matchday: one date lookup per new date + one request per 20 live/recently-finished Matches every 5 min — well under 1,000/day. Last seen remaining quota is logged by the cron and returned as `apiFootball.quotaRemaining`.
+
 ## Settlement
 
 **System-only** (July 2026): group owners can no longer settle rounds — the owner manual-settle and owner auto-settle routes (`POST /api/rounds/[id]/settle`, `POST /api/rounds/[id]/auto-settle`) were removed. Settlement happens exclusively via the match-sync cron:
@@ -288,7 +314,7 @@ Members can change **their own leg** via `PATCH /api/legs/[id]` while the round 
 
 | Route | Role |
 |-------|------|
-| `POST /api/internal/sync-matches` | football-data.org → `Match` table; reconcile recent FT score corrections → leg outcomes; locks open rounds at first kickoff; auto-settles locked rounds (incl. early loss); awards deferred legs on settled rounds; retries pending lock/settle notifications |
+| `POST /api/internal/sync-matches` | Link locked legs to `Match` → football-data.org + API-Football observations → consensus `Match` result; reconcile recent FT score corrections → leg outcomes; locks open rounds at first kickoff; auto-settles locked rounds (incl. early loss); awards deferred legs on settled rounds; retries pending lock/settle notifications |
 | `POST /api/internal/round-reminders` | Pick reminder emails/push (T−2h before kickoff) |
 | `POST /api/internal/warm-odds-cache` | Refresh odds snapshots in DB |
 
@@ -300,8 +326,8 @@ Members can change **their own leg** via `PATCH /api/legs/[id]` while the round 
 | `apps/web/src/app/api/legs/[id]/route.ts` | Change/remove own leg (PATCH/DELETE) — cutoff, authorization, locked-round edit reprice |
 | `apps/web/src/lib/admin/compute-settlement-queue.ts` | Locked + early-settled-pending queue + 3h overdue-leg flags |
 | `apps/web/src/lib/admin/compute-admin-results.ts` | Recent matches for admin score override UI |
-| `apps/web/src/components/admin-settlement.tsx` | Settlement queue UI + manual settle / correct outcome |
-| `apps/web/src/components/admin-results.tsx` | Match score override + per-leg outcome correction |
+| `apps/web/src/components/admin/settlement.tsx` | Settlement queue UI + manual settle / correct outcome |
+| `apps/web/src/components/admin/results.tsx` | Match score override + per-leg outcome correction |
 | `apps/web/src/app/api/admin/rounds/[id]/settle/route.ts` | Admin manual settle (locked) or deferred leg resolve (settled) |
 | `apps/web/src/app/api/admin/matches/[id]/route.ts` | Admin match score override (locks score, re-resolves legs) |
 | `apps/web/src/app/api/admin/legs/[id]/correct-outcome/route.ts` | Admin correction of a resolved leg outcome |
@@ -311,7 +337,13 @@ Members can change **their own leg** via `PATCH /api/legs/[id]` while the round 
 | `apps/web/src/lib/results/result-confirmation.ts` | `isMatchResultConfirmed` / score-stability confirmation helpers |
 | `apps/web/src/lib/results/reconcile-match-legs.ts` | Feed score → leg outcome reconciliation (cron + admin override) |
 | `apps/web/src/lib/results/override-match-score.ts` | Admin override + lock; delegates re-resolution to reconcile |
-| `apps/web/src/lib/results/sync-matches.ts` | Upsert matches; respects `scoreLocked`; stamps `finishedAt` / `scoreStableSince` |
+| `apps/web/src/lib/results/sync-matches.ts` | football-data.org → observations; maps fixtures onto existing Matches |
+| `apps/web/src/lib/results/sync-api-football.ts` | API-Football mapping (date lookups) + polling (ids) → observations |
+| `apps/web/src/lib/results/providers/api-football.ts` | API-Football client, status map, 90' score + stats reading |
+| `apps/web/src/lib/results/ensure-leg-matches.ts` | Link pending locked legs to a `Match` (adopt or create) |
+| `apps/web/src/lib/results/observations.ts` | `recordObservation` / `applyMatchConsensus` (respects `scoreLocked`; stamps `finishedAt` / `scoreStableSince` / `statsStableSince`) |
+| `apps/web/src/lib/results/consensus.ts` | Pure consensus rules (agreed / single / conflict / abstain) |
+| `apps/web/src/lib/results/map-fixture.ts` + `team-names.ts` + `team-alias-store.ts` | Fixture mapping by kickoff + team names; static + learned aliases |
 | `apps/web/src/lib/notifications/dispatch.ts` | Central notification dispatcher |
 | `apps/web/src/lib/notifications/send-pick-reminders.ts` | Pick reminder cron logic |
 | `apps/web/src/lib/notifications/retry-pending-round-notifications.ts` | Retry failed lock/settle notifications |
@@ -325,9 +357,9 @@ Members can change **their own leg** via `PATCH /api/legs/[id]` while the round 
 | `apps/mobile/src/notifications/register.ts` | Push permission + token registration |
 | `GET/PATCH /api/user/notification-preferences` | User notification toggles |
 | `POST/DELETE /api/user/push-token` | Mobile Expo push token |
-| `apps/web/src/lib/results/football-data.ts` | football-data.org fetch, team matching, **regulation (90 min) scores** for settlement |
-| `apps/web/src/lib/results/match-store.ts` | DB lookup for auto-settle; aligns goals to leg home/away when sources disagree |
-| `apps/web/src/lib/results/resolve-leg.ts` | Market → outcome logic (90-minute score) |
+| `apps/web/src/lib/results/football-data.ts` | football-data.org fetch, team matching, **regulation (90 min) scores** (null after extra time without `regularTime`) |
+| `apps/web/src/lib/results/match-store.ts` | DB lookup for auto-settle; `alignResultToLeg` swaps goals / HT / corners to the leg's home/away |
+| `apps/web/src/lib/results/resolve-leg.ts` | Market → outcome logic (90-minute score; corners from confirmed stats) |
 | `apps/web/src/lib/settlement/apply-round-settlement.ts` | Transactional settle: atomic `locked → settled` claim, points/P&L, `RoundNotSettleableError` |
 
 ---
@@ -372,14 +404,14 @@ Admin-only for now; public rollout planned when user base grows.
 |------|------|
 | `apps/web/src/lib/auth.config.ts` | Edge-safe Auth.js (middleware) |
 | `apps/web/src/lib/auth.ts` | Credentials sign-in, JWT role refresh |
-| `apps/web/src/lib/admin.ts` | `requireAdmin`, `ADMIN_EMAILS` promotion |
+| `apps/web/src/lib/admin/auth.ts` | `requireAdmin`, `ADMIN_EMAILS` promotion |
 | `apps/web/src/lib/admin/compute-admin-stats.ts` | Overview aggregates |
 | `apps/web/src/lib/admin/compute-platform-leaderboards.ts` | Leaderboard queries (excludes marketing demo accounts) |
 | `apps/web/src/lib/admin/demo-accounts.ts` | `@demo.tikiacca.com` / `DEMO24` filters for admin leaderboards |
 | `apps/web/src/lib/analytics.ts` | `recordAnalyticsEvent` |
-| `apps/web/src/components/admin-page-shell.tsx` | Admin layout + nav |
-| `apps/web/src/components/admin-stats.tsx` | Overview UI |
-| `apps/web/src/components/platform-leaderboards.tsx` | Leaderboard tables |
+| `apps/web/src/components/admin/page-shell.tsx` | Admin layout + nav |
+| `apps/web/src/components/admin/stats.tsx` | Overview UI |
+| `apps/web/src/components/admin/platform-leaderboards.tsx` | Leaderboard tables |
 | `apps/web/src/components/stake-profit.tsx` | Points → profit converter |
 | `GET /api/admin/stats` | JSON overview (admin session) |
 | `GET /api/admin/leaderboards` | JSON leaderboards (admin session) |
@@ -407,7 +439,7 @@ Member summary **best / worst leg** = highest / lowest decimal odds across the m
 | `apps/web/src/lib/stats/compute-user-stats.ts` | Cross-group user stats + personal competition/bet-type/team insights |
 | `apps/web/src/lib/stats/compute-member-chart.ts` | Multi-member chart series |
 | `apps/web/src/lib/stats/helpers.ts` | Shared helpers (favourites, best/worst, live net points); chart labels `formatBetAxisLabel` + `formatSettledDateLabel`; `CHART_ORIGIN_LABEL` (`Start`) at 0 pts |
-| `apps/web/src/components/group-stats.tsx` | Group performance UI (Recharts) |
+| `apps/web/src/components/group/stats.tsx` | Group performance UI (Recharts) |
 | `apps/web/src/components/dashboard-stats.tsx` | Cross-group performance UI (`/performance`) |
 | `apps/web/src/components/share-card.tsx` | Shareable performance image (PNG) + copy text fallback |
 | `apps/web/src/lib/share/render-performance-image.ts` | Canvas renderer for branded share cards |
@@ -425,7 +457,8 @@ Member summary **best / worst leg** = highest / lowest decimal odds across the m
 | `NEXTAUTH_URL` | Yes | e.g. `http://localhost:3000` |
 | `ODDS_API_KEY` | No | Live odds; omit = mock |
 | `ODDS_API_SPORT` | No | Default `soccer_fifa_world_cup` (fallback only) |
-| `FOOTBALL_DATA_API_KEY` | No | Match sync |
+| `FOOTBALL_DATA_API_KEY` | No | Match sync (free-tier competitions) |
+| `API_FOOTBALL_KEY` | No | Second results source + corners stats; required for API-Football-only competitions (League One/Two, Nations League, cups, UEFA qualifiers) to auto-settle |
 | `FOOTBALL_DATA_CACHE_TTL_MS` | No | In-memory cache TTL for football-data fetches (default 60s; bypassed on cron sync) |
 | `ODDS_API_CACHE_TTL_MS` | No | DB snapshot TTL for odds (code default 30 min; production 7 h — must exceed the 6 h warm cron when `ODDS_DB_ONLY=true`) |
 | `OUTRIGHTS_ENABLED` | No | Season-long outrights; off unless `"true"`. Dormant by design — [ODDS_PROVIDERS.md](./ODDS_PROVIDERS.md) |
@@ -444,7 +477,7 @@ Member summary **best / worst leg** = highest / lowest decimal odds across the m
 
 ### Production (GitHub Actions → Cloud Run)
 
-Secrets: `DATABASE_URL`, `AUTH_SECRET` (Terraform Secret Manager + `deploy.yml`), `ODDS_API_KEY`, `FOOTBALL_DATA_API_KEY`, `RESEND_API_KEY` (optional), GCP deploy secrets. `CRON_SECRET` is in Secret Manager (Terraform); optional GitHub secret only to seed Terraform without rotating.
+Secrets: `DATABASE_URL`, `AUTH_SECRET` (Terraform Secret Manager + `deploy.yml`), `ODDS_API_KEY`, `FOOTBALL_DATA_API_KEY`, `API_FOOTBALL_KEY`, `RESEND_API_KEY` (optional), GCP deploy secrets. `CRON_SECRET` is in Secret Manager (Terraform); optional GitHub secret only to seed Terraform without rotating.
 
 Env vars on Cloud Run: `NEXTAUTH_URL`, `EMAIL_FROM`, `ADMIN_EMAILS` (from GitHub secret), `ODDS_API_SPORT`, `ODDS_API_REGIONS=uk`, etc. See `.github/workflows/deploy.yml`.
 
@@ -452,7 +485,7 @@ Env vars on Cloud Run: `NEXTAUTH_URL`, `EMAIL_FROM`, `ADMIN_EMAILS` (from GitHub
 
 ## Database (Prisma)
 
-Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `AnalyticsEvent`, `CompetitionSetting`, `RoundMessage`, `MessageReaction`.
+Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `MatchObservation`, `TeamAlias`, `AnalyticsEvent`, `CompetitionSetting`, `RoundMessage`, `MessageReaction`.
 
 - `RoundMessage` — group-scoped permanent chat: required `groupId`, nullable `roundId` for lifecycle-event Bet context, user banter (`kind: "user"`) + append-only system messages (`kind: "system"`, `eventType`: `leg_submitted | leg_changed | leg_removed | round_locked | leg_result | round_settled`; `legId` set on active pick announcements so the betslip row can mirror reactions). User posts run through shared `containsProfanity` (same list as names/groups). Existing messages were backfilled by `20260718200000_group_scoped_chat`; its trigger derives `groupId` for old-revision writes during a rolling deploy, with `20260718201000_group_chat_rolling_compat` ensuring the trigger on existing development databases. Legs submitted before group chat shipped may lack announcements; backfill with `npm run db:maintenance -- backfill-leg-announcements --execute` (preview first).
 - `MessageReaction` — emoji reactions on messages, unique per `(messageId, userId, emoji)`. The bar shows **only used emoji chips**; a muted **React** / **+** opens a viewport-level picker (quick picks 🔥😂💀👀🫡🍀, then more). The API validates any single Unicode emoji. Pick rows mirror the latest `leg_submitted` / `leg_changed` message for their `legId`.
@@ -471,7 +504,9 @@ Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `Analytics
 - Up to `legsPerMember` legs per user per round (`@@unique([roundId, userId, legIndex])`).
 - **Fixture uniqueness rule:** new/edited picks allow only one leg per `fixtureId` in a round, regardless of market, because same-match combinations require correlation-adjusted bet-builder pricing unavailable from the current feed. See `packages/shared/src/market-conflicts.ts`. Enforced on `POST`/`PATCH` `/api/legs`; web/mobile pickers disable occupied fixtures. Existing settled history is unchanged. The older `fix-duplicate-markets` maintenance remains available for historical same-market-family cleanup.
 - Leg stores `legIndex` + fixture snapshot: teams, kickoff, `competitionId` (slug), `competition` (display name), optional `matchId` FK, market, odds, bookmaker, `betslipUrl`, `bookmakerLinks` JSON, outcome.
-- `Match` — canonical result per fixture (`externalDataId` from football-data.org).
+- `Match` — canonical result per fixture (`externalDataId` from football-data.org, `externalOddsId` from The Odds API); consensus fields `resultSource`, `homeGoalsHt`/`awayGoalsHt`, `wentToExtraTime`, `stats` + `statsStableSince`, `apiFootballCheckedAt`.
+- `MatchObservation` — one row per `(matchId, provider)`: that feed's status, 90' / final / HT score, extra time, stats, `changedAt`. Unique on `(provider, externalId)`.
+- `TeamAlias` — learned team-name equivalences (`source`: `auto` | `admin`) used by fixture mapping.
 - `Round.accaBookmakerRankings` — JSON array of ranked bookmakers at lock.
 - `CompetitionSetting` — `competitionId` slug + `enabled` flag for leg-picker visibility (seeded: World Cup on, every other competition off; new catalogue entries are inserted off).
 - `PlatformSetting` — generic admin-managed key/value runtime toggle store; currently one row (`estimated_odds_enabled`) gating the estimated-odds fill at runtime alongside `ESTIMATED_ODDS_ENABLED`.
@@ -499,7 +534,7 @@ Recent migrations include `20260718190000_concurrent_group_bets` and `2026071819
 | `POST /api/groups` | Session | Create group (`name`, optional `legsPerMember` 1–3 and `maxActiveBets` 1–5) |
 | `PATCH /api/groups/[id]` | Owner | Update `legsPerMember` and/or `maxActiveBets`; lower caps preserve existing bets and block creation until capacity returns |
 | `POST /api/groups/[id]/rounds` | Member | Create another open bet when owner cap >1, below cap, and no empty open bet exists |
-| `POST /api/internal/sync-matches` | `CRON_SECRET` | Sync football-data.org → `Match` |
+| `POST /api/internal/sync-matches` | `CRON_SECRET` | Sync football-data.org + API-Football → `Match` (consensus), lock, auto-settle |
 | `POST /api/internal/warm-odds-cache` | `CRON_SECRET` | Refresh odds DB snapshots |
 | `GET /api/groups/[id]` | Member | Group + all `activeRounds` (round-scoped betslip data) + compatibility `activeRound` + recent settled bets + latest active-leg announcements/reactions + chat unread count |
 | `GET /api/groups/[id]/history` | Member | Full settled bet history (fixtures, markets, outcomes) |
@@ -532,7 +567,7 @@ Recent migrations include `20260718190000_concurrent_group_bets` and `2026071819
 
 ## Known limitations
 
-1. **football-data.org free tier:** Free-tier competitions auto-sync when enabled (or when they have pending legs). **Manual settlement** competitions (League One, League Two, Champions League Qualification, Europa League, Carabao Cup / EFL Cup — football-data `EL1`/`EL2`/`FLC` need Tier 2+) are skipped by match sync; admins settle those legs in `/admin/settlement`. EPL/Championship may be empty off-season.
+1. **Results coverage:** Free-tier football-data.org competitions have two sources (consensus); League One, League Two, CL Qualification, Europa League, Carabao Cup, Nations League and FA Cup have **API-Football only** — without `API_FOOTBALL_KEY` they fall back to manual settlement in `/admin/settlement`. A single source still settles (`single`), so a wrong API-Football score on those competitions is caught only by the 24h reconcile or an admin. Cards and `to_qualify` legs, and corners legs on extra-time matches, are always admin-settled. Legs placed before this shipped have no `Match` until the next cron links them. EPL/Championship may be empty off-season.
 2. **Settlement is system-only** — auto-settle runs after match sync (every 5 min); leg outcomes update once a FINISHED score has been stable for 1h (or immediately after an admin score lock), with automatic reconciliation for 24h if the feed later corrects the score; round settles when **any leg loses** or **all legs are won/void**. Remaining legs on an early loss keep resolving via `applyDeferredLegOutcome()`. Owners cannot settle (routes removed July 2026). Overlapping settle attempts are safe — transactional, exactly-once via an atomic `locked → settled` claim (see [Settlement](#settlement)). Rounds the system cannot resolve are handled by admins via the **settlement queue** (`/admin/settlement`) — pending legs 3h+ after kickoff (including leftovers after early settle) are flagged for intervention. Wrong FT scores: usually self-heal via reconcile; escape hatch is **Admin → Results** to override and lock, or correct individual outcomes.
 3. **Email notifications** require Resend setup (`RESEND_API_KEY`, `EMAIL_FROM`); skipped if unset.
 4. **Auto-settle requires synced `Match` rows** — 5-min cron or manual `POST /api/internal/sync-matches`.
@@ -551,6 +586,7 @@ Recent migrations include `20260718190000_concurrent_group_bets` and `2026071819
 
 - [x] `ODDS_API_KEY` in GitHub secrets
 - [x] `FOOTBALL_DATA_API_KEY` in GitHub secrets
+- [ ] `API_FOOTBALL_KEY` in GitHub secrets (Pro plan; passed to Cloud Run by `deploy.yml`)
 - [x] `CRON_SECRET` in Secret Manager + Cloud Scheduler jobs (`sync-matches`, `warm-odds-cache`) via Terraform
 - [x] `NEXTAUTH_URL=https://www.tikiacca.com`
 - [x] Cloudflare Worker + www redirect configured

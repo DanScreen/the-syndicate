@@ -5,7 +5,7 @@ import {
   tryPostSystemMessage,
 } from "@/lib/chat/system-messages";
 import { isBookmakerHubUrl } from "@/lib/odds/betslip-links";
-import { sortQuotesByBestOdds } from "@/lib/odds/bookmakers";
+import { sortQuotesByBestOdds } from "@tiki-acca/shared";
 import { lockRoundWithAccaPricing } from "@/lib/odds/lock-round";
 import { findSelection } from "@/lib/odds/provider";
 import { bookmakerLinksFromQuotes } from "@/lib/odds/quotes";

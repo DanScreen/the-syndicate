@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/admin";
+import { requireAdmin } from "@/lib/admin/auth";
 import { overrideMatchScore } from "@/lib/results/override-match-score";
 import { adminOverrideMatchScoreSchema } from "@tiki-acca/shared";
 import { NextResponse } from "next/server";

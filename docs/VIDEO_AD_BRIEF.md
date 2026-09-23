@@ -145,11 +145,11 @@ across the eight (Nadia and Aisha below), a spread of ability that reads on scre
 
 **The character-bible headshots double as profile pictures.** The same face that
 skies the shot is the face beside *Kev Doyle* on the betslip. Export one square
-headshot per character into `marketing-posts/video-ad/avatars/` (§7).
+headshot per character into `tools/marketing/video-ad/avatars/` (§7).
 
 ### The cast
 
-Names are in `marketing-posts/video-ad/scenario.json`; change them there and every
+Names are in `tools/marketing/video-ad/scenario.json`; change them there and every
 capture follows.
 
 | # | Name | Character | Role |
@@ -202,7 +202,7 @@ no sponsor logos, no real kit designs.**
 
 ## 4. The picks
 
-The picks are the script. Every one is in `marketing-posts/video-ad/scenario.json`,
+The picks are the script. Every one is in `tools/marketing/video-ad/scenario.json`,
 which drives the seed and the captures (§7), so the numbers below are exactly what
 appears on screen.
 
@@ -411,16 +411,16 @@ npm run video-ad:capture                             # every beat
 npm run video-ad:capture -- --leaderboard-frames     # plus L1 count-up frames
 ```
 
-Full instructions, options and output layout: [marketing-posts/README.md](../marketing-posts/README.md)
+Full instructions, options and output layout: [tools/marketing/README.md](../tools/marketing/README.md)
 → *Video ad captures*. The pieces:
 
 | Piece | Path |
 |-------|------|
-| Cast, picks, odds, stages | `marketing-posts/video-ad/scenario.json` |
+| Cast, picks, odds, stages | `tools/marketing/video-ad/scenario.json` |
 | Seed (two groups at any stage) | `packages/database/prisma/video-ad-seed.ts` — `npm run video-ad:seed -- --stage=<name>` |
-| Capture | `marketing-posts/scripts/capture-video-ad.mjs` |
-| Profile pictures | `marketing-posts/video-ad/avatars/<member key>.png` |
-| Output (git-ignored) | `marketing-posts/video-ad/captures/<beat>-<stage>/` |
+| Capture | `tools/marketing/scripts/capture-video-ad.mjs` |
+| Profile pictures | `tools/marketing/video-ad/avatars/<member key>.png` |
+| Output (git-ignored) | `tools/marketing/video-ad/captures/<beat>-<stage>/` |
 
 ### The beats
 
@@ -651,7 +651,7 @@ produced on a single £20 month. Check the generator's monthly credit allowance 
 2. **Kev's character bible.** He carries the ad. Confident face, deflated face, full
    body — and his profile picture. If Kev isn't likeable, nothing else matters.
 3. **Remaining seven characters** — four red in full detail, four blue built lighter.
-   Export all eight headshots to `marketing-posts/video-ad/avatars/`.
+   Export all eight headshots to `tools/marketing/video-ad/avatars/`.
 4. **Look development** — one hero still of the cage. Iterate until it's right; it
    becomes the style reference for all 17 shots.
 5. **App captures** — put real fixtures in `scenario.json`, then
@@ -689,4 +689,4 @@ produced on a single £20 month. Check the generator's monthly credit allowance 
 
 - [BRAND.md](./BRAND.md) — palette, logo, typography (locked)
 - [MARKETING_BRIEF.md](./MARKETING_BRIEF.md) — positioning, taglines, voice
-- [marketing-posts/README.md](../marketing-posts/README.md) — video ad capture workflow and demo seed
+- [tools/marketing/README.md](../tools/marketing/README.md) — video ad capture workflow and demo seed

@@ -1,4 +1,5 @@
 import type { BookmakerQuote, Market, MarketSelection } from "@tiki-acca/shared";
+import { decodeLineKey, encodeLineKey } from "@tiki-acca/shared";
 import type { OddsApiBookmaker, OddsApiEvent, OddsApiMarket, OddsApiOutcome } from "./api-types";
 import { addQuote, resolveDeeplink } from "./quotes";
 
@@ -9,19 +10,22 @@ export function slugify(value: string): string {
     .replace(/^_|_$/g, "");
 }
 
-export function lineKey(line: number): string {
-  if (line < 0) return `m${String(Math.abs(line)).replace(".", "")}`;
-  return String(line).replace(".", "");
+/** Line suffix for market types; null for quarter lines, which we cannot settle — skip them. */
+export function lineKey(line: number): string | null {
+  return encodeLineKey(line);
 }
 
-export function overUnderMarketType(prefix: string, line: number): string {
+export function overUnderMarketType(prefix: string, line: number): string | null {
   const key = lineKey(line);
+  if (key === null) return null;
   if (!prefix) return `over_under_${key}`;
   return `${prefix}_over_under_${key}`;
 }
 
-export function handicapMarketType(prefix: string, homePoint: number): string {
-  return `${prefix}_handicap_${lineKey(homePoint)}`;
+export function handicapMarketType(prefix: string, homePoint: number): string | null {
+  const key = lineKey(homePoint);
+  if (key === null) return null;
+  return `${prefix}_handicap_${key}`;
 }
 
 function isYes(name: string): boolean {
@@ -181,8 +185,11 @@ export function buildPlayerOverUnderMarkets(
       const side = selectionSideFromOutcome(outcome);
       if (!player || (side !== "over" && side !== "under") || outcome.point === undefined) continue;
 
+      const key = lineKey(outcome.point);
+      if (key === null) continue;
+
       const playerKey = slugify(player);
-      const marketKey = `${playerKey}__${lineKey(outcome.point)}`;
+      const marketKey = `${playerKey}__${key}`;
       const quoteMap = byMarketKey.get(marketKey) ?? new Map<string, BookmakerQuote[]>();
       addOutcomeQuote(quoteMap, side, bookmaker, market, outcome);
       byMarketKey.set(marketKey, quoteMap);
@@ -231,6 +238,9 @@ export function buildAlternateTotalsMarkets(
 
   const markets: Market[] = [];
   for (const line of [...lines].sort((a, b) => a - b)) {
+    const type = overUnderMarketType(typePrefix, line);
+    if (type === null) continue;
+
     const quoteMap = new Map<string, BookmakerQuote[]>();
     for (const bookmaker of bookmakers) {
       const market = bookmaker.markets.find(
@@ -247,7 +257,7 @@ export function buildAlternateTotalsMarkets(
     }
 
     const built = marketFromQuoteMap(
-      overUnderMarketType(typePrefix, line),
+      type,
       `${labelBase} O/U ${line}`,
       quoteMap,
       [
@@ -283,6 +293,7 @@ export function buildAlternateSpreadsMarkets(
 
       const homePoint = isHome ? outcome.point : -outcome.point;
       const type = handicapMarketType(typePrefix, homePoint);
+      if (type === null) continue;
       const quoteMap = lineMaps.get(type) ?? new Map<string, BookmakerQuote[]>();
       const selectionId = isHome ? `home_${outcome.point}` : `away_${outcome.point}`;
       addOutcomeQuote(quoteMap, selectionId, bookmaker, market, outcome);
@@ -317,9 +328,7 @@ export function buildAlternateSpreadsMarkets(
 }
 
 function parseHandicapType(type: string, prefix: string): number | null {
-  const raw = type.replace(`${prefix}_handicap_`, "");
-  if (raw.startsWith("m")) return -Number(raw.slice(1)) / 10;
-  return Number(raw) / 10;
+  return decodeLineKey(type.replace(`${prefix}_handicap_`, ""));
 }
 
 export function buildAlternateTeamTotalsMarkets(
@@ -342,8 +351,11 @@ export function buildAlternateTeamTotalsMarkets(
       const team = outcome.description?.trim() || outcome.name.trim();
       if (isOver(team) || isUnder(team)) continue;
 
+      const encodedLine = lineKey(outcome.point);
+      if (encodedLine === null) continue;
+
       const teamKey = slugify(team);
-      const key = `${teamKey}__${lineKey(outcome.point)}`;
+      const key = `${teamKey}__${encodedLine}`;
       const quoteMap = byKey.get(key) ?? new Map<string, BookmakerQuote[]>();
       addOutcomeQuote(quoteMap, side, bookmaker, market, outcome);
       byKey.set(key, quoteMap);

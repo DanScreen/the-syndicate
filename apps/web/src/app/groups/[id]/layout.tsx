@@ -1,4 +1,4 @@
-import { GroupLayoutClient } from "@/components/group-layout-client";
+import { GroupLayoutClient } from "@/components/group/layout-client";
 
 type Props = {
   children: React.ReactNode;

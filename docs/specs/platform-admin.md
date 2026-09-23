@@ -175,7 +175,7 @@ Login recording is fire-and-forget (`recordAnalyticsEventAsync`). Client activit
 
 | Path | Role |
 |------|------|
-| `apps/web/src/lib/admin.ts` | `getAdminEmails`, `resolveUserRole`, `requireAdmin`, `requireAdminPage` |
+| `apps/web/src/lib/admin/auth.ts` | `getAdminEmails`, `resolveUserRole`, `requireAdmin`, `requireAdminPage` |
 | `apps/web/src/lib/auth.config.ts` | Edge-safe Auth.js config (middleware) |
 | `apps/web/src/lib/auth.ts` | Credentials provider, role refresh in JWT callback |
 | `apps/web/src/lib/admin/compute-admin-stats.ts` | Overview aggregates |
@@ -185,11 +185,11 @@ Login recording is fire-and-forget (`recordAnalyticsEventAsync`). Client activit
 | `apps/web/src/components/analytics/authenticated-page-tracker.tsx` | Global authenticated web navigation tracker |
 | `apps/mobile/src/analytics/activity-tracker.tsx` | Global mobile route and foreground tracker |
 | `apps/web/src/lib/admin/compute-user-activity.ts` | Paginated per-user activity aggregation |
-| `apps/web/src/components/admin-user-activity.tsx` | Admin customer activity table |
-| `apps/web/src/components/admin-page-shell.tsx` | Shared admin layout |
-| `apps/web/src/components/admin-nav.tsx` | Overview / Leaderboards tabs |
-| `apps/web/src/components/admin-stats.tsx` | Overview UI |
-| `apps/web/src/components/platform-leaderboards.tsx` | Leaderboard tables |
+| `apps/web/src/components/admin/user-activity.tsx` | Admin customer activity table |
+| `apps/web/src/components/admin/page-shell.tsx` | Shared admin layout |
+| `apps/web/src/components/admin/nav.tsx` | Overview / Leaderboards tabs |
+| `apps/web/src/components/admin/stats.tsx` | Overview UI |
+| `apps/web/src/components/admin/platform-leaderboards.tsx` | Leaderboard tables |
 | `apps/web/src/components/stake-profit.tsx` | Points → profit converter |
 | `packages/shared/src/roles.ts` | `USER_ROLES`, `ANALYTICS_EVENT_TYPES` |
 | `packages/shared/src/scoring.ts` | `profitFromPoints`, `formatProfitGbp` |

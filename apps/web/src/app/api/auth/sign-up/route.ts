@@ -1,4 +1,4 @@
-import { isAdminEmail } from "@/lib/admin";
+import { isAdminEmail } from "@/lib/admin/auth";
 import { normalizeEmail } from "@/lib/auth-email";
 import { recordAnalyticsEventAsync } from "@/lib/analytics";
 import { clientIpFrom, isRateLimited, retryAfterSeconds } from "@/lib/rate-limit";
