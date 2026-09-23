@@ -10,7 +10,7 @@
     "dev": "npm run dev --workspace=@tiki-acca/web",
     "dev:mobile": "npm run dev --workspace=@tiki-acca/mobile",
     "build": "npm run build --workspace=@tiki-acca/web",
-    "lint": "npm run check:brand && npm run lint --workspace=@tiki-acca/web",
+    "lint": "npm run check:brand && npm run lint --workspaces --if-present",
     "check:brand": "node scripts/brand/check-brand-sync.mjs",
     "generate:brand-assets": "node scripts/brand/generate-brand-assets.mjs",
     "marketing:seed": "npm run seed:demo --workspace=@tiki-acca/marketing",

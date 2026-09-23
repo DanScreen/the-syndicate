@@ -1,15 +1,15 @@
 "use client";
 
-import {
-  filterUserStatsByGroup,
-  type UserCategoryStats,
-  type UserStatsChartPoint,
-  type UserStatsGroupBreakdown,
-  type UserStatsSummary,
-} from "@/lib/stats/compute-user-stats";
 import { ShareCard } from "@/components/share-card";
 import { StakeProfit } from "@/components/stake-profit";
-import { BRAND_COLORS, formatLegPoints } from "@tiki-acca/shared";
+import {
+  BRAND_COLORS,
+  filterUserStatsByGroup,
+  formatLegPoints,
+  type UserCategoryStats,
+  type UserStatsChartPoint,
+  type UserStatsResponse,
+} from "@tiki-acca/shared";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -21,15 +21,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-
-type UserStatsData = {
-  summary: UserStatsSummary;
-  chart: UserStatsChartPoint[];
-  groups: UserStatsGroupBreakdown[];
-  competition: UserCategoryStats;
-  market: UserCategoryStats;
-  team: UserCategoryStats;
-};
 
 function StatCard({
   label,
@@ -118,7 +109,7 @@ function ChartTooltip({
 }
 
 export function DashboardStats({ userName }: { userName: string }) {
-  const [data, setData] = useState<UserStatsData | null>(null);
+  const [data, setData] = useState<UserStatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedGroupId, setSelectedGroupId] = useState("all");
 

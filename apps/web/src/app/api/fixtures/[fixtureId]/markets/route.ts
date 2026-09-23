@@ -1,4 +1,6 @@
 import { requireSession } from "@/lib/api-auth";
+import { serialized } from "@/lib/api-response";
+import type { FixtureMarketsResponse } from "@tiki-acca/shared";
 import { isCompetitionEnabled } from "@/lib/competitions/settings";
 import {
   estimateTierCredits,
@@ -45,15 +47,17 @@ export async function GET(request: Request, { params }: Params) {
   const markets = await getExtendedMarketsForTier(fixtureId, competition, tierParam);
   const tier = getMarketTier(tierParam);
 
-  return NextResponse.json({
-    markets,
-    tier: tierParam,
-    tierCredits: estimateTierCredits(tier),
-    tiers: MARKET_TIERS.map((t) => ({
-      id: t.id,
-      label: t.label,
-      description: t.description,
-      credits: estimateTierCredits(t),
-    })),
-  });
+  return NextResponse.json(
+    serialized({
+      markets,
+      tier: tierParam,
+      tierCredits: estimateTierCredits(tier),
+      tiers: MARKET_TIERS.map((t) => ({
+        id: t.id,
+        label: t.label,
+        description: t.description,
+        credits: estimateTierCredits(t),
+      })),
+    }) satisfies FixtureMarketsResponse
+  );
 }

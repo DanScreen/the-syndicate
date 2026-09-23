@@ -1,6 +1,6 @@
 "use client";
 
-import { useGroupData } from "@/context/group-data";
+import { useGroupData } from "@tiki-acca/client";
 import {
   DEFAULT_LEGS_PER_MEMBER,
   DEFAULT_MAX_ACTIVE_BETS,

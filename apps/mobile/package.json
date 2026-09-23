@@ -19,10 +19,12 @@
     "tag:release": "node scripts/tag-release.js",
     "update:preview": "eas update --branch preview",
     "update:production": "eas update --branch production",
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@react-native-community/datetimepicker": "8.4.4",
+    "@tiki-acca/client": "*",
     "@tiki-acca/shared": "*",
     "expo": "~54.0.36",
     "expo-asset": "~12.0.13",
@@ -44,6 +46,8 @@
   "devDependencies": {
     "@babel/core": "^7.25.0",
     "@types/react": "~19.1.10",
+    "eslint": "^9.39.4",
+    "eslint-config-expo": "~10.0.0",
     "typescript": "^5"
   }
 }

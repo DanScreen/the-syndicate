@@ -6,7 +6,7 @@ Everything is re-exported from `src/index.ts`; consumers import from `@tiki-acca
 
 ## Modules
 
-- `types.ts`, `api-types.ts` — core domain types and the shapes of API request/response payloads.
+- `types.ts`, `api-types.ts` — core domain types and the API response contract. Web routes check their output against these with `serialized(body) satisfies <X>Response`; both clients read them.
 - `schemas.ts` — Zod validation schemas for API inputs.
 - `constants.ts`, `roles.ts` — shared enums/constants (user roles, limits, etc.).
 - `age.ts` — 18+ age-verification date math (see `age.test.ts`).
@@ -22,11 +22,14 @@ Everything is re-exported from `src/index.ts`; consumers import from `@tiki-acca
 - `group-summary-display.ts` — formatting for group summary cards/notifications.
 - `notification-types.ts` — push/email notification payload types.
 - `profanity.ts` — chat message filtering.
-- `brand.ts` — brand tokens (name, colours) consumed by both apps and `scripts/brand/generate-brand-assets.mjs` / `scripts/brand/check-brand-sync.mjs`.
+- `brand.ts` — brand tokens (name, colours, `MEMBER_CHART_COLORS`) consumed by both apps and `scripts/brand/generate-brand-assets.mjs` / `scripts/brand/check-brand-sync.mjs`.
+- `round-view.ts` — `deriveRoundView()`: everything the group Bet tab shows (selected bet, quota, edit window, banner, acca pricing, betslip rules), plus `accaSummaryCopy()`.
+- `round-display.ts`, `stats-display.ts` — display helpers (kickoff format, outcome labels, chart labels, `filterUserStatsByGroup`, `buildShareText`).
+- `copy.ts` — user-facing copy for both apps: `copy`, `COMPLIANCE` (responsible-gambling wording and helpline) and `NOTIFICATION_PREFERENCE_SECTIONS`.
 
 ## Testing
 
-Co-located `*.test.ts` files (`age`, `bookmaker-branding`, `chat`, `group-summary-display`, `profanity`) run via the consuming app's test runner — see `apps/web/package.json`'s `test` script, which points directly at test files under `apps/web/src`. There is no standalone test runner in this package; new pure-logic modules with non-obvious edge cases should get a co-located `*.test.ts` following the same pattern.
+Co-located `*.test.ts` files run with `npm test --workspace=@tiki-acca/shared` (node:test via tsx), and in CI through the root `npm test`. New pure-logic modules with non-obvious edge cases should get a co-located `*.test.ts`.
 
 ## Adding a module
 

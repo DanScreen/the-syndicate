@@ -1,7 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { BOOKMAKER_RANKINGS_PREVIEW_COUNT, formatOdds } from "@tiki-acca/shared";
+import {
+  BOOKMAKER_RANKINGS_PREVIEW_COUNT,
+  COMPLIANCE,
+  accaSummaryCopy,
+  formatOdds,
+} from "@tiki-acca/shared";
 import type { AccaBookmakerRanking } from "@tiki-acca/shared";
 import {
   BookmakerLogo,
@@ -61,68 +66,40 @@ export function AccaSummary({
   const visibleBookmakerRankings = showAllBookmakers
     ? bookmakerRankings
     : bookmakerRankings.slice(0, BOOKMAKER_RANKINGS_PREVIEW_COUNT);
-  const oddsLabel = inProgress
-    ? "Locked combined odds"
-    : preview
-      ? "Current combined odds"
-      : "Combined odds";
-  const bookmakerLine = inProgress
-    ? `Locked at ${bookmakerName}`
-    : preview
-      ? `Best so far at ${bookmakerName}`
-      : `Best at ${bookmakerName}`;
-
-  const ctaBookmaker =
-    (inProgress && bookmakerName) ||
-    (!inProgress && topBookmaker?.bookmakerName) ||
-    bookmakerName ||
-    null;
-  const linkQuality =
-    betslipLinkQuality ??
-    topBookmaker?.linkQuality ??
-    (topBookmaker?.url ? "deeplink" : null);
-  const multiLeg = legCount > 1;
-  const ctaLabel =
-    linkQuality === "hub"
-      ? ctaBookmaker
-        ? `Open ${ctaBookmaker}`
-        : "Open bookmaker"
-      : multiLeg
-        ? `Open first pick${ctaBookmaker ? ` · ${ctaBookmaker}` : ""}`
-        : `Open betslip${ctaBookmaker ? ` · ${ctaBookmaker}` : ""}`;
-  const ctaHint =
-    linkQuality === "hub"
-      ? "Opens the bookmaker’s football section. Add each pick on-site, or use Open on a pick when a deeplink is available."
-      : multiLeg
-        ? betslipHasAllLegLinks
-          ? "Opens the first selection. Use Open on each pick below to add the rest at this bookmaker."
-          : "Opens the closest available selection. Use Open on each pick to build the acca."
-        : null;
+  const labels = accaSummaryCopy({
+    inProgress,
+    preview,
+    bookmakerName,
+    topBookmakerName: topBookmaker?.bookmakerName,
+    linkQuality:
+      betslipLinkQuality ??
+      topBookmaker?.linkQuality ??
+      (topBookmaker?.url ? "deeplink" : null),
+    legCount,
+    hasAllLegLinks: betslipHasAllLegLinks,
+    singleBookmaker,
+  });
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent/30 bg-accent-muted/20 px-4 py-3 text-sm">
         <div>
-          <p className="font-semibold">{oddsLabel}</p>
+          <p className="font-semibold">{labels.oddsLabel}</p>
           <p className="text-2xl font-bold text-accent">{formatOdds(combinedOdds)}</p>
           {singleBookmaker && bookmakerName && (
             <p className="mt-1 flex items-center gap-2 text-xs text-muted">
               {bookmakerId ? (
                 <BookmakerLogo bookmakerId={bookmakerId} name={bookmakerName} size={18} />
               ) : null}
-              <span>{bookmakerLine}</span>
+              <span>{labels.bookmakerLine}</span>
             </p>
           )}
-          {preview ? (
-            <p className="mt-1 text-xs text-muted">
-              Based on legs submitted so far. Final odds lock when the bet closes.
-            </p>
+          {labels.previewNote ? (
+            <p className="mt-1 text-xs text-muted">{labels.previewNote}</p>
           ) : null}
-          {!singleBookmaker && !preview && (
-            <p className="mt-0.5 text-xs text-warning">
-              {inProgress ? "Best per-leg odds locked at submission" : "Place legs individually"}
-            </p>
-          )}
+          {labels.multiBookmakerNote ? (
+            <p className="mt-0.5 text-xs text-warning">{labels.multiBookmakerNote}</p>
+          ) : null}
         </div>
         {betslipLink && (
           <div className="flex max-w-xs flex-col items-end gap-1.5">
@@ -132,25 +109,25 @@ export function AccaSummary({
               rel="noopener noreferrer"
               className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-on-accent hover:bg-accent-bright"
             >
-              {ctaLabel}
+              {labels.ctaLabel}
             </a>
-            {ctaHint ? <p className="text-right text-xs leading-snug text-muted">{ctaHint}</p> : null}
+            {labels.ctaHint ? (
+              <p className="text-right text-xs leading-snug text-muted">{labels.ctaHint}</p>
+            ) : null}
           </div>
         )}
       </div>
 
       {betslipLink ? (
         <p className="text-xs leading-snug text-muted">
-          18+. Bets are placed with licensed bookmakers, not Tiki Acca. We may
-          earn commission if you sign up or bet via these links. Gamble
-          responsibly —{" "}
+          {COMPLIANCE.betslipDisclosure}{" "}
           <a
-            href="https://www.begambleaware.org"
+            href={COMPLIANCE.begambleawareUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="text-accent hover:underline"
           >
-            BeGambleAware.org
+            {COMPLIANCE.begambleawareLabel}
           </a>
           .
         </p>

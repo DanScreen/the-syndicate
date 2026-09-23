@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MarketingShell } from "@/components/marketing/marketing-shell";
+import { COMPLIANCE } from "@tiki-acca/shared";
 
 // Deliberately unlinked from site navigation — this page exists as the App
 // Store Support URL and for direct reference from support replies.
@@ -108,12 +109,12 @@ export default function SupportPage() {
             . 18+. If gambling stops being fun, free and confidential support is
             available at{" "}
             <a
-              href="https://www.begambleaware.org"
+              href={COMPLIANCE.begambleawareUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="text-accent hover:underline"
             >
-              BeGambleAware.org
+              {COMPLIANCE.begambleawareLabel}
             </a>
             .
           </p>

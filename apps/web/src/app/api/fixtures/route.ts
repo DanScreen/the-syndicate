@@ -1,4 +1,6 @@
 import { getFixtures } from "@/lib/odds/provider";
+import { serialized } from "@/lib/api-response";
+import type { FixturesResponse } from "@tiki-acca/shared";
 import { requireSession } from "@/lib/api-auth";
 import { isCompetitionEnabled } from "@/lib/competitions/settings";
 import { isValidCompetitionId } from "@tiki-acca/shared";
@@ -22,5 +24,12 @@ export async function GET(request: Request) {
   }
 
   const { fixtures, source, oddsConfigured } = await getFixtures(competition);
-  return NextResponse.json({ fixtures, source, oddsConfigured, competitionId: competition });
+  return NextResponse.json(
+    serialized({
+      fixtures,
+      source,
+      oddsConfigured,
+      competitionId: competition,
+    }) satisfies FixturesResponse
+  );
 }

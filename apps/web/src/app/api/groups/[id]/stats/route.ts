@@ -1,4 +1,6 @@
 import { requireSession } from "@/lib/api-auth";
+import { serialized } from "@/lib/api-response";
+import type { GroupStatsResponse } from "@tiki-acca/shared";
 import { computeGroupStats } from "@/lib/stats/compute-group-stats";
 import { statsRoundWhere } from "@/lib/stats/helpers";
 import { prisma } from "@tiki-acca/database";
@@ -39,5 +41,7 @@ export async function GET(_request: Request, { params }: Params) {
     name: m.user.name,
   }));
 
-  return NextResponse.json(computeGroupStats(rounds, members));
+  return NextResponse.json(
+    serialized(computeGroupStats(rounds, members)) satisfies GroupStatsResponse
+  );
 }

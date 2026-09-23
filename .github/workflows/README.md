@@ -4,7 +4,7 @@ Five GitHub Actions workflows. Deploy/infra details live in `docs/DEPLOYMENT.md`
 
 | Workflow | Trigger | Purpose |
 |---|---|---|
-| `ci.yml` | Every PR, and push to `main` | Lint, typecheck (web/mobile/shared), migrations and tests against a Postgres service container. No secrets. |
+| `ci.yml` | Every PR, and push to `main` | Lint (web/mobile/client), typecheck (web/mobile/shared/client), migrations and tests against a Postgres service container. No secrets. |
 | `deploy.yml` | Push to `main` touching `apps/web/**` or `packages/**` | Builds and deploys the web app to Cloud Run. |
 | `terraform.yml` | Push/PR touching `infra/terraform/**`, or manual | Plans (PR) / applies (push to `main`) the Terraform infra. See `infra/terraform/README.md`. |
 | `eas.yml` | Manual (`workflow_dispatch`, choose `ios`/`android`/`all`), or push of a `mobile-v*` tag | Triggers an EAS build for the mobile app. Tags are created by `apps/mobile`'s release tooling — see `apps/mobile/README.md`. |

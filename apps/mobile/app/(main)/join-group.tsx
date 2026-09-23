@@ -2,7 +2,7 @@ import { ApiError, api } from "@/api/client";
 import { useAuth } from "@/auth/AuthProvider";
 import { GambleResponsiblyFooter } from "@/components/compliance";
 import { Button, ErrorText, Field, Screen, Subtitle, Title } from "@/components/ui";
-import { copy } from "@/lib/copy";
+import { copy } from "@tiki-acca/shared";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 

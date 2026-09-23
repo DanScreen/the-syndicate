@@ -13,6 +13,7 @@
     "email:preview": "tsx scripts/generate-email-preview.ts"
   },
   "dependencies": {
+    "@tiki-acca/client": "*",
     "@tiki-acca/database": "*",
     "@tiki-acca/shared": "*",
     "bcryptjs": "^3.0.2",

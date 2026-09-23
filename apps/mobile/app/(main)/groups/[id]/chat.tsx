@@ -1,7 +1,7 @@
 import { useAuth } from "@/auth/AuthProvider";
 import { GroupThread } from "@/components/group-chat";
 import { colors } from "@/config";
-import { useGroupData } from "@/context/group-data";
+import { useGroupData } from "@tiki-acca/client";
 import { StyleSheet, View } from "react-native";
 
 export default function GroupChatScreen() {
@@ -14,7 +14,6 @@ export default function GroupChatScreen() {
     <View style={styles.container}>
       <GroupThread
         groupId={data.group.id}
-        token={token}
         currentUserId={user?.id}
         isOwner={data.isOwner}
         onRead={markChatRead}

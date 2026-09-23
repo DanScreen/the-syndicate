@@ -1,11 +1,10 @@
 "use client";
 
-import { buildShareText } from "@/lib/stats/compute-user-stats";
 import {
   renderPerformanceShareImage,
   type ShareChartPoint,
 } from "@/lib/share/render-performance-image";
-import { formatLegPoints, pointsTone } from "@tiki-acca/shared";
+import { buildShareText, formatLegPoints, pointsTone } from "@tiki-acca/shared";
 import { useCallback, useEffect, useState } from "react";
 
 type ShareCardProps = {

@@ -1,5 +1,5 @@
 import { colors } from "@/config";
-import { useGroupData } from "@/context/group-data";
+import { useGroupData } from "@tiki-acca/client";
 import { router, useLocalSearchParams, useSegments } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text } from "react-native";
 

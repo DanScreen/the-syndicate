@@ -1,6 +1,11 @@
 import { Card } from "@/components/ui";
 import { colors } from "@/config";
-import { formatLegPoints } from "@tiki-acca/shared";
+import {
+  MEMBER_CHART_COLORS,
+  formatLegPoints,
+  type MemberChartPoint,
+  type MemberSeries,
+} from "@tiki-acca/shared";
 import { useMemo, useState } from "react";
 import { LayoutChangeEvent, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Line, Polyline } from "react-native-svg";
@@ -218,4 +223,113 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
   },
+  seriesName: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  swatch: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
 });
+
+/** One line per member, like the web group chart; values keyed by userId on each point. */
+export function MemberPointsChart({
+  title,
+  members,
+  points,
+}: {
+  title: string;
+  members: MemberSeries[];
+  points: MemberChartPoint[];
+}) {
+  const [width, setWidth] = useState(0);
+
+  const chart = useMemo(() => {
+    if (points.length < 2 || width <= 0) return null;
+    const valueOf = (point: MemberChartPoint, userId: string) => Number(point[userId] ?? 0);
+    const values = points.flatMap((p) => members.map((m) => valueOf(p, m.userId)));
+    const minY = Math.min(0, ...values);
+    const maxY = Math.max(0, ...values);
+    const yRange = maxY - minY || 1;
+    const innerW = width - PADDING.left - PADDING.right;
+    const innerH = CHART_HEIGHT - PADDING.top - PADDING.bottom;
+    const x = (i: number) => PADDING.left + (i / (points.length - 1)) * innerW;
+    const y = (v: number) => PADDING.top + innerH - ((v - minY) / yRange) * innerH;
+    const series = members.map((m, index) => ({
+      member: m,
+      color: MEMBER_CHART_COLORS[index % MEMBER_CHART_COLORS.length],
+      polyline: points.map((p, i) => `${x(i)},${y(valueOf(p, m.userId))}`).join(" "),
+      latest: valueOf(points[points.length - 1]!, m.userId),
+    }));
+    const yTicks = [...new Set([maxY, minY + yRange / 2, minY].map((v) => Math.round(v)))];
+    return { series, yTicks };
+  }, [members, points, width]);
+
+  if (points.length < 2 || members.length === 0) return null;
+
+  return (
+    <Card>
+      <Text style={styles.title}>{title}</Text>
+      <View style={styles.chartWrap} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
+        {chart ? (
+          <>
+            <View style={styles.yAxis}>
+              {chart.yTicks.map((tick, i) => (
+                <Text key={`y-${i}-${tick}`} style={styles.axisLabel}>
+                  {tick}
+                </Text>
+              ))}
+            </View>
+            <Svg width={width} height={CHART_HEIGHT}>
+              {[0, 0.5, 1].map((frac) => {
+                const y = PADDING.top + frac * (CHART_HEIGHT - PADDING.top - PADDING.bottom);
+                return (
+                  <Line
+                    key={frac}
+                    x1={PADDING.left}
+                    y1={y}
+                    x2={width - PADDING.right}
+                    y2={y}
+                    stroke={colors.border}
+                    strokeWidth={1}
+                    strokeDasharray="4 4"
+                  />
+                );
+              })}
+              {chart.series.map((s) => (
+                <Polyline
+                  key={s.member.userId}
+                  points={s.polyline}
+                  fill="none"
+                  stroke={s.color}
+                  strokeWidth={2}
+                />
+              ))}
+            </Svg>
+            <View style={styles.xAxis}>
+              {points.map((p, i) => (
+                <Text key={i} style={styles.xLabel} numberOfLines={1}>
+                  {p.label}
+                </Text>
+              ))}
+            </View>
+          </>
+        ) : null}
+      </View>
+      <View style={styles.legend}>
+        {(chart?.series ?? []).map((s) => (
+          <View key={s.member.userId} style={styles.legendRow}>
+            <View style={[styles.legendLeft, styles.seriesName]}>
+              <View style={[styles.swatch, { backgroundColor: s.color }]} />
+              <Text style={styles.legendLabel}>{s.member.name}</Text>
+            </View>
+            <Text style={styles.total}>{formatLegPoints(s.latest)} pts</Text>
+          </View>
+        ))}
+      </View>
+    </Card>
+  );
+}

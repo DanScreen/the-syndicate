@@ -2,7 +2,7 @@
 
 import { GroupStats } from "@/components/group/stats";
 import { Leaderboard } from "@/components/group/leaderboard";
-import { useGroupData } from "@/context/group-data";
+import { useGroupData } from "@tiki-acca/client";
 
 export default function GroupLeaderboardPage() {
   const { data } = useGroupData();

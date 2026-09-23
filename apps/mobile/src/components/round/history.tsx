@@ -1,16 +1,19 @@
 import { Pressable, Text, View } from "react-native";
 import {
-  groupAccaRoundPoints,
-  formatLegPoints,
-  formatRoundStatusBadge,
   formatFixtureLabel,
+  formatLegPoints,
   formatOdds,
+  formatRoundStatusBadge,
+  groupAccaRoundPoints,
+  legOutcomeLabel,
   pointsToneFromOutcome,
 } from "@tiki-acca/shared";
-import type { HistoryRound, LegOutcome } from "@tiki-acca/shared";
+import type {
+  HistoryRound,
+  LegOutcome,
+} from "@tiki-acca/shared";
 import { colors } from "@/config";
 import { outcomeColors, pointsStyle } from "./helpers";
-import { legOutcomeLabel } from "@tiki-acca/shared";
 import { styles } from "./styles";
 
 function outcomePointsStyle(outcome: string) {
