@@ -149,3 +149,13 @@ xcrun simctl openurl booted "tikiacca://groups/join?code=YOURCODE"
 - **Manual builds:** Actions → *EAS Build (mobile)* → Run workflow — pick platform/profile, and tick *submit* to auto-submit a `production` build.
 - **Requires:** `EXPO_TOKEN` GitHub secret, plus store credentials saved on EAS so `eas submit` can run non-interactively — an App Store Connect API key (iOS) and a Google service account key (Android).
 - Still tag the release afterwards (`npm run tag:release`, above).
+
+### Releasing a new store version
+
+1. On a branch, bump `expo.version` in `app.json` (and `version` in `package.json` to match — cosmetic). Use a new marketing version only for changes that need a native rebuild or a store listing; JS-only fixes go out as OTA updates instead.
+2. Open a PR and merge it to `main`. The merge starts *EAS Build (mobile)* in GitHub Actions; its log prints `Version bumped X -> Y` and the expo.dev build link. (A merge that touches `app.json` without changing the version logs `expo.version unchanged` and builds nothing.)
+3. Wait for the build and submission on expo.dev (~20–30 min). iOS arrives in App Store Connect / TestFlight; Android (once enabled) lands as a draft on the internal track.
+4. Release it by hand: App Store Connect → *Add for review* → submit; Play Console → promote the draft. Nothing reaches users automatically.
+5. Tag the commit: `npm run tag:release -- ios` (and `-- android`), then push the tag it prints.
+
+After the bump, OTA updates published from `main` (`npm run update:production`) carry the new version's runtime, so they reach only installs of the new build. Users still on the old version get no further OTA updates until they update from the store — see [OTA updates](#ota-updates-expo-updates).
