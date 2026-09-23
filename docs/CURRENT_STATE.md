@@ -115,6 +115,8 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 
 \*Asian handicap only from exchange bookmakers in current World Cup UK feed — filtered out; handicap UI empty for those fixtures.
 
+**Line keys in market types.** Lines are embedded in `marketType` (`over_under_<k>`, `corners_over_under_<k>`, `cards_over_under_<k>`, `<prefix>_handicap_<k>`, and `…__<k>` player/team totals) as **tenths**: `encodeLineKey()` / `decodeLineKey()` in `packages/shared/src/market-groups.ts` are the single codec (`lineKey()` in `market-builders.ts` delegates). 2.5 → `25`, 2 → `20`, 10 → `100`, −1.5 → `m15`; 0 stays `0` and 0.5 stays `05`, so half-line keys are unchanged from before. **Quarter lines (2.25, −0.75, …) are skipped** by every builder — split-stake settlement (half won / half void) cannot be represented on a leg. Before September 2026 whole lines were encoded without the tenths digit (`over_under_2` → decoded as 0.2), so whole-line goal O/U legs auto-settled against the wrong line; legacy rows are repaired with `npm run db:maintenance -- preview-line-keys` / `fix-line-keys --execute` (reads the real line from `marketLabel` / `selectionLabel`, since legacy `10` meant line 10 but now means 1.0) and then `resettle-round` for each settled round it lists. Tests: `packages/shared/src/market-groups.test.ts`, `apps/web/src/lib/odds/market-builders.test.ts`, `apps/web/src/lib/results/resolve-leg.test.ts`, `apps/web/src/lib/legs/repair-line-keys.test.ts`.
+
 ---
 
 ## Scoring
@@ -190,7 +192,8 @@ Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_
 | `apps/web/src/lib/odds/event-markets.ts` | Per-event markets (BTTS, props, corners, etc.) |
 | `apps/web/src/lib/odds/odds-store.ts` | PostgreSQL odds snapshots (bulk + per-event tiers) |
 | `apps/web/src/lib/odds/warm-cache.ts` | Cron odds refresh logic |
-| `apps/web/src/lib/odds/market-builders.ts` | Odds API → app market mappers |
+| `apps/web/src/lib/odds/market-builders.ts` | Odds API → app market mappers (`lineKey` → shared `encodeLineKey`; quarter lines skipped) |
+| `apps/web/src/lib/legs/repair-line-keys.ts` | Legacy whole-line `marketType` repair (used by `db:maintenance fix-line-keys`) |
 | `apps/web/src/lib/odds/merge-markets.ts` | Merge matching featured + alternate market quote coverage |
 | `apps/web/src/lib/odds/quotes.ts` | Quote helpers + deeplink resolution (no hub fallback) |
 | `apps/web/src/lib/odds/betslip-links.ts` | Ranked/per-leg links; hub detection; CTA link quality |
