@@ -10,7 +10,14 @@ COPY apps/web/package.json ./apps/web/
 COPY apps/mobile/package.json ./apps/mobile/
 COPY packages/database/package.json ./packages/database/
 COPY packages/shared/package.json ./packages/shared/
-RUN npm ci
+COPY tools/marketing/package.json ./tools/marketing/
+# Only the web app and the packages it builds from; skips Expo/React Native
+# and the marketing tooling (Playwright). All workspace manifests are copied
+# above because npm ci checks them against the lockfile.
+RUN npm ci --include-workspace-root \
+  --workspace=@tiki-acca/web \
+  --workspace=@tiki-acca/database \
+  --workspace=@tiki-acca/shared
 
 FROM base AS builder
 WORKDIR /app
