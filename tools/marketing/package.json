@@ -8,10 +8,21 @@
     "posts": "node scripts/make-posts.mjs",
     "gallery": "node scripts/build-gallery.mjs",
     "x-header": "node scripts/make-x-header.mjs",
-    "appstore": "node scripts/frame-appstore.mjs"
+    "appstore": "node scripts/frame-appstore.mjs",
+    "video-ad": "node scripts/capture-video-ad.mjs",
+    "seed:demo": "tsx seeds/demo-seed.ts",
+    "seed:video-ad": "tsx seeds/video-ad-seed.ts",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@types/node": "^20",
     "playwright": "1.61.1",
-    "sharp": "0.34.5"
+    "sharp": "0.34.5",
+    "tsx": "^4.19.3",
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@tiki-acca/database": "*",
+    "bcryptjs": "^3.0.2"
   }
 }

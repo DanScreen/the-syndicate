@@ -18,6 +18,14 @@ Inputs (committed):
 - `scripts/capture-panels.mjs` — automated chart and bookmaker-panel capture (`npm run marketing:capture`).
 - `scripts/build-gallery.mjs` — self-contained `gallery.html` review page (`npm run marketing:gallery`).
 - `scripts/frame-appstore.mjs` — App Store screenshot framer (`npm run marketing:appstore`).
+- `scripts/capture-video-ad.mjs` — video ad app captures (`npm run video-ad:capture`, see below).
+- `seeds/demo-seed.ts` — the "Thursday Club" demo account for screenshots and App Store review (`npm run marketing:seed`; `.github/workflows/seed-demo.yml` also runs it against production on demand).
+- `seeds/video-ad-seed.ts` — the video ad's two groups at any story stage (`npm run video-ad:seed`).
+- `video-ad/` — the video ad scenario and profile pictures.
+
+Seeds import the Prisma client from `@tiki-acca/database` and are type-checked by
+`npm run typecheck` (so CI fails if a schema change breaks them). They stay here,
+not in `packages/database`, because that package ships with the web app.
 
 Outputs (generated, git-ignored — regenerate rather than commit):
 
@@ -26,6 +34,7 @@ Outputs (generated, git-ignored — regenerate rather than commit):
 - `x-twitter/` — 1600×900 PNGs and the X header.
 - `app-store/` — 1290×2796 App Store frames (`AS_OUT=<dir>` writes elsewhere).
 - `gallery.html` — review page.
+- `video-ad/captures/` — video ad captures.
 
 The last committed set of outputs is in git history at commit `9809a75`
 (`marketing-posts/`).
@@ -69,6 +78,46 @@ This refreshes:
 The other source captures are intentionally retained as approved manual mobile
 views. If recapturing them, use a 1062×1148 viewport, keep the app chrome
 visible, and avoid clipping page titles or primary content.
+
+## Video ad captures ("The Cage")
+
+Real app screens for the AI video ad in
+[`docs/VIDEO_AD_BRIEF.md`](../../docs/VIDEO_AD_BRIEF.md) §7. Cast, picks, odds and
+story stages live in `video-ad/scenario.json`; edit that one file to change a
+name, fixture or price.
+
+```bash
+docker compose up -d && npm run db:migrate:deploy
+npm run dev                                   # keep running
+npm run video-ad:capture                      # every stage + the leaderboard
+npm run video-ad:capture -- --stage=red-locked
+npm run video-ad:capture -- --leaderboard-frames   # also L1 count-up frames
+npm run video-ad:capture -- --initials        # no profile pictures (app as shipped)
+```
+
+The capture re-seeds the two demo groups (Tuesday Reds, Tuesday Blues) before
+each stage with `npm run video-ad:seed -- --stage=<name>` (`seeds/video-ad-seed.ts`), so run it against a
+local database only. Output lands in `video-ad/captures/<beat>-<stage>/`
+(git-ignored) at iPhone 15 Pro resolution (1179×2556), plus `manifest.json`:
+
+| Beat | Stage | Shows |
+|------|-------|-------|
+| S1–S3 | `red-1`…`red-3` | Red betslip filling one named leg at a time; Kev still pending; combined odds 1.40 → 2.94 → 9.55 |
+| S4 | `red-locked` | Kev's Coventry 6.00 in, acca locked at 57.33 |
+| S5 | `red-settled` | Settled card: three Won, Kev Lost, group −1 pts |
+| S6 | `blue-won-1`…`3` | Blue legs landing Won one by one |
+| S7 | `blue-settled` | Settled card: four Won, group 12.5 pts, Acca @ 13.50 |
+| L1 | `leaderboard` | Composite leaderboard: team points, then every player's points |
+
+Profile pictures come from `video-ad/avatars/<member key>.png` (see the README
+there); members without one get an initials placeholder. The capture also
+restores pass order in lists (the active betslip has no defined leg order),
+hides the signed-in member's own Change/Remove controls and the Next.js dev
+badge. Everything else on screen is the app as it renders.
+
+Sign-in is rate limited to 10 per 5 minutes per IP; a full run signs in three
+times. If the repo's Playwright build is not installed, point
+`MARKETING_CHROMIUM_PATH` at a local Chromium.
 
 ## Edit and regenerate
 

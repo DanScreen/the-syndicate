@@ -29,6 +29,7 @@ Tiki Acca is a social group football acca platform. Production: [www.tikiacca.co
 | Product intent & user flows | [PRODUCT.md](./PRODUCT.md) |
 | Brand, logo, design | [BRAND.md](./BRAND.md) |
 | Positioning, taglines, marketing copy | [MARKETING_BRIEF.md](./MARKETING_BRIEF.md) |
+| Video ad production (AI-generated) | [VIDEO_AD_BRIEF.md](./VIDEO_AD_BRIEF.md) |
 | Platform admin & analytics | [specs/platform-admin.md](./specs/platform-admin.md) |
 | **Add an odds market or change odds provider** | [ODDS_PROVIDERS.md](./ODDS_PROVIDERS.md) — verified coverage limits; read before adding outrights. Sourcing plan: [specs/odds-and-results-sourcing.md](./specs/odds-and-results-sourcing.md) |
 | Deploy, infra, or reduce GCP costs | [DEPLOYMENT.md](./DEPLOYMENT.md), [infra/terraform/README.md](../infra/terraform/README.md) |
@@ -78,6 +79,7 @@ docs/
 ├── app-store/             ← listing metadata, review notes, rating/privacy worksheets
 ├── legal/                 ← cookie & privacy notice source
 ├── brand/logo-archive/    ← previous live logo vectors + rollback steps
+├── VIDEO_AD_BRIEF.md      ← AI-generated video ad "The Cage": concept, shot list, prompts, compliance
 └── specs/
     ├── competitions-and-results.md   ← Phases A–C done; Phase 1b backlog
     ├── group-stats-and-points.md     ← Phases 1–4 done

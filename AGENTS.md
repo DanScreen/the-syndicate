@@ -58,7 +58,7 @@ If you only write or revise a spec, update the spec file and [docs/ROADMAP.md](d
 | `packages/shared` | Zod schemas, API response types, view logic (`deriveRoundView`), copy and display helpers shared by both apps |
 | `packages/client` | React data hooks shared by both apps — group data, chat, leg picker, blocked members; each app passes its own `ApiFetcher` |
 | `packages/database` | Prisma schema (PostgreSQL) |
-| `tools/marketing` | Social + App Store image tooling (Playwright/Sharp) — [README.md](tools/marketing/README.md); outputs are git-ignored |
+| `tools/marketing` | Social + App Store image tooling (Playwright/Sharp), video ad captures, and the demo/marketing DB seeds (`seeds/`) — [README.md](tools/marketing/README.md); outputs are git-ignored. Never shipped: the Docker image installs only web, database and shared |
 | `scripts/brand` | Brand colour sync check + icon generation |
 | `scripts/ops` | Production runbook scripts (provider probe, leg backfill) — see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) |
 | `infra/terraform` | All durable GCP resources |
