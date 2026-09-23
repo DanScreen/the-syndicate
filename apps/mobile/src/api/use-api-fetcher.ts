@@ -1,4 +1,4 @@
-import { reportEmailUnverified } from "@/api/client";
+import { CLIENT_HEADERS, reportEmailUnverified } from "@/api/client";
 import { useAuth } from "@/auth/AuthProvider";
 import { API_URL } from "@/config";
 import { createApiFetcher, type ApiFetcher } from "@tiki-acca/client";
@@ -11,7 +11,7 @@ export function useApiFetcher(): ApiFetcher {
     const fetcher = createApiFetcher({
       baseUrl: API_URL,
       headers: (): Record<string, string> =>
-        token ? { Authorization: `Bearer ${token}` } : {},
+        token ? { ...CLIENT_HEADERS, Authorization: `Bearer ${token}` } : CLIENT_HEADERS,
     });
     return <T>(path: string, request?: Parameters<ApiFetcher>[1]) =>
       fetcher<T>(path, request).catch(reportEmailUnverified);

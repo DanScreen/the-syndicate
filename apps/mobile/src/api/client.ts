@@ -1,6 +1,6 @@
 import { API_URL } from "@/config";
 import { ApiError, requestJson } from "@tiki-acca/client";
-import { EMAIL_UNVERIFIED_CODE } from "@tiki-acca/shared";
+import { EMAIL_UNVERIFIED_CODE, EMAIL_VERIFICATION_CLIENT_HEADER } from "@tiki-acca/shared";
 
 export { ApiError };
 
@@ -23,6 +23,9 @@ export function reportEmailUnverified(err: unknown): never {
   throw err;
 }
 
+/** Sent on every request: tells the API this build can show the verify-email screen. */
+export const CLIENT_HEADERS = { [EMAIL_VERIFICATION_CLIENT_HEADER]: "1" };
+
 /** One-off API call with an optional Bearer token (`body` is a JSON string). */
 export async function api<T>(
   path: string,
@@ -31,6 +34,7 @@ export async function api<T>(
   const { token, headers: initHeaders, ...init } = options;
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
+    ...CLIENT_HEADERS,
     ...(initHeaders as Record<string, string> | undefined),
   };
   if (token) headers.Authorization = `Bearer ${token}`;

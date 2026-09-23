@@ -111,3 +111,11 @@ export const signUpEmailSchema = z
 
 /** Stable error code on 403s from `requireSession` for unverified accounts. */
 export const EMAIL_UNVERIFIED_CODE = "email_unverified";
+
+/**
+ * Sent (value "1") by app builds that have the verify-email screen. The API only
+ * holds back unverified mobile users whose app sends it: iOS build 5 and older
+ * predate that screen and can't take OTA updates, so they'd just see errors.
+ * Once those installs are gone, drop the check in `requireSession`.
+ */
+export const EMAIL_VERIFICATION_CLIENT_HEADER = "x-supports-email-verification";

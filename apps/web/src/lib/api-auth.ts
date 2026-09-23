@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { analyticsChannelFromAuthorization } from "@/lib/analytics-channel";
 import { verifyMobileToken } from "@/lib/mobile-token";
-import { EMAIL_UNVERIFIED_CODE } from "@tiki-acca/shared";
+import { EMAIL_UNVERIFIED_CODE, EMAIL_VERIFICATION_CLIENT_HEADER } from "@tiki-acca/shared";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
@@ -51,7 +51,12 @@ export async function requireSession(
     const token = authHeader.slice(7);
     try {
       const user = await verifyMobileToken(token);
-      if (!user.emailVerified && !options.allowUnverified) return emailUnverified();
+      // Apps without the verify-email screen (iOS build 5 and older) are let
+      // through; blocking them would only show errors. See the header's docs.
+      const appCanVerify = headersList.get(EMAIL_VERIFICATION_CLIENT_HEADER) === "1";
+      if (!user.emailVerified && !options.allowUnverified && appCanVerify) {
+        return emailUnverified();
+      }
       return { session: { user }, channel, error: null };
     } catch {
       return {
