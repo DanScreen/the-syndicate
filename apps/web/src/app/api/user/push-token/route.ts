@@ -31,7 +31,7 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const { session, error } = await requireSession();
+  const { session, error } = await requireSession({ allowUnverified: true });
   if (error) return error;
 
   const body = await request.json().catch(() => ({}));

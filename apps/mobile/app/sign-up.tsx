@@ -4,6 +4,7 @@ import { LogoMark } from "@/components/logo";
 import { Button, ErrorText, Field, LinkText, Screen, Subtitle, Title } from "@/components/ui";
 import { colors } from "@/config";
 import { redirectAfterAuth } from "@/lib/auth-redirect";
+import { checkEmailFormat } from "@tiki-acca/shared";
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
@@ -65,17 +66,23 @@ export default function SignUpScreen() {
   }
 
   async function handleSubmit() {
+    // Same rules the server applies — catches typos without a round trip.
+    const emailCheck = checkEmailFormat(email);
+    if (!emailCheck.ok) {
+      setError(emailCheck.message);
+      return;
+    }
     setLoading(true);
     setError("");
     try {
-      await signUp(
+      const user = await signUp(
         firstName.trim(),
         lastName.trim(),
         email.trim(),
         password,
         dob ? toISODate(dob) : ""
       );
-      redirectAfterAuth();
+      redirectAfterAuth(user);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Sign up failed");
     } finally {

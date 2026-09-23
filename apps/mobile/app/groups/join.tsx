@@ -26,6 +26,10 @@ export default function DeepLinkJoinScreen() {
     return <Redirect href="/sign-in" />;
   }
 
+  if (user.emailVerified === false) {
+    return <Redirect href="/verify-email" />;
+  }
+
   const href = code
     ? (`/(main)/join-group?code=${encodeURIComponent(code)}` as const)
     : ("/(main)/home" as const);

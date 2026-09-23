@@ -7,6 +7,7 @@ import {
 } from "./constants";
 import { containsProfanity } from "./profanity";
 import { isValidDateOfBirth, meetsMinimumAge, MIN_SIGN_UP_AGE } from "./age";
+import { signUpEmailSchema } from "./email";
 
 export const signUpSchema = z.object({
   firstName: z
@@ -25,7 +26,7 @@ export const signUpSchema = z.object({
     .refine((v) => !containsProfanity(v), {
       message: "Please choose a different last name",
     }),
-  email: z.string().email(),
+  email: signUpEmailSchema,
   password: z.string().min(8).max(100),
   // `YYYY-MM-DD` as produced by an HTML date input. Must be a real date and 18+.
   dateOfBirth: z
@@ -53,6 +54,21 @@ export const forgotPasswordSchema = z.object({
 export const resetPasswordSchema = z.object({
   token: z.string().min(1),
   password: z.string().min(8).max(100),
+});
+
+export const verifyEmailSchema = z.object({
+  token: z.string().min(1),
+});
+
+/** Unverified accounts only — fixes a typo'd sign-up address. */
+export const changeUnverifiedEmailSchema = z.object({
+  email: signUpEmailSchema,
+  password: z.string().min(1),
+});
+
+/** Platform admin correcting an unverified user's address (no password). */
+export const adminCorrectEmailSchema = z.object({
+  email: signUpEmailSchema,
 });
 
 export const legsPerMemberSchema = z
@@ -153,6 +169,9 @@ export const notificationPreferencesSchema = z.object({
 export type SignUpInput = z.infer<typeof signUpSchema>;
 export type SignInInput = z.infer<typeof signInSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
+export type ChangeUnverifiedEmailInput = z.infer<typeof changeUnverifiedEmailSchema>;
+export type AdminCorrectEmailInput = z.infer<typeof adminCorrectEmailSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type CreateGroupInput = z.infer<typeof createGroupSchema>;
 export type UpdateGroupSettingsInput = z.infer<typeof updateGroupSettingsSchema>;

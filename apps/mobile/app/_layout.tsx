@@ -25,6 +25,9 @@ function RootNavigator() {
   }
 
   const signedIn = !!user;
+  // Missing flag = cached user from an older build; the startup status check
+  // (or any 403 email_unverified) fills it in.
+  const verified = user?.emailVerified !== false;
 
   return (
     <Stack
@@ -35,8 +38,12 @@ function RootNavigator() {
         contentStyle: { backgroundColor: colors.bg },
       }}
     >
-      <Stack.Protected guard={signedIn}>
+      <Stack.Protected guard={signedIn && verified}>
         <Stack.Screen name="(main)" options={{ headerShown: false }} />
+      </Stack.Protected>
+
+      <Stack.Protected guard={signedIn && !verified}>
+        <Stack.Screen name="verify-email" options={{ headerShown: false }} />
       </Stack.Protected>
 
       <Stack.Protected guard={!signedIn}>

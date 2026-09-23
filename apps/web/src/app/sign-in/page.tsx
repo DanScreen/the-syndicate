@@ -1,9 +1,10 @@
 "use client";
 
 import { Logo } from "@/components/logo";
+import { verifyEmailHref } from "@/lib/auth-paths";
 import { safeCallbackUrl, withCallbackUrl } from "@/lib/callback-url";
 import Link from "next/link";
-import { signIn } from "next-auth/react";
+import { getSession, signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 
@@ -29,13 +30,17 @@ function SignInForm() {
       redirect: false,
     });
 
-    setLoading(false);
-
     if (!result?.ok || result.error) {
+      setLoading(false);
       setError("Invalid email or password");
       return;
     }
 
+    const session = await getSession();
+    if (session?.user?.isEmailVerified === false) {
+      window.location.assign(verifyEmailHref(callbackUrl));
+      return;
+    }
     window.location.assign(result.url ?? callbackUrl);
   }
 
@@ -57,7 +62,7 @@ function SignInForm() {
 
       {searchParams.get("registered") === "1" && (
         <p className="mt-4 rounded-lg border border-accent/30 bg-accent-muted/20 px-3 py-2 text-sm text-accent">
-          Account created — sign in below to continue.
+          Account created — sign in below, then confirm your email to continue.
         </p>
       )}
 

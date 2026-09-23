@@ -1,7 +1,7 @@
+import { anonymiseAccount } from "@/lib/account-removal";
 import { requireSession } from "@/lib/api-auth";
 import { prisma } from "@tiki-acca/database";
 import bcrypt from "bcryptjs";
-import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -41,7 +41,7 @@ const deleteAccountSchema = z.object({ password: z.string().min(1) });
  * when the leaver is the only member.
  */
 export async function DELETE(request: Request) {
-  const { session, error } = await requireSession();
+  const { session, error } = await requireSession({ allowUnverified: true });
   if (error) return error;
   const userId = session!.user!.id;
 
@@ -64,53 +64,7 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Incorrect password" }, { status: 403 });
   }
 
-  await prisma.$transaction(async (tx) => {
-    const owned = await tx.group.findMany({
-      where: { ownerId: userId },
-      select: {
-        id: true,
-        members: {
-          where: { userId: { not: userId } },
-          orderBy: { joinedAt: "asc" },
-          take: 1,
-          select: { id: true, userId: true },
-        },
-      },
-    });
-    for (const group of owned) {
-      const heir = group.members[0];
-      if (heir) {
-        await tx.group.update({
-          where: { id: group.id },
-          data: { ownerId: heir.userId },
-        });
-        await tx.groupMember.update({
-          where: { id: heir.id },
-          data: { role: "owner" },
-        });
-      } else {
-        // Cascades members, rounds, legs, and messages.
-        await tx.group.delete({ where: { id: group.id } });
-      }
-    }
-
-    await tx.mobileSession.deleteMany({ where: { userId } });
-    await tx.pushDevice.deleteMany({ where: { userId } });
-    await tx.notificationPreference.deleteMany({ where: { userId } });
-
-    await tx.user.update({
-      where: { id: userId },
-      data: {
-        firstName: "Former",
-        lastName: "Member",
-        name: "Former member",
-        email: `deleted-${userId}@removed.tikiacca.com`,
-        passwordHash: `deleted:${randomBytes(32).toString("hex")}`,
-        dateOfBirth: null,
-        role: "user",
-      },
-    });
-  });
+  await prisma.$transaction((tx) => anonymiseAccount(tx, userId));
 
   return NextResponse.json({ ok: true });
 }

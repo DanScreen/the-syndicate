@@ -9,6 +9,17 @@ export type AuthUser = {
   /** Full display name (`firstName lastName`). */
   name: string;
   email: string;
+  /**
+   * False until the user confirms their address. Optional because older
+   * clients stored users before this existed — treat missing as unknown and
+   * re-check via `GET /api/auth/verify-email/status`.
+   */
+  emailVerified?: boolean;
+};
+
+export type EmailVerificationStatus = {
+  email: string;
+  emailVerified: boolean;
 };
 
 export type MobileSignInResponse = {

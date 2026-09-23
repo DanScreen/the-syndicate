@@ -20,6 +20,10 @@ export default function DeepLinkGroupScreen() {
     return <Redirect href="/sign-in" />;
   }
 
+  if (user.emailVerified === false) {
+    return <Redirect href="/verify-email" />;
+  }
+
   if (!id) {
     return <Redirect href="/(main)/home" />;
   }

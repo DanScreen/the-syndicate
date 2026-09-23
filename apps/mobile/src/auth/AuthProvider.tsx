@@ -8,9 +8,9 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { ApiError, api } from "@/api/client";
+import { ApiError, api, setEmailUnverifiedListener } from "@/api/client";
 import { unregisterPushNotifications } from "@/notifications/register";
-import type { AuthUser } from "@tiki-acca/shared";
+import type { AuthUser, EmailVerificationStatus } from "@tiki-acca/shared";
 
 const TOKEN_KEY = "syndicate_token";
 const USER_KEY = "syndicate_user";
@@ -19,15 +19,19 @@ type AuthContextValue = {
   user: AuthUser | null;
   token: string | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<AuthUser>;
   signUp: (
     firstName: string,
     lastName: string,
     email: string,
     password: string,
     dateOfBirth: string
-  ) => Promise<void>;
+  ) => Promise<AuthUser>;
   signOut: () => Promise<void>;
+  /** Re-reads verification from the server; resolves true once verified. */
+  refreshEmailVerification: () => Promise<boolean>;
+  /** After the unverified change-email flow succeeds. */
+  setUnverifiedEmail: (email: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -73,12 +77,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               setToken(null);
               setUser(null);
             });
+
+          // Accounts signed in before verification shipped have no flag
+          // stored. Best-effort: offline startup keeps the cached user.
+          void api<EmailVerificationStatus>("/api/auth/verify-email/status", {
+            token: storedToken,
+          })
+            .then(async (status) => {
+              const currentToken = await SecureStore.getItemAsync(TOKEN_KEY);
+              if (currentToken !== storedToken) return;
+              await updateStoredUser({
+                email: status.email,
+                emailVerified: status.emailVerified,
+              });
+            })
+            .catch(() => {});
         }
       } finally {
         setLoading(false);
       }
     })();
   }, []);
+
+  const updateStoredUser = useCallback(async (patch: Partial<AuthUser>) => {
+    const raw = await SecureStore.getItemAsync(USER_KEY);
+    if (!raw) return;
+    const next = { ...(JSON.parse(raw) as AuthUser), ...patch };
+    await SecureStore.setItemAsync(USER_KEY, JSON.stringify(next));
+    setUser(next);
+  }, []);
+
+  useEffect(() => {
+    setEmailUnverifiedListener(() => {
+      void updateStoredUser({ emailVerified: false });
+    });
+    return () => setEmailUnverifiedListener(null);
+  }, [updateStoredUser]);
 
   const persist = useCallback(async (nextToken: string, nextUser: AuthUser) => {
     await Promise.all([
@@ -99,6 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       );
       await persist(data.token, data.user);
+      return data.user;
     },
     [persist]
   );
@@ -115,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         method: "POST",
         body: JSON.stringify({ firstName, lastName, email, password, dateOfBirth }),
       });
-      await signIn(email, password);
+      return signIn(email, password);
     },
     [signIn]
   );
@@ -140,9 +175,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, [token]);
 
+  const refreshEmailVerification = useCallback(async () => {
+    if (!token) return false;
+    const status = await api<EmailVerificationStatus>("/api/auth/verify-email/status", {
+      token,
+    });
+    await updateStoredUser({ email: status.email, emailVerified: status.emailVerified });
+    return status.emailVerified;
+  }, [token, updateStoredUser]);
+
+  const setUnverifiedEmail = useCallback(
+    (email: string) => updateStoredUser({ email, emailVerified: false }),
+    [updateStoredUser]
+  );
+
   const value = useMemo(
-    () => ({ user, token, loading, signIn, signUp, signOut }),
-    [user, token, loading, signIn, signUp, signOut]
+    () => ({
+      user,
+      token,
+      loading,
+      signIn,
+      signUp,
+      signOut,
+      refreshEmailVerification,
+      setUnverifiedEmail,
+    }),
+    [user, token, loading, signIn, signUp, signOut, refreshEmailVerification, setUnverifiedEmail]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

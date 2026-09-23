@@ -39,7 +39,8 @@ flowchart TB
 
 | Entity | Purpose |
 |--------|---------|
-| **User** | Account; `firstName` / `lastName` / `name` (full display); `role` (`user` \| `admin`); aggregate `totalPoints` |
+| **User** | Account; `firstName` / `lastName` / `name` (full display); `role` (`user` \| `admin`); `emailVerifiedAt` (null = unconfirmed, gated); aggregate `totalPoints` |
+| **EmailVerificationToken** | One-time confirm-email link; SHA-256 token hash, the address it was sent to, 24h expiry, used-at |
 | **MobileSession** | Revocable native-device login; SHA-256 token hash, user, created/last-used/revoked timestamps |
 | **Group** | Name, invite code, owner, status, `legsPerMember` (1–3), `maxActiveBets` (1–5; default 1) |
 | **GroupMember** | Membership, group role, group-scoped points, chat `lastReadMessageAt` |
@@ -99,7 +100,7 @@ Each group has one permanent polling thread in a dedicated web/mobile Chat tab. 
 → [CURRENT_STATE.md](./CURRENT_STATE.md#web-pages)
 
 ### Auth
-Split config: edge-safe `auth.config.ts` (middleware, no Prisma) + `auth.ts` (credentials, DB). Web sessions include `user.role`; role is refreshed from DB on each JWT update via `getSessionUserRole()`. Mobile sign-in creates a random, non-expiring bearer token; only its SHA-256 hash is stored in `MobileSession`. Explicit mobile sign-out revokes that device session. `requireSession()` accepts either a mobile bearer session or an Auth.js cookie; legacy 30-day mobile JWTs remain accepted during rollout.
+Split config: edge-safe `auth.config.ts` (middleware, no Prisma) + `auth.ts` (credentials, DB). Web sessions include `user.role` and `user.isEmailVerified`; both are refreshed from DB on each JWT update. Mobile sign-in creates a random, non-expiring bearer token; only its SHA-256 hash is stored in `MobileSession`. Explicit mobile sign-out revokes that device session. `requireSession()` accepts either a mobile bearer session or an Auth.js cookie; legacy 30-day mobile JWTs remain accepted during rollout. Unconfirmed emails are rejected by `requireSession()` with 403 `email_unverified` unless the route opts in with `allowUnverified`; web middleware and the mobile root layout route those users to a verify screen. Details: [CURRENT_STATE.md#email-verification](./CURRENT_STATE.md#email-verification).
 
 ### Platform admin
 `ADMIN_EMAILS` env promotes users to `role: admin`. Admin tab in `AppNav`; pages at `/admin/*`; APIs at `/api/admin/*`. Session role refreshed from DB on each request — no re-login after adding an email. Lightweight `AnalyticsEvent` logging.

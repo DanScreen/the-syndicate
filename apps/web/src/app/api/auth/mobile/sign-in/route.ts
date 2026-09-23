@@ -50,11 +50,7 @@ export async function POST(request: Request) {
       channel: "mobile",
     });
 
-    const token = await createMobileToken({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-    });
+    const token = await createMobileToken({ id: user.id });
 
     return NextResponse.json({
       token,
@@ -64,6 +60,7 @@ export async function POST(request: Request) {
         lastName: user.lastName,
         name: user.name,
         email: user.email,
+        emailVerified: user.emailVerifiedAt !== null,
       },
     });
   } catch {

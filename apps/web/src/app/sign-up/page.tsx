@@ -1,8 +1,10 @@
 "use client";
 
 import { Logo } from "@/components/logo";
+import { verifyEmailHref } from "@/lib/auth-paths";
 import { safeCallbackUrl, withCallbackUrl } from "@/lib/callback-url";
 import { MIN_SIGN_UP_AGE } from "@tiki-acca/shared";
+import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
@@ -40,9 +42,9 @@ function SignUpForm() {
     });
 
     const data = await res.json();
-    setLoading(false);
 
     if (!res.ok) {
+      setLoading(false);
       const fieldError =
         data.error?.fieldErrors?.firstName?.[0] ??
         data.error?.fieldErrors?.lastName?.[0] ??
@@ -53,6 +55,19 @@ function SignUpForm() {
       return;
     }
 
+    // Sign straight in and land on the "check your inbox" screen, which
+    // continues to callbackUrl (e.g. an invite) once the email is confirmed.
+    const signedIn = await signIn("credentials", {
+      email: email.trim(),
+      password,
+      redirect: false,
+    });
+    if (signedIn?.ok && !signedIn.error) {
+      window.location.assign(verifyEmailHref(callbackUrl));
+      return;
+    }
+
+    setLoading(false);
     const signInHref = withCallbackUrl("/sign-in", callbackUrl);
     const separator = signInHref.includes("?") ? "&" : "?";
     router.push(`${signInHref}${separator}registered=1`);

@@ -7,12 +7,15 @@ declare module "next-auth" {
       id: string;
       firstName?: string;
       role?: UserRole;
+      /** Undefined only on cookies issued before verification shipped. */
+      isEmailVerified?: boolean;
     };
   }
 
   interface User {
     firstName?: string;
     role?: UserRole;
+    isEmailVerified?: boolean;
   }
 }
 
@@ -21,5 +24,6 @@ declare module "next-auth/jwt" {
     id?: string;
     firstName?: string;
     role?: UserRole;
+    isEmailVerified?: boolean;
   }
 }

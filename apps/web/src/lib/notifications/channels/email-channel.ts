@@ -2,6 +2,10 @@ import { sendEmail } from "@/lib/notifications/email";
 import type { NotificationChannel } from "@tiki-acca/shared";
 import { Prisma, prisma } from "@tiki-acca/database";
 
+/**
+ * Notification emails only go to confirmed addresses: an unconfirmed one may be
+ * a typo or junk, and repeated bounces hurt our sender reputation.
+ */
 export async function sendEmailToUser(
   userId: string,
   subject: string,
@@ -10,9 +14,9 @@ export async function sendEmailToUser(
 ): Promise<boolean> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { email: true },
+    select: { email: true, emailVerifiedAt: true },
   });
-  if (!user?.email) return false;
+  if (!user?.email || !user.emailVerifiedAt) return false;
   return sendEmail({ to: [user.email], subject, html, text });
 }
 

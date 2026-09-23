@@ -136,14 +136,15 @@ export async function isRoundNotificationComplete(params: {
     const [user, pushCount] = await Promise.all([
       prisma.user.findUnique({
         where: { id: member.userId },
-        select: { email: true },
+        select: { email: true, emailVerifiedAt: true },
       }),
       prisma.pushDevice.count({ where: { userId: member.userId } }),
     ]);
 
     const emailKey = emailPrefKey(params.type);
+    // Unconfirmed addresses are never emailed (see sendEmailToUser).
     const wantsEmail = Boolean(
-      emailKey && prefs[emailKey] && user?.email
+      emailKey && prefs[emailKey] && user?.email && user.emailVerifiedAt
     );
     const wantsPush =
       prefs[pushPrefKey(params.type)] && pushCount > 0;

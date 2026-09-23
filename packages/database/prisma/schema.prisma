@@ -14,6 +14,10 @@ model User {
   /// Full display name (`firstName lastName`) for leaderboards, picks, emails.
   name         String
   email        String        @unique
+  /// Set when the user clicks the link in their verification email (or
+  /// completes a password reset, which proves the same thing). Null = the
+  /// account is gated to the verify-email screen until they confirm.
+  emailVerifiedAt DateTime?
   /// Date of birth captured at sign-up for 18+ age verification. Nullable so
   /// pre-existing accounts (created before this was collected) are grandfathered.
   dateOfBirth  DateTime?     @db.Date
@@ -35,6 +39,7 @@ model User {
   messageReactions MessageReaction[]
   mobileSessions   MobileSession[]
   passwordResetTokens PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
   messageReports   MessageReport[] @relation("MessageReports")
   blocksMade       UserBlock[]     @relation("BlocksMade")
   blocksReceived   UserBlock[]     @relation("BlocksReceived")
@@ -46,6 +51,22 @@ model PasswordResetToken {
   id        String    @id @default(cuid())
   tokenHash String    @unique
   userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// Single-use, expiring token for confirming an email address. Only a SHA-256
+/// hash of the emailed token is stored. `email` pins the token to the address
+/// it was sent to, so a link sent before an email change can't verify the new one.
+model EmailVerificationToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  userId    String
+  email     String
   expiresAt DateTime
   usedAt    DateTime?
   createdAt DateTime  @default(now())

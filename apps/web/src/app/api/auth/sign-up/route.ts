@@ -1,5 +1,7 @@
 import { isAdminEmail } from "@/lib/admin";
 import { normalizeEmail } from "@/lib/auth-email";
+import { emailDomain, emailDomainAcceptsMail } from "@/lib/email-domain";
+import { sendVerificationEmail } from "@/lib/email-verification";
 import { recordAnalyticsEventAsync } from "@/lib/analytics";
 import { clientIpFrom, isRateLimited, retryAfterSeconds } from "@/lib/rate-limit";
 import { prisma } from "@tiki-acca/database";
@@ -30,6 +32,18 @@ export async function POST(request: Request) {
     }
 
     const email = normalizeEmail(parsed.data.email);
+    if (!(await emailDomainAcceptsMail(emailDomain(email)))) {
+      return NextResponse.json(
+        {
+          error: {
+            formErrors: [],
+            fieldErrors: { email: ["That email domain can't receive mail — check for typos"] },
+          },
+        },
+        { status: 400 }
+      );
+    }
+
     const existing = await prisma.user.findFirst({
       where: { email: { equals: email, mode: "insensitive" } },
     });
@@ -63,7 +77,16 @@ export async function POST(request: Request) {
 
     recordAnalyticsEventAsync({ type: "sign_up", userId: user.id });
 
-    return NextResponse.json({ user }, { status: 201 });
+    // A failed send doesn't fail sign-up — the verify screen offers a resend.
+    const verificationEmailSent = await sendVerificationEmail(user).catch((err) => {
+      console.error("[sign-up] verification email failed", err);
+      return false;
+    });
+
+    return NextResponse.json(
+      { user: { ...user, emailVerified: false }, verificationEmailSent },
+      { status: 201 }
+    );
   } catch {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }

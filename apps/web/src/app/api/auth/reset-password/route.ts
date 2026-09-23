@@ -36,6 +36,12 @@ export async function POST(request: Request) {
     const passwordHash = await bcrypt.hash(parsed.data.password, 10);
     await prisma.$transaction([
       prisma.user.update({ where: { id: userId }, data: { passwordHash } }),
+      // The reset link reached their inbox, which proves the address as well
+      // as a verification link would.
+      prisma.user.updateMany({
+        where: { id: userId, emailVerifiedAt: null },
+        data: { emailVerifiedAt: new Date() },
+      }),
       // Log out every existing device — a leaked reset link shouldn't leave
       // old sessions (possibly the attacker's) still valid.
       prisma.mobileSession.updateMany({

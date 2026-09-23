@@ -1,12 +1,26 @@
 import { API_URL } from "@/config";
+import { EMAIL_UNVERIFIED_CODE } from "@tiki-acca/shared";
 
 export class ApiError extends Error {
   status: number;
+  code?: string;
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, code?: string) {
     super(message);
     this.status = status;
+    this.code = code;
   }
+}
+
+let onEmailUnverified: (() => void) | null = null;
+
+/**
+ * AuthProvider registers here so any API call rejected for an unverified email
+ * (e.g. a user who was signed in before verification existed) flips the app
+ * to the verify screen.
+ */
+export function setEmailUnverifiedListener(listener: (() => void) | null) {
+  onEmailUnverified = listener;
 }
 
 function formatError(error: unknown): string {
@@ -41,7 +55,13 @@ export async function api<T>(
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
-    throw new ApiError(res.status, formatError(data.error ?? data.message ?? "Request failed"));
+    const code = typeof data.code === "string" ? data.code : undefined;
+    if (res.status === 403 && code === EMAIL_UNVERIFIED_CODE) onEmailUnverified?.();
+    throw new ApiError(
+      res.status,
+      formatError(data.error ?? data.message ?? "Request failed"),
+      code
+    );
   }
 
   return data as T;
