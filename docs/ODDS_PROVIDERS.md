@@ -8,6 +8,12 @@ was found to be built against sport keys that do not exist.
 
 **Read this before adding any outright market, or before adding a provider.**
 
+> **Update 2026-09-22.** [§7](#7-september-2026-re-evaluation) re-evaluates providers against a
+> **≤ £100/month budget for odds + results combined**. It **corrects** the Betfair
+> recommendation in §3 (the free key isn't licensed for commercial display) and
+> The Odds API pricing in the §3 table. The proposed plan is
+> [specs/odds-and-results-sourcing.md](./specs/odds-and-results-sourcing.md).
+
 ---
 
 ## TL;DR
@@ -157,13 +163,13 @@ possible · 20–50k queries/month · UK bookmakers prioritised.
 
 | Provider | Football coverage | Bookmakers | UK | Outrights | ~Cost at our volume |
 |---|---|---|---|---|---|
-| **Betfair Exchange** | All major leagues | 1 (exchange) | Native UK | **Yes** — Winner, Relegation, Top Goalscorer are first-class market types | Free app key |
+| **Betfair Exchange** | All major leagues | 1 (exchange) | Native UK | **Yes** — Winner, Relegation, Top Goalscorer are first-class market types | ~~Free app key~~ **Not free for commercial use** (§7 correction) |
 | **BetsAPI** | Broad | ~5, full depth each | Bet365, Betfair, Betway | **Likely** — "all odds markets you find on the related website" | From ~$10/mo |
-| **UK Odds API** | Football only | 28 UK books | Purpose-built UK | Unconfirmed; "football specials" (next manager, awards) on Business tier | £149–359/mo |
+| **UK Odds API** | Football only | 28 UK books | Purpose-built UK | Unconfirmed; "football specials" (next manager, awards) on Business tier | £149–359/mo (Sept 2026: Starter £49/mo for 10 UK books; see §7) |
 | **odds-api.io** | 12,000+ leagues | 265+, **tier-gated to 2/5/10/15** | Named UK books | **No** (verified) | £99–229/mo |
 | **Sportmonks** | Strong, football-only | 120+ via TXOdds add-on | Yes | **No** (verified) | €14–69 add-on |
 | **OpticOdds / LSports / Sportradar** | Enterprise-grade | 100+ | Yes | Yes | ~$5,000/mo+ |
-| **The Odds API** (current) | Good, all our leagues | 50+ UK/EU/AU | Yes | **Soccer: no** | $99/mo Business tier |
+| **The Odds API** (current) | Good, all our leagues | 50+ UK/EU/AU | Yes | **Soccer: no** | $30 (20K credits) / $59 (100K) / $119 (5M). There is no $99 tier (§7 correction) |
 
 ### Notes and traps
 
@@ -189,6 +195,14 @@ For that second source, **Betfair Exchange first** — free, UK-native, and
 unambiguously carries league winner, relegation and top goalscorer as standard
 market types. **BetsAPI** is the fallback if a bookmaker spread matters more
 than cost.
+
+> **Correction (2026-09-22):** Betfair is **not** a free source for us.
+>
+> - The free *delayed* app key is for development/testing and private betting.
+> - Any commercial use of the data needs Betfair's approval.
+> - The software-vendor licence costs £999.
+>
+> Don't build on Betfair without that approval. See [§7](#7-september-2026-re-evaluation).
 
 ### Confidence
 
@@ -336,11 +350,12 @@ latter means keeping the manual queue as a fallback regardless.
 |---|---|---|
 | 1 | Keep outrights dormant, drop the feature, or integrate a second provider | **Resolved** — kept, gated off behind `OUTRIGHTS_ENABLED` |
 | 1b | Fix `currentSeasonEndDate()` for non-league outrights (World Cup settles 2030, not next May) | **Open** — blocks enabling the flag |
-| 2 | Corners/cards settlement — needs a stats source + resolver branches, **not** a guard change | **Open** |
-| 3 | Trial BetsAPI ($1/one-day) and probe id-mapping quality | **Open** |
-| 4 | Cards: booking-point approximation vs. keep manual | **Open** — decide deliberately, not by default |
-| 5 | Extend `MatchResult` beyond `{homeGoals, awayGoals, status}` | Blocked on #3 |
-| 6 | Trial TheStatsAPI (7-day free) for BTTS depth (bet365 + Paddy Power) alongside the BetsAPI trial — same qualifier-class fixture, compare | **Open** — see §3b |
+| 2 | Corners/cards settlement — needs a stats source + resolver branches, **not** a guard change | **Proposed**: API-Football statistics + new resolver branches ([spec](./specs/odds-and-results-sourcing.md) Phase 2) |
+| 3 | Trial BetsAPI ($1/one-day) and probe id-mapping quality | **Superseded** by the spec's Phase 0 bake-off (API-Football as the stats source; id mapping via `Match.externalOddsId` + `TeamAlias`) |
+| 4 | Cards: booking-point approximation vs. keep manual | **Open** — decide deliberately, not by default. API-Football card events (incl. second yellows) would support either convention |
+| 5 | Extend `MatchResult` beyond `{homeGoals, awayGoals, status}` | **Proposed** in the spec, Phase 2 (`halfTime?`, `stats?`) |
+| 6 | Trial TheStatsAPI (7-day free) for BTTS depth (bet365 + Paddy Power) alongside the BetsAPI trial — same qualifier-class fixture, compare | **Folded into** the spec's Phase 0 bake-off, alongside OddsPapi and UK Odds API Starter |
+| 7 | Odds + results sourcing under a £100/month cap | **Proposed** — [specs/odds-and-results-sourcing.md](./specs/odds-and-results-sourcing.md) |
 
 ---
 
@@ -354,6 +369,109 @@ latter means keeping the manual queue as a fallback regardless.
    season-long markets.
 4. **Negative-cache external failures.** A 404 from a misconfigured key never
    self-heals and will hammer the provider on every page load.
+
+---
+
+## 7. September 2026 re-evaluation
+
+**Date:** 2026-09-22 · **Status:** research complete; **live-probed 22–23 Sept**
+(see *Probe results* below). The research itself came from vendor docs and web
+search, because that session's network egress blocked every vendor host. Phase 0
+of the spec is the trial.
+
+The brief changed from "outrights + BTTS depth" to:
+
+- more leagues, markets and bookmakers for odds;
+- results for every league;
+- **≤ £100/month for odds and results combined**.
+
+Anything was in scope: scraping, AI, search engines.
+
+### Corrections to earlier sections
+
+- **Betfair (§3).** It isn't a free source for us:
+  - the delayed key is for development/testing and private betting;
+  - commercial use of the data needs Betfair's approval;
+  - the software-vendor licence costs £999.
+- **The Odds API pricing (§3 table).** The plans are 500 free, 20K $30, 100K $59, 5M $119 and 15M $249 credits/month. There's no "$99 Business tier".
+- **UK Odds API (§3 table).** A Starter plan now exists at £49/month (10 UK bookmakers, core markets). Pro is £149 (all 34).
+
+### New findings
+
+| Finding | Consequence |
+|---|---|
+| **API-Football**. Pricing: Pro $19/month (7,500 requests/day); the free plan serves seasons 2022–2024 only. Coverage: 1,200+ competitions including League One/Two, FA Cup, EFL Cup and UEFA's second and third tiers. Data: 90' score split from extra time, statistics (corners, cards), events (card type incl. second yellow, goals), live scores. Odds from ~15–20 bookmakers incl. bet365, refreshed every 3h | Best-value results source by far; odds depth comes bundled |
+| The Odds API has `/scores` (2 credits with `daysFrom` ≤ 3), keyed by the **same event id** our legs store | Zero-fuzz second opinion on results. `Match.externalOddsId` (unused today) is the join |
+| football-data.org paid: Standard €49 (25 competitions), Advanced €99 (50); stats are an add-on | Poor value next to API-Football |
+| Smarkets API: £150 activation; no redistribution without written approval | Not usable |
+| Google Custom Search JSON API: closed to new customers, ends 2027-01-01 | "Google search" for results must go via Gemini grounding (5,000 free prompts/month on Gemini 3.x) or a SERP API |
+| **OddsPapi**. Pricing: free tier 250 requests/month, each returning all bookmakers and markets for a fixture; paid "from ~$49". Claims: 350+ bookmakers, 460+ markets, event/market/betslip links via `includeLinks` where available | The only candidate claiming breadth + depth + links under £50. Trial it; vendor-authored claims only |
+| TheStatsAPI: $50 Starter; odds from bet365, Paddy Power, Betfair Sportsbook, Pinnacle and Kambi; results + stats; 150 competitions by default | Trial as an alternative depth feed |
+| Kambi's public offering API is keyless. It powers Unibet, 32Red, LeoVegas, BetUK, Grosvenor, Casumo and BetMGM UK | Parked: unofficial, one pricing engine behind all 7 brands, ToS risk |
+| API-Sports' terms grant no licence to publish its data | Same as today with football-data.org. Revisit if the app scales |
+
+### Conclusion
+
+No single provider covers all of these under £100/month:
+
+- UK bookmakers;
+- bet365;
+- market depth;
+- deeplinks;
+- results with stats.
+
+A small portfolio does, for roughly £40–£90/month. The plan in
+[specs/odds-and-results-sourcing.md](./specs/odds-and-results-sourcing.md):
+
+- **API-Football** for results, with its odds as the default depth feed.
+- **The Odds API**, bulk markets only, for its breadth of UK bookmakers. Betslip deeplinks are low priority (owner decision, 2026-09-22).
+- **Consensus settlement** across API-Football, The Odds API `/scores` and football-data.org.
+- **An AI resolver** for ties only.
+- **A bake-off** that picks at most one extra depth feed.
+
+The spec's §10 lists sources and a confidence level for each claim.
+
+### Probe results (22–23 Sept 2026)
+
+Run locally with `scripts/probe-sources.mjs` plus a one-off Nations League
+check. API-Football was on Pro; The Odds API on region `uk`.
+
+**The Odds API**
+
+| Measure | Result |
+|---|---|
+| Plan and credits | **20K plan** (not 100K as the spec first assumed): 16,655 used, 3,345 left on 22 Sept |
+| Soccer keys | 67, 43 active. Active §3.7 candidates: Nations League, Conference League, Ligue 2, Serie B, 2. Bundesliga, La Liga 2, Belgium, Turkey, Greece, Austria, Switzerland, Denmark, Norway, Sweden, MLS, Liga MX, Argentina, Brazil Série B, Copa Sudamericana, K League 1, League of Ireland, Scottish Premiership |
+| Inactive or missing | FA Cup, Poland, J League, A-League and Saudi Pro League inactive. No key at all for the National League, WSL, Scottish Championship or international friendlies |
+| `/scores` (last 3 days) | EPL 4 of 24 listed events completed; Championship 2 of 14; League Two, Europa League and Nations League 0 |
+| UK books, Championship (9–10 Oct, 17 days out) | h2h 13 (incl. the Betfair and Smarkets exchanges), BTTS 5, corners 0, cards 0, anytime scorer 0 |
+| UK books, Nations League (24 Sept, 2 days out) | h2h 11 (incl. the Betfair exchange), BTTS 7, corners 1 book on one of two fixtures, cards 0, anytime scorer 0 |
+
+**API-Football (Pro)**
+
+| Measure | Result |
+|---|---|
+| Quota | 7,500 requests/day; a full probe uses under 20 |
+| Bookmakers | 33 listed. UK: Betfair, William Hill, bet365, Ladbrokes, Betfred, Unibet, 888Sport, Betway, BetVictor. **No Sky Bet, Paddy Power or Coral** |
+| Premier League odds | bet365 up to 105 bet types per fixture, William Hill 48, Betfair 17, BetVictor 14 |
+| Nations League odds | 50 of 156 fixtures priced so far. UK books actually present: **Betfair, bet365, William Hill and BetVictor only**. bet365 has corners over/under and anytime scorer; only one non-UK book prices cards |
+| Quote age | Nearest Nations League fixture last updated 11 hours before the probe |
+| Coverage flags, current season | Events, stats and odds on the Premier League, Championship, League One, League Two, Carabao Cup, WSL, Scottish Premiership, League of Ireland, Europa League, MLS and international friendlies. **Champions League and Conference League: no odds.** National League, Scottish Championship and club friendlies: no stats. FA Cup: no events or stats |
+| Nations League stats | Flags are off for 2026 (not started) but on for every past season. Four sampled 2024–26 finished fixtures all had corners, yellow cards and goal/card events |
+| Mapping to The Odds API | Nations League: 37 of 45 events match on exact name and date; the other 8 need 4 aliases (Rep. Of Ireland, Türkiye, Czechia, FYR Macedonia), giving 45 of 45 |
+
+**football-data.org:** 12 competitions on TIER_ONE, as expected, plus Copa Libertadores on TIER_FOUR.
+
+### Could API-Football replace The Odds API outright?
+
+Not yet (spec open decision 11, 2026-09-23). Retiring The Odds API saves $30/month but:
+
+- **Fewer UK bookmakers.** 4 UK sportsbooks on Nations League fixtures against 10, and none of Paddy Power, Coral or Sky Bet. "Best price across UK books" gets worse.
+- **No Champions League or Conference League odds** on API-Football, and the Champions League is in the catalogue.
+- **Staler prices.** API-Football refreshes every 3h; the sample quote was 11h old.
+- **It's a rewrite, not a switch.** The fixture list, `externalOddsId` on legs, lock-time quotes and betslip deeplinks all come from The Odds API today.
+
+API-Football's odds remain the planned **depth** feed (BTTS, double chance, correct score, corners, goalscorer), where The Odds API is thin.
 
 ---
 

@@ -35,11 +35,11 @@ The Admin catalogue also includes Eredivisie, Primeira Liga, Brazil Série A, Ch
 ## Workstream B — FA Cup + EFL Cup (code)
 
 - [x] Add `efl-cup` (Carabao Cup) to `packages/shared/src/competitions.ts` — Odds API `soccer_england_efl_cup`. football-data.org code `FLC` is **not** on the free tier → `manualSettlement: true` (admin settlement queue), same pattern as Workstream B2.
-- [ ] Add `fa-cup` (`soccer_fa_cup` / `FAC`) — FA Cup is also absent from the free-tier coverage list; expect the same manual-settlement pattern unless the football-data plan is upgraded.
+- [x] Add `fa-cup` (`soccer_fa_cup`, API-Football league 45) — shipped 2026-09-23 with API-Football results (no football-data code). The Odds API key is inactive until bookmakers price the first round (November); enable then.
 - [x] `CompetitionSetting` rows auto-seed disabled via `ensureSettingsRows()` when the catalogue gains an entry; admin enables when rounds are scheduled.
-- [ ] Verify team-name matching between Odds API and football-data.org for lower-league cup entrants (`lib/results/football-data.ts` matching) — only needed if/when FA Cup / EFL Cup move off manual settlement.
+- [ ] Verify team-name matching for lower-league cup entrants on the first FA Cup / Carabao Cup matchday — fixture mapping (`lib/results/map-fixture.ts`) learns one-sided aliases automatically and refuses ambiguous ones; check `/admin/results` for Matches without an API-Football row.
 
-## Workstream B2 — UEFA summer qualifiers (shipped, manual settlement)
+## Workstream B2 — UEFA summer qualifiers (shipped; auto-settled via API-Football since 2026-09-23)
 
 Champions League Qualification and Europa League play through the July–August gap, so both were added to `packages/shared/src/competitions.ts` (Odds API keys: `soccer_uefa_champs_league_qualification`, `soccer_uefa_europa_league`). **Neither is on our football-data.org tier** (Europa League + the qualifier competitions require the paid Standard plan, ~€49/mo), so both are flagged `manualSettlement: true` with an empty `footballDataCode`.
 
@@ -50,8 +50,18 @@ Behaviour:
 
 - [x] Add both competitions (disabled by default) with the `manualSettlement` flag + `competitionNeedsManualSettlement()` helper.
 - [ ] Enable via `/admin/competitions` when qualifier rounds are scheduled; **verify the Odds API keys resolve** against a live pull first (stage rollovers shift availability).
-- [ ] Operator note: settle CL-qual / Europa League legs manually each qualifier round — there is no auto-sync on the current tier.
-- [ ] Optional: revisit the football-data.org Standard plan (~€49/mo) if manual settlement becomes a burden; it would also cover Conference League. See odds/settlement provider notes.
+- [x] ~~Operator note: settle CL-qual / Europa League legs manually~~ — superseded 2026-09-23: API-Football results (sourcing spec Phase 1) auto-settle them when `API_FOOTBALL_KEY` is set; `manualSettlement` flags removed.
+- [ ] Optional: revisit the football-data.org Standard plan (~€49/mo) if manual settlement becomes a burden; it would also cover Conference League. See odds/settlement provider notes. *(2026-09-22: a cheaper option is proposed instead. API-Football, $19/mo, covers all of these plus the FA Cup — see [odds-and-results-sourcing.md](./odds-and-results-sourcing.md).)*
+
+## Workstream B3 — UEFA Nations League (shipped; auto-settled via API-Football since 2026-09-23)
+
+The 2026–27 league phase fills the long September–October international break (matchdays 1–4 on 24 Sept – 6 Oct, 5–6 on 12–17 Nov). Added as `nations-league` (Odds API key `soccer_uefa_nations_league`), flagged `manualSettlement: true` like B2 — football-data.org's free tier doesn't carry it.
+
+Checked on 22 Sept 2026 with the provider probe from [#60](https://github.com/DanScreen/the-syndicate/pull/60) (`scripts/probe-sources.mjs`, `docs/specs/odds-and-results-sourcing.md`): the key is active with 45 fixtures listed; match result has 11 UK books and BTTS 7, but corners, cards and anytime scorer are near-empty, so expect the **Corners & cards** tier to show little for these fixtures.
+
+- [x] Add the competition (disabled by default) with the `manualSettlement` flag.
+- [ ] Enable via `/admin/competitions` before matchday 1 (24 Sept).
+- [x] Drop the `manualSettlement` flag once the API-Football results feed ships — done 2026-09-23 (sourcing spec Phase 1). Until `API_FOOTBALL_KEY` is in production, `/admin/competitions` still shows it as manual and admins settle by hand.
 
 ## Workstream C — quiet-period UX (code)
 
@@ -63,7 +73,7 @@ Behaviour:
 
 ## Recurring checklist (every season)
 
-Add to operator docs: each May/June, review competition end dates, plan the summer gap (tournament years vs. fallow years), and pre-verify next season's API IDs. Fallow summers (2027) have **no default competition** from late May to August — revisit whether to add summer competitions (MLS, international friendlies) before then. Summer bridges available now: **Brazil Série A** (free-tier auto-settle) and the **UEFA qualifiers** (CL Qualification + Europa League, manual settlement — see Workstream B2). If UEFA qualifiers are enabled, confirm someone owns manual settlement for those rounds.
+Add to operator docs: each May/June, review competition end dates, plan the summer gap (tournament years vs. fallow years), and pre-verify next season's API IDs. Fallow summers (2027) have **no default competition** from late May to August — revisit whether to add summer competitions (MLS, international friendlies) before then. Summer bridges available now: **Brazil Série A** (free-tier auto-settle) and the **UEFA qualifiers** (CL Qualification + Europa League, manual settlement — see Workstream B2). International breaks: the **Nations League** (manual settlement — see Workstream B3). If UEFA qualifiers are enabled, confirm someone owns manual settlement for those rounds.
 
 ---
 
@@ -72,7 +82,7 @@ Add to operator docs: each May/June, review competition end dates, plan the summ
 | Question | Recommendation |
 |----------|----------------|
 | Enable all five leagues at once or stagger? | Stagger — Championship + EPL first; add continental leagues when their seasons start (credits + picker noise) |
-| EFL Cup without free-tier results sync? | **Shipped with manual settlement** (`efl-cup` / Carabao Cup). Auto-sync deferred until football-data Tier 2+ (`FLC`) or another results source. FA Cup still backlog. |
+| EFL Cup without free-tier results sync? | **Shipped with manual settlement** (`efl-cup` / Carabao Cup). Auto-sync deferred until football-data Tier 2+ (`FLC`) or another results source. FA Cup still backlog. Proposed results source: API-Football ([odds-and-results-sourcing.md](./odds-and-results-sourcing.md)). |
 | Summer 2027 fallow gap | Out of scope; note in ROADMAP when 2026–27 season ships |
 
 ## Related docs

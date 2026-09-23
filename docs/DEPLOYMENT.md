@@ -114,7 +114,14 @@ Auto-settle reads from the `Match` table. Populate it on a schedule.
 
 Both jobs send `Authorization: Bearer` with the `CRON_SECRET` value. **`CRON_SECRET` is owned by the app deploy workflow** (`deploy.yml` "Ensure CRON_SECRET" step creates/rotates it in Secret Manager so it exists before Cloud Run mounts it, independent of the Terraform workflow). Terraform *reads* it via a data source rather than managing it — this avoids the dual-ownership that previously caused `409 already exists` on `terraform apply`. The scheduler jobs get the bearer value from the `cron_secret` tfvar, not from the secret resource. `DATABASE_URL`/`AUTH_SECRET`, by contrast, are Terraform-owned. Override schedules or `app_base_url` via Terraform variables; see [infra/terraform/README.md](../infra/terraform/README.md).
 
-Requires `FOOTBALL_DATA_API_KEY` on Cloud Run (via `deploy.yml`). Response includes `sync` and `autoSettle` results.
+Needs `FOOTBALL_DATA_API_KEY` and/or `API_FOOTBALL_KEY` on Cloud Run (both via `deploy.yml` from GitHub secrets); it returns 503 only when neither is set. Response includes `ensureMatches`, `sync` (football-data), `apiFootball` (mapped / polled / requests / `quotaRemaining` / errors) and `autoSettle`.
+
+### API-Football (results + stats)
+
+- **Secret:** add `API_FOOTBALL_KEY` to GitHub secrets (Settings → Secrets → Actions); the next `deploy.yml` run passes it to Cloud Run. Without it, the API-Football-only competitions (League One/Two, CL qualifiers, Europa League, Carabao Cup, Nations League, FA Cup) show as **Manual settlement** in `/admin/competitions`, and corners legs aren't auto-settled.
+- **Plan:** Pro ($19/mo, 7,500 requests/day). The free plan can't see the current season.
+- **Budget per 5-min run:** one `fixtures?date=` request per new UTC date with unmapped locked legs (cached per run; unmapped Matches retry hourly), plus one `fixtures?ids=` request per 20 live / recently-finished Matches. A busy Saturday stays under ~1,000/day. The cron log line `[sync-matches] api-football …` includes the remaining daily quota.
+- **Migration:** `20260923120000_match_observations` (runs in `deploy.yml` via `db:migrate:deploy`).
 
 If you previously created `sync-matches` manually, **import** it into Terraform state before apply (see Terraform README).
 
@@ -136,7 +143,7 @@ Until the first cron run (or with `ODDS_DB_ONLY` unset), user traffic can still 
 
 [The Odds API](https://the-odds-api.com/) bills in **credits**: each request costs `markets × regions` (one region = `uk` by default via `ODDS_API_REGIONS`).
 
-**Match sync (`sync-matches`) does not use The Odds API** — it calls football-data.org only.
+**Match sync (`sync-matches`) does not use The Odds API** — it calls football-data.org and API-Football only.
 
 ### Scheduled calls (production)
 
@@ -406,7 +413,7 @@ matters:
 
 | Owned by | What |
 |----------|------|
-| `deploy.yml` (`gcloud run deploy`) | The container **image** and the **entire runtime env** (~15 vars from GitHub secrets: `ODDS_API_KEY`, `FOOTBALL_DATA_API_KEY`, `RESEND_API_KEY`, `EMAIL_FROM`, `ADMIN_EMAILS`, `ORIGIN_AUTH_SECRET`, the `ODDS_*` flags) |
+| `deploy.yml` (`gcloud run deploy`) | The container **image** and the **entire runtime env** (~15 vars from GitHub secrets: `ODDS_API_KEY`, `FOOTBALL_DATA_API_KEY`, `API_FOOTBALL_KEY`, `RESEND_API_KEY`, `EMAIL_FROM`, `ADMIN_EMAILS`, `ORIGIN_AUTH_SECRET`, the `ODDS_*` flags) |
 | Terraform (`cloud-run.tf`) | Everything else — scaling, CPU, volumes, service account, and the 6 baseline env vars it declares |
 
 `cloud-run.tf` therefore lists **both** `image` and `env` in `lifecycle.ignore_changes`.

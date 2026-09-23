@@ -3,9 +3,8 @@ import { correctLegOutcome } from "@/lib/settlement/correct-leg-outcome";
 import { applyDeferredLegOutcome } from "@/lib/settlement/apply-round-settlement";
 import { persistResolvableLegOutcomes } from "@/lib/settlement/resolve-round-outcomes";
 import { resolveLegOutcome } from "@/lib/results/resolve-leg";
-import { dbMatchToResult } from "@/lib/results/match-store";
+import { alignResultToLeg, dbMatchToResult } from "@/lib/results/match-store";
 import {
-  alignGoalsToLeg,
   isLegOrientationDirect,
   isLegOrientationReversed,
 } from "@/lib/results/football-data";
@@ -108,19 +107,16 @@ export async function reconcileMatchLegOutcomes(
 
     const base = dbMatchToResult(match);
     if (!base) continue;
-    const aligned = alignGoalsToLeg(
-      base.homeGoals,
-      base.awayGoals,
-      base.status,
-      match.homeTeam,
-      match.awayTeam,
-      leg.homeTeam,
-      leg.awayTeam
-    );
+    const aligned = alignResultToLeg(base, match, leg);
     if (!aligned) continue;
 
     const outcome = resolveLegOutcome(
-      { marketType: leg.marketType, selectionId: leg.selectionId },
+      {
+        marketType: leg.marketType,
+        selectionId: leg.selectionId,
+        homeTeam: leg.homeTeam,
+        awayTeam: leg.awayTeam,
+      },
       aligned
     );
     if (!outcome || outcome === "pending") continue;
