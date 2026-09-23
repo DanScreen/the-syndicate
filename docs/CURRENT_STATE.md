@@ -557,7 +557,7 @@ Recent migrations include `20260923120000_email_verification`, `20260718190000_c
 | `POST /api/legs` | Session | Submit leg (rejects any second leg on the same fixture — 409) |
 | `PATCH /api/legs/[id]` | Leg owner | Edit own pick until first kickoff (locked rounds reprice; one-leg-per-fixture rule) |
 | `DELETE /api/legs/[id]` | Leg owner | Remove own pick while round is open and before first kickoff |
-| `POST /api/rounds/[id]/lock` | Member of a **solo** round | Lock a solo acca on demand (needs `unlimitedLegs`, `open`, ≥1 leg). 403 on multi-member rounds — a manual lock there would lock other members out |
+| `POST /api/rounds/[id]/lock` | Member of a **solo** round | Lock a solo acca on demand (needs `unlimitedLegs`, `open`, ≥1 leg). 403 on multi-member rounds — a manual lock there would lock other members out. Guards in `lib/rounds/lock-solo-round.ts` |
 | `GET /api/groups` | Session | Groups list + single-bet `activeLegs` + compact multi-bet `activeBets` summaries + yourLeg / yourLegCount + chat unread count |
 | `POST /api/groups` | Session | Create group (`name`, optional `legsPerMember` 1–3 and `maxActiveBets` 1–5) |
 | `PATCH /api/groups/[id]` | Owner | Update `legsPerMember` and/or `maxActiveBets`; lower caps preserve existing bets and block creation until capacity returns |

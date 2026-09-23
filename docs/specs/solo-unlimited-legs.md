@@ -224,7 +224,7 @@ its own spec once this mechanic works. This spec only makes solo accas
 | Phase | Scope | Ship gate | Status |
 |---|---|---|---|
 | 1 | Migration + `unlimitedLegs` snapshot at both creation paths + `effectiveLegQuota` + call sites | Tests 1–4, 6–8 green; multi-member behaviour unchanged | ✅ done |
-| 2 | `POST /api/rounds/[id]/lock` | Test 5 green | ✅ code done, **route tests not written** |
+| 2 | `POST /api/rounds/[id]/lock` | Test 5 green | ✅ done (guards in `lib/rounds/lock-solo-round.ts`, tests alongside) |
 | 3 | Web + mobile copy and Lock acca button | Manual run of a 5-leg solo acca end to end | ✅ code done, **not manually run** |
 | 4 | Join handover (§3a) — clear the flag transactionally on join | Test 9 green (7 cases) | ✅ done |
 
@@ -233,10 +233,10 @@ typecheck clean; migration `20260728150000_round_unlimited_legs` applied locally
 
 **Known gaps (carry into the next session):**
 
-- **Test 5 (the `POST /api/rounds/[id]/lock` route guards) was never written.** The
-  endpoint's five guards — membership, `unlimitedLegs`, `open`, ≥1 leg, and the
-  past-kickoff path — are covered by reading only. This is the least-tested part
-  of the feature and the first thing to add.
+- ~~Test 5 never written~~ — **done 2026-09-23.** Guards moved from the route into
+  `lockSoloRound()` (`apps/web/src/lib/rounds/lock-solo-round.ts`) so they can be
+  tested against the DB without mocking auth; `lock-solo-round.test.ts` covers
+  lock, 0 legs, non-solo, non-member, not open, unknown round, and past kickoff.
 - **No end-to-end run.** Phase 3's ship gate (build a 5-leg solo acca in the
   running app and lock it) has not been done. Types and unit tests pass; the UI
   itself is unexercised.
