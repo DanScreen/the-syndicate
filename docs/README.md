@@ -36,6 +36,7 @@ Tiki Acca is a social group football acca platform. Production: [www.tikiacca.co
 | Web app layout & scripts | [apps/web/README.md](../apps/web/README.md) |
 | Database schema & migrations | [packages/database/README.md](../packages/database/README.md) |
 | Shared types & business logic | [packages/shared/README.md](../packages/shared/README.md) |
+| Shared React data hooks (web + mobile) | [packages/client/README.md](../packages/client/README.md) |
 | CI workflows at a glance | [.github/workflows/README.md](../.github/workflows/README.md) |
 
 Specs are **design contracts**. [CURRENT_STATE.md](./CURRENT_STATE.md) is **as-built truth** — update it when you ship.
