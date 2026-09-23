@@ -1,6 +1,6 @@
 import { ApiError, api } from "@/api/client";
-import { PointsLineChart } from "@/components/points-chart";
-import { Card, EmptyState, ErrorText, OptionRow } from "@/components/ui";
+import { MemberPointsChart, PointsLineChart } from "@/components/points-chart";
+import { Button, Card, EmptyState, ErrorText, OptionRow } from "@/components/ui";
 import { colors } from "@/config";
 import { copy } from "@tiki-acca/shared";
 import type {
@@ -11,6 +11,8 @@ import type {
   UserStatsResponse,
 } from "@tiki-acca/shared";
 import {
+  buildShareText,
+  filterUserStatsByGroup,
   formatLegHighlight,
   formatLegPoints,
   formatProfitGbp,
@@ -22,6 +24,8 @@ import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
+  ScrollView,
+  Share,
   StyleSheet,
   Text,
   TextInput,
@@ -222,9 +226,11 @@ function MemberBreakdown({
 
 export function GroupStatsPanel({
   groupId,
+  groupName,
   token,
 }: {
   groupId: string;
+  groupName?: string;
   token: string;
 }) {
   const [data, setData] = useState<GroupStatsResponse | null>(null);
@@ -294,26 +300,11 @@ export function GroupStatsPanel({
         }))}
       />
 
-      {members.length > 0 && memberChart.length > 0 ? (
-        <Card>
-          <Text style={styles.blockTitle}>Member points over time</Text>
-          {memberChart.map((point, i) => (
-            <View key={i} style={styles.chartRow}>
-              <Text style={styles.chartLabel}>{point.label}</Text>
-              {point.dateLabel ? (
-                <Text style={styles.meta}>{point.dateLabel}</Text>
-              ) : null}
-              <View style={styles.memberChartValues}>
-                {members.map((m) => (
-                  <Text key={m.userId} style={styles.meta}>
-                    {m.name}: {formatLegPoints(Number(point[m.userId] ?? 0))}
-                  </Text>
-                ))}
-              </View>
-            </View>
-          ))}
-        </Card>
-      ) : null}
+      <MemberPointsChart
+        title="Member points over time"
+        members={members}
+        points={memberChart}
+      />
 
       {members.length > 0 ? (
         <View style={styles.stack}>
@@ -331,8 +322,32 @@ export function GroupStatsPanel({
           ) : null}
         </View>
       ) : null}
+
+      <ShareStatsButton
+        title={groupName ? `${groupName} Stats` : "Group Stats"}
+        netPoints={summary.netGroupPoints}
+        legsPlayed={summary.totalBets}
+        winRate={summary.winRate}
+      />
     </View>
   );
+}
+
+/** Native share sheet with the same text summary web shares. */
+function ShareStatsButton(stats: {
+  title: string;
+  netPoints: number;
+  legsPlayed: number;
+  winRate: number | null;
+}) {
+  async function share() {
+    try {
+      await Share.share({ message: buildShareText(stats.title, stats) });
+    } catch {
+      // Dismissed or unavailable — nothing to do.
+    }
+  }
+  return <Button label={copy.stats.shareButton} variant="secondary" onPress={() => void share()} />;
 }
 
 let cachedUserStats: { token: string; data: UserStatsResponse } | null = null;
@@ -366,6 +381,7 @@ export function UserPerformancePanel({
   );
   const [loading, setLoading] = useState(!data);
   const [error, setError] = useState("");
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -403,10 +419,34 @@ export function UserPerformancePanel({
     return <EmptyState title={copy.stats.noUserLegs} />;
   }
 
-  const { summary, chart, groups } = data;
+  const filtered = filterUserStatsByGroup(data, selectedGroupId);
+  const { summary, chart, groups } = filtered;
+  const selectedGroup = groups.find((g) => g.groupId === selectedGroupId) ?? null;
 
   return (
     <View style={styles.stack}>
+      {groups.length > 1 ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={styles.filterRow}>
+            {[{ groupId: null, groupName: "All groups" }, ...groups].map((g) => {
+              const selected = g.groupId === selectedGroupId;
+              return (
+                <Pressable
+                  key={g.groupId ?? "all"}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  onPress={() => setSelectedGroupId(g.groupId)}
+                  style={[styles.filterChip, selected && styles.filterChipActive]}
+                >
+                  <Text style={[styles.filterText, selected && styles.filterTextActive]}>
+                    {g.groupName}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </ScrollView>
+      ) : null}
       <View style={styles.statGrid}>
         <StatCard label="Groups" value={String(summary.groupCount)} />
         <StatCard label="Rounds" value={String(summary.settledRounds)} />
@@ -433,24 +473,24 @@ export function UserPerformancePanel({
 
       <CategoryRow
         label="Competition"
-        favourite={data.competition.favourite}
-        bestWorst={data.competition.bestWorst}
+        favourite={filtered.competition.favourite}
+        bestWorst={filtered.competition.bestWorst}
       />
       <CategoryRow
         label="Bet type"
-        favourite={data.market.favourite}
-        bestWorst={data.market.bestWorst}
+        favourite={filtered.market.favourite}
+        bestWorst={filtered.market.bestWorst}
       />
       <CategoryRow
         label="Team"
-        favourite={data.team.favourite}
-        bestWorst={data.team.bestWorst}
+        favourite={filtered.team.favourite}
+        bestWorst={filtered.team.bestWorst}
       />
 
       <StakeProfit points={summary.netPoints} />
 
       <ChartPointsList
-        title="Cumulative points (all groups)"
+        title={selectedGroup ? `Cumulative points (${selectedGroup.groupName})` : "Cumulative points (all groups)"}
         minPoints={2}
         points={chart.map((p) => ({
           label: p.label,
@@ -458,6 +498,13 @@ export function UserPerformancePanel({
           roundPoints: p.roundPoints,
           cumulativePoints: p.cumulativePoints,
         }))}
+      />
+
+      <ShareStatsButton
+        title={selectedGroup ? `${selectedGroup.groupName} stats` : `${userName}'s performance`}
+        netPoints={summary.netPoints}
+        legsPlayed={summary.legsPlayed}
+        winRate={summary.winRate}
       />
 
       <Card>
@@ -493,6 +540,29 @@ export function UserPerformancePanel({
 const styles = StyleSheet.create({
   stack: {
     gap: 12,
+  },
+  filterRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  filterChip: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  filterChipActive: {
+    borderColor: colors.accent,
+    backgroundColor: colors.accentMuted,
+  },
+  filterText: {
+    color: colors.muted,
+    fontSize: 13,
+  },
+  filterTextActive: {
+    color: colors.accent,
+    fontWeight: "600",
   },
   statGrid: {
     flexDirection: "row",
@@ -578,31 +648,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     flex: 1,
-  },
-  chartRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    paddingVertical: 8,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    gap: 8,
-  },
-  chartRowLeft: {
-    flex: 1,
-  },
-  chartRowRight: {
-    alignItems: "flex-end",
-  },
-  chartLabel: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  memberChartValues: {
-    flex: 1,
-    alignItems: "flex-end",
-    gap: 2,
   },
   categoryCard: {
     borderWidth: 1,

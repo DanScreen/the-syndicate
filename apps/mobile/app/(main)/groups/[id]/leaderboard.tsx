@@ -24,7 +24,7 @@ export default function GroupLeaderboardScreen() {
         <Text style={styles.subtitle}>
           Group charts, stake converter, and member breakdowns.
         </Text>
-        <GroupStatsPanel groupId={data.group.id} token={token} />
+        <GroupStatsPanel groupId={data.group.id} groupName={data.group.name} token={token} />
       </View>
     </ScrollView>
   );

@@ -9,7 +9,12 @@ import type {
 } from "@tiki-acca/shared";
 import { ShareCard } from "@/components/share-card";
 import { StakeProfit } from "@/components/stake-profit";
-import { BRAND_COLORS, formatLegHighlight, formatLegPoints } from "@tiki-acca/shared";
+import {
+  BRAND_COLORS,
+  MEMBER_CHART_COLORS,
+  formatLegHighlight,
+  formatLegPoints,
+} from "@tiki-acca/shared";
 import type { LegHighlight } from "@tiki-acca/shared";
 import { useEffect, useState } from "react";
 import {
@@ -22,20 +27,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-
-// Distinct per-member line colors. Each must differ from BRAND_COLORS.accent
-// ("#38bdf8") and from each other — a prior version reused the same blue
-// literal for the second slot, so any group of 2+ showed identical lines.
-const MEMBER_COLORS = [
-  BRAND_COLORS.accent,
-  BRAND_COLORS.warning,
-  BRAND_COLORS.success,
-  "#a78bfa",
-  "#f472b6",
-  "#fb923c",
-  "#2dd4bf",
-  BRAND_COLORS.danger,
-];
 
 function StatCard({
   label,
@@ -398,7 +389,7 @@ export function GroupStats({ groupId, groupName }: { groupId: string; groupName?
                   type="monotone"
                   dataKey={member.userId}
                   name={member.name}
-                  stroke={MEMBER_COLORS[i % MEMBER_COLORS.length]}
+                  stroke={MEMBER_CHART_COLORS[i % MEMBER_CHART_COLORS.length]}
                   strokeWidth={2}
                   dot={{ r: 2 }}
                   connectNulls

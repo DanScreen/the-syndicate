@@ -378,3 +378,12 @@ export type MemberStatsResponse = {
   market: MemberCategoryStats;
   team: MemberCategoryStats;
 };
+
+export type BlockedMember = {
+  userId: string;
+  name: string;
+};
+
+export type BlockedMembersResponse = {
+  blocks: BlockedMember[];
+};

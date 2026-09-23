@@ -16,7 +16,7 @@ import {
   yourLegStatusMessage,
 } from "@tiki-acca/shared";
 import { useAuth } from "@/auth/AuthProvider";
-import { Button, Card, EmptyState, Screen, Title } from "@/components/ui";
+import { Button, Card, Screen, Title } from "@/components/ui";
 import { colors } from "@/config";
 import { copy } from "@tiki-acca/shared";
 import { router, useFocusEffect } from "expo-router";
@@ -73,6 +73,9 @@ export default function GroupsScreen() {
     }
   }
 
+  // Live points across all groups (same rule as each card and Performance).
+  const totalPoints = Number(groups.reduce((sum, g) => sum + g.points, 0).toFixed(2));
+
   if (loading && !hasLoadedRef.current) {
     return (
       <Screen>
@@ -96,11 +99,30 @@ export default function GroupsScreen() {
           <Text style={styles.greeting}>Hi, {user.firstName}</Text>
         ) : null}
         <Title>Your Groups</Title>
+        {groups.length > 0 ? (
+          <Text style={styles.summary}>
+            {groups.length} group{groups.length === 1 ? "" : "s"} ·{" "}
+            <Text style={pointsStyle(totalPoints)}>{formatLegPoints(totalPoints)}</Text> pts
+            total ·{" "}
+            <Text
+              style={styles.summaryLink}
+              accessibilityRole="link"
+              onPress={() => router.navigate("/(main)/performance")}
+            >
+              View performance
+            </Text>
+          </Text>
+        ) : null}
         {groups.length === 0 ? (
-          <EmptyState
-            title={copy.dashboard.emptyTitle}
-            message={copy.dashboard.emptyBody}
-          />
+          <Card>
+            <Text style={styles.welcomeTitle}>{copy.dashboard.welcomeTitle}</Text>
+            <Text style={styles.meta}>{copy.dashboard.welcomeIntro}</Text>
+            {copy.dashboard.welcomeSteps.map((step, index) => (
+              <Text key={step} style={styles.welcomeStep}>
+                {index + 1}. {step}
+              </Text>
+            ))}
+          </Card>
         ) : (
           groups.map((g) => {
             const legs = g.activeLegs ?? [];
@@ -282,6 +304,26 @@ const styles = StyleSheet.create({
   loadingText: {
     color: colors.muted,
     fontSize: 14,
+  },
+  summary: {
+    color: colors.muted,
+    fontSize: 14,
+    marginBottom: 12,
+  },
+  summaryLink: {
+    color: colors.accent,
+  },
+  welcomeTitle: {
+    color: colors.accent,
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 6,
+  },
+  welcomeStep: {
+    color: colors.muted,
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 6,
   },
   greeting: {
     color: colors.muted,
