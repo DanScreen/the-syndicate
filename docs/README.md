@@ -40,7 +40,7 @@ npm run dev   # http://localhost:3000
 | Brand, logo, design | [BRAND.md](./BRAND.md) |
 | Positioning, taglines, marketing copy | [MARKETING_BRIEF.md](./MARKETING_BRIEF.md) |
 | Platform admin & analytics | [specs/platform-admin.md](./specs/platform-admin.md) |
-| **Add an odds market or change odds provider** | [ODDS_PROVIDERS.md](./ODDS_PROVIDERS.md) — verified coverage limits; read before adding outrights |
+| **Add an odds market or change odds provider** | [ODDS_PROVIDERS.md](./ODDS_PROVIDERS.md) — verified coverage limits; read before adding outrights. Sourcing plan: [specs/odds-and-results-sourcing.md](./specs/odds-and-results-sourcing.md) |
 | Deploy, infra, or reduce GCP costs | [DEPLOYMENT.md](./DEPLOYMENT.md), [infra/terraform/README.md](../infra/terraform/README.md) |
 | Commands & conventions | [AGENTS.md](../AGENTS.md) |
 | Web app layout & scripts | [apps/web/README.md](../apps/web/README.md) |
@@ -95,6 +95,7 @@ docs/
     ├── group-chat.md                 ← Round banter thread + reactions + system messages (build priority)
     ├── group-chat-build-plan.md      ← Execution steps, model per step, session prompts
     ├── live-matchday.md              ← Per-leg result push + live round view (backlog)
+    ├── odds-and-results-sourcing.md  ← Multi-source odds + results under £100/month (proposed)
     ├── seasons-and-public-leaderboards.md ← Season windows, /leaderboards, monthly awards (backlog)
     ├── settle-recap-share.md         ← Settle-day recap share card / invite loop (backlog)
     └── streaks-and-badges.md         ← Pick streaks + badge catalogue (backlog)
