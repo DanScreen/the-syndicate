@@ -60,7 +60,7 @@ Match sync + odds warm: Cloud Scheduler (Terraform) → `POST /api/internal/sync
 | Blog | `apps/web/content/blog/*.mdx` (posts), `apps/web/src/lib/blog.ts`, `app/blog/` — publish = git push; `draft: true` hides in prod. SEO frontmatter-driven (canonical, OG image, `BlogPosting` JSON-LD, tag hubs). Strict authoring standards: [BLOG.md](./BLOG.md) |
 | SEO | `apps/web/src/app/sitemap.ts`, `robots.ts` — public pages set self-referencing `alternates.canonical` (`/`, `/about`, `/privacy`, `/cookies`, `/terms`, `/support`, blog). Auth/account routes are `noindex` and listed in `robots` disallow. Canonical host is `https://www.tikiacca.com` (`metadataBase`). Apex/`*.run.app` redirects or 403s in Search Console are expected (www via Cloudflare; origin auth blocks direct Cloud Run crawls). |
 | Favicon / app icons | `apps/web/src/app/icon.svg`, `favicon.ico` (16/32/48), `apple-icon.tsx` (`lib/brand/rondo-icon.tsx`) — extra-wide apex-up Triangle rondo disc; glyph source in `logo.tsx`. Metadata URLs use `?v=` cache-bust (`layout.tsx`) — bump when the mark changes |
-| Brand archive | `apps/web/src/lib/brand/archive.ts`, `logo-alternatives.tsx` (unused alternatives), `docs/brand/logo-archive/v6-wide-apex-up/` (previous live logo vectors + rollback instructions) |
+| Brand archive | `docs/brand/logo-archive/v6-wide-apex-up/` (previous live logo vectors + rollback instructions); rejected explorations live in git history — see [BRAND.md](./BRAND.md#archived-explorations) |
 | Group layout | `apps/web/src/app/groups/[id]/layout.tsx`, `group-layout-client.tsx`, `context/group-data.tsx` |
 | Scoring | `packages/shared/src/scoring.ts` |
 | Competitions catalogue | `packages/shared/src/competitions.ts` |

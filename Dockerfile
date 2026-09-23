@@ -20,7 +20,6 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV DATABASE_URL="postgresql://tikiacca:tikiacca@localhost:5432/tiki_acca"
 
-RUN mkdir -p apps/web/public
 RUN npm run db:generate
 RUN npm run build --workspace=@tiki-acca/web
 

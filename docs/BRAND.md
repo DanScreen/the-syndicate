@@ -4,7 +4,7 @@ Visual identity for Tiki Acca.
 
 **Renamed (July 2026):** **The Syndicate → Tiki Acca** — tiki-taka pun; everyone touches the ball, each member adds one leg. Groups are called **"groups"** (the noun "syndicate" is retired). Full rationale + rename scope: [specs/rename-tiki-acca.md](./specs/rename-tiki-acca.md). Legacy internals that deliberately keep old names: GCP resources (Cloud SQL `the_syndicate`, Cloud Run `the-syndicate-web`, artifact repo), mobile SecureStore keys, GitHub repo name, `lib/brand/archive.ts` history.
 
-**Palette (July 2026):** **Floodlight** — sky-blue accent on floodlit navy, chosen from the eight-scheme exploration (replaced Turf Green, which had doubled as both brand and success colour). Logo remains the **Triangle rondo** (see [brand/tiki-logo-review/](./brand/tiki-logo-review/LOGO_REVIEW.md)).
+**Palette (July 2026):** **Floodlight** — sky-blue accent on floodlit navy, chosen from the eight-scheme exploration (replaced Turf Green, which had doubled as both brand and success colour). Logo remains the **Triangle rondo**.
 
 **Messaging & copy direction:** [MARKETING_BRIEF.md](./MARKETING_BRIEF.md) — positioning territories, tagline options, homepage/about page structure (draft, tagline decision open).
 
@@ -139,13 +139,16 @@ Mobile strategy: [specs/mobile-apps.md](./specs/mobile-apps.md).
 
 ## Archived explorations
 
-Rejected logo and palette options are kept for reference (not linked in the app):
+Rejected logo explorations were removed from the tree in the repo-structure clean-up. They remain in git history; check out commit `9809a75` to see them:
 
-| Path | Contents |
+| Path at `9809a75` | Contents |
 |------|----------|
 | `apps/web/src/lib/brand/archive.ts` | Archived design concepts + logo variant metadata |
 | `apps/web/src/lib/brand/logo-alternatives.tsx` | SVG components: crest, pitch, monogram, nodes |
-| `docs/brand/logo-review/LOGO_REVIEW.md` | **July 2026** — AI-generated betslip concepts (2 won + 1 pending legs); not shipped |
+| `docs/brand/tiki-logo-review/` | **July 2026** — Triangle rondo selection board and variants |
+| `docs/brand/logo-review/` | **July 2026** — AI-generated betslip concepts (2 won + 1 pending legs); not shipped |
+
+The previous live logo vectors and rollback instructions are still in the tree at [`brand/logo-archive/v6-wide-apex-up/`](./brand/logo-archive/v6-wide-apex-up/).
 
 ---
 

@@ -1,7 +1,6 @@
 node_modules/
 .expo/
 .idea/
-dev
 .next/
 .turbo/
 dist/
@@ -16,3 +15,12 @@ tfplan
 .env.local
 .env*.local
 .DS_Store
+
+# Generated outputs (regenerate with the scripts that write them)
+scripts/preview-notification-emails.html
+marketing-posts/gallery.html
+marketing-posts/square/
+marketing-posts/story/
+marketing-posts/x-twitter/
+marketing-posts/app-store/
+marketing-posts/app-store-6.5/

@@ -1,7 +1,8 @@
 # Design review triage — decisions
 
-_Date: 2026-07-18 · Sources: [DESIGN_REVIEW_fable-5.md](./DESIGN_REVIEW_fable-5.md) [F] and
-[DESIGN_REVIEW_opus-4-8.md](./DESIGN_REVIEW_opus-4-8.md) [O] · Sign-off: Daniel_
+_Date: 2026-07-18 · Sources: two independent design reviews, [F] and [O]. The full review
+texts (`docs/DESIGN_REVIEW_fable-5.md`, `docs/DESIGN_REVIEW_opus-4-8.md`) are in git history
+at commit `9809a75` · Sign-off: Daniel_
 
 Findings from both reviews, de-duplicated and triaged. The colour/token findings from
 both reviews were already closed by the Floodlight re-theme (semantic tokens, literal
