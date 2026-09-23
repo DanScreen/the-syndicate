@@ -1,7 +1,7 @@
 "use client";
 
-import { GroupThread } from "@/components/group-chat";
-import { useGroupData } from "@/context/group-data";
+import { GroupThread } from "@/components/group/chat";
+import { useGroupData } from "@tiki-acca/client";
 import { useSession } from "next-auth/react";
 
 export default function GroupChatPage() {

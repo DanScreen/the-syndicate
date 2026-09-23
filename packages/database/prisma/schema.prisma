@@ -199,12 +199,86 @@ model Match {
   status         String    @default("SCHEDULED")
   homeGoals      Int?
   awayGoals      Int?
+  /// First time we observed FINISHED (or equivalent) from the results feed.
+  finishedAt     DateTime?
+  /// Last time the terminal FT score (homeGoals/awayGoals) changed from the
+  /// feed. Auto-settle waits RESULT_CONFIRMATION_MS after this (capped by
+  /// RESULT_CONFIRMATION_MAX_MS from finishedAt) so VAR / disallowed-goal
+  /// corrections can land before we write outcomes.
+  scoreStableSince DateTime?
+  /// When true, sync will not overwrite status/score — admin override wins.
+  scoreLocked    Boolean   @default(false)
   externalOddsId String?   @unique
   externalDataId Int?      @unique
   lastSyncedAt   DateTime?
+  /// Half-time score (canonical orientation), when a provider reports it.
+  homeGoalsHt    Int?
+  awayGoalsHt    Int?
+  /// True when the match went to extra time / penalties. Goals stay 90-minute;
+  /// corners stats cover the whole match, so corners legs go to admin.
+  wentToExtraTime Boolean  @default(false)
+  /// Canonical match stats `{ corners, yellowCards, redCards }` each
+  /// `{ home, away }` (API-Football only). Stats-based legs wait until these
+  /// are unchanged for STATS_CONFIRMATION_MS.
+  stats          Json?
+  statsStableSince DateTime?
+  /// How the canonical result was reached: agreed | single | conflict | abstain.
+  /// `conflict` / `abstain` hold auto-settle until sources agree or an admin locks.
+  resultSource   String?
+  /// Last failed attempt to map this match to an API-Football fixture
+  /// (negative cache so unmapped matches are retried hourly, not every run).
+  apiFootballCheckedAt DateTime?
   legs           Leg[]
+  observations   MatchObservation[]
 
   @@index([competitionId, kickoff])
+}
+
+/// One results provider's view of a match (docs/specs/odds-and-results-sourcing.md §3.1).
+/// `Match` stays canonical; resolveMatchConsensus() writes it from these rows.
+/// Scores are stored in the Match's home/away orientation.
+model MatchObservation {
+  id           String   @id @default(cuid())
+  matchId      String
+  /// api_football | football_data
+  provider     String
+  /// Provider fixture id.
+  externalId   String
+  /// True when the provider lists the fixture with home/away swapped.
+  reversed     Boolean  @default(false)
+  /// Normalised to football-data vocabulary (SCHEDULED, IN_PLAY, FINISHED, POSTPONED, …).
+  status       String
+  /// 90-minute score. Null when the provider can't give the regulation split.
+  homeGoals90  Int?
+  awayGoals90  Int?
+  /// Latest score including extra time (live score while in play).
+  homeGoalsEnd Int?
+  awayGoalsEnd Int?
+  homeGoalsHt  Int?
+  awayGoalsHt  Int?
+  extraTime    Boolean  @default(false)
+  stats        Json?
+  observedAt   DateTime @default(now())
+  /// Last change to any settled field (status, scores, stats).
+  changedAt    DateTime @default(now())
+  match        Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, provider])
+  @@unique([provider, externalId])
+}
+
+/// Team-name equivalences across providers (normalised names), auto-learned
+/// when a fixture maps unambiguously on one side.
+model TeamAlias {
+  id            String   @id @default(cuid())
+  competitionId String?
+  alias         String
+  canonical     String
+  /// auto | admin
+  source        String
+  createdAt     DateTime @default(now())
+
+  @@unique([alias, canonical])
 }
 
 model AnalyticsEvent {

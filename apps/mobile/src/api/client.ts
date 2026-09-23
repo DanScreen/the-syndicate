@@ -1,16 +1,8 @@
 import { API_URL } from "@/config";
+import { ApiError, requestJson } from "@tiki-acca/client";
 import { EMAIL_UNVERIFIED_CODE } from "@tiki-acca/shared";
 
-export class ApiError extends Error {
-  status: number;
-  code?: string;
-
-  constructor(status: number, message: string, code?: string) {
-    super(message);
-    this.status = status;
-    this.code = code;
-  }
-}
+export { ApiError };
 
 let onEmailUnverified: (() => void) | null = null;
 
@@ -23,23 +15,15 @@ export function setEmailUnverifiedListener(listener: (() => void) | null) {
   onEmailUnverified = listener;
 }
 
-function formatError(error: unknown): string {
-  if (typeof error === "string") return error;
-  if (error && typeof error === "object") {
-    const obj = error as Record<string, unknown>;
-    if (typeof obj.formErrors === "object" && Array.isArray((obj.formErrors as string[]))) {
-      const msgs = (obj.formErrors as string[]).join(", ");
-      if (msgs) return msgs;
-    }
-    if (typeof obj.fieldErrors === "object" && obj.fieldErrors) {
-      const parts = Object.entries(obj.fieldErrors as Record<string, string[]>)
-        .flatMap(([field, msgs]) => msgs.map((m) => `${field}: ${m}`));
-      if (parts.length) return parts.join("; ");
-    }
+/** `.catch` handler: flags an `email_unverified` 403 to the listener, then rethrows. */
+export function reportEmailUnverified(err: unknown): never {
+  if (err instanceof ApiError && err.status === 403 && err.code === EMAIL_UNVERIFIED_CODE) {
+    onEmailUnverified?.();
   }
-  return "Request failed";
+  throw err;
 }
 
+/** One-off API call with an optional Bearer token (`body` is a JSON string). */
 export async function api<T>(
   path: string,
   options: RequestInit & { token?: string | null } = {}
@@ -50,19 +34,5 @@ export async function api<T>(
     ...(initHeaders as Record<string, string> | undefined),
   };
   if (token) headers.Authorization = `Bearer ${token}`;
-
-  const res = await fetch(`${API_URL}${path}`, { ...init, headers });
-  const data = await res.json().catch(() => ({}));
-
-  if (!res.ok) {
-    const code = typeof data.code === "string" ? data.code : undefined;
-    if (res.status === 403 && code === EMAIL_UNVERIFIED_CODE) onEmailUnverified?.();
-    throw new ApiError(
-      res.status,
-      formatError(data.error ?? data.message ?? "Request failed"),
-      code
-    );
-  }
-
-  return data as T;
+  return requestJson<T>(`${API_URL}${path}`, { ...init, headers }).catch(reportEmailUnverified);
 }

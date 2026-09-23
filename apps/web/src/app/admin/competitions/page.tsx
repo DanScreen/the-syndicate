@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { AdminCompetitionsPanel } from "@/components/admin-competitions";
-import { AdminPageShell } from "@/components/admin-page-shell";
+import { AdminCompetitionsPanel } from "@/components/admin/competitions";
+import { AdminPageShell } from "@/components/admin/page-shell";
 
 export const metadata: Metadata = {
   title: "Competitions",

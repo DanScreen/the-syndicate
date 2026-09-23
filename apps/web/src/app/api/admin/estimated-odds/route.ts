@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/admin";
+import { requireAdmin } from "@/lib/admin/auth";
 import { estimatedOddsEnabled } from "@/lib/odds/config";
 import {
   getEstimatedOddsAdminToggle,

@@ -1,6 +1,6 @@
 "use client";
 
-import { AppHeader } from "@/components/header";
+import { AppHeader } from "@/components/layout/header";
 import { greetingFirstName } from "@/lib/user-display";
 import { useSession } from "next-auth/react";
 import { MarketingHeader } from "./marketing-header";

@@ -22,11 +22,12 @@ Core loop and MVP polish are **shipped**:
 - **Acca lock** with best combined bookmaker + ranked bookmaker list at lock
 - **Real bookmaker betslip deeplinks** (Odds API `includeLinks`; hubs labelled last-resort; per-leg Open at recommended book)
 - **Match table** + football-data.org sync cron + hands-off auto-settle
+- **Two-source results consensus** (football-data.org + API-Football) — ends manual settlement for League One/Two, Carabao Cup, Europa League, CL qualifiers, Nations League, FA Cup; corners markets auto-settle from match stats — [specs/odds-and-results-sourcing.md](./specs/odds-and-results-sourcing.md) Phases 1–2
 - **Email + push notifications** — lock, settle, pick reminders (T−2h); preferences UI — [specs/notifications.md](./specs/notifications.md)
 - **Unit-stake points** (win: `odds−1`, loss: `−1`, void: `0`)
 - **Group stats** + **member stats** (charts, favourites, best/worst)
 - **Cross-group performance** page (`/performance`) + share cards
-- **Split app layout** — Groups home, Performance nav, group tabs (Round / Leaderboard / Performance)
+- **Split app layout** — Groups home, Performance nav, group tabs (Bet / Leaderboard / History / Chat)
 - Locked round UX: in-progress leg results, locked odds only (no bookmaker comparison after lock)
 - **Early settle on first lost leg** — group −1 immediately; remaining legs resolve afterward
 - **Auto-settle reliability** — 5-min match sync, cache bypass on cron, progressive leg outcomes before acca settles
@@ -47,7 +48,7 @@ Core loop and MVP polish are **shipped**:
 | # | Feature | Type | Notes |
 |---|---------|------|-------|
 | 1 | **Validate with real users** | Product | Run 2–3 friend groups through full loop on prod |
-| 2 | **Season readiness (2026–27)** | Mostly ops | Leagues can be enabled via `/admin/competitions` when ready; remaining code: FA Cup + quiet-period empty states (Carabao Cup / EFL Cup shipped, manual settlement) — [specs/season-readiness.md](./specs/season-readiness.md) |
+| 2 | **Season readiness (2026–27)** | Mostly ops | Leagues can be enabled via `/admin/competitions` when ready; remaining code: FA Cup + quiet-period empty states (Carabao Cup / EFL Cup and UEFA Nations League shipped, manual settlement) — [specs/season-readiness.md](./specs/season-readiness.md) |
 | 3 | **Live matchday** | Code | Per-leg result push + acca-won push + live round view — [specs/live-matchday.md](./specs/live-matchday.md) |
 | 4 | **Settle-day recap share card** | Code | Auto recap image per settled round; invite loop — [specs/settle-recap-share.md](./specs/settle-recap-share.md) |
 | 5 | **Affiliate links** | Code + ops | Bookmaker affiliate programmes (start applications early — approval takes weeks) — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md) Phase A |
@@ -60,6 +61,7 @@ Core loop and MVP polish are **shipped**:
 | 12 | Terraform CI GCS permissions fix | Infra | App deploy unaffected |
 | 13 | **Competitive proof messaging** | Brand/copy | Future secondary theme: **“Think you know football? Prove it. Real picks. Real odds. Real results.”** Keep the social group headline primary; planned uses and guardrails in [MARKETING_BRIEF.md](./MARKETING_BRIEF.md#territory-d--prove-it-competitive-proof-approved-for-future-use) |
 | 14 | **Solo accas — finish verification** | Code | Feature shipped (phases 1–3, [spec](./specs/solo-unlimited-legs.md)). Remaining: route-guard tests for `POST /api/rounds/[id]/lock` and one manual end-to-end solo run. Solo on-ramp UX (dashboard entry point, invite conversion) deliberately deferred to a later spec |
+| 15 | **Odds & results sourcing v2** | Code + ops | **Phases 1–2 done 2026-09-23** (two-source results consensus, API-Football-only competitions auto-settle, corners auto-settle). **Ops:** add `API_FOOTBALL_KEY` GitHub secret + keep API-Football Pro. Next: Phase 0 remainder (bake-off), Phase 3 odds depth incl. bet365, Phase 4 AI tie-breaker; cards and `to_qualify` still admin-settled. Budget ≤ £100/month for both — [specs/odds-and-results-sourcing.md](./specs/odds-and-results-sourcing.md) |
 
 ---
 
@@ -110,7 +112,7 @@ Native **iPhone** and **Android** apps via Expo (`apps/mobile/`), targeting **fu
 
 **Variables (GitHub):** `EMAIL_FROM` (optional).
 
-**Secrets (GitHub):** `ODDS_API_KEY`, `FOOTBALL_DATA_API_KEY`, `DATABASE_URL`, `AUTH_SECRET`, `CRON_SECRET` (optional — seed Terraform / Secret Manager), `RESEND_API_KEY` (optional), `ADMIN_EMAILS` (optional, comma-separated developer emails), `EXPO_TOKEN` (optional — mobile EAS CI), GCP deploy secrets.
+**Secrets (GitHub):** `ODDS_API_KEY`, `FOOTBALL_DATA_API_KEY`, `API_FOOTBALL_KEY`, `DATABASE_URL`, `AUTH_SECRET`, `CRON_SECRET` (optional — seed Terraform / Secret Manager), `RESEND_API_KEY` (optional), `ADMIN_EMAILS` (optional, comma-separated developer emails), `EXPO_TOKEN` (optional — mobile EAS CI), GCP deploy secrets.
 
 **Local odds:** `ODDS_API_KEY` in `apps/web/.env.local` — omit for mock fixtures.
 

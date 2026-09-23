@@ -1,5 +1,5 @@
-import { AdminPageShell } from "@/components/admin-page-shell";
-import { AdminUnverifiedAccounts } from "@/components/admin-unverified-accounts";
+import { AdminPageShell } from "@/components/admin/page-shell";
+import { AdminUnverifiedAccounts } from "@/components/admin/unverified-accounts";
 import { computeUnverifiedAccounts } from "@/lib/admin/compute-unverified-accounts";
 import type { Metadata } from "next";
 

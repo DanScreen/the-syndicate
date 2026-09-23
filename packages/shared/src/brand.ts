@@ -23,6 +23,21 @@ export const BRAND_COLORS = {
   onAccent: "#000000",
 } as const;
 
+/**
+ * Per-member line colours on the group points chart (web and mobile). Each must
+ * differ from the others so a group of 2+ never shows identical lines.
+ */
+export const MEMBER_CHART_COLORS = [
+  BRAND_COLORS.accent,
+  BRAND_COLORS.warning,
+  BRAND_COLORS.success,
+  "#a78bfa",
+  "#f472b6",
+  "#fb923c",
+  "#2dd4bf",
+  BRAND_COLORS.danger,
+] as const;
+
 /** Shared marketing copy used by web and native entry screens. */
 export const BRAND_TAGLINE = "Social group accas";
 export const BRAND_HEADLINE = "Your Mates. One Acca. Every Leg Counts.";

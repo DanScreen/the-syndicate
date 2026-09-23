@@ -9,6 +9,36 @@ export const POINTS = {
 
 export const DEFAULT_STAKE_GBP = 10;
 
+/**
+ * How long a FINISHED score must remain unchanged before auto-settle writes
+ * leg outcomes. football-data.org (and similar feeds) sometimes publish a
+ * provisional FT score and correct it minutes later (disallowed goals / VAR).
+ * Each feed score change resets this stability clock (`Match.scoreStableSince`).
+ */
+export const RESULT_CONFIRMATION_MS = 60 * 60 * 1000;
+
+/**
+ * Hard cap from first FINISHED observation (`Match.finishedAt`). Even if the
+ * feed keeps tweaking the score, we confirm once this elapses so settlement
+ * cannot stall indefinitely.
+ */
+export const RESULT_CONFIRMATION_MAX_MS = 4 * 60 * 60 * 1000;
+
+/**
+ * How long after first FINISHED we keep re-checking the feed score against
+ * already-written leg outcomes. Late VAR / disallowed-goal corrections that
+ * land after the stability window still auto-correct points via reconciliation
+ * until this horizon expires (admin lock still wins immediately).
+ */
+export const RESULT_RECONCILE_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Stats-based legs (corners) wait until the provider's match statistics have
+ * been unchanged this long after FT. Stats get revised after the whistle more
+ * often than scores (docs/specs/odds-and-results-sourcing.md §3.1).
+ */
+export const STATS_CONFIRMATION_MS = 2 * 60 * 60 * 1000;
+
 /** Owner-selectable legs each member submits per round. */
 export const LEGS_PER_MEMBER_OPTIONS = [1, 2, 3] as const;
 export type LegsPerMember = (typeof LEGS_PER_MEMBER_OPTIONS)[number];

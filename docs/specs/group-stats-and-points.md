@@ -41,7 +41,7 @@ Member totals on a winning acca **do not** sum to the group total (e.g. legs 1.6
 
 ## Group summary (shipped)
 
-**"Group stats"** section on group page via `group-stats.tsx`.
+**"Group stats"** section on group page via `components/group/stats.tsx`.
 
 | Stat | Definition |
 |------|------------|
@@ -116,7 +116,7 @@ Key files: `apps/web/src/lib/stats/` — see [CURRENT_STATE.md](../CURRENT_STATE
 ### Phase 4 — Polish ✅
 
 - [x] Cross-group performance page (`GET /api/user/stats`, `/performance`, `dashboard-stats.tsx`)
-- [x] Share cards (`share-card.tsx` on `/performance` + group Performance tab)
+- [x] Share cards (`share-card.tsx` on `/performance` + group Leaderboard stats section)
 
 ---
 

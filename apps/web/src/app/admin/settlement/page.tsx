@@ -1,5 +1,5 @@
-import { AdminPageShell } from "@/components/admin-page-shell";
-import { AdminSettlement } from "@/components/admin-settlement";
+import { AdminPageShell } from "@/components/admin/page-shell";
+import { AdminSettlement } from "@/components/admin/settlement";
 import {
   computeSettlementQueue,
   OVERDUE_AFTER_HOURS,
@@ -19,7 +19,7 @@ export default async function AdminSettlementPage() {
   return (
     <AdminPageShell
       title="Settlement Queue"
-      description={`Locked rounds awaiting system settlement. Legs still unresolved ${OVERDUE_AFTER_HOURS} hours after kickoff are flagged — settle those rounds manually once you've verified the results.`}
+      description={`Locked rounds awaiting system settlement. Legs still unresolved ${OVERDUE_AFTER_HOURS} hours after kickoff are flagged (allows ~2h match + 1h FT confirmation). Settle manually once you've verified the results, or override a wrong score under Admin → Results.`}
       path="/admin/settlement"
     >
       <AdminSettlement rounds={rounds} />

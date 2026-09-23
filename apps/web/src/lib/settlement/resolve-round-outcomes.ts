@@ -1,15 +1,36 @@
 import { postLegResultMessage } from "@/lib/chat/system-messages";
 import { getMatchResultForLegFromDb } from "@/lib/results/match-store";
-import { resolveLegOutcome } from "@/lib/results/resolve-leg";
+import {
+  isMatchResultConfirmed,
+  isResultHeldForReview,
+} from "@/lib/results/result-confirmation";
+import { isCornersMarket, resolveLegOutcome } from "@/lib/results/resolve-leg";
 import { prisma } from "@tiki-acca/database";
 import type { Leg } from "@prisma/client";
-import { formatFixtureLabel, isOutrightFixtureId, type LegOutcome } from "@tiki-acca/shared";
+import {
+  formatFixtureLabel,
+  isOutrightFixtureId,
+  RESULT_CONFIRMATION_MS,
+  STATS_CONFIRMATION_MS,
+  type LegOutcome,
+} from "@tiki-acca/shared";
 
 export type PendingLeg = { legId: string; reason: string };
 
 export type ResolveRoundResult =
   | { ready: true; outcomeMap: Map<string, LegOutcome> }
   | { ready: false; pending: PendingLeg[]; resolved: Map<string, LegOutcome> };
+
+function cornersPendingReason(leg: Leg, extraTime: boolean, hasStats: boolean): string {
+  if (extraTime) {
+    return `${formatFixtureLabel(leg)} went to extra time — corners leg needs manual settlement`;
+  }
+  if (!hasStats) {
+    return `No corners stats yet for ${formatFixtureLabel(leg)} — settle by hand if the provider has none`;
+  }
+  const hours = Math.round(STATS_CONFIRMATION_MS / 3_600_000);
+  return `Corners for ${formatFixtureLabel(leg)} — waiting for match stats to stay unchanged for ${hours}h`;
+}
 
 export async function resolveRoundOutcomes(
   legs: Leg[]
@@ -45,8 +66,36 @@ export async function resolveRoundOutcomes(
       continue;
     }
 
+    // Results providers disagree (or none has a 90' score) — admin decides.
+    if (isResultHeldForReview(matchData.match)) {
+      pending.push({
+        legId: leg.id,
+        reason:
+          matchData.match.resultSource === "conflict"
+            ? `Results sources disagree for ${formatFixtureLabel(leg)} — check /admin/results`
+            : `No 90-minute score for ${formatFixtureLabel(leg)} — check /admin/results`,
+      });
+      continue;
+    }
+
+    // Hold auto-settle until the feed's FT score has been stable long enough
+    // (disallowed goals / VAR corrections reset the stability clock).
+    if (!isMatchResultConfirmed(matchData.match)) {
+      const mins = Math.ceil(RESULT_CONFIRMATION_MS / 60_000);
+      pending.push({
+        legId: leg.id,
+        reason: `Result confirming for ${formatFixtureLabel(leg)} — waiting for FT score to stay unchanged for ${mins}m`,
+      });
+      continue;
+    }
+
     const outcome = resolveLegOutcome(
-      { marketType: leg.marketType, selectionId: leg.selectionId },
+      {
+        marketType: leg.marketType,
+        selectionId: leg.selectionId,
+        homeTeam: leg.homeTeam,
+        awayTeam: leg.awayTeam,
+      },
       matchData.result
     );
 
@@ -54,9 +103,15 @@ export async function resolveRoundOutcomes(
       pending.push({
         legId: leg.id,
         reason:
-          matchData.result.status === "FINISHED"
-            ? `Could not resolve ${leg.marketType} (${leg.selectionId})`
-            : `Match not finished (${matchData.result.status})`,
+          matchData.result.status !== "FINISHED"
+            ? `Match not finished (${matchData.result.status})`
+            : isCornersMarket(leg.marketType)
+              ? cornersPendingReason(
+                  leg,
+                  matchData.result.extraTime === true,
+                  matchData.match.stats !== null
+                )
+              : `Could not resolve ${leg.marketType} (${leg.selectionId})`,
       });
       continue;
     }

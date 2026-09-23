@@ -11,6 +11,8 @@ docs
 !.env.example
 apps/mobile/*
 !apps/mobile/package.json
+tools/marketing/*
+!tools/marketing/package.json
 *.db
 *.db-journal
 .DS_Store

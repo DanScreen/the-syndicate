@@ -1,5 +1,6 @@
 import { requireSession } from "@/lib/api-auth";
 import { prisma } from "@tiki-acca/database";
+import type { BlockedMembersResponse } from "@tiki-acca/shared";
 import { NextResponse } from "next/server";
 
 /** List members this user has blocked — powers the unblock UI. */
@@ -15,5 +16,5 @@ export async function GET() {
 
   return NextResponse.json({
     blocks: blocks.map((b) => ({ userId: b.blocked.id, name: b.blocked.name })),
-  });
+  } satisfies BlockedMembersResponse);
 }

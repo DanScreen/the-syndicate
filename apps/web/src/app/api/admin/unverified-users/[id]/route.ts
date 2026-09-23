@@ -1,5 +1,5 @@
 import { isDeletedAccountEmail, removeUnverifiedAccount } from "@/lib/account-removal";
-import { isAdminEmail, requireAdmin } from "@/lib/admin";
+import { isAdminEmail, requireAdmin } from "@/lib/admin/auth";
 import { emailDomain, emailDomainAcceptsMail } from "@/lib/email-domain";
 import { sendVerificationEmail } from "@/lib/email-verification";
 import { prisma } from "@tiki-acca/database";

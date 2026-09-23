@@ -17,6 +17,10 @@ flowchart TB
   Web --> Stats[lib/stats]
   Cron[Cloud Scheduler] -->|sync-matches, warm-odds-cache| Web
   Mobile[apps/mobile] -.-> Web
+  Web --> Client[packages/client]
+  Mobile --> Client
+  Client --> Shared
+  Mobile --> Shared
 ```
 
 ---
@@ -46,7 +50,9 @@ flowchart TB
 | **GroupMember** | Membership, group role, group-scoped points, chat `lastReadMessageAt` |
 | **Round** | One acca: group-scoped `betNumber`; open → locked → settled; `legsPerMember` snapshot; `accaBookmakerRankings` JSON at lock |
 | **Leg** | Pick slot (`legIndex` 1..quota) per member: fixture, `competitionId`, market, odds, outcome |
-| **Match** | Canonical fixture result (football-data.org sync); reused for auto-settle |
+| **Match** | Canonical fixture result, written by consensus over provider observations; `finishedAt` + `scoreStableSince` (1h stability, 4h max); 24h feed→leg reconcile; `scoreLocked` for admin overrides; `stats` (corners) for stats markets; reused for auto-settle |
+| **MatchObservation** | One provider's latest reading of a Match (football-data.org, API-Football); `resolveMatchConsensus` combines them — [specs/odds-and-results-sourcing.md](./specs/odds-and-results-sourcing.md) |
+| **TeamAlias** | Learned team-name equivalences for mapping provider fixtures onto Matches |
 | **AnalyticsEvent** | Product analytics: `sign_up`, `login`, `page_view` |
 | **RoundMessage** | Group-scoped user/system chat message; optional `roundId` for bet context and `legId` for pick announcements |
 | **MessageReaction** | Constrained emoji reaction, unique per message/user/emoji |
@@ -81,14 +87,14 @@ Members edit their own leg via `PATCH /api/legs/[id]` while the round is `open` 
 → `packages/shared/src/scoring.ts` · [specs/platform-admin.md](./specs/platform-admin.md)
 
 ### Stats
-Computed on read from settled rounds. Group + member + **cross-group user** APIs; Recharts on group Performance tab and `/performance` page. Share cards for copy/Web Share.
+Computed on read from settled rounds. Group + member + **cross-group user** APIs; Recharts on group Leaderboard (stats section) and `/performance` page. Share cards for copy/Web Share.
 
 → `apps/web/src/lib/stats/`
 
 ### Group chat
 Each group has one permanent polling thread in a dedicated web/mobile Chat tab. `RoundMessage.groupId` owns every message; nullable `roundId` preserves **Bet #N** context for lifecycle system events while user messages remain group-wide. Existing round messages were backfilled by `20260718200000_group_scoped_chat`. Lifecycle messages are persisted at event time and gated by the lock/settlement atomic claims. Reactions attach to messages; pick rows mirror the latest announcement selected by `legId`. `GroupMember.lastReadMessageAt` drives Chat-tab and group-card unread badges. Chat push is push-only, sender-suppressed, foreground-suppressed from active polling, limited to one delivery per user/group ten-minute bucket, and deep-links to Chat.
 
-→ `apps/web/src/lib/chat/` · `apps/web/src/components/group-chat.tsx` · `apps/mobile/src/components/group-chat.tsx` · [spec](./specs/group-chat.md)
+→ `apps/web/src/lib/chat/` · `apps/web/src/components/group/chat.tsx` · `apps/mobile/src/components/group-chat.tsx` · [spec](./specs/group-chat.md)
 
 ### Web UI layout
 - **Header:** Logo + “Social Group Betting” tagline; `AppNav` — Home → About → Groups → Performance → Admin (admins) → Blog (rightmost); greeting **Hi, {name}** → `/account`; logo + Home → `/`
@@ -128,7 +134,7 @@ Production URL: **https://www.tikiacca.com** (Cloudflare → Cloud Run, `europe-
 
 Expo app in `apps/mobile/` — member-facing parity includes the round lifecycle, stats, history, notifications, and group chat.
 
-**Target:** functional parity with the website for member-facing flows. **Strategy:** [specs/mobile-apps.md](./specs/mobile-apps.md) — API-first, shared `packages/shared` contracts, EAS release for iOS + Android.
+**Target:** functional parity with the website for member-facing flows. **Strategy:** [specs/mobile-apps.md](./specs/mobile-apps.md) — API-first, shared `packages/shared` contracts (types, view logic such as `deriveRoundView`, copy), shared `packages/client` React hooks for data (group data, chat, leg picker), EAS release for iOS + Android. Each app keeps only its UI.
 
 **Auth:** `POST /api/auth/mobile/sign-in` → revocable bearer session; `POST /api/auth/mobile/sign-out` revokes it; `requireSession()` accepts Bearer or Auth.js cookie.
 

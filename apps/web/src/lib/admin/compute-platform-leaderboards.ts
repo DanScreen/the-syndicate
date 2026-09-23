@@ -1,4 +1,10 @@
 import { prisma } from "@tiki-acca/database";
+import { isDemoAccountEmail, isDemoGroup } from "@/lib/admin/demo-accounts";
+import {
+  groupNetPoints,
+  statsRoundWhere,
+  type RoundWithLegs,
+} from "@/lib/stats/helpers";
 
 export type GroupLeaderboardEntry = {
   rank: number;
@@ -26,15 +32,94 @@ export type PlatformLeaderboards = {
   players: PlayerLeaderboardEntry[];
 };
 
+export type GroupLeaderboardSource = {
+  id: string;
+  name: string;
+  ownerName: string;
+  ownerEmail?: string | null;
+  inviteCode?: string | null;
+  members: Array<{ legsWon: number; legsLost: number }>;
+  rounds: RoundWithLegs[];
+};
+
+/**
+ * Rank groups by group acca points (`groupNetPoints`) — the same metric as
+ * group Performance / dashboard "Group points". Do not sum member leg points:
+ * on a win, member totals do not equal the group total; on a loss the group
+ * is −1 while winning members can still be positive.
+ *
+ * Marketing demo accounts / "The Thursday Club" are omitted.
+ */
+export function rankGroupsByAccaPoints(
+  groups: GroupLeaderboardSource[]
+): GroupLeaderboardEntry[] {
+  const rows = groups
+    .filter(
+      (g) =>
+        !isDemoGroup({
+          inviteCode: g.inviteCode,
+          ownerEmail: g.ownerEmail,
+        })
+    )
+    .map((g) => ({
+      groupId: g.id,
+      name: g.name,
+      ownerName: g.ownerName,
+      memberCount: g.members.length,
+      totalPoints: groupNetPoints(g.rounds),
+      legsWon: g.members.reduce((sum, m) => sum + m.legsWon, 0),
+      legsLost: g.members.reduce((sum, m) => sum + m.legsLost, 0),
+    }))
+    .filter((g) => g.memberCount > 0)
+    .sort((a, b) => b.totalPoints - a.totalPoints || a.name.localeCompare(b.name));
+
+  return rows.map((row, i) => ({
+    rank: i + 1,
+    ...row,
+  }));
+}
+
+export type PlayerLeaderboardSource = {
+  id: string;
+  name: string;
+  email: string;
+  totalPoints: number;
+  legsWon: number;
+  legsLost: number;
+  groupCount: number;
+};
+
+/** Rank players by stored total points; omit marketing demo accounts. */
+export function rankPlayersByPoints(
+  users: PlayerLeaderboardSource[]
+): PlayerLeaderboardEntry[] {
+  return users
+    .filter((u) => !isDemoAccountEmail(u.email))
+    .map((u, i) => ({
+      rank: i + 1,
+      userId: u.id,
+      name: u.name,
+      totalPoints: u.totalPoints,
+      legsWon: u.legsWon,
+      legsLost: u.legsLost,
+      groupCount: u.groupCount,
+    }));
+}
+
 export async function computePlatformLeaderboards(): Promise<PlatformLeaderboards> {
   const [groupRecords, users] = await Promise.all([
     prisma.group.findMany({
       select: {
         id: true,
         name: true,
-        owner: { select: { name: true } },
+        inviteCode: true,
+        owner: { select: { name: true, email: true } },
         members: {
-          select: { points: true, legsWon: true, legsLost: true },
+          select: { legsWon: true, legsLost: true },
+        },
+        rounds: {
+          where: statsRoundWhere,
+          include: { legs: true },
         },
       },
     }),
@@ -42,6 +127,7 @@ export async function computePlatformLeaderboards(): Promise<PlatformLeaderboard
       select: {
         id: true,
         name: true,
+        email: true,
         totalPoints: true,
         legsWon: true,
         legsLost: true,
@@ -51,33 +137,29 @@ export async function computePlatformLeaderboards(): Promise<PlatformLeaderboard
     }),
   ]);
 
-  const groupRows = groupRecords
-    .map((g) => ({
-      groupId: g.id,
+  const groups = rankGroupsByAccaPoints(
+    groupRecords.map((g) => ({
+      id: g.id,
       name: g.name,
+      inviteCode: g.inviteCode,
       ownerName: g.owner.name,
-      memberCount: g.members.length,
-      totalPoints: g.members.reduce((sum, m) => sum + m.points, 0),
-      legsWon: g.members.reduce((sum, m) => sum + m.legsWon, 0),
-      legsLost: g.members.reduce((sum, m) => sum + m.legsLost, 0),
+      ownerEmail: g.owner.email,
+      members: g.members,
+      rounds: g.rounds,
     }))
-    .filter((g) => g.memberCount > 0)
-    .sort((a, b) => b.totalPoints - a.totalPoints);
+  );
 
-  const groups: GroupLeaderboardEntry[] = groupRows.map((row, i) => ({
-    rank: i + 1,
-    ...row,
-  }));
-
-  const players: PlayerLeaderboardEntry[] = users.map((u, i) => ({
-    rank: i + 1,
-    userId: u.id,
-    name: u.name,
-    totalPoints: u.totalPoints,
-    legsWon: u.legsWon,
-    legsLost: u.legsLost,
-    groupCount: u._count.memberships,
-  }));
+  const players = rankPlayersByPoints(
+    users.map((u) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      totalPoints: u.totalPoints,
+      legsWon: u.legsWon,
+      legsLost: u.legsLost,
+      groupCount: u._count.memberships,
+    }))
+  );
 
   return { groups, players };
 }

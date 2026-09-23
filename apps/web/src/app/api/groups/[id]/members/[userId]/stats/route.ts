@@ -1,4 +1,6 @@
 import { requireSession } from "@/lib/api-auth";
+import { serialized } from "@/lib/api-response";
+import type { MemberStatsResponse } from "@tiki-acca/shared";
 import { computeMemberStats } from "@/lib/stats/compute-member-stats";
 import { statsRoundWhere } from "@/lib/stats/helpers";
 import { prisma } from "@tiki-acca/database";
@@ -37,8 +39,10 @@ export async function GET(_request: Request, { params }: Params) {
     orderBy: [{ settledAt: "asc" }, { lockedAt: "asc" }, { createdAt: "asc" }],
   });
 
-  return NextResponse.json({
-    name: targetMember.user.name,
-    ...computeMemberStats(userId, rounds),
-  });
+  return NextResponse.json(
+    serialized({
+      name: targetMember.user.name,
+      ...computeMemberStats(userId, rounds),
+    }) satisfies MemberStatsResponse
+  );
 }

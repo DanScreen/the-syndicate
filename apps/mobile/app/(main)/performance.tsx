@@ -2,7 +2,6 @@ import { useAuth } from "@/auth/AuthProvider";
 import { GambleResponsiblyFooter } from "@/components/compliance";
 import { UserPerformancePanel } from "@/components/stats";
 import { Screen, Subtitle, Title } from "@/components/ui";
-import { colors } from "@/config";
 import { ScrollView, StyleSheet } from "react-native";
 
 export default function PerformanceScreen() {

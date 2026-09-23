@@ -1,5 +1,5 @@
-import { AdminPageShell } from "@/components/admin-page-shell";
-import { AdminUserActivity } from "@/components/admin-user-activity";
+import { AdminPageShell } from "@/components/admin/page-shell";
+import { AdminUserActivity } from "@/components/admin/user-activity";
 import { computeUserActivity } from "@/lib/admin/compute-user-activity";
 import type { Metadata } from "next";
 

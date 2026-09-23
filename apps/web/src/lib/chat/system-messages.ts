@@ -163,6 +163,25 @@ export async function postLegResultMessage(
   });
 }
 
+/** Posted when an admin (or feed correction path) changes a previously written outcome. */
+export async function postLegResultCorrectedMessage(
+  db: Db,
+  leg: AnnouncedLeg,
+  previous: Exclude<LegOutcome, "pending"> | "pending",
+  outcome: Exclude<LegOutcome, "pending">,
+  userName?: string
+): Promise<void> {
+  const name = userName ?? (await displayName(db, leg.userId));
+  const label = (o: string) =>
+    o === "won" ? "won" : o === "lost" ? "lost" : o === "void" ? "void" : "pending";
+  await createSystemMessage(db, {
+    roundId: leg.roundId,
+    eventType: "leg_result_corrected",
+    legId: leg.id,
+    body: `Result corrected: ${name}'s ${leg.selectionLabel} (${formatFixtureLabel(leg, "v")}) ${label(previous)} → ${label(outcome)}`,
+  });
+}
+
 /** Posted inside the settle transaction, after the `locked → settled` claim. */
 export async function postRoundSettledMessage(
   db: Db,

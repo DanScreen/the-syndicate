@@ -1,25 +1,15 @@
 import {
-  formatBetAxisLabel,
   formatRoundDateLabel,
   memberPointsInRound,
   roundsForPerformanceStats,
-  CHART_ORIGIN_LABEL,
   type RoundWithLegs,
 } from "./helpers";
-
-export type MemberSeries = {
-  userId: string;
-  name: string;
-};
-
-export type MemberChartPoint = {
-  roundNumber: number;
-  /** Unique X-axis category, e.g. "Bet 3" or "Start". */
-  label: string;
-  /** Settlement date for tooltips; empty at origin. */
-  dateLabel: string;
-  [userId: string]: number | string;
-};
+import {
+  CHART_ORIGIN_LABEL,
+  formatBetAxisLabel,
+  type MemberChartPoint,
+  type MemberSeries,
+} from "@tiki-acca/shared";
 
 export function computeMemberChart(
   rounds: RoundWithLegs[],

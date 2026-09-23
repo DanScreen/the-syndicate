@@ -1,5 +1,5 @@
 import { requireSession } from "@/lib/api-auth";
-import { isAdminEmail } from "@/lib/admin";
+import { isAdminEmail } from "@/lib/admin/auth";
 import { emailDomain, emailDomainAcceptsMail } from "@/lib/email-domain";
 import { sendVerificationEmail } from "@/lib/email-verification";
 import { isRateLimited, retryAfterSeconds } from "@/lib/rate-limit";

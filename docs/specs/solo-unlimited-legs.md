@@ -163,12 +163,12 @@ different wording: there is no denominator to count towards.
 |---|---|---|
 | `apps/web/src/app/groups/[id]/page.tsx:306` | `Submit leg 2 of 3` | `Add leg 2` |
 | `apps/web/src/app/groups/[id]/page.tsx:253` | `3 legs each this round` | `Build your acca — up to 10 legs` |
-| `apps/mobile/src/components/group-round.tsx:181` | `2/3` | `2 legs` |
+| `apps/mobile/src/components/round/round-progress.tsx` | `2/3` | `2 legs` |
 
 Plus a **Lock acca (N legs)** button on open unlimited rounds with ≥1 leg,
 on both web and mobile. Disabled at 0 legs.
 
-The member-progress list (`group-round.tsx:135`, "waiting on X members") is
+The member-progress list (`round/round-progress.tsx`, "waiting on X members") is
 meaningless with one member — suppress it on unlimited rounds rather than
 rendering a one-row list.
 
@@ -179,7 +179,7 @@ the platform admin leaderboard). Decided 2026-07-28; no exclusion logic to
 build.
 
 > **Caveat, recorded so it isn't rediscovered later.** Points are awarded
-> **per leg** (`pointsForMemberLeg`, `apps/web/src/lib/settlement.ts:6` — win
+> **per leg** (`pointsForMemberLeg`, `apps/web/src/lib/settlement/points.ts` — win
 > `odds − 1`, loss `−1`) and increment `User.totalPoints`. A solo user
 > submitting 10 legs a round therefore accumulates points up to ~10× faster
 > than a group member submitting one, in either direction. Ranking by total

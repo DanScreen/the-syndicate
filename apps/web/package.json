@@ -6,11 +6,14 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "test": "node --env-file-if-exists=.env.local --import tsx --test --test-force-exit src/lib/account-removal.test.ts src/lib/analytics.test.ts src/lib/chat/exactly-once.test.ts src/lib/chat/group-scope.test.ts src/lib/chat/leg-removal.test.ts src/lib/odds/estimated-odds-flag.test.ts src/lib/odds/estimated-odds-quote-safety.test.ts src/lib/odds/estimated-odds-runtime.test.ts src/lib/odds/fixture-conflicts.test.ts src/lib/odds/merge-markets.test.ts src/lib/odds/outright-markets.test.ts src/lib/odds/outrights-flag.test.ts src/lib/rounds/create-additional-round.test.ts src/lib/rounds/solo-rounds.test.ts src/lib/settlement/propagate-selection-outcome.test.ts src/lib/stats/helpers.test.ts",
-    "db:maintenance": "npx tsx scripts/data-maintenance.ts"
+    "lint": "eslint .",
+    "test": "node --env-file-if-exists=.env.local --import tsx --test --test-force-exit \"src/**/*.test.ts\"",
+    "db:maintenance": "npx tsx scripts/data-maintenance.ts",
+    "typecheck": "tsc --noEmit",
+    "email:preview": "tsx scripts/generate-email-preview.ts"
   },
   "dependencies": {
+    "@tiki-acca/client": "*",
     "@tiki-acca/database": "*",
     "@tiki-acca/shared": "*",
     "bcryptjs": "^3.0.2",
@@ -25,6 +28,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.5",
     "@tailwindcss/postcss": "^4.0.14",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
@@ -33,6 +37,7 @@
     "eslint": "^9",
     "eslint-config-next": "^15.2.4",
     "tailwindcss": "^4.0.14",
+    "tsx": "^4.19.3",
     "typescript": "^5"
   }
 }

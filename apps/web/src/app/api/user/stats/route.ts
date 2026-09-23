@@ -1,4 +1,6 @@
 import { requireSession } from "@/lib/api-auth";
+import { serialized } from "@/lib/api-response";
+import type { UserStatsResponse } from "@tiki-acca/shared";
 import { computeUserStats } from "@/lib/stats/compute-user-stats";
 import { statsRoundWhere } from "@/lib/stats/helpers";
 import { prisma } from "@tiki-acca/database";
@@ -34,5 +36,5 @@ export async function GET() {
     userId
   );
 
-  return NextResponse.json(stats);
+  return NextResponse.json(serialized(stats) satisfies UserStatsResponse);
 }

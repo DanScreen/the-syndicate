@@ -37,7 +37,7 @@ model RoundMessage {
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   kind      String   // "user" | "system"
   body      String   // user text (max 500 chars) or system event copy
-  eventType String?  // system only: leg_submitted | leg_changed | leg_removed | round_locked | leg_result | round_settled
+  eventType String?  // system only: leg_submitted | leg_changed | leg_removed | round_locked | leg_result | leg_result_corrected | round_settled
   legId     String?  // system pick events: the announced leg — lets the betslip row find its message
   leg       Leg?     @relation(fields: [legId], references: [id], onDelete: SetNull)
   createdAt DateTime @default(now())

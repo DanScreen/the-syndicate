@@ -17,6 +17,7 @@ export const SYSTEM_MESSAGE_EVENT_TYPES = [
   "leg_removed",
   "round_locked",
   "leg_result",
+  "leg_result_corrected",
   "round_settled",
 ] as const;
 

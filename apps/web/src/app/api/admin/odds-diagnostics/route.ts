@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/admin";
+import { requireAdmin } from "@/lib/admin/auth";
 import { runOddsDiagnostics } from "@/lib/odds/diagnostics";
 import { DEFAULT_COMPETITION_ID, isValidCompetitionId } from "@tiki-acca/shared";
 import { NextResponse } from "next/server";

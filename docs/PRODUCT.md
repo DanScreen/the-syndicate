@@ -48,7 +48,7 @@ While the bet is open: leg picker shows **best odds only** per selection; **Comp
 **Removing picks:** members can remove only their own leg while the round is still **open** and before the first kickoff. Removal requires confirmation and is announced in Group Chat. Locked and settled accas cannot lose legs.
 
 ### 5. Settle & stats
-**Settlement is system-only** — the match sync cron (every 5 min) updates leg outcomes as matches finish. A round **settles as soon as any leg loses** (group −1) or when every leg is won/void (acca win). If it was the group’s final active bet, a replacement opens automatically. Unfinished legs on a busted acca keep resolving afterward for personal outcomes/points. Group owners cannot mark outcomes themselves. Platform admins have a web-only **settlement queue** (`/admin/settlement`) for stuck/overdue legs (including remaining legs after an early loss). Email on settle. **Leaderboard** tab for points; **History** tab for every settled acca (fixtures, markets, outcomes); **Performance** tab for group charts and member breakdowns. User-level **Performance** nav for cross-group stats. Round tab shows a short recent-settled teaser with a link to full history.
+**Settlement is system-only** — the match sync cron (every 5 min) updates leg outcomes once a finished score has been stable for ~1 hour (feed corrections for disallowed goals/VAR restart that clock; late corrections within 24h auto-reconcile outcomes and points). A round **settles as soon as any leg loses** (group −1) or when every leg is won/void (acca win). If it was the group’s final active bet, a replacement opens automatically. Unfinished legs on a busted acca keep resolving afterward for personal outcomes/points. Group owners cannot mark outcomes themselves. Platform admins have a web-only **settlement queue** (`/admin/settlement`) and **match results** page (`/admin/results`) to override wrong FT scores or correct leg outcomes. Email on settle. **Leaderboard** tab for member rankings plus group charts and member breakdowns; **History** tab for every settled acca (fixtures, markets, outcomes). User-level **Performance** nav for cross-group stats. Round tab shows a short recent-settled teaser with a link to full history.
 
 **Primary metric:** unit-stake **points** (not £ profit). Users can enter a stake on performance pages to see profit equivalent (points × stake).
 
@@ -84,7 +84,7 @@ Platform admins (`ADMIN_EMAILS`) see an **Admin** tab in the header with `/admin
 - [x] Unit-stake points + leaderboard
 - [x] Group stats + member stats (charts, favourites)
 - [x] Cross-group Performance page + share cards
-- [x] Split layout: Groups home, group tabs (Round / Leaderboard / Performance)
+- [x] Split layout: Groups home, group tabs (Bet / Leaderboard / History / Chat)
 - [x] Marketing homepage + about page (Turf Green brand)
 - [x] Platform admin dashboard + leaderboards (admin-only)
 - [x] Points-first stats with stake → profit converter

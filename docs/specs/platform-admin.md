@@ -49,7 +49,8 @@ Protected by middleware (`/admin/*` requires login) + `requireAdminPage()` (redi
 | `/admin` | Platform overview — users, groups, picks, accas, activity |
 | `/admin/activity` | Searchable per-user web/mobile login, visit, view, and recency report |
 | `/admin/unverified` | Unconfirmed-email accounts — fix email, resend link, remove (see [CURRENT_STATE](../CURRENT_STATE.md#email-verification)) |
-| `/admin/settlement` | Settlement queue — locked rounds, overdue-leg flags, manual settle |
+| `/admin/settlement` | Settlement queue — locked rounds, overdue-leg flags, manual settle, outcome correction |
+| `/admin/results` | Match results — override FT score (locks against feed), correct leg outcomes |
 | `/admin/leaderboards` | Group + player rankings by points |
 | `/admin/competitions` | Enable/disable competitions in the leg picker |
 | `/admin/odds` | Odds API diagnostics — raw events, filter pipeline, quota |
@@ -61,14 +62,25 @@ Admin pages are **web-only** — no admin surface in the mobile app (by design).
 Settlement is system-only (owners cannot settle), so this page is the **escape hatch** for rounds the cron cannot resolve:
 
 - Lists all `locked` rounds (rounds needing attention first, then oldest lock).
-- A pending leg is flagged **overdue** when unresolved **2+ hours after its scheduled kickoff** (`OVERDUE_AFTER_HOURS` in `compute-settlement-queue.ts`) — highlights matches that likely finished but couldn't be auto-resolved (unrecognised market, missing match data).
-- Admin picks won/lost/void for each pending leg (system-resolved outcomes are pre-filled and shown as badges) and settles the round via `POST /api/admin/rounds/[id]/settle`.
+- A pending leg is flagged **overdue** when unresolved **3+ hours after its scheduled kickoff** (`OVERDUE_AFTER_HOURS` in `compute-settlement-queue.ts`) — covers typical match length plus the 1h FT confirmation window.
+- Admin picks won/lost/void for each pending leg (system-resolved outcomes are pre-filled; already-resolved legs can be **corrected**) and settles the round via `POST /api/admin/rounds/[id]/settle`.
 - Locked rounds: outcomes must cover every leg; reuses `applyRoundSettlement()` — the same exactly-once `locked → settled` claim as the cron; a lost race returns 409.
 - Settled rounds that still have pending legs (early loss): queue lists them; admin submits outcomes only for remaining pending legs → `applyDeferredLegOutcome()`.
 
-**Nav:** Admin users see **Admin** in `AppNav`. Sub-nav: Overview | Activity | Settlement | Leaderboards | Competitions | Odds (`AdminNav`).
+**Nav:** Admin users see **Admin** in `AppNav`. Sub-nav: Overview | Activity | Settlement | Results | Leaderboards | Competitions | Odds (`AdminNav`).
 
 **SEO:** `robots: noindex` on admin pages.
+
+### Match results (`/admin/results`)
+
+Wrong FT scores (provisional feed results, disallowed goals) are fixed here:
+
+- Lists recent matches with linked legs (last 7 days).
+- Admin enters home/away goals → **Override & lock** (`PATCH /api/admin/matches/[id]`) sets `Match.scoreLocked`, stamps `finishedAt`, and re-resolves every linked leg (correcting wrong outcomes via points delta).
+- Per-leg **Correct outcome** (`POST /api/admin/legs/[id]/correct-outcome`) for locked or settled rounds without changing the Match row.
+- Settlement queue cards also expose a **Correct…** control on already-resolved legs.
+
+**FT confirmation (automated):** auto-settle waits until the FT score has been stable for `RESULT_CONFIRMATION_MS` (1 hour) — each feed score change resets the clock — capped at `RESULT_CONFIRMATION_MAX_MS` (4h) from first FINISHED. For 24h after FT (`RESULT_RECONCILE_MS`), the sync cron re-checks Match score vs leg outcomes and auto-corrects mismatches (disallowed goals / VAR that land late). Admin lock confirms immediately and skips further feed overwrites.
 
 ---
 
@@ -83,6 +95,8 @@ Settlement is system-only (owners cannot settle), so this page is the **escape h
 | `GET /api/admin/odds-diagnostics` | Admin session | Odds API probe (`?competition=world-cup`) |
 | `POST /api/admin/warm-odds-cache` | Admin session | Manually warm odds DB snapshots (same as cron) |
 | `POST /api/admin/rounds/[id]/settle` | Admin session | Manual settle — outcomes for every leg (escape hatch) |
+| `PATCH /api/admin/matches/[id]` | Admin session | Override FT score + lock; re-resolve linked legs |
+| `POST /api/admin/legs/[id]/correct-outcome` | Admin session | Correct a resolved (or pending) leg outcome with points delta |
 | `POST /api/analytics/events` | Web session / mobile bearer | Authenticated page/screen or foreground activity; server derives user, channel, and visit |
 
 Non-admin → `403 Forbidden`. Unauthenticated → `401`.
@@ -111,8 +125,8 @@ Non-admin → `403 Forbidden`. Unauthenticated → `401`.
 
 | Leaderboard | Sort key | Notes |
 |-------------|----------|-------|
-| **Groups** | Sum of `GroupMember.points` per group | Owner name, member count + W/L shown |
-| **Players** | `User.totalPoints` | All registered users; group count + W/L shown |
+| **Groups** | `groupNetPoints()` — group acca points (same as group Performance; **not** sum of member leg points). Excludes marketing demo group (`DEMO24` / `@demo.tikiacca.com` owner) | Owner name, member count + W/L shown |
+| **Players** | `User.totalPoints`. Excludes `@demo.tikiacca.com` marketing accounts | All other registered users; group count + W/L shown |
 
 **Future:** Roll out public `/leaderboards` when user base grows — reuse `computePlatformLeaderboards()` and `PlatformLeaderboards` component.
 
@@ -150,7 +164,7 @@ Login recording is fire-and-forget (`recordAnalyticsEventAsync`). Client activit
 |---------|----------------|
 | Leg points | `legPointsForOutcome()` — win `odds−1`, loss `−1`, void `0` |
 | Profit equivalent | `profitFromPoints(points, stakeGbp)` → `points × stake` |
-| UI converter | `StakeProfit` component on `/performance` and group Performance tab |
+| UI converter | `StakeProfit` component on `/performance` and group Leaderboard (stats section) |
 
 **Removed from primary UI:** Acca P/L cards on performance pages; round history shows round points not £ P/L.
 
@@ -162,20 +176,21 @@ Login recording is fire-and-forget (`recordAnalyticsEventAsync`). Client activit
 
 | Path | Role |
 |------|------|
-| `apps/web/src/lib/admin.ts` | `getAdminEmails`, `resolveUserRole`, `requireAdmin`, `requireAdminPage` |
+| `apps/web/src/lib/admin/auth.ts` | `getAdminEmails`, `resolveUserRole`, `requireAdmin`, `requireAdminPage` |
 | `apps/web/src/lib/auth.config.ts` | Edge-safe Auth.js config (middleware) |
 | `apps/web/src/lib/auth.ts` | Credentials provider, role refresh in JWT callback |
 | `apps/web/src/lib/admin/compute-admin-stats.ts` | Overview aggregates |
 | `apps/web/src/lib/admin/compute-platform-leaderboards.ts` | Leaderboard queries |
+| `apps/web/src/lib/admin/demo-accounts.ts` | Marketing demo email domain / invite code filters |
 | `apps/web/src/lib/analytics.ts` | `recordAnalyticsEvent` |
 | `apps/web/src/components/analytics/authenticated-page-tracker.tsx` | Global authenticated web navigation tracker |
 | `apps/mobile/src/analytics/activity-tracker.tsx` | Global mobile route and foreground tracker |
 | `apps/web/src/lib/admin/compute-user-activity.ts` | Paginated per-user activity aggregation |
-| `apps/web/src/components/admin-user-activity.tsx` | Admin customer activity table |
-| `apps/web/src/components/admin-page-shell.tsx` | Shared admin layout |
-| `apps/web/src/components/admin-nav.tsx` | Overview / Leaderboards tabs |
-| `apps/web/src/components/admin-stats.tsx` | Overview UI |
-| `apps/web/src/components/platform-leaderboards.tsx` | Leaderboard tables |
+| `apps/web/src/components/admin/user-activity.tsx` | Admin customer activity table |
+| `apps/web/src/components/admin/page-shell.tsx` | Shared admin layout |
+| `apps/web/src/components/admin/nav.tsx` | Overview / Leaderboards tabs |
+| `apps/web/src/components/admin/stats.tsx` | Overview UI |
+| `apps/web/src/components/admin/platform-leaderboards.tsx` | Leaderboard tables |
 | `apps/web/src/components/stake-profit.tsx` | Points → profit converter |
 | `packages/shared/src/roles.ts` | `USER_ROLES`, `ANALYTICS_EVENT_TYPES` |
 | `packages/shared/src/scoring.ts` | `profitFromPoints`, `formatProfitGbp` |
