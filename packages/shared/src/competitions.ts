@@ -155,6 +155,15 @@ export const COMPETITIONS: Competition[] = [
     footballDataCode: "",
     manualSettlement: true,
   },
+  {
+    id: "nations-league",
+    name: "UEFA Nations League",
+    oddsApiSport: "soccer_uefa_nations_league",
+    // Not on football-data.org's free tier — settled manually until the
+    // API-Football results feed ships (docs/specs/odds-and-results-sourcing.md).
+    footballDataCode: "",
+    manualSettlement: true,
+  },
 ];
 
 export const DEFAULT_COMPETITION_ID = "world-cup";
