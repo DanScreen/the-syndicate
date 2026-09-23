@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | Proposed. Research complete 2026-09-22; **nothing has been live-trialled yet** (Phase 0 is the trial) |
+| **Status** | **Phases 1–2 shipped 2026-09-23** (results consensus + corners settlement; see as-built notes under each phase). Phase 0 partly done; Phases 3–5 proposed |
 | **Budget** | ≤ £100/month for odds **and** results combined (owner hard cap) |
 | **Owner decisions** | 2026-09-22: betslip deeplinks are **low priority**. Keep them where a source already provides them; never pay for them or pick a source because of them |
 | **Depends on** | — |
@@ -368,23 +368,23 @@ Rule of thumb #2: only trials count. Probes ran locally on 22–23 Sept 2026; re
 
 ### Phase 1: results v2 (removes manual settlement)
 
-- [ ] Migration: `MatchObservation`, `TeamAlias` (§7)
-- [ ] Leg create/edit upserts `Match` by `externalOddsId = fixtureId` and sets `leg.matchId` (§3.2)
-- [ ] `apiFootballLeagueId` on the catalogue
-- [ ] `lib/results/providers/api-football.ts`:
-  - `fixtures?ids=` polling (≤ 20 ids per call) for tracked matches between KO and KO+4h;
-  - a daily fixture-list refresh per enabled competition;
-  - a quota snapshot from `x-ratelimit-*` headers, plus negative caching (rule #4).
-- [ ] Refactor the football-data sync to map-then-attach observations
-- [ ] The Odds API `/scores` adapter (competitions with pending legs only)
-- [ ] `resolveMatchConsensus()` writes the canonical `Match`. Stability, `scoreLocked` and reconcile are untouched
-- [ ] Remove `manualSettlement` from `league-one`, `league-two`, `champions-league-qual`, `europa-league`, `efl-cup`; add `fa-cup`
-- [ ] `/admin/results`: a per-match observation table (provider, status, 90', after ET, updated)
-- [ ] Tests:
-  - consensus: agree / single / disagree / ET abstention / admin lock;
-  - alias auto-learning, including the ambiguous case → suggestion;
-  - id-first linking.
-- [ ] Docs, in the same PR: CURRENT_STATE (sync, env, limitations), DEPLOYMENT (new secret), [competitions-and-results.md](./competitions-and-results.md), `.env.example`
+- [x] Migration: `MatchObservation`, `TeamAlias` (§7) — `20260923120000_match_observations`; also adds `Match.resultSource`, `homeGoalsHt`/`awayGoalsHt`, `wentToExtraTime`, `stats`, `statsStableSince`, `apiFootballCheckedAt`
+- [x] Legs get a `Match` by `externalOddsId = fixtureId` (§3.2). **As built:** done by the cron at lock (`ensureMatchesForLockedLegs`), not at leg create/edit — only locked legs need a result, and it avoids a write on every pick change. Adopts a football-data Match (competition + kickoff ±3h + team names) before creating one
+- [x] `apiFootballLeagueId` on the catalogue
+- [x] `lib/results/providers/api-football.ts` + `lib/results/sync-api-football.ts`:
+  - `fixtures?ids=` polling (≤ 20 ids per call) from KO−10 min while live (up to KO+12h), then every 15 min for 24h after FT so stats corrections land;
+  - **as built:** instead of a daily fixture-list refresh per competition, unmapped Matches with locked legs trigger one `fixtures?date=` lookup per UTC date (all leagues in one call, filtered by league id) — cheaper, and only for fixtures we need;
+  - quota snapshot from `x-ratelimit-requests-remaining`, plus negative caching (`apiFootballCheckedAt`, retry hourly).
+- [x] Refactor the football-data sync to map-then-attach observations
+- [ ] The Odds API `/scores` adapter (competitions with pending legs only) — **deferred**: two sources cover every catalogue competition, and The Odds API may be retired later (Phase 3)
+- [x] `resolveMatchConsensus()` writes the canonical `Match`. Stability, `scoreLocked` and reconcile are untouched. Terminal disagreement (`conflict`) or no 90' score (`abstain`) holds auto-settle for admin
+- [x] Remove `manualSettlement` from `league-one`, `league-two`, `champions-league-qual`, `europa-league`, `efl-cup` (and `nations-league`); add `fa-cup`. They're manual again only when `API_FOOTBALL_KEY` is unset (`/admin/competitions` shows the active feeds)
+- [x] `/admin/results`: a per-match observation table (provider, status, 90', after ET, corners, updated) + conflict / abstain hold banner
+- [x] Tests:
+  - consensus: agree / single / disagree / ET abstention / admin lock (`consensus.test.ts`, `sync-api-football.test.ts`);
+  - alias auto-learning, including the ambiguous case (`map-fixture.test.ts`). **As built:** ambiguous → no mapping and an hourly retry; no suggestion UI yet (admin can still override the score);
+  - id-first linking + mocked-feed end-to-end mapping (`sync-api-football.test.ts`).
+- [x] Docs, in the same PR: CURRENT_STATE (sync, env, limitations), DEPLOYMENT (new secret), [competitions-and-results.md](./competitions-and-results.md), `.env.example`
 
 **Request budget, busy Saturday:**
 
@@ -397,11 +397,13 @@ Rule of thumb #2: only trials count. Probes ran locally on 22–23 Sept 2026; re
 
 ### Phase 2: settle what we already sell
 
-- [ ] `MatchResult` gains `halfTime?` and `stats?`
-- [ ] Resolver branches: corners (regulation only), `to_qualify` (result after ET/pens), HT result. Each returns `null` when data is missing
-- [ ] Cards follow decision #4; they stay manual until it's made
-- [ ] Hide the specials tier where API-Football coverage lacks fixture statistics
-- [ ] Live-matchday: in-play score and minute from API-Football observations. This answers [live-matchday.md](./live-matchday.md)'s open question about free-tier live scores
+- [x] `MatchResult` gains `halfTime?`, `extraTime?` and `stats?`
+- [x] Resolver branches: corners (regulation only) — `corners_1x2`, `corners_over_under_*`, `corners_handicap_*`, `team_corners__*`. They return `null` (admin) when stats are missing, the match went to extra time, or the team slug doesn't match, and wait until stats are unchanged for `STATS_CONFIRMATION_MS` (2h)
+- [ ] `to_qualify` (result after ET/pens) — **not auto-settled**: it needs the post-ET/penalties winner, which football-data only gives as totals; left to admin until two-source agreement on the winner is modelled
+- [ ] HT result — not a market we sell yet; the half-time score is now stored for Phase 3
+- [x] Cards follow decision #4; they stay manual until it's made (stats are stored)
+- [ ] Hide the specials tier where API-Football coverage lacks fixture statistics — deferred; legs without stats fall to admin
+- [ ] Live-matchday: in-play score and minute from API-Football observations — deferred; observations already hold the live score, the minute isn't stored yet
 
 ### Phase 3: odds depth
 

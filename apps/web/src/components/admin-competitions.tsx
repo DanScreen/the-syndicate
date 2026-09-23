@@ -8,6 +8,7 @@ type CompetitionRow = {
   enabled: boolean;
   oddsApiSport: string;
   footballDataCode: string;
+  resultsFeeds: string;
   manualSettlement: boolean;
 };
 
@@ -70,8 +71,9 @@ export function AdminCompetitionsPanel() {
       {manualCount > 0 && (
         <div className="rounded-lg border border-amber-400/30 bg-amber-400/5 px-4 py-3 text-sm text-amber-200">
           {manualCount} competition{manualCount === 1 ? "" : "s"} tagged{" "}
-          <span className="font-semibold">Manual settlement</span> — these have no
-          automatic result sync on our football-data.org tier. Odds still load, but you
+          <span className="font-semibold">Manual settlement</span> — no results
+          feed covers them in this deployment (football-data.org free tier, or
+          API-Football when <code>API_FOOTBALL_KEY</code> is set). Odds still load, but you
           must settle their legs by hand in the admin settlement queue.
         </div>
       )}
@@ -101,8 +103,8 @@ export function AdminCompetitionsPanel() {
                 )}
               </p>
               <p className="mt-1 text-xs text-muted">
-                {competition.id} · Odds API: {competition.oddsApiSport} · football-data:{" "}
-                {competition.manualSettlement ? "— (settle manually)" : competition.footballDataCode}
+                {competition.id} · Odds API: {competition.oddsApiSport} · Results:{" "}
+                {competition.manualSettlement ? "— (settle manually)" : competition.resultsFeeds}
               </p>
             </div>
             <label className="flex items-center gap-3 text-sm">

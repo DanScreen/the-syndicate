@@ -20,6 +20,50 @@ function outcomeClass(outcome: string): string {
   return "text-muted";
 }
 
+const PROVIDER_LABELS: Record<string, string> = {
+  api_football: "API-Football",
+  football_data: "football-data",
+};
+
+function score(home: number | null, away: number | null): string {
+  return home === null || away === null ? "—" : `${home}–${away}`;
+}
+
+function ObservationsTable({ match }: { match: AdminResultsMatch }) {
+  if (match.observations.length === 0) return null;
+  return (
+    <table className="mt-3 w-full text-xs">
+      <thead className="text-left text-muted">
+        <tr>
+          <th className="py-1 pr-3 font-normal">Source</th>
+          <th className="py-1 pr-3 font-normal">Status</th>
+          <th className="py-1 pr-3 font-normal">90&apos;</th>
+          <th className="py-1 pr-3 font-normal">Final</th>
+          <th className="py-1 pr-3 font-normal">Corners</th>
+          <th className="py-1 font-normal">Last change</th>
+        </tr>
+      </thead>
+      <tbody>
+        {match.observations.map((obs) => (
+          <tr key={obs.provider} className="border-t border-border/50">
+            <td className="py-1 pr-3">{PROVIDER_LABELS[obs.provider] ?? obs.provider}</td>
+            <td className="py-1 pr-3">{obs.status}</td>
+            <td className="py-1 pr-3">{score(obs.homeGoals90, obs.awayGoals90)}</td>
+            <td className="py-1 pr-3">
+              {score(obs.homeGoalsEnd, obs.awayGoalsEnd)}
+              {obs.extraTime ? " (AET)" : ""}
+            </td>
+            <td className="py-1 pr-3">
+              {obs.corners ? `${obs.corners.home}–${obs.corners.away}` : "—"}
+            </td>
+            <td className="py-1 text-muted">{formatKickoff(obs.changedAt)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
 function MatchOverrideCard({ match }: { match: AdminResultsMatch }) {
   const router = useRouter();
   const [homeGoals, setHomeGoals] = useState(String(match.homeGoals ?? 0));
@@ -30,7 +74,10 @@ function MatchOverrideCard({ match }: { match: AdminResultsMatch }) {
   const [error, setError] = useState("");
 
   const confirming =
-    match.status === "FINISHED" && !match.confirmed && !match.scoreLocked;
+    match.status === "FINISHED" &&
+    !match.confirmed &&
+    !match.scoreLocked &&
+    !match.heldForReview;
   const remainingMins = Math.ceil(match.confirmationRemainingMs / 60_000);
 
   async function handleOverride() {
@@ -92,7 +139,16 @@ function MatchOverrideCard({ match }: { match: AdminResultsMatch }) {
               ? ` · feed ${match.homeGoals}–${match.awayGoals}`
               : ""}
             {match.scoreLocked ? " · score locked by admin" : ""}
+            {match.resultSource === "agreed" ? " · sources agree" : ""}
+            {match.wentToExtraTime ? " · went to extra time" : ""}
           </p>
+          {match.heldForReview && (
+            <p className="mt-1 text-xs font-medium text-amber-300">
+              {match.resultSource === "conflict"
+                ? "Results sources disagree — auto-settle is held. Check the scores below and override & lock the correct 90-minute score."
+                : "No source can give the 90-minute score (extra time) — auto-settle is held. Override & lock the 90-minute score."}
+            </p>
+          )}
           {confirming && (
             <p className="mt-1 text-xs text-accent">
               Waiting for FT score to stay unchanged ~{remainingMins}m (VAR /
@@ -134,6 +190,8 @@ function MatchOverrideCard({ match }: { match: AdminResultsMatch }) {
           </button>
         </div>
       </div>
+
+      <ObservationsTable match={match} />
 
       {match.legs.length > 0 && (
         <ul className="mt-4 space-y-2 border-t border-border pt-3">

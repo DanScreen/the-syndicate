@@ -1,7 +1,9 @@
 import { prisma } from "@tiki-acca/database";
+import { isApiFootballConfigured } from "@/lib/results/providers/api-football";
 import {
   COMPETITIONS,
   competitionNeedsManualSettlement,
+  competitionResultsProviders,
   DEFAULT_ENABLED_COMPETITION_IDS,
   type Competition,
 } from "@tiki-acca/shared";
@@ -12,8 +14,24 @@ export type CompetitionSettingView = {
   enabled: boolean;
   oddsApiSport: string;
   footballDataCode: string;
+  /** Human label for the results feeds that settle this competition. */
+  resultsFeeds: string;
   manualSettlement: boolean;
 };
+
+/** Results feeds actually running for a competition in this deployment. */
+function activeResultsFeeds(competition: Competition): string[] {
+  const feeds: string[] = [];
+  for (const provider of competitionResultsProviders(competition)) {
+    if (provider === "football_data" && Boolean(process.env.FOOTBALL_DATA_API_KEY)) {
+      feeds.push(`football-data ${competition.footballDataCode}`);
+    }
+    if (provider === "api_football" && isApiFootballConfigured()) {
+      feeds.push(`API-Football ${competition.apiFootballLeagueId}`);
+    }
+  }
+  return feeds;
+}
 
 async function ensureSettingsRows() {
   const existing = await prisma.competitionSetting.findMany({
@@ -48,7 +66,10 @@ export async function getCompetitionSettings(): Promise<CompetitionSettingView[]
     enabled: byId.get(competition.id) ?? false,
     oddsApiSport: competition.oddsApiSport,
     footballDataCode: competition.footballDataCode,
-    manualSettlement: competitionNeedsManualSettlement(competition),
+    resultsFeeds: activeResultsFeeds(competition).join(" + "),
+    manualSettlement:
+      competitionNeedsManualSettlement(competition) ||
+      activeResultsFeeds(competition).length === 0,
   }));
 }
 

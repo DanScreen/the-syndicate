@@ -1,9 +1,10 @@
 import {
-  alignGoalsToLeg,
   isLegOrientationDirect,
   isLegOrientationReversed,
 } from "@/lib/results/football-data";
-import type { MatchResult } from "@/lib/results/resolve-leg";
+import type { ObservedStats } from "@/lib/results/consensus";
+import { areMatchStatsConfirmed } from "@/lib/results/result-confirmation";
+import type { MatchResult, ScorePair } from "@/lib/results/resolve-leg";
 import { prisma } from "@tiki-acca/database";
 import type { Match } from "@prisma/client";
 
@@ -17,20 +18,56 @@ function kickoffDayBounds(kickoff: Date): { start: Date; end: Date } {
   };
 }
 
-export function dbMatchToResult(match: Match): MatchResult | null {
+/**
+ * Canonical Match → settlement input (Match orientation). Stats are included
+ * only once confirmed, so corners legs wait for STATS_CONFIRMATION_MS.
+ */
+export function dbMatchToResult(match: Match, now: Date = new Date()): MatchResult | null {
   if (VOID_STATUSES.has(match.status)) {
     return { homeGoals: 0, awayGoals: 0, status: match.status };
   }
 
-  if (match.homeGoals === null || match.awayGoals === null) {
-    return { homeGoals: 0, awayGoals: 0, status: match.status };
-  }
+  const halfTime: ScorePair | null =
+    match.homeGoalsHt !== null && match.awayGoalsHt !== null
+      ? { home: match.homeGoalsHt, away: match.awayGoalsHt }
+      : null;
+  const stats = areMatchStatsConfirmed(match, now)
+    ? { corners: (match.stats as ObservedStats | null)?.corners ?? null }
+    : null;
 
   return {
-    homeGoals: match.homeGoals,
-    awayGoals: match.awayGoals,
+    homeGoals: match.homeGoals ?? 0,
+    awayGoals: match.awayGoals ?? 0,
     status: match.status,
+    extraTime: match.wentToExtraTime,
+    halfTime,
+    stats,
   };
+}
+
+function swapPair(pair: ScorePair | null | undefined): ScorePair | null | undefined {
+  return pair ? { home: pair.away, away: pair.home } : pair;
+}
+
+/** Map a Match-orientation result to the leg's home/away; null if teams don't match. */
+export function alignResultToLeg(
+  result: MatchResult,
+  match: { homeTeam: string; awayTeam: string },
+  leg: { homeTeam: string; awayTeam: string }
+): MatchResult | null {
+  if (isLegOrientationDirect(match.homeTeam, match.awayTeam, leg.homeTeam, leg.awayTeam)) {
+    return result;
+  }
+  if (isLegOrientationReversed(match.homeTeam, match.awayTeam, leg.homeTeam, leg.awayTeam)) {
+    return {
+      ...result,
+      homeGoals: result.awayGoals,
+      awayGoals: result.homeGoals,
+      halfTime: swapPair(result.halfTime),
+      stats: result.stats ? { corners: swapPair(result.stats.corners) } : result.stats,
+    };
+  }
+  return null;
 }
 
 export async function findDbMatchForLeg(leg: {
@@ -70,16 +107,7 @@ function alignDbMatchResultToLeg(
 ): MatchResult | null {
   const base = dbMatchToResult(match);
   if (!base) return null;
-
-  return alignGoalsToLeg(
-    base.homeGoals,
-    base.awayGoals,
-    base.status,
-    match.homeTeam,
-    match.awayTeam,
-    leg.homeTeam,
-    leg.awayTeam
-  );
+  return alignResultToLeg(base, match, leg);
 }
 
 export async function getMatchResultForLegFromDb(leg: {
