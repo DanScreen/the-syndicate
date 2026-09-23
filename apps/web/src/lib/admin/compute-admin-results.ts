@@ -3,8 +3,10 @@ import {
   RESULT_CONFIRMATION_MS,
   formatFixtureLabel,
 } from "@tiki-acca/shared";
+import type { ObservedStats } from "@/lib/results/consensus";
 import {
   isMatchResultConfirmed,
+  isResultHeldForReview,
   resultConfirmationRemainingMs,
 } from "@/lib/results/result-confirmation";
 
@@ -20,6 +22,19 @@ export type AdminResultsMatchLeg = {
   fixtureLabel: string;
 };
 
+/** One results provider's view, in the Match's orientation. */
+export type AdminResultsObservation = {
+  provider: string;
+  status: string;
+  homeGoals90: number | null;
+  awayGoals90: number | null;
+  homeGoalsEnd: number | null;
+  awayGoalsEnd: number | null;
+  extraTime: boolean;
+  corners: { home: number; away: number } | null;
+  changedAt: string;
+};
+
 export type AdminResultsMatch = {
   id: string;
   competitionId: string;
@@ -30,6 +45,12 @@ export type AdminResultsMatch = {
   homeGoals: number | null;
   awayGoals: number | null;
   scoreLocked: boolean;
+  /** agreed | single | conflict | abstain (null before any terminal result). */
+  resultSource: string | null;
+  /** Sources disagree / no 90' score — auto-settle held for an admin. */
+  heldForReview: boolean;
+  wentToExtraTime: boolean;
+  observations: AdminResultsObservation[];
   finishedAt: string | null;
   confirmed: boolean;
   confirmationRemainingMs: number;
@@ -56,6 +77,7 @@ export async function computeAdminResultsMatches(
     },
     orderBy: { kickoff: "desc" },
     include: {
+      observations: { orderBy: { provider: "asc" } },
       legs: {
         orderBy: { createdAt: "asc" },
         include: {
@@ -85,6 +107,20 @@ export async function computeAdminResultsMatches(
       homeGoals: match.homeGoals,
       awayGoals: match.awayGoals,
       scoreLocked: match.scoreLocked,
+      resultSource: match.resultSource,
+      heldForReview: isResultHeldForReview(match),
+      wentToExtraTime: match.wentToExtraTime,
+      observations: match.observations.map((obs) => ({
+        provider: obs.provider,
+        status: obs.status,
+        homeGoals90: obs.homeGoals90,
+        awayGoals90: obs.awayGoals90,
+        homeGoalsEnd: obs.homeGoalsEnd,
+        awayGoalsEnd: obs.awayGoalsEnd,
+        extraTime: obs.extraTime,
+        corners: (obs.stats as ObservedStats | null)?.corners ?? null,
+        changedAt: obs.changedAt.toISOString(),
+      })),
       finishedAt: match.finishedAt?.toISOString() ?? null,
       confirmed: isMatchResultConfirmed(match, now),
       confirmationRemainingMs: resultConfirmationRemainingMs(match, now),

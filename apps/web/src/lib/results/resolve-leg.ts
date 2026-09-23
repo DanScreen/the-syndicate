@@ -1,17 +1,36 @@
 import type { LegOutcome } from "@tiki-acca/shared";
-import { overUnderLineFromType, asianHandicapLineFromType } from "@/lib/odds/market-groups";
+import {
+  asianHandicapLineFromType,
+  embeddedOverUnderLineFromType,
+  overUnderLineFromType,
+  prefixedHandicapLineFromType,
+} from "@/lib/odds/market-groups";
+import { slugify } from "@/lib/odds/market-builders";
 
 /** Standard markets settle on 90-minute (regulation) score, not extra time. */
+
+export type ScorePair = { home: number; away: number };
 
 export type MatchResult = {
   homeGoals: number;
   awayGoals: number;
   status: string;
+  /** Match went to extra time / penalties (stats then cover 120'). */
+  extraTime?: boolean;
+  halfTime?: ScorePair | null;
+  /**
+   * Confirmed match stats in the leg's orientation. Present only once the
+   * stats have been stable for STATS_CONFIRMATION_MS (see match-store).
+   */
+  stats?: { corners?: ScorePair | null } | null;
 };
 
 type LegForResolution = {
   marketType: string;
   selectionId: string;
+  /** Needed for team-specific markets (team corners). */
+  homeTeam?: string;
+  awayTeam?: string;
 };
 
 const VOID_STATUSES = new Set(["POSTPONED", "CANCELLED", "SUSPENDED", "AWARDED"]);
@@ -104,12 +123,63 @@ function correctScoreOutcome(
   return home === homeGoals && away === awayGoals ? "won" : "lost";
 }
 
+/** True for markets settled from match stats rather than goals. */
+export function isCornersMarket(marketType: string): boolean {
+  return (
+    marketType === "corners_1x2" ||
+    marketType.startsWith("corners_") ||
+    marketType.startsWith("team_corners__")
+  );
+}
+
+/**
+ * Corners markets. Bookmakers settle these on 90 minutes; our stats cover the
+ * whole match, so extra-time matches return null (admin settles by hand).
+ */
+function resolveCornersLeg(leg: LegForResolution, result: MatchResult): LegOutcome | null {
+  if (result.extraTime) return null;
+  const corners = result.stats?.corners;
+  if (!corners) return null;
+  const { home, away } = corners;
+
+  if (leg.marketType === "corners_1x2") {
+    return matchWinnerOutcome(leg.selectionId, home, away);
+  }
+
+  const totalLine = overUnderLineFromType(leg.marketType);
+  if (totalLine !== null && leg.marketType.startsWith("corners_over_under_")) {
+    return overUnderOutcome(leg.selectionId, home + away, totalLine);
+  }
+
+  if (prefixedHandicapLineFromType(leg.marketType, "corners") !== null) {
+    return asianHandicapOutcome(leg.selectionId, home, away);
+  }
+
+  if (leg.marketType.startsWith("team_corners__")) {
+    const line = embeddedOverUnderLineFromType(leg.marketType);
+    const teamSlug = leg.marketType.slice("team_corners__".length).replace(/__m?\d+$/, "");
+    if (line === null || !teamSlug) return null;
+    const side =
+      leg.homeTeam && slugify(leg.homeTeam) === teamSlug
+        ? "home"
+        : leg.awayTeam && slugify(leg.awayTeam) === teamSlug
+          ? "away"
+          : null;
+    if (!side) return null;
+    return overUnderOutcome(leg.selectionId, side === "home" ? home : away, line);
+  }
+
+  return null;
+}
+
 export function resolveLegOutcome(leg: LegForResolution, result: MatchResult): LegOutcome | null {
   if (VOID_STATUSES.has(result.status)) return "void";
   if (result.status !== "FINISHED") return null;
 
   const { homeGoals, awayGoals } = result;
   const totalGoals = homeGoals + awayGoals;
+
+  if (isCornersMarket(leg.marketType)) return resolveCornersLeg(leg, result);
 
   switch (leg.marketType) {
     case "match_winner":

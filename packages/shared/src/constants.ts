@@ -32,6 +32,13 @@ export const RESULT_CONFIRMATION_MAX_MS = 4 * 60 * 60 * 1000;
  */
 export const RESULT_RECONCILE_MS = 24 * 60 * 60 * 1000;
 
+/**
+ * Stats-based legs (corners) wait until the provider's match statistics have
+ * been unchanged this long after FT. Stats get revised after the whistle more
+ * often than scores (docs/specs/odds-and-results-sourcing.md §3.1).
+ */
+export const STATS_CONFIRMATION_MS = 2 * 60 * 60 * 1000;
+
 /** Owner-selectable legs each member submits per round. */
 export const LEGS_PER_MEMBER_OPTIONS = [1, 2, 3] as const;
 export type LegsPerMember = (typeof LEGS_PER_MEMBER_OPTIONS)[number];

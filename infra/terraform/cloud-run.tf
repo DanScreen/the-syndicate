@@ -109,7 +109,7 @@ resource "google_cloud_run_v2_service" "web" {
 
   # deploy.yml owns the deployed image AND the full runtime env: it sets ~15
   # variables via `gcloud run deploy --set-env-vars` (ODDS_API_KEY,
-  # FOOTBALL_DATA_API_KEY, RESEND_API_KEY, ADMIN_EMAILS, ORIGIN_AUTH_SECRET,
+  # FOOTBALL_DATA_API_KEY, API_FOOTBALL_KEY, RESEND_API_KEY, ADMIN_EMAILS, ORIGIN_AUTH_SECRET,
   # the ODDS_* tuning flags...) sourced from GitHub secrets. This resource
   # declares only the handful below, so Terraform MUST ignore env — otherwise
   # any apply that touches the template reconciles the container back to this
