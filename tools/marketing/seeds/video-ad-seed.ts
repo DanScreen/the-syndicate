@@ -3,21 +3,20 @@
  * groups — Tuesday Reds and Tuesday Blues — at a named stage of the story so
  * each betslip state can be screen-captured exactly as the app renders it.
  *
- * Cast, picks, odds and stages live in tools/marketing/video-ad/scenario.json.
+ * Cast, picks, odds and stages live in ../video-ad/scenario.json.
  * Every account uses the @demo.tikiacca.com domain, so admin platform
  * leaderboards already omit them (apps/web/src/lib/admin/demo-accounts.ts).
  *
- * Run (from packages/database):
- *   npx tsx prisma/video-ad-seed.ts --stage=red-3
- *   npx tsx prisma/video-ad-seed.ts            # "final": both rounds settled
- *   npx tsx prisma/video-ad-seed.ts --list     # print stage names
+ * Run from the repository root:
+ *   npm run video-ad:seed -- --stage=red-3
+ *   npm run video-ad:seed                      # "final": both rounds settled
+ *   npm run video-ad:seed -- --list            # print stage names
  *
  * Idempotent: rebuilds the two scenario groups and upserts their eight users.
  * Never point DATABASE_URL at production.
  */
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { prisma } from "../src";
+import { prisma } from "@tiki-acca/database";
 import bcrypt from "bcryptjs";
 
 type Outcome = "won" | "lost";
@@ -65,16 +64,7 @@ type Scenario = {
   stages: Stage[];
 };
 
-const SCENARIO_PATH = join(
-  __dirname,
-  "..",
-  "..",
-  "..",
-  "tools",
-  "marketing",
-  "video-ad",
-  "scenario.json"
-);
+const SCENARIO_PATH = new URL("../video-ad/scenario.json", import.meta.url);
 const scenario = JSON.parse(readFileSync(SCENARIO_PATH, "utf8")) as Scenario;
 
 const hour = 60 * 60 * 1000;

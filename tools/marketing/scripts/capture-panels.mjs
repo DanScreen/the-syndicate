@@ -3,7 +3,7 @@
  *
  * Prerequisites:
  *   1. docker compose up -d
- *   2. cd packages/database && npx tsx prisma/demo-seed.ts
+ *   2. npm run marketing:seed
  *   3. npm run dev
  *
  * Run from the repository root:

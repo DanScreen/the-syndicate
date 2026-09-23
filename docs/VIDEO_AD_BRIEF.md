@@ -417,7 +417,7 @@ Full instructions, options and output layout: [tools/marketing/README.md](../too
 | Piece | Path |
 |-------|------|
 | Cast, picks, odds, stages | `tools/marketing/video-ad/scenario.json` |
-| Seed (two groups at any stage) | `packages/database/prisma/video-ad-seed.ts` — `npm run video-ad:seed -- --stage=<name>` |
+| Seed (two groups at any stage) | `tools/marketing/seeds/video-ad-seed.ts` — `npm run video-ad:seed -- --stage=<name>` |
 | Capture | `tools/marketing/scripts/capture-video-ad.mjs` |
 | Profile pictures | `tools/marketing/video-ad/avatars/<member key>.png` |
 | Output (git-ignored) | `tools/marketing/video-ad/captures/<beat>-<stage>/` |

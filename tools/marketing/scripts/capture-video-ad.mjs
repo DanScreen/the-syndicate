@@ -2,7 +2,7 @@
  * Capture every app screen for the "The Cage" video ad (docs/VIDEO_AD_BRIEF.md §7).
  *
  * For each stage in tools/marketing/video-ad/scenario.json this re-seeds the two
- * demo groups (packages/database/prisma/video-ad-seed.ts), signs in as that
+ * demo groups (tools/marketing/seeds/video-ad-seed.ts), signs in as that
  * stage's member on an iPhone-sized viewport and saves, under
  * tools/marketing/video-ad/captures/<beat>-<stage>/:
  *
@@ -85,8 +85,8 @@ const formatPoints = (n) => `${Number(n.toFixed(2)).toString()} pts`;
 const to2 = (n) => Number(n.toFixed(2));
 
 function seed(stageName) {
-  const out = execFileSync("npx", ["tsx", "prisma/video-ad-seed.ts", `--stage=${stageName}`], {
-    cwd: join(REPO_ROOT, "packages", "database"),
+  const out = execFileSync("npx", ["tsx", "seeds/video-ad-seed.ts", `--stage=${stageName}`], {
+    cwd: MARKETING_ROOT,
     encoding: "utf8",
   });
   process.stdout.write(out.replace(/^/gm, "  "));

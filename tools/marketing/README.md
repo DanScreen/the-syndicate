@@ -18,6 +18,14 @@ Inputs (committed):
 - `scripts/capture-panels.mjs` — automated chart and bookmaker-panel capture (`npm run marketing:capture`).
 - `scripts/build-gallery.mjs` — self-contained `gallery.html` review page (`npm run marketing:gallery`).
 - `scripts/frame-appstore.mjs` — App Store screenshot framer (`npm run marketing:appstore`).
+- `scripts/capture-video-ad.mjs` — video ad app captures (`npm run video-ad:capture`, see below).
+- `seeds/demo-seed.ts` — the "Thursday Club" demo account for screenshots and App Store review (`npm run marketing:seed`; `.github/workflows/seed-demo.yml` also runs it against production on demand).
+- `seeds/video-ad-seed.ts` — the video ad's two groups at any story stage (`npm run video-ad:seed`).
+- `video-ad/` — the video ad scenario and profile pictures.
+
+Seeds import the Prisma client from `@tiki-acca/database` and are type-checked by
+`npm run typecheck` (so CI fails if a schema change breaks them). They stay here,
+not in `packages/database`, because that package ships with the web app.
 
 Outputs (generated, git-ignored — regenerate rather than commit):
 
@@ -26,6 +34,7 @@ Outputs (generated, git-ignored — regenerate rather than commit):
 - `x-twitter/` — 1600×900 PNGs and the X header.
 - `app-store/` — 1290×2796 App Store frames (`AS_OUT=<dir>` writes elsewhere).
 - `gallery.html` — review page.
+- `video-ad/captures/` — video ad captures.
 
 The last committed set of outputs is in git history at commit `9809a75`
 (`marketing-posts/`).
@@ -87,7 +96,7 @@ npm run video-ad:capture -- --initials        # no profile pictures (app as ship
 ```
 
 The capture re-seeds the two demo groups (Tuesday Reds, Tuesday Blues) before
-each stage with `npm run video-ad:seed -- --stage=<name>`, so run it against a
+each stage with `npm run video-ad:seed -- --stage=<name>` (`seeds/video-ad-seed.ts`), so run it against a
 local database only. Output lands in `video-ad/captures/<beat>-<stage>/`
 (git-ignored) at iPhone 15 Pro resolution (1179×2556), plus `manifest.json`:
 

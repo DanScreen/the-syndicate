@@ -7,7 +7,7 @@ Prisma schema, migrations, and client for Tiki Acca. Postgres in every real envi
 - `prisma/schema.prisma` — the schema. Model-level and field-level `///` doc comments explain non-obvious constraints (e.g. why `dateOfBirth` is nullable, why only token hashes are stored) — read those before changing a model.
 - `prisma/migrations/` — one directory per migration, applied in lexical (timestamp) order. Never edit an already-applied migration; add a new one instead.
 - `prisma/seed.ts` — minimal seed run via `npm run seed`. Currently just verifies connectivity/user count; it is not a fixtures generator.
-- `prisma/demo-seed.ts` — builds the presentable "Thursday Club" demo account used for marketing screenshots and App Store review (login `danny@demo.tikiacca.com` / `DemoPass123!`). Idempotent — deletes any prior demo group/users first. Run from this package with `npx tsx prisma/demo-seed.ts`, or from the repo root via `npm run marketing:seed` (see `.github/workflows/seed-demo.yml`, which runs it against production on demand).
+- Marketing and demo data seeds live outside this package, in [`tools/marketing/seeds/`](../../tools/marketing/seeds/) — `demo-seed.ts` (the "Thursday Club" App Store reviewer / screenshot account, `npm run marketing:seed`, also run against production on demand by `.github/workflows/seed-demo.yml`) and `video-ad-seed.ts` (`npm run video-ad:seed`). Keep fixtures out of this package: it ships with the web app.
 - `src/index.ts` — exports the shared `PrismaClient` instance consumed by `apps/web`.
 
 ## Common commands

@@ -1,5 +1,5 @@
 {
-  "$comment": "Single source of truth for the 'The Cage' video ad (docs/VIDEO_AD_BRIEF.md). Read by packages/database/prisma/video-ad-seed.ts and tools/marketing/scripts/capture-video-ad.mjs. Fixtures are plausible placeholders: swap in real fixtures from the capture weekend before capturing.",
+  "$comment": "Single source of truth for the 'The Cage' video ad (docs/VIDEO_AD_BRIEF.md). Read by tools/marketing/seeds/video-ad-seed.ts and tools/marketing/scripts/capture-video-ad.mjs. Fixtures are plausible placeholders: swap in real fixtures from the capture weekend before capturing.",
   "password": "DemoPass123!",
   "bookmaker": { "id": "bet365", "name": "Bet365" },
   "groups": [
