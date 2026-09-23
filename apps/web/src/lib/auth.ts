@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { signInSchema } from "@tiki-acca/shared";
-import { resolveUserRole, getSessionUserRole } from "@/lib/admin/auth";
+import { resolveUserRole } from "@/lib/admin/auth";
 import { authConfig } from "@/lib/auth.config";
 import { normalizeEmail } from "@/lib/auth-email";
 import { recordAnalyticsEventAsync } from "@/lib/analytics";
@@ -23,12 +23,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.id = user.id;
         token.firstName = user.firstName;
         token.role = user.role ?? "user";
+        token.isEmailVerified = user.isEmailVerified;
         return token;
       }
 
+      // Refreshed from the DB on every node-side call so role changes and
+      // email verification take effect without re-login.
       const userId = (token.id ?? token.sub) as string | undefined;
       if (userId) {
-        token.role = await getSessionUserRole(userId);
+        const current = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { role: true, email: true, emailVerifiedAt: true },
+        });
+        if (current) {
+          token.role = await resolveUserRole(userId, current.email, current.role);
+          token.email = current.email;
+          token.isEmailVerified = current.emailVerifiedAt !== null;
+        } else {
+          token.role = "user";
+        }
       }
 
       return token;
@@ -77,6 +90,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             name: user.name,
             firstName: user.firstName,
             role,
+            isEmailVerified: user.emailVerifiedAt !== null,
           };
         } catch (err) {
           console.error("[auth] authorize failed", err);

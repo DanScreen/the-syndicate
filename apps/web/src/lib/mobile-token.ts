@@ -19,6 +19,7 @@ export type MobileUser = {
   id: string;
   email: string;
   name: string;
+  emailVerified: boolean;
 };
 
 const SESSION_PREFIX = "ms_";
@@ -27,7 +28,9 @@ function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 
-export async function createMobileToken(user: MobileUser): Promise<string> {
+export async function createMobileToken(
+  user: Pick<MobileUser, "id">
+): Promise<string> {
   const token = `${SESSION_PREFIX}${randomBytes(32).toString("base64url")}`;
   await prisma.mobileSession.create({
     data: {
@@ -44,7 +47,7 @@ export async function verifyMobileToken(token: string): Promise<MobileUser> {
       where: { tokenHash: hashToken(token) },
       include: {
         user: {
-          select: { id: true, email: true, name: true },
+          select: { id: true, email: true, name: true, emailVerifiedAt: true },
         },
       },
     });
@@ -59,7 +62,8 @@ export async function verifyMobileToken(token: string): Promise<MobileUser> {
         data: { lastUsedAt: new Date() },
       });
     }
-    return session.user;
+    const { emailVerifiedAt, ...user } = session.user;
+    return { ...user, emailVerified: emailVerifiedAt !== null };
   }
 
   // Existing 30-day JWTs remain valid during rollout. New sign-ins use
@@ -68,10 +72,16 @@ export async function verifyMobileToken(token: string): Promise<MobileUser> {
   if (!payload.id || !payload.email || !payload.name) {
     throw new Error("Invalid token payload");
   }
+  const user = await prisma.user.findUnique({
+    where: { id: payload.id as string },
+    select: { id: true, email: true, name: true, emailVerifiedAt: true },
+  });
+  if (!user) throw new Error("Unknown user");
   return {
-    id: payload.id as string,
-    email: payload.email as string,
-    name: payload.name as string,
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    emailVerified: user.emailVerifiedAt !== null,
   };
 }
 

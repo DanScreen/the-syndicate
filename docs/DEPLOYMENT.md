@@ -270,7 +270,7 @@ Full behaviour: [specs/platform-admin.md](./specs/platform-admin.md).
 | `CLOUD_SQL_CONNECTION_NAME` | `terraform output cloud_sql_connection_name` |
 | `DATABASE_URL` | `terraform output -json github_actions_secrets` (for migration step) |
 | `CRON_SECRET` | (Optional) Existing cron bearer — pass to Terraform on first apply to avoid rotation; stored in Secret Manager |
-| `RESEND_API_KEY` | (Optional) Resend API key for email notifications |
+| `RESEND_API_KEY` | Resend API key — **required** for email verification links (and email notifications) |
 | `ORIGIN_AUTH_SECRET` | (Optional) Cloudflare origin-auth shared secret — see [DDoS & abuse protection](#ddos--abuse-protection) |
 | `TF_STATE_BUCKET` | GCS bucket for Terraform remote state |
 

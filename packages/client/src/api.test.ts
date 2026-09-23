@@ -44,6 +44,20 @@ describe("createApiFetcher", () => {
       assert.ok(error instanceof ApiError);
       assert.equal(error.status, 403);
       assert.equal(error.message, "Not a member");
+      assert.equal(error.code, undefined);
+      return true;
+    });
+  });
+
+  it("carries the server's error code", async () => {
+    mock.method(globalThis, "fetch", async () =>
+      new Response(JSON.stringify({ error: "Confirm your email", code: "email_unverified" }), {
+        status: 403,
+      })
+    );
+    await assert.rejects(createApiFetcher()("/api/groups"), (error: unknown) => {
+      assert.ok(error instanceof ApiError);
+      assert.equal(error.code, "email_unverified");
       return true;
     });
   });

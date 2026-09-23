@@ -14,6 +14,8 @@
  *   npx tsx apps/web/scripts/data-maintenance.ts resync-matches --execute
  *   npx tsx apps/web/scripts/data-maintenance.ts preview-leg-announcements
  *   npx tsx apps/web/scripts/data-maintenance.ts backfill-leg-announcements --execute
+ *   npx tsx apps/web/scripts/data-maintenance.ts preview-stale-unverified [--days 30]
+ *   npx tsx apps/web/scripts/data-maintenance.ts delete-stale-unverified [--days 30] --execute
  *   npx tsx apps/web/scripts/data-maintenance.ts preview-line-keys
  *   npx tsx apps/web/scripts/data-maintenance.ts fix-line-keys --execute
  */
@@ -25,6 +27,7 @@ import {
   type LegOutcome,
 } from "@tiki-acca/shared";
 
+import { DELETED_EMAIL_DOMAIN } from "../src/lib/account-removal";
 import { deleteRedundantMarketLegs } from "../src/lib/legs/purge-duplicate-markets";
 import { lockRoundWithAccaPricing } from "../src/lib/odds/lock-round";
 import {
@@ -649,6 +652,81 @@ async function backfillLegAnnouncements() {
   console.log(`Created ${created} leg_submitted announcements.`);
 }
 
+const EMAIL_VERIFICATION_MIGRATION = "20260923120000_email_verification";
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Accounts that never confirmed their email, have no trace in any group (no
+ * membership, owned group, leg, or chat message), and have had at least
+ * `days` to confirm. Pre-existing accounts only started being asked when the
+ * verification migration ran, so the clock starts then, not at sign-up.
+ */
+function staleUnverifiedWhere(cutoff: Date): Prisma.UserWhereInput {
+  return {
+    emailVerifiedAt: null,
+    createdAt: { lt: cutoff },
+    role: { not: "admin" },
+    NOT: { email: { endsWith: `@${DELETED_EMAIL_DOMAIN}`, mode: "insensitive" } },
+    memberships: { none: {} },
+    ownedGroups: { none: {} },
+    legs: { none: {} },
+    roundMessages: { none: {} },
+  };
+}
+
+async function staleUnverifiedCutoff(days: number): Promise<Date | null> {
+  const rows = await prisma.$queryRaw<{ finished_at: Date | null }[]>`
+    SELECT finished_at FROM "_prisma_migrations"
+    WHERE migration_name = ${EMAIL_VERIFICATION_MIGRATION} AND rolled_back_at IS NULL
+  `;
+  const requiredSince = rows[0]?.finished_at;
+  if (!requiredSince) {
+    throw new Error(`Migration ${EMAIL_VERIFICATION_MIGRATION} hasn't been applied to this database`);
+  }
+  const cutoff = new Date(Date.now() - days * DAY_MS);
+  if (requiredSince > cutoff) {
+    const firstEligible = new Date(requiredSince.getTime() + days * DAY_MS);
+    console.log(
+      `Email verification has only been required since ${requiredSince.toISOString()}; ` +
+        `nothing is ${days} days stale until ${firstEligible.toISOString()}.`
+    );
+    return null;
+  }
+  return cutoff;
+}
+
+async function deleteStaleUnverified(days: number) {
+  if (!Number.isInteger(days) || days < 7) {
+    throw new Error("--days must be a whole number of at least 7");
+  }
+  const cutoff = await staleUnverifiedCutoff(days);
+  if (!cutoff) return;
+
+  const where = staleUnverifiedWhere(cutoff);
+  const users = await prisma.user.findMany({
+    where,
+    orderBy: { createdAt: "asc" },
+    select: { id: true, email: true, name: true, createdAt: true },
+  });
+
+  console.log(`${users.length} unconfirmed account(s) older than ${days} days with no group activity:`);
+  for (const user of users) {
+    console.log(`  ${user.createdAt.toISOString().slice(0, 10)}  ${user.email}  (${user.name})`);
+  }
+  if (users.length === 0) return;
+
+  if (!execute) {
+    console.log("\nDry run only. Re-run delete-stale-unverified with --execute to delete them.");
+    return;
+  }
+
+  // Re-apply the filter so anything that changed since the preview is skipped.
+  const result = await prisma.user.deleteMany({
+    where: { ...where, id: { in: users.map((user) => user.id) } },
+  });
+  console.log(`\nDeleted ${result.count} account(s).`);
+}
+
 /**
  * Legs minted before whole-number line keys were fixed (e.g. `over_under_2`,
  * `corners_over_under_10`) decode to the wrong line. Rewrites marketType from the
@@ -781,6 +859,14 @@ async function main() {
     case "backfill-leg-announcements":
       await backfillLegAnnouncements();
       break;
+    case "preview-stale-unverified":
+    case "delete-stale-unverified": {
+      if (command === "preview-stale-unverified" && execute) {
+        throw new Error("preview-stale-unverified never deletes; use delete-stale-unverified --execute");
+      }
+      await deleteStaleUnverified(Number(argValue("--days") ?? 30));
+      break;
+    }
     case "preview-line-keys":
     case "fix-line-keys":
       await fixLineKeys();
@@ -788,7 +874,7 @@ async function main() {
     default:
       console.error(`Unknown command: ${command ?? "(none)"}`);
       console.error(
-        "Commands: preview-solo-rounds, remove-solo-rounds, find-rounds, preview-resettle, resettle-round, preview-duplicate-markets, fix-duplicate-markets, reconcile-points, rescore-member-legs, resync-matches, preview-leg-announcements, backfill-leg-announcements, preview-line-keys, fix-line-keys"
+        "Commands: preview-solo-rounds, remove-solo-rounds, find-rounds, preview-resettle, resettle-round, preview-duplicate-markets, fix-duplicate-markets, reconcile-points, rescore-member-legs, resync-matches, preview-leg-announcements, backfill-leg-announcements, preview-line-keys, fix-line-keys, preview-stale-unverified, delete-stale-unverified"
       );
       process.exit(1);
   }

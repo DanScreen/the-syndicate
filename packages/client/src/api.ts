@@ -1,11 +1,14 @@
 /** A failed API call: HTTP status plus a readable message from the response body. */
 export class ApiError extends Error {
   status: number;
+  /** Machine-readable reason when the server sends one, e.g. `email_unverified`. */
+  code?: string;
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, code?: string) {
     super(message);
     this.name = "ApiError";
     this.status = status;
+    this.code = code;
   }
 }
 
@@ -47,7 +50,11 @@ export async function requestJson<T>(url: string, init: RequestInit = {}): Promi
   const res = await fetch(url, init);
   const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
   if (!res.ok) {
-    throw new ApiError(res.status, apiErrorMessage(data.error ?? data.message));
+    throw new ApiError(
+      res.status,
+      apiErrorMessage(data.error ?? data.message),
+      typeof data.code === "string" ? data.code : undefined
+    );
   }
   return data as T;
 }

@@ -25,6 +25,10 @@ export default function Index() {
     );
   }
 
+  if (user?.emailVerified === false) {
+    return <Redirect href="/verify-email" />;
+  }
+
   if (user) {
     return <Redirect href="/(main)/home" />;
   }

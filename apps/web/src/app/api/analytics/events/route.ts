@@ -10,7 +10,7 @@ const CLIENT_EVENT_TYPES = new Set(["page_view", "app_open"]);
 const EVENT_LIMIT_PER_MINUTE = 180;
 
 export async function POST(request: Request) {
-  const { session, channel, error } = await requireSession();
+  const { session, channel, error } = await requireSession({ allowUnverified: true });
   if (error) return error;
   if (!session || !channel) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

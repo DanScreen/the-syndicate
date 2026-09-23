@@ -1,4 +1,6 @@
 import type { NextAuthConfig } from "next-auth";
+import { NextResponse } from "next/server";
+import { isProtectedPath, verifyEmailHref } from "@/lib/auth-paths";
 
 /**
  * Edge-safe Auth.js config — no Prisma or Node-only imports.
@@ -17,15 +19,14 @@ export const authConfig = {
       const path = request.nextUrl.pathname;
       // Invite links must be viewable signed-out so we can prompt sign-in/up
       // while preserving `?code=` (see `/groups/join`).
-      const isJoinInvite = path === "/groups/join";
-      const isProtected =
-        path.startsWith("/dashboard") ||
-        (path.startsWith("/groups") && !isJoinInvite) ||
-        path.startsWith("/admin") ||
-        path.startsWith("/settings") ||
-        path.startsWith("/account") ||
-        path === "/performance";
-      if (isProtected) return isLoggedIn;
+      if (!isProtectedPath(path)) return true;
+      if (!isLoggedIn) return false;
+      // Edge can't reach the DB, so this reads the cookie's copy. The node-side
+      // jwt callback refreshes it; API routes re-check against the DB.
+      if (auth?.user?.isEmailVerified === false) {
+        const returnTo = `${path}${request.nextUrl.search}`;
+        return NextResponse.redirect(new URL(verifyEmailHref(returnTo), request.nextUrl));
+      }
       return true;
     },
     async jwt({ token, user }) {
@@ -34,6 +35,7 @@ export const authConfig = {
         token.id = user.id;
         token.firstName = user.firstName;
         token.role = user.role ?? "user";
+        token.isEmailVerified = user.isEmailVerified;
       }
       return token;
     },
@@ -45,6 +47,10 @@ export const authConfig = {
           session.user.firstName = token.firstName;
         }
         session.user.role = (token.role as "user" | "admin") ?? "user";
+        if (typeof token.isEmailVerified === "boolean") {
+          session.user.isEmailVerified = token.isEmailVerified;
+        }
+        if (typeof token.email === "string") session.user.email = token.email;
       }
       return session;
     },

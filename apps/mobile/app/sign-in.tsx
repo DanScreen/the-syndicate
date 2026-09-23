@@ -33,8 +33,8 @@ export default function SignInScreen() {
     setLoading(true);
     setError("");
     try {
-      await signIn(email.trim(), password);
-      redirectAfterAuth();
+      const user = await signIn(email.trim(), password);
+      redirectAfterAuth(user);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Sign in failed");
     } finally {

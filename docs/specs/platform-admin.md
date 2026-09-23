@@ -48,6 +48,7 @@ Protected by middleware (`/admin/*` requires login) + `requireAdminPage()` (redi
 |-------|---------|
 | `/admin` | Platform overview — users, groups, picks, accas, activity |
 | `/admin/activity` | Searchable per-user web/mobile login, visit, view, and recency report |
+| `/admin/unverified` | Unconfirmed-email accounts — fix email, resend link, remove (see [CURRENT_STATE](../CURRENT_STATE.md#email-verification)) |
 | `/admin/settlement` | Settlement queue — locked rounds, overdue-leg flags, manual settle, outcome correction |
 | `/admin/results` | Match results — override FT score (locks against feed), correct leg outcomes |
 | `/admin/leaderboards` | Group + player rankings by points |

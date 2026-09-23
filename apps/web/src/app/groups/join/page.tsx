@@ -2,7 +2,9 @@
 
 import { AppHeader } from "@/components/layout/header";
 import { MarketingHeader } from "@/components/marketing/marketing-header";
+import { verifyEmailHref } from "@/lib/auth-paths";
 import { withCallbackUrl } from "@/lib/callback-url";
+import { EMAIL_UNVERIFIED_CODE } from "@tiki-acca/shared";
 import { greetingFirstName } from "@/lib/user-display";
 import { copy } from "@tiki-acca/shared";
 import Link from "next/link";
@@ -72,6 +74,11 @@ function JoinGroupForm({ inviteCode: initialCode }: { inviteCode: string }) {
 
     if (res.status === 401) {
       setError("Please sign in or sign up to join this group.");
+      return;
+    }
+
+    if (res.status === 403 && data.code === EMAIL_UNVERIFIED_CODE) {
+      router.replace(verifyEmailHref(joinReturnPath(code.toUpperCase())));
       return;
     }
 

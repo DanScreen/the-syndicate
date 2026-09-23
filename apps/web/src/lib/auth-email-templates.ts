@@ -1,4 +1,5 @@
 import {
+  escapeHtml,
   mutedNote,
   paragraph,
   renderEmailLayout,
@@ -34,6 +35,42 @@ export function resetPasswordEmail(params: { resetUrl: string }): EmailDocument 
       // A dead CTA here locks someone out of their account entirely, so the URL
       // is repeated as text rather than living only in the plain-text part.
       ctaFallbackUrl: params.resetUrl,
+    }),
+    text,
+  };
+}
+
+export function verifyEmailEmail(params: { verifyUrl: string; firstName: string }): EmailDocument {
+  const greeting = params.firstName ? `Hi ${params.firstName},` : "Hi,";
+  const bodyHtml = [
+    paragraph(escapeHtml(greeting)),
+    paragraph("Confirm this is your email address to finish setting up your Tiki Acca account."),
+    mutedNote("This link expires in 24 hours. If you didn't create a Tiki Acca account, you can ignore this email."),
+  ].join("");
+
+  const text = [
+    "Confirm your Tiki Acca email",
+    "",
+    greeting,
+    "Confirm this is your email address to finish setting up your Tiki Acca account.",
+    `Confirm it here: ${params.verifyUrl}`,
+    "",
+    "This link expires in 24 hours.",
+    "If you didn't create a Tiki Acca account, you can ignore this email.",
+  ].join("\n");
+
+  return {
+    subject: "Confirm your Tiki Acca email",
+    preheader: "One tap to finish setting up your account.",
+    html: renderEmailLayout({
+      preheader: "One tap to finish setting up your account.",
+      eyebrow: "Welcome",
+      title: "Confirm your email",
+      bodyHtml,
+      ctaLabel: "Confirm email",
+      ctaUrl: params.verifyUrl,
+      // Same as the reset email: a dead CTA would leave the account gated.
+      ctaFallbackUrl: params.verifyUrl,
     }),
     text,
   };

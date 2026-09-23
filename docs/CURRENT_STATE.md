@@ -1,12 +1,12 @@
 # Current state (as-built)
 
-Last updated 19 September 2026 (FT score stability + auto-reconcile for disallowed goals / VAR; group tabs: Bet / Leaderboard / History / Chat). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
+Last updated 23 September 2026 (email verification: stricter sign-up email checks + confirm-your-email gate on web and mobile; unconfirmed addresses get no notification emails; admin `/admin/unverified` + stale-account cleanup). Previously 19 September 2026 (FT score stability + auto-reconcile for disallowed goals / VAR; group tabs: Bet / Leaderboard / History / Chat). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
 
 Production: **https://www.tikiacca.com** (apex → 301 to www via Cloudflare).
 
 > **Rebrand (July 2026):** The Syndicate → **Tiki Acca** ([spec](./specs/rename-tiki-acca.md)). Groups are called "groups". **Legacy internal names kept on purpose** — GCP resources (Cloud SQL `the_syndicate`, Cloud Run `the-syndicate-web`, artifact repo), mobile SecureStore keys (`syndicate_token`/`syndicate_user`), GitHub repo name. Do not rename these.
 
-Mobile (`apps/mobile/`) — v1 parity shipped and EAS project linked at `@the-syndicate/tiki-acca` (`0ad18d34-5681-4e1c-a208-e45064b0515c`). **iOS is live in App Store Connect** (submitted, build 5 of version 1.0.0, 2026-07-22). **Android** has a production build with Firebase push wired up but is not yet submitted — blocked on Play Console identity verification; see [ANDROID_LAUNCH.md](../apps/mobile/ANDROID_LAUNCH.md) for full status. Release process (versioning, git tagging, OTA updates via `eas update`) documented in [apps/mobile/README.md](../apps/mobile/README.md#versioning). The non-scrolling sign-in screen doubles as a compact brand landing page using shared copy from `packages/shared/src/brand.ts`. Mobile auth uses a revocable, non-expiring `MobileSession` bearer token stored in SecureStore, so users remain signed in until explicit logout; legacy 30-day JWTs remain valid during rollout. Logged-in chrome: brand-only `AppHeader` (not a home link) + bottom `AppTabBar`. Groups list lives at `/(main)/home` (not `/`) so tab switches never hit the auth stack; its first load is held behind a full-page loading state to prevent layout shift. Root `Stack.Protected` gates sign-in/sign-up. **Developer testing:** Expo Go / device build ([DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md)).
+Mobile (`apps/mobile/`) — v1 parity shipped and EAS project linked at `@the-syndicate/tiki-acca` (`0ad18d34-5681-4e1c-a208-e45064b0515c`). **iOS is live in App Store Connect** (submitted, build 5 of version 1.0.0, 2026-07-22). **Android** has a production build with Firebase push wired up but is not yet submitted — blocked on Play Console identity verification; see [ANDROID_LAUNCH.md](../apps/mobile/ANDROID_LAUNCH.md) for full status. Release process (versioning, git tagging, OTA updates via `eas update`) documented in [apps/mobile/README.md](../apps/mobile/README.md#versioning). The non-scrolling sign-in screen doubles as a compact brand landing page using shared copy from `packages/shared/src/brand.ts`. Mobile auth uses a revocable, non-expiring `MobileSession` bearer token stored in SecureStore, so users remain signed in until explicit logout; legacy 30-day JWTs remain valid during rollout. Logged-in chrome: brand-only `AppHeader` (not a home link) + bottom `AppTabBar`. Groups list lives at `/(main)/home` (not `/`) so tab switches never hit the auth stack; its first load is held behind a full-page loading state to prevent layout shift. Root `Stack.Protected` gates sign-in/sign-up, and routes signed-in users with an unconfirmed email to `app/verify-email.tsx` instead of `(main)` (see [Email verification](#email-verification)). **Developer testing:** Expo Go / device build ([DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md)).
 
 ---
 
@@ -83,6 +83,7 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 | Area | Status |
 |------|--------|
 | Auth (email/password, Auth.js JWT sessions) | ✅ |
+| Email verification — stricter sign-up email checks, confirm-link email, gate on web + mobile (existing users included) | ✅ |
 | Groups, invite codes, join links (`?code=`), no member cap | ✅ |
 | Legs per member (1 / 2 / 3) — owner create + Settings; updates open rounds | ✅ |
 | Concurrent active bets — owner cap 1–5; member-created; web + mobile switcher | ✅ pending owner test |
@@ -219,22 +220,37 @@ Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_
 
 ---
 
+## Email verification
+
+Every account must confirm its email before using the app. Applies to accounts created before this shipped too: migration `20260923120000_email_verification` leaves every existing `User.emailVerifiedAt` null, so they hit the gate on their next visit and are emailed a link automatically.
+
+- **Sign-up checks:** `checkEmailFormat` / `signUpEmailSchema` (`packages/shared/src/email.ts`) — stricter than Zod `.email()`: label/TLD rules, rejects reserved domains (`example.com`, `.test`, `.local`, …) and suggests fixes for common typos (`gmail.con` → `gmail.com`). Server also checks the domain has MX (or A/AAAA) records (`apps/web/src/lib/email-domain.ts`, 3s timeout, fails open on DNS errors). Same checks on the unverified change-email route. Mobile sign-up runs `checkEmailFormat` client-side.
+- **Links:** `lib/email-verification.ts` — 32-byte tokens stored SHA-256 hashed in `EmailVerificationToken`, 24h expiry, pinned to the address they were sent to (a link for an old address stops working after a change). Resending keeps earlier unexpired links valid. Reopening a used link reports success once verified. Links always open the web `/verify-email` page (no iOS AASA / Android App Link for it); mobile notices via the status endpoint. Without Resend configured, non-production logs the link to the server console. A successful **password reset** also marks the email verified (it proves inbox ownership).
+- **Enforcement (layered):** `requireSession()` in `lib/api-auth.ts` returns **403 `{ code: "email_unverified" }`** for unverified users on web and mobile bearer auth (DB-backed, the hard gate); routes that must work while unverified pass `{ allowUnverified: true }` (verify-email status/resend/change-email, analytics events, account delete, push-token delete). Web middleware (`auth.config.ts` `authorized`) redirects protected paths to `/verify-email?callbackUrl=…` using the `isEmailVerified` JWT flag, which `auth.ts` refreshes from the DB on each `auth()` call; `components/email-verification-guard.tsx` covers stale cookies client-side. Path helpers live in client-safe `lib/auth-paths.ts`. (The next-auth field is `isEmailVerified` to avoid Auth.js's `AdapterUser.emailVerified: Date`; the shared `AuthUser` used by mobile has `emailVerified?: boolean`.)
+- **Mobile:** sign-in response includes `emailVerified`; `AuthProvider` re-reads `/api/auth/verify-email/status` on startup and flips the user to unverified on any `email_unverified` 403 (`setEmailUnverifiedListener` in `src/api/client.ts`; both `api()` and the shared-hook fetcher in `src/api/use-api-fetcher.ts` route errors through `reportEmailUnverified`, using the `code` that `@tiki-acca/client`'s `ApiError` now carries). Root layout guards `(main)` behind `emailVerified !== false`; `app/verify-email.tsx` auto-sends a link if none is pending and re-checks when the app returns to the foreground. Pending invite codes survive verification and are consumed by `(main)/_layout`. Old app builds without this screen get 403s once the web deploy lands — ship the JS via `eas update` alongside it.
+- **Analytics:** `email_verified` event recorded when a link is consumed.
+- **Notifications:** lock / settle / pick-reminder **emails are never sent to unconfirmed addresses** (`sendEmailToUser` in `lib/notifications/channels/email-channel.ts`) — they may be typos or junk, and bounces hurt sender reputation. Push still goes out. `isRoundNotificationComplete` ignores the email channel for them so round retries don't loop. Unconfirmed members still count towards the round quota (rounds lock at first kickoff regardless); remove junk accounts via the admin page.
+- **Admin — `/admin/unverified`:** paginated, searchable list of unconfirmed accounts (tombstoned deleted accounts excluded) with joined date, last link sent, groups, leg count and a "domain can't receive mail" flag (live DNS check per page). Actions: **Fix email** (validated like sign-up, uniqueness + domain checks, then sends a new link — for users who can't sign in because they don't know their typo'd address), **Resend link**, **Remove** (`removeUnverifiedAccount` in `lib/account-removal.ts`: owned groups handed over as on self-delete; accounts with no legs or chat are hard-deleted, otherwise anonymised to "Former member"; either way removed from every group). Routes: `PATCH` / `DELETE /api/admin/unverified-users/[id]` (admin only, refuse verified or deleted accounts).
+- **Cleanup:** `npm run db:maintenance -- preview-stale-unverified [--days 30]` / `delete-stale-unverified [--days 30] --execute` hard-deletes unconfirmed accounts with no group membership, owned group, leg or chat message, older than `--days` (min 7). The clock starts at the later of sign-up and when migration `20260923120000_email_verification` was applied (read from `_prisma_migrations`), so pre-existing accounts get the full grace period.
+
 ## Web pages
 
-Protected routes enforced in `apps/web/src/middleware.ts` / `auth.config.ts`: `/dashboard`, `/groups/*` (**except** `/groups/join`), `/performance`, `/admin`, `/account`, `/settings`. `/groups/join` is public so invite links work signed-out — the page prompts Sign in / Sign up with `callbackUrl` back to the invite (`lib/callback-url.ts`). Middleware uses edge-safe `auth.config.ts` only (no Prisma); credentials + DB live in `auth.ts`. Middleware also runs on all non-static routes for the **origin-auth check** (`ORIGIN_AUTH_SECRET` + Cloudflare `x-origin-auth` header — blocks direct `*.run.app` traffic; `/api/health` and `/api/internal/*` exempt). Auth endpoints are **rate-limited** per IP (`lib/rate-limit.ts`): sign-in 10/5min, sign-up 5/hour. See [DEPLOYMENT.md](./DEPLOYMENT.md#ddos--abuse-protection).
+Protected routes enforced in `apps/web/src/middleware.ts` / `auth.config.ts`: `/dashboard`, `/groups/*` (**except** `/groups/join`), `/performance`, `/admin`, `/account`, `/settings`. `/groups/join` is public so invite links work signed-out — the page prompts Sign in / Sign up with `callbackUrl` back to the invite (`lib/callback-url.ts`). Middleware uses edge-safe `auth.config.ts` only (no Prisma); credentials + DB live in `auth.ts`. Middleware also runs on all non-static routes for the **origin-auth check** (`ORIGIN_AUTH_SECRET` + Cloudflare `x-origin-auth` header — blocks direct `*.run.app` traffic; `/api/health` and `/api/internal/*` exempt). Signed-in users with an unconfirmed email are redirected to `/verify-email` from every protected route and `/groups/join` (see [Email verification](#email-verification)). Auth endpoints are **rate-limited** per IP (`lib/rate-limit.ts`): sign-in 10/5min, sign-up 5/hour, verify-email 20/hour; per user: resend 3/hour, change-email 5/hour. See [DEPLOYMENT.md](./DEPLOYMENT.md#ddos--abuse-protection).
 
 | Path | Purpose |
 |------|---------|
 | `/` | Landing — hero, value props, how it works, FAQ, CTA (signed-in: app header + Groups/Performance CTAs) |
 | `/about` | Product story, what we are/aren’t, responsible gambling (reachable when signed in) |
 | `/blog`, `/blog/[slug]` | File-based MDX blog (static; drafts hidden in prod) |
-| `/sign-in`, `/sign-up` | Auth — sign-up collects **first name** + **last name**; both preserve `callbackUrl` (e.g. invite return) |
+| `/sign-in`, `/sign-up` | Auth — sign-up collects **first name** + **last name**; both preserve `callbackUrl` (e.g. invite return). Unverified users land on `/verify-email` after either |
+| `/verify-email` | Confirm-your-email gate (noindex). `?token=` consumes an emailed link (works signed-out); otherwise shows the pending screen: I've confirmed it / Resend / Wrong email address? / Sign out. Returns to `callbackUrl` once verified |
 | `/account` | Account — profile, notification prefs, blocked members (unblock), sign out, delete (via header greeting) |
 | `/settings/notifications` | Redirect → `/account#notifications` (legacy / List-Unsubscribe) |
 | `/dashboard` | **Groups home** — list of user's groups; **group/your points**; **current betslip** legs (fixture, market, selection, odds); waiting status if you haven't picked |
 | `/performance` | Cross-group stats (`DashboardStats`) — group filter dropdown, charts, share cards |
 | `/admin` | **Admin** — platform metrics (admin role only) |
 | `/admin/activity` | **Admin** — per-user web/mobile logins, visits, page/screen views, and last activity |
+| `/admin/unverified` | **Admin** — unconfirmed-email accounts: fix email, resend link, remove (see [Email verification](#email-verification)) |
 | `/admin/settlement` | **Admin** — settlement queue: locked rounds, overdue legs (3h+ after KO), manual settle + outcome correction |
 | `/admin/results` | **Admin** — recent matches: override FT score (locks against feed), correct leg outcomes |
 | `/admin/leaderboards` | **Admin** — group & player rankings by points |
@@ -290,7 +306,7 @@ Spec: [specs/odds-and-results-sourcing.md](./specs/odds-and-results-sourcing.md)
 
 **FT confirmation window.** When match sync first observes `FINISHED`, it stamps `Match.finishedAt` and `Match.scoreStableSince`. Auto-settle holds leg outcomes until the FT score has been **unchanged for** `RESULT_CONFIRMATION_MS` (1 hour, `packages/shared/src/constants.ts`), capped at `RESULT_CONFIRMATION_MAX_MS` (4 hours) from first FINISHED — so football-data.org can correct provisional scores (disallowed goals / VAR). Each feed score change resets `scoreStableSince` and restarts the 1h stability clock. During the wait the Match row keeps updating to the latest feed score. **After outcomes are written**, the same cron keeps reconciling for `RESULT_RECONCILE_MS` (24 hours): if the feed score later disagrees with a leg’s won/lost/void, outcomes and points are auto-corrected via `reconcileMatchLegOutcomes()` (chat correction + P/L delta) — no admin required. Admin score overrides set `scoreLocked` and confirm immediately. Existing FINISHED rows are backfilled so a deploy does not re-open the window.
 
-Email and push notifications fire on **round locked**, **round settled**, and **pick reminders** (within 2h before first kickoff). Resend for email (`RESEND_API_KEY`, `EMAIL_FROM`); Expo Push API for mobile (`PushDevice` tokens). Per-user preferences at `/account` (web) and `(main)/account` (mobile). Deduped via `NotificationLog`; round-level `lockedNotificationSentAt` / `settledNotificationSentAt` set only when all members are satisfied (delivered or opted out). Failed lock/settle deliveries retried on `sync-matches` (5 min). Pick reminders cron: `POST /api/internal/round-reminders` every 15 min (Terraform). Notification times formatted in `Europe/London`. See [specs/notifications.md](./specs/notifications.md).
+Email and push notifications fire on **round locked**, **round settled**, and **pick reminders** (within 2h before first kickoff). Resend for email (`RESEND_API_KEY`, `EMAIL_FROM`); Expo Push API for mobile (`PushDevice` tokens). Per-user preferences at `/account` (web) and `(main)/account` (mobile). Deduped via `NotificationLog`; round-level `lockedNotificationSentAt` / `settledNotificationSentAt` set only when all members are satisfied (delivered or opted out). Failed lock/settle deliveries retried on `sync-matches` (5 min). Pick reminders cron: `POST /api/internal/round-reminders` every 15 min (Terraform). Notification times formatted in `Europe/London`. Emails only go to confirmed addresses (see [Email verification](#email-verification)). See [specs/notifications.md](./specs/notifications.md).
 
 **Early settle on loss.** As soon as one leg is `lost`, the round settles: group scores −1 and concluded legs award member points under the per-leg rule (won → odds−1, lost → −1, void → 0). If no other open or locked bet remains, the next open round starts automatically; otherwise members continue through the existing active bets and can create another when the owner’s cap permits. Remaining legs stay `pending` until match sync (or admin) resolves them via `applyDeferredLegOutcome()` — still exactly-once (pending → outcome claim).
 
@@ -387,6 +403,8 @@ Platform admins (`User.role = admin`) see an **Admin** area including Overview, 
 | Logins (7d/30d) | `AnalyticsEvent` type `login` |
 | Page views (7d/30d) | `AnalyticsEvent` type `page_view` |
 
+`/admin/unverified` lists accounts that haven't confirmed their email, with fix-email / resend / remove actions — see [Email verification](#email-verification).
+
 `/admin/activity` lists every customer with searchable, sortable, paginated lifetime counts split by web and mobile: logins, 30-minute visits, page/screen views, legacy unknown-channel logins, joined date, last login, and last active. The channel filter limits the list to customers with activity on that channel.
 
 ### Leaderboards (`/admin/leaderboards`)
@@ -400,7 +418,7 @@ Admin-only for now; public rollout planned when user base grows.
 
 ### Analytics events
 
-`AnalyticsEvent` table: `sign_up`, `login`, `visit`, `page_view`, `app_open`. New events carry `channel: web | mobile`; historical page views are backfilled as web, while pre-migration logins remain null/legacy because their original channel cannot be recovered. Global authenticated trackers capture App Router navigation and mobile route/foreground activity. A visit begins after 30 minutes without page/screen activity; PostgreSQL advisory locking prevents duplicate starts across tabs or instances. Paths exclude query strings and normalise dynamic group/blog IDs. No IP address, device fingerprint, referrer, or third-party analytics identifier is stored.
+`AnalyticsEvent` table: `sign_up`, `login`, `visit`, `page_view`, `app_open`, `email_verified`. New events carry `channel: web | mobile`; historical page views are backfilled as web, while pre-migration logins remain null/legacy because their original channel cannot be recovered. Global authenticated trackers capture App Router navigation and mobile route/foreground activity. A visit begins after 30 minutes without page/screen activity; PostgreSQL advisory locking prevents duplicate starts across tabs or instances. Paths exclude query strings and normalise dynamic group/blog IDs. No IP address, device fingerprint, referrer, or third-party analytics identifier is stored.
 
 ### Key files
 
@@ -419,6 +437,8 @@ Admin-only for now; public rollout planned when user base grows.
 | `apps/web/src/components/stake-profit.tsx` | Points → profit converter |
 | `GET /api/admin/stats` | JSON overview (admin session) |
 | `GET /api/admin/leaderboards` | JSON leaderboards (admin session) |
+| `PATCH /api/admin/unverified-users/[id]` | Correct an unconfirmed user's email `{ email }` (same address = resend) and send a new link |
+| `DELETE /api/admin/unverified-users/[id]` | Remove an unconfirmed account (`{ result: "deleted" \| "anonymised" }`) |
 
 **Analytics coverage:** global authenticated web/mobile trackers include client navigation and group-tab changes. Pre-migration data remains partial; see Known limitations and the platform-admin spec.
 
@@ -473,7 +493,7 @@ Member summary **best / worst leg** = highest / lowest decimal odds across the m
 | `ODDS_DB_ONLY` | No | When `true`, bulk fixtures + core tiers read DB only (cron must refresh). Specials (corners & cards) still live-fetch on miss |
 | `ODDS_WARM_CORE_WITHIN_HOURS` | No | Cron prefetches core extended markets within N hours of kickoff (default 72) |
 | `CRON_SECRET` | No | Bearer token for `/api/internal/*` cron routes |
-| `RESEND_API_KEY` | No | Email notifications via Resend |
+| `RESEND_API_KEY` | No (prod: **yes**) | Email via Resend — notifications and **email verification links** (without it in production nobody can confirm their email; locally the link is logged to the console) |
 | `EXPO_ACCESS_TOKEN` | No | Optional Expo Push API auth (higher rate limits) |
 | `EMAIL_FROM` | No | Sender address (required with `RESEND_API_KEY`) |
 | `ADMIN_EMAILS` | No | Comma-separated emails granted platform admin |
@@ -498,6 +518,8 @@ Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `MatchObse
 
 - `User.firstName` / `User.lastName` — collected at sign-up; header greeting uses first name only (`lib/user-display.ts`).
 - `User.name` — full display name (`firstName lastName`) for leaderboards, picks, emails.
+- `User.emailVerifiedAt` — null until the user confirms their email (or resets their password); gates app/API use. See [Email verification](#email-verification).
+- `EmailVerificationToken` — hashed one-time confirm links (`tokenHash` unique, `email` it was sent to, `expiresAt`, `usedAt`); cascades on user delete.
 - `User.role` — platform role: `user` (default) or `admin` (via `ADMIN_EMAILS`).
 - `AnalyticsEvent` — first-party customer activity (`type`, `userId?`, `channel?`, normalised `path?`, `createdAt`), indexed by user/channel/time. The authenticated ingest route derives user and channel server-side.
 - `Group.legsPerMember` — 1–3 (default 1); owner create / Settings.
@@ -519,7 +541,7 @@ Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `MatchObse
 
 Schema: `packages/database/prisma/schema.prisma`
 
-Recent migrations include `20260718190000_concurrent_group_bets` and `20260718193000_concurrent_group_bets_constraints`.
+Recent migrations include `20260923120000_email_verification`, `20260718190000_concurrent_group_bets` and `20260718193000_concurrent_group_bets_constraints`.
 
 ---
 
@@ -547,7 +569,12 @@ Recent migrations include `20260718190000_concurrent_group_bets` and `2026071819
 | `GET /api/user/stats` | Session | Cross-group performance stats |
 | `GET/PATCH /api/user/notification-preferences` | Session | Notification toggles |
 | `POST /api/analytics/events` | Session / mobile bearer | Record an authenticated page/screen view or mobile foreground event; derives channel and 30-minute visits server-side |
-| `POST /api/auth/mobile/sign-in` | Public (rate-limited) | Create revocable persistent mobile session |
+| `POST /api/auth/sign-up` | Public (rate-limited) | Create account (strict email format + MX check); sends confirm link; returns `verificationEmailSent` |
+| `POST /api/auth/verify-email` | Public (20/hour/IP) | Consume `{ token }` from an emailed link; marks the user verified |
+| `GET /api/auth/verify-email/status` | Session / mobile bearer (unverified OK) | `{ email, emailVerified }` |
+| `POST /api/auth/verify-email/resend` | Session / mobile bearer (unverified OK, 3/hour) | Send a new link; `{ onlyIfNonePending: true }` skips if an unexpired link exists |
+| `POST /api/auth/verify-email/change-email` | Session / mobile bearer (unverified OK, 5/hour) | Fix a mistyped address `{ email, password }` — unverified accounts only; sends a new link |
+| `POST /api/auth/mobile/sign-in` | Public (rate-limited) | Create revocable persistent mobile session (response `user.emailVerified`) |
 | `POST /api/auth/mobile/refresh` | Mobile bearer | Upgrade a valid legacy JWT to a persistent session (persistent tokens pass through) |
 | `POST /api/auth/mobile/sign-out` | Mobile bearer | Revoke the current device session |
 | `GET/POST /api/groups/[id]/messages` | Member | Cursor-paginated permanent group thread (`before`/`after`, latest pick announcements included) / post group-wide text (500 chars, profanity filter, 10/min) |
@@ -573,7 +600,7 @@ Recent migrations include `20260718190000_concurrent_group_bets` and `2026071819
 
 1. **Results coverage:** Free-tier football-data.org competitions have two sources (consensus); League One, League Two, CL Qualification, Europa League, Carabao Cup, Nations League and FA Cup have **API-Football only** — without `API_FOOTBALL_KEY` they fall back to manual settlement in `/admin/settlement`. A single source still settles (`single`), so a wrong API-Football score on those competitions is caught only by the 24h reconcile or an admin. Cards and `to_qualify` legs, and corners legs on extra-time matches, are always admin-settled. Legs placed before this shipped have no `Match` until the next cron links them. EPL/Championship may be empty off-season.
 2. **Settlement is system-only** — auto-settle runs after match sync (every 5 min); leg outcomes update once a FINISHED score has been stable for 1h (or immediately after an admin score lock), with automatic reconciliation for 24h if the feed later corrects the score; round settles when **any leg loses** or **all legs are won/void**. Remaining legs on an early loss keep resolving via `applyDeferredLegOutcome()`. Owners cannot settle (routes removed July 2026). Overlapping settle attempts are safe — transactional, exactly-once via an atomic `locked → settled` claim (see [Settlement](#settlement)). Rounds the system cannot resolve are handled by admins via the **settlement queue** (`/admin/settlement`) — pending legs 3h+ after kickoff (including leftovers after early settle) are flagged for intervention. Wrong FT scores: usually self-heal via reconcile; escape hatch is **Admin → Results** to override and lock, or correct individual outcomes.
-3. **Email notifications** require Resend setup (`RESEND_API_KEY`, `EMAIL_FROM`); skipped if unset.
+3. **Email** requires Resend setup (`RESEND_API_KEY`, `EMAIL_FROM`); notifications are skipped if unset, but **verification links are required in production** — without Resend, new and existing users are stuck at `/verify-email`.
 4. **Auto-settle requires synced `Match` rows** — 5-min cron or manual `POST /api/internal/sync-matches`.
 5. **Cross-competition acca** — often no single bookmaker; best-per-leg odds locked at submission; per-leg deeplinks when Odds API provides them.
 6. **Betslip deeplinks** — selection/event links from Odds API (`includeLinks`); hubs only as labelled last resort. **No one-click full multi-leg betslip** for most UK books — CTA opens first available pick; users add remaining legs via per-leg Open. Mock mode has hubs only.
@@ -581,7 +608,7 @@ Recent migrations include `20260718190000_concurrent_group_bets` and `2026071819
 8. **Terraform CI** needs `storage.objectAdmin` on the deploy SA for the GCS state bucket. If CI fails with `storage.objects.list` denied, grant bucket access once (see [infra/terraform/README.md](../infra/terraform/README.md#terraform-ci-state-bucket-access)), then re-run the workflow. `deploy.yml` bootstraps `CRON_SECRET` in Secret Manager from the GitHub secret when missing.
 9. **Odds snapshots in PostgreSQL** — shared across Cloud Run instances; refreshed by `POST /api/internal/warm-odds-cache` (Cloud Scheduler job in Terraform) or admin **Warm odds cache now** on `/admin/odds`. Set `ODDS_DB_ONLY=true` so bulk/core user routes never burn API credits (specials still on-demand). In-memory cache remains for quota block/snapshot and football-data only.
 10. **Mobile app** — Native app code complete, feature parity across iOS/Android (single codebase, no platform forks). **iOS live in App Store Connect** (submitted, build 5). **Android** built and ready (Firebase push wired up) but not yet submitted — blocked on Play Console ID verification, see [ANDROID_LAUNCH.md](../apps/mobile/ANDROID_LAUNCH.md). Dev testing: Expo Go or `expo run:ios --device` ([DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md)); friend distribution via [FRIEND_TESTING.md](../apps/mobile/FRIEND_TESTING.md). Leg-edit parity shipped (same "Change my pick" flow as web). Admin pages are web-only by design. Web and mobile share their data layer (`@tiki-acca/client`), Bet-tab view logic (`deriveRoundView`) and copy — see [specs/mobile-apps.md](./specs/mobile-apps.md#reducing-duplicated-effort-and-artifacts).
-11. **Auth JWT** — middleware uses edge-safe `auth.config.ts` (no Prisma); `auth.ts` refreshes `role` from DB on each session update.
+11. **Auth JWT** — middleware uses edge-safe `auth.config.ts` (no Prisma); `auth.ts` refreshes `role`, `email` and `isEmailVerified` from DB on each session update. Middleware can therefore lag one request behind a verification done elsewhere; the verify page calls `update()` to re-issue the cookie.
 12. **Chat realtime** — the permanent group thread polls every 20 seconds while the Chat tab is visible; no WebSocket/SSE, typing indicators, read receipts, media, or reaction notifications in v1. Chat push needs Expo/APNs/FCM setup on a physical device.
 13. **Concurrent-bet notification links** — reminder/lock/settle payloads carry `roundId`, but current web/mobile group URLs do not preselect that bet; the user lands on the group’s default active bet and can switch manually.
 14. **Analytics coverage boundary** — complete authenticated web/mobile navigation and visit tracking starts with migration `20260718213000_customer_activity_tracking`. Earlier identified web page views remain available, but older login events cannot be split reliably between web and mobile and appear as **Legacy logins**.
@@ -596,7 +623,7 @@ Recent migrations include `20260718190000_concurrent_group_bets` and `2026071819
 - [x] Cloudflare Worker + www redirect configured
 - [ ] `ORIGIN_AUTH_SECRET`: Cloudflare Transform Rule (`x-origin-auth`) + GitHub secret — [DEPLOYMENT.md](./DEPLOYMENT.md#ddos--abuse-protection)
 - [ ] Cloudflare rate-limiting rule on `/api/auth/*` (free tier: 1 rule)
-- [x] `RESEND_API_KEY` + `EMAIL_FROM` in GitHub (optional, for email notifications)
+- [x] `RESEND_API_KEY` + `EMAIL_FROM` in GitHub (required — email verification; also email notifications)
 - [x] `ADMIN_EMAILS` in GitHub secrets + passed to Cloud Run via `deploy.yml`
 
 ## GCP cost notes
