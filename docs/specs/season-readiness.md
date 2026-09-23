@@ -51,7 +51,7 @@ Behaviour:
 - [x] Add both competitions (disabled by default) with the `manualSettlement` flag + `competitionNeedsManualSettlement()` helper.
 - [ ] Enable via `/admin/competitions` when qualifier rounds are scheduled; **verify the Odds API keys resolve** against a live pull first (stage rollovers shift availability).
 - [ ] Operator note: settle CL-qual / Europa League legs manually each qualifier round — there is no auto-sync on the current tier.
-- [ ] Optional: revisit the football-data.org Standard plan (~€49/mo) if manual settlement becomes a burden; it would also cover Conference League. See odds/settlement provider notes.
+- [ ] Optional: revisit the football-data.org Standard plan (~€49/mo) if manual settlement becomes a burden; it would also cover Conference League. See odds/settlement provider notes. *(2026-09-22: a cheaper option is proposed instead. API-Football, $19/mo, covers all of these plus the FA Cup — see [odds-and-results-sourcing.md](./odds-and-results-sourcing.md).)*
 
 ## Workstream B3 — UEFA Nations League (shipped, manual settlement)
 
@@ -82,7 +82,7 @@ Add to operator docs: each May/June, review competition end dates, plan the summ
 | Question | Recommendation |
 |----------|----------------|
 | Enable all five leagues at once or stagger? | Stagger — Championship + EPL first; add continental leagues when their seasons start (credits + picker noise) |
-| EFL Cup without free-tier results sync? | **Shipped with manual settlement** (`efl-cup` / Carabao Cup). Auto-sync deferred until football-data Tier 2+ (`FLC`) or another results source. FA Cup still backlog. |
+| EFL Cup without free-tier results sync? | **Shipped with manual settlement** (`efl-cup` / Carabao Cup). Auto-sync deferred until football-data Tier 2+ (`FLC`) or another results source. FA Cup still backlog. Proposed results source: API-Football ([odds-and-results-sourcing.md](./odds-and-results-sourcing.md)). |
 | Summer 2027 fallow gap | Out of scope; note in ROADMAP when 2026–27 season ships |
 
 ## Related docs
