@@ -34,6 +34,8 @@ Omit `ODDS_API_KEY` for mock fixtures. Add `FOOTBALL_DATA_API_KEY` and/or `API_F
 
 ### Deploy
 
+PRs and pushes to `main` → `.github/workflows/ci.yml`: lint, typecheck, tests against Postgres.
+
 Push to `main` → GitHub Actions (`.github/workflows/deploy.yml`): build → `db:migrate:deploy` → Cloud Run.
 
 Match sync + odds warm: Cloud Scheduler (Terraform) → `POST /api/internal/sync-matches` (every 5 min UTC) and `POST /api/internal/warm-odds-cache` (every 6 h UTC) with Bearer `CRON_SECRET` from Secret Manager. See [DEPLOYMENT.md](./DEPLOYMENT.md).

@@ -37,6 +37,7 @@ flowchart LR
 | CI/CD | Add `.github/workflows/deploy.yml` | Done |
 | IaC | Add `infra/terraform/` for GCP resources | Done |
 | IaC CI | Add `.github/workflows/terraform.yml` | Done |
+| PR checks | Add `.github/workflows/ci.yml` (lint, typecheck, tests) | Done |
 | Health | Add `GET /api/health` for Cloud Run probes | Done |
 | Security | Require `AUTH_SECRET` in production; tighten CORS | Done |
 | Docs | Update README + ARCHITECTURE | Done |
