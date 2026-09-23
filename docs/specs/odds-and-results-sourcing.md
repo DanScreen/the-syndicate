@@ -28,7 +28,8 @@
   - Betslip links are low priority (owner, 2026-09-22), so The Odds API earns its place only through the number of UK bookmakers it prices.
   - API-Football's odds come in the same subscription at no extra cost: bet365, William Hill and others, 100+ bet types, refreshed every 3 hours.
   - In parallel, trial the three sub-£50 feeds that claim UK depth (OddsPapi, UK Odds API Starter, TheStatsAPI) and adopt **at most one**.
-- **Moving extended markets off The Odds API cuts its credit burn by ~90%** in a peak-season, 20-competition scenario (§5.1). The plan can then drop from 100K ($59) to 20K ($30), which pays for the new sources.
+- **Moving extended markets off The Odds API cuts its credit burn by ~90%** in a peak-season, 20-competition scenario (§5.1). We're already on the 20K plan ($30; probe, 22 Sept 2026), so this is what lets the catalogue grow without moving up to 100K ($59).
+- **Don't retire The Odds API yet** (open decision 11). API-Football can't yet replace its UK bookmaker breadth, its Champions League odds or its freshness ([ODDS_PROVIDERS §7](../ODDS_PROVIDERS.md#7-september-2026-re-evaluation)).
 - **API calls scale with competitions, not visitors** (§5.3). The site reads odds and results from Postgres; only crons call providers. The plan leaves ~5× headroom on API-Football even with the catalogue doubled to 40 competitions.
 - **Not recommended:**
   - scraping bookmakers or Oddschecker;
@@ -46,7 +47,7 @@
 
 | Gap | Evidence |
 |-----|----------|
-| 5 catalogue competitions never auto-settle | `manualSettlement: true` on `league-one`, `league-two`, `champions-league-qual`, `europa-league`, `efl-cup` (`packages/shared/src/competitions.ts`). The football-data.org free tier has none of them |
+| 6 catalogue competitions never auto-settle | `manualSettlement: true` on `league-one`, `league-two`, `champions-league-qual`, `europa-league`, `efl-cup` and `nations-league` (#61) (`packages/shared/src/competitions.ts`). The football-data.org free tier has none of them |
 | FA Cup can't be added | [season-readiness.md](./season-readiness.md): `FAC` isn't on the free tier either |
 | Corners & cards are sold but never auto-settle | `MatchResult` is only `{homeGoals, awayGoals, status}`. `resolveLegOutcome()` returns `null`, so every such leg falls into the admin queue ([ODDS_PROVIDERS §4](../ODDS_PROVIDERS.md#4-results-coverage-the-settlement-gap)) |
 | No live scores | The football-data free tier delays scores. This is an open question in [live-matchday.md](./live-matchday.md) |
@@ -289,7 +290,9 @@ Scenario: peak-season weekend, 20 enabled competitions, 150 fixtures inside the 
 | Core tier (5 credits per fixture per run) | 5 × 150 × 4 × 30 = 90,000 | Retired: 0 |
 | Specials on demand (7 credits) | Occasional | Retired: 0 |
 | `/scores` (2 credits, only competitions with pending legs, KO+100m…KO+4h) | — | ~1,000–5,000 |
-| **Total / month** | **~97,000 → needs 100K ($59), no headroom** | **~8,000–12,000 → fits 20K ($30)** |
+| **Total / month** | **~97,000 → would need 100K ($59), no headroom** | **~8,000–12,000 → fits 20K ($30)** |
+
+This is a scenario, not today's usage. The account is on **20K ($30)**, and on 22 Sept 2026 it had used 16,655 credits with 3,345 left (probe). Enabling many more competitions before Phase 3 would push it over 20K.
 
 Doubling the catalogue to 40 competitions doubles bulk to 14,400/month (~15–19K with `/scores`). That still fits 20K at today's 6-hourly refresh. Refreshing every 3h, or going well past 40 competitions, needs the 100K plan ($59); Target A then becomes ~£62/month.
 
@@ -297,14 +300,14 @@ Doubling the catalogue to 40 competitions doubles bulk to 14,400/month (~15–19
 
 | Line | Phases 1–2 (results fixed) | Target A (API-Football odds as the depth feed) | Target B (+ one bake-off feed) |
 |---|---|---|---|
-| The Odds API | 100K $59 | 20K $30 | 20K $30 |
+| The Odds API | 20K $30 | 20K $30 | 20K $30 |
 | API-Football | Pro $19 | Pro $19 | Pro $19 |
 | Bake-off feed | — | — | ~$49–65 (OddsPapi ~$49 unverified; UK Odds API £49 ≈ $65; TheStatsAPI $50) |
 | AI resolver | ≤ $5 | ≤ $5 | ≤ $5 |
 | football-data.org | $0 | $0 | $0 |
-| **Total** | **~$83 ≈ £62** | **~$54 ≈ £41** | **~$103–119 ≈ £77–89** |
+| **Total** | **~$54 ≈ £41** | **~$54 ≈ £41** | **~$103–119 ≈ £77–89** |
 
-- **Incremental cost of Phases 1–2** over today is **$19 + AI ≈ £15–18**, if you're already on the 100K plan.
+- **Incremental cost of Phases 1–2** over today is **$19 + AI ≈ £15–18**. Today is the 20K plan ($30), confirmed by the probe on 22 Sept 2026. The earlier draft assumed 100K.
 - **Target B with UK Odds API Starter** sits close to the cap once VAT is added. Choose it only if VAT is reclaimable or its bookmaker list clearly beats the others.
 - **API-Football Ultra ($29, 75K requests/day)** is only needed if the catalogue grows a lot or we poll individual fixtures every minute. §5.3 shows Pro is ample.
 
@@ -338,9 +341,9 @@ Bake-off candidates: TheStatsAPI Starter (100K requests/month) would comfortably
 
 ### Phase 0: bake-off (1–2 weeks, ≈ £15 plus free tiers)
 
-Rule of thumb #2: only trials count. Nothing below has been probed live, because this research session's network egress blocked every vendor host.
+Rule of thumb #2: only trials count. Probes ran locally on 22–23 Sept 2026; results are in [ODDS_PROVIDERS §7](../ODDS_PROVIDERS.md#7-september-2026-re-evaluation).
 
-- [ ] Buy one month of API-Football Pro. The free plan can't see the current season.
+- [x] Buy one month of API-Football Pro. The free plan can't see the current season. (Bought 2026-09-22.)
 - [ ] Free keys and trials:
   - OddsPapi (250 requests/month);
   - TheStatsAPI (7 days);
@@ -353,7 +356,7 @@ Rule of thumb #2: only trials count. Nothing below has been probed live, because
     - UK bookmakers per market for sample fixtures (h2h, BTTS, corners, cards, goalscorer).
   - **football-data.org:** the competitions per plan tier.
   - **API-Football:** plan and quota, the bookmaker list with UK brands flagged, and coverage flags for the §3.7 competitions. It also samples current-season Premier League odds, which on the free plan just reports the plan restriction.
-- [ ] **Probe v2**, once Pro is bought, per source × fixture:
+- [ ] **Probe v2**, once Pro is bought, per source × fixture. Partly done on Nations League fixtures (quote age, mapping rate, past-season stats); the rest needs finished current-season fixtures:
   - **Odds:** quote age.
   - **Results:** latency from FT to a terminal observation, 90' vs AET correctness, corners/cards presence for League Two, card-event detail types, and automatic mapping rate against The Odds API event ids.
 - [ ] Check The Odds API `/scores` coverage for each enabled sport key and its extra-time behaviour.
@@ -493,7 +496,8 @@ Catalogue fields: `apiFootballLeagueId?`, `fixtureSource?` (§3.6). Quote fields
 | 7 | AI resolver: auto-accept, or suggest-only | Suggest-only until the eval passes |
 | 8 | Kambi public-API experiment | No |
 | 9 | Friendlies | International friendlies: yes, once Phase 1 auto-settles them. Club friendlies: no (§3.7) |
-| 10 | Add the Nations League before Phase 1 ships, with manual settlement, to cover the 21 Sept – 6 Oct break | Owner's call. Verify the Odds API key first |
+| 10 | Add the Nations League before Phase 1 ships, with manual settlement, to cover the 21 Sept – 6 Oct break | **Decided 2026-09-22 (owner): yes.** Key verified live (45 fixtures, 11 UK books on match result); shipped in #61 |
+| 11 | Retire The Odds API entirely and take all odds from API-Football | **No for now (assessed 2026-09-23).** On Nations League fixtures API-Football had 4 UK sportsbooks against The Odds API's 10, no Champions League odds, and an 11-hour-old quote. It saves $30/month. Revisit after Phase 3, measuring how often the best price comes from a book only The Odds API carries ([ODDS_PROVIDERS §7](../ODDS_PROVIDERS.md#7-september-2026-re-evaluation)) |
 
 ## 10. Verification status and sources
 

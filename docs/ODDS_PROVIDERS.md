@@ -374,9 +374,10 @@ latter means keeping the manual queue as a fallback regardless.
 
 ## 7. September 2026 re-evaluation
 
-**Date:** 2026-09-22 · **Status:** research complete, **nothing live-probed**.
-The research session's network egress blocked every vendor host, so these
-findings come from vendor docs and web search. Phase 0 of the spec is the trial.
+**Date:** 2026-09-22 · **Status:** research complete; **live-probed 22–23 Sept**
+(see *Probe results* below). The research itself came from vendor docs and web
+search, because that session's network egress blocked every vendor host. Phase 0
+of the spec is the trial.
 
 The brief changed from "outrights + BTTS depth" to:
 
@@ -429,6 +430,48 @@ A small portfolio does, for roughly £40–£90/month. The plan in
 - **A bake-off** that picks at most one extra depth feed.
 
 The spec's §10 lists sources and a confidence level for each claim.
+
+### Probe results (22–23 Sept 2026)
+
+Run locally with `scripts/probe-sources.mjs` plus a one-off Nations League
+check. API-Football was on Pro; The Odds API on region `uk`.
+
+**The Odds API**
+
+| Measure | Result |
+|---|---|
+| Plan and credits | **20K plan** (not 100K as the spec first assumed): 16,655 used, 3,345 left on 22 Sept |
+| Soccer keys | 67, 43 active. Active §3.7 candidates: Nations League, Conference League, Ligue 2, Serie B, 2. Bundesliga, La Liga 2, Belgium, Turkey, Greece, Austria, Switzerland, Denmark, Norway, Sweden, MLS, Liga MX, Argentina, Brazil Série B, Copa Sudamericana, K League 1, League of Ireland, Scottish Premiership |
+| Inactive or missing | FA Cup, Poland, J League, A-League and Saudi Pro League inactive. No key at all for the National League, WSL, Scottish Championship or international friendlies |
+| `/scores` (last 3 days) | EPL 4 of 24 listed events completed; Championship 2 of 14; League Two, Europa League and Nations League 0 |
+| UK books, Championship (9–10 Oct, 17 days out) | h2h 13 (incl. the Betfair and Smarkets exchanges), BTTS 5, corners 0, cards 0, anytime scorer 0 |
+| UK books, Nations League (24 Sept, 2 days out) | h2h 11 (incl. the Betfair exchange), BTTS 7, corners 1 book on one of two fixtures, cards 0, anytime scorer 0 |
+
+**API-Football (Pro)**
+
+| Measure | Result |
+|---|---|
+| Quota | 7,500 requests/day; a full probe uses under 20 |
+| Bookmakers | 33 listed. UK: Betfair, William Hill, bet365, Ladbrokes, Betfred, Unibet, 888Sport, Betway, BetVictor. **No Sky Bet, Paddy Power or Coral** |
+| Premier League odds | bet365 up to 105 bet types per fixture, William Hill 48, Betfair 17, BetVictor 14 |
+| Nations League odds | 50 of 156 fixtures priced so far. UK books actually present: **Betfair, bet365, William Hill and BetVictor only**. bet365 has corners over/under and anytime scorer; only one non-UK book prices cards |
+| Quote age | Nearest Nations League fixture last updated 11 hours before the probe |
+| Coverage flags, current season | Events, stats and odds on the Premier League, Championship, League One, League Two, Carabao Cup, WSL, Scottish Premiership, League of Ireland, Europa League, MLS and international friendlies. **Champions League and Conference League: no odds.** National League, Scottish Championship and club friendlies: no stats. FA Cup: no events or stats |
+| Nations League stats | Flags are off for 2026 (not started) but on for every past season. Four sampled 2024–26 finished fixtures all had corners, yellow cards and goal/card events |
+| Mapping to The Odds API | Nations League: 37 of 45 events match on exact name and date; the other 8 need 4 aliases (Rep. Of Ireland, Türkiye, Czechia, FYR Macedonia), giving 45 of 45 |
+
+**football-data.org:** 12 competitions on TIER_ONE, as expected, plus Copa Libertadores on TIER_FOUR.
+
+### Could API-Football replace The Odds API outright?
+
+Not yet (spec open decision 11, 2026-09-23). Retiring The Odds API saves $30/month but:
+
+- **Fewer UK bookmakers.** 4 UK sportsbooks on Nations League fixtures against 10, and none of Paddy Power, Coral or Sky Bet. "Best price across UK books" gets worse.
+- **No Champions League or Conference League odds** on API-Football, and the Champions League is in the catalogue.
+- **Staler prices.** API-Football refreshes every 3h; the sample quote was 11h old.
+- **It's a rewrite, not a switch.** The fixture list, `externalOddsId` on legs, lock-time quotes and betslip deeplinks all come from The Odds API today.
+
+API-Football's odds remain the planned **depth** feed (BTTS, double chance, correct score, corners, goalscorer), where The Odds API is thin.
 
 ---
 
