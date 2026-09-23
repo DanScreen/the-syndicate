@@ -126,6 +126,15 @@ Android delivers `expo-notifications` via Firebase Cloud Messaging.
 4. Promote from internal → closed/open testing → production in Play Console when ready.
 5. Once the app exists, go back to step 2 above and add the Play App Signing SHA-256
    fingerprint to `assetlinks.json` alongside the upload one.
+6. Turn on Android in CI releases. The CI workflow submits from EAS's servers, so a
+   local `serviceAccountKeyPath` file won't be found there — upload the service account
+   JSON to EAS instead (`npx eas credentials --platform android` → Google Service Account
+   → upload key; run it yourself, it's interactive). Then:
+   ```bash
+   gh variable set MOBILE_RELEASE_PLATFORMS --body all
+   ```
+   From then on every `expo.version` bump merged to `main` builds and submits Android
+   too — see [README.md → CI](./README.md#ci).
 
 ---
 

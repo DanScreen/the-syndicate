@@ -218,7 +218,7 @@ Checklist for implementation. Web route → API → mobile screen.
 ### Phase 5 — Store release
 
 - [x] EAS Build profiles (`apps/mobile/eas.json` — development, preview, production)
-- [x] CI workflow (`.github/workflows/eas.yml`) — `EXPO_TOKEN`, tag `mobile-v*`
+- [x] CI workflow (`.github/workflows/eas.yml`) — `EXPO_TOKEN`; build + auto-submit on `app.json` version bump to `main`
 - [x] Store listing copy ([apps/mobile/STORE_LISTING.md](../../apps/mobile/STORE_LISTING.md))
 - [x] Splash screen + universal link config in `app.json` (icons in `assets/` — re-export from Acca stack when rebranding)
 - [x] **Operator:** `eas login` + `eas init` — linked to `@the-syndicate/tiki-acca`

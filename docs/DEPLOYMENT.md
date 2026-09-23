@@ -373,9 +373,9 @@ Icons/splash: `apps/mobile/assets/` — export checklist in [BRAND.md](./BRAND.m
 
 ### CI
 
-[`.github/workflows/eas.yml`](../.github/workflows/eas.yml) — manual **workflow_dispatch** or push tag `mobile-v*` (e.g. `mobile-v1.0.0`).
+[`.github/workflows/eas.yml`](../.github/workflows/eas.yml) — a push to `main` that bumps `expo.version` in `apps/mobile/app.json` runs a `production` EAS build with `--auto-submit` to the stores; manual **workflow_dispatch** for ad-hoc builds. Details: [apps/mobile/README.md → CI](../apps/mobile/README.md#ci).
 
-**GitHub secret:** `EXPO_TOKEN` (expo.dev → Access tokens).
+**GitHub secret:** `EXPO_TOKEN` (expo.dev → Access tokens). **Repo variable (optional):** `MOBILE_RELEASE_PLATFORMS` — `ios` (default), `android` or `all`. Store submit credentials (App Store Connect API key, Google service account key) live on EAS, not GitHub.
 
 ### Universal links (optional)
 

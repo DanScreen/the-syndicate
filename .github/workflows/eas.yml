@@ -1,6 +1,14 @@
 name: EAS Build (mobile)
 
 on:
+  # Release path: a push to main that changes apps/mobile/app.json's
+  # expo.version builds production binaries and auto-submits them to the
+  # stores. Other app.json edits (and all other pushes) don't build — JS-only
+  # changes ship via `eas update` instead (see apps/mobile/README.md).
+  push:
+    branches: [main]
+    paths:
+      - "apps/mobile/app.json"
   workflow_dispatch:
     inputs:
       platform:
@@ -20,9 +28,17 @@ on:
         options:
           - preview
           - production
-  push:
-    tags:
-      - "mobile-v*"
+      submit:
+        description: Auto-submit to the stores when the build finishes (production only)
+        required: false
+        default: false
+        type: boolean
+
+# Never run two release builds for the same ref at once — the second would
+# race the first for the same auto-incremented build number.
+concurrency:
+  group: eas-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -35,32 +51,86 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Resolve build
+        id: resolve
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          INPUT_PLATFORM: ${{ inputs.platform }}
+          INPUT_PROFILE: ${{ inputs.profile }}
+          INPUT_SUBMIT: ${{ inputs.submit }}
+          # Platforms to release on a version bump. Android stays off until
+          # Play submission is set up (apps/mobile/ANDROID_LAUNCH.md step 4) —
+          # then set the repo variable MOBILE_RELEASE_PLATFORMS=all.
+          RELEASE_PLATFORMS: ${{ vars.MOBILE_RELEASE_PLATFORMS || 'ios' }}
+        run: |
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            submit=false
+            if [ "$INPUT_SUBMIT" = "true" ] && [ "$INPUT_PROFILE" = "production" ]; then
+              submit=true
+            fi
+            {
+              echo "build=true"
+              echo "platform=$INPUT_PLATFORM"
+              echo "profile=$INPUT_PROFILE"
+              echo "submit=$submit"
+            } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          version() { node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).expo.version))'; }
+          current=$(version < app.json)
+          previous=""
+          if git fetch --no-tags --depth=1 origin "$BEFORE" 2>/dev/null; then
+            previous=$(git show "$BEFORE:apps/mobile/app.json" | version)
+          else
+            echo "::warning::Could not fetch previous commit $BEFORE; not building. Run this workflow manually if a release is needed."
+          fi
+
+          if [ -n "$previous" ] && [ "$current" != "$previous" ]; then
+            echo "Version bumped $previous -> $current: building and submitting ($RELEASE_PLATFORMS)"
+            {
+              echo "build=true"
+              echo "platform=$RELEASE_PLATFORMS"
+              echo "profile=production"
+              echo "submit=true"
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo "expo.version unchanged ($current): nothing to build"
+            echo "build=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Setup Node
+        if: steps.resolve.outputs.build == 'true'
         uses: actions/setup-node@v5
         with:
           node-version: 20
           cache: npm
 
       - name: Install dependencies
+        if: steps.resolve.outputs.build == 'true'
         run: npm ci
         working-directory: .
 
       - name: Setup EAS
+        if: steps.resolve.outputs.build == 'true'
         uses: expo/expo-github-action@v8
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Resolve platform
-        id: platform
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "value=${{ inputs.platform }}" >> "$GITHUB_OUTPUT"
-            echo "profile=${{ inputs.profile }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "value=all" >> "$GITHUB_OUTPUT"
-            echo "profile=production" >> "$GITHUB_OUTPUT"
-          fi
-
+      # --no-wait: the build (and the submit that --auto-submit queues after
+      # it) runs on EAS servers; follow progress on expo.dev rather than
+      # holding a runner for the ~15-30 min build.
       - name: EAS build
-        run: eas build --non-interactive --profile "${{ steps.platform.outputs.profile }}" --platform "${{ steps.platform.outputs.value }}"
+        if: steps.resolve.outputs.build == 'true'
+        env:
+          PLATFORM: ${{ steps.resolve.outputs.platform }}
+          PROFILE: ${{ steps.resolve.outputs.profile }}
+          SUBMIT: ${{ steps.resolve.outputs.submit }}
+        run: |
+          args=(--non-interactive --no-wait --profile "$PROFILE" --platform "$PLATFORM")
+          if [ "$SUBMIT" = "true" ]; then
+            args+=(--auto-submit)
+          fi
+          eas build "${args[@]}"
