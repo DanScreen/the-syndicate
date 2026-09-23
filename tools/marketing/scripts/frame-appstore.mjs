@@ -7,10 +7,10 @@
  * App Store requires for 6.7"/6.9" iPhones.
  *
  * SOURCE: drop full-screen Simulator captures (iPhone 16 Pro Max = 1290×2796)
- *         into marketing-posts/_appstore-raw/ named per SCREENS below.
- * OUTPUT: marketing-posts/app-store/*.png
+ *         into tools/marketing/_appstore-raw/ named per SCREENS below.
+ * OUTPUT: tools/marketing/app-store/*.png
  *
- * Run from the repo root:  node marketing-posts/scripts/frame-appstore.mjs
+ * Run from the repo root:  node tools/marketing/scripts/frame-appstore.mjs
  * Add --placeholder to render synthetic sources for a geometry preview.
  */
 import { createRequire } from "node:module";
@@ -20,8 +20,7 @@ import { fileURLToPath } from "node:url";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const POSTS_ROOT = join(SCRIPT_DIR, "..");
-const REPO_ROOT = join(POSTS_ROOT, "..");
-const require = createRequire(join(REPO_ROOT, "package.json"));
+const require = createRequire(import.meta.url);
 const sharp = require("sharp");
 
 const RAW = join(POSTS_ROOT, "_appstore-raw");

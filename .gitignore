@@ -17,10 +17,10 @@ tfplan
 .DS_Store
 
 # Generated outputs (regenerate with the scripts that write them)
-scripts/preview-notification-emails.html
-marketing-posts/gallery.html
-marketing-posts/square/
-marketing-posts/story/
-marketing-posts/x-twitter/
-marketing-posts/app-store/
-marketing-posts/app-store-6.5/
+apps/web/scripts/preview-notification-emails.html
+tools/marketing/gallery.html
+tools/marketing/square/
+tools/marketing/story/
+tools/marketing/x-twitter/
+tools/marketing/app-store/
+tools/marketing/app-store-6.5/

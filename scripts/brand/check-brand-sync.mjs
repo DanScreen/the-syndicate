@@ -8,13 +8,13 @@
  * variables (accentBright → --accent-bright). Run with --fix-hint to print the
  * expected :root block for globals.css.
  *
- * Usage: node scripts/check-brand-sync.mjs [--fix-hint]
+ * Usage: node scripts/brand/check-brand-sync.mjs [--fix-hint]
  */
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const brandPath = join(root, "packages/shared/src/brand.ts");
 const cssPath = join(root, "apps/web/src/app/globals.css");
 

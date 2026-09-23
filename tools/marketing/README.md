@@ -5,15 +5,30 @@ draft for review, not a record of published posts.
 
 ## Structure
 
-- `_raw-screenshots/` — source UI captures.
+This folder is the `@tiki-acca/marketing` npm workspace. The root
+`marketing:*` scripts call into it.
+
+Inputs (committed):
+
+- `_raw-screenshots/` — source UI captures for social posts.
+- `_appstore-raw/` — full-screen iOS Simulator captures for App Store frames.
+- `scripts/concepts.mjs` — shared concept, copy, source, and approval-tier list.
+- `scripts/make-posts.mjs` — branded image composer (`npm run marketing:build`).
+- `scripts/make-x-header.mjs` — 1500×500 X account header (`npm run marketing:x-header`).
+- `scripts/capture-panels.mjs` — automated chart and bookmaker-panel capture (`npm run marketing:capture`).
+- `scripts/build-gallery.mjs` — self-contained `gallery.html` review page (`npm run marketing:gallery`).
+- `scripts/frame-appstore.mjs` — App Store screenshot framer (`npm run marketing:appstore`).
+
+Outputs (generated, git-ignored — regenerate rather than commit):
+
 - `square/` — 1080×1080 PNGs.
 - `story/` — 1080×1920 PNGs.
-- `x-twitter/` — 1600×900 PNGs.
-- `scripts/concepts.mjs` — shared concept, copy, source, and approval-tier list.
-- `scripts/make-posts.mjs` — branded image composer.
-- `scripts/make-x-header.mjs` — 1500×500 X account header.
-- `scripts/capture-panels.mjs` — automated chart and bookmaker-panel capture.
-- `scripts/build-gallery.mjs` — self-contained `gallery.html` review page.
+- `x-twitter/` — 1600×900 PNGs and the X header.
+- `app-store/` — 1290×2796 App Store frames (`AS_OUT=<dir>` writes elsewhere).
+- `gallery.html` — review page.
+
+The last committed set of outputs is in git history at commit `9809a75`
+(`marketing-posts/`).
 
 ## First-time setup
 
@@ -25,8 +40,8 @@ npx playwright install chromium
 docker compose up -d
 ```
 
-Playwright and Sharp are direct development dependencies so the workflow does
-not depend on packages pulled in transitively by the web app.
+Playwright and Sharp are dev dependencies of this workspace, so the workflow
+does not depend on packages pulled in transitively by the web app.
 
 ## Refresh the source UI
 
@@ -66,7 +81,7 @@ visible, and avoid clipping page titles or primary content.
 npm run marketing:build
 npm run marketing:gallery
 npm run marketing:x-header
-open marketing-posts/gallery.html
+open tools/marketing/gallery.html
 ```
 
 The composer overwrites files listed in the manifest. Remove obsolete generated
@@ -79,4 +94,4 @@ PNGs when deleting or renaming a concept.
 - Headlines follow `docs/BRAND.md`; factual UI remains unaltered.
 - Avoid tipster language such as “guaranteed”, “risk-free”, or “free money”.
 - Confirm the final compliance wording before paid publication.
-- Stage `marketing-posts/` explicitly; do not stage unrelated untracked files.
+- Outputs are git-ignored; share them via the gallery or by uploading, not by committing.

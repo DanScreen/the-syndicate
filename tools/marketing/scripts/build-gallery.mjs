@@ -1,11 +1,11 @@
 /**
  * Tiki Acca — marketing post review gallery.
  *
- * Reads the composed PNGs from marketing-posts/{square,story,x-twitter}/, embeds
+ * Reads the composed PNGs from tools/marketing/{square,story,x-twitter}/, embeds
  * downscaled JPEG thumbnails as data URIs, and writes a single self-contained
- * marketing-posts/gallery.html (openable locally, or publish as a Claude Artifact).
+ * tools/marketing/gallery.html (openable locally, or publish as a Claude Artifact).
  *
- * Run:  node marketing-posts/scripts/build-gallery.mjs
+ * Run:  node tools/marketing/scripts/build-gallery.mjs
  */
 import { createRequire } from "node:module";
 import { writeFileSync } from "node:fs";
@@ -15,8 +15,7 @@ import { shots } from "./concepts.mjs";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const POSTS = join(SCRIPT_DIR, "..");
-const REPO_ROOT = join(POSTS, "..");
-const require = createRequire(join(REPO_ROOT, "package.json"));
+const require = createRequire(import.meta.url);
 const sharp = require("sharp");
 
 const OUT = join(POSTS, "gallery.html");
@@ -121,7 +120,7 @@ const html = `<title>Tiki Acca — Social Launch Post Set</title>
   </header>
   ${rows.join("")}
   <footer>
-    Files live in <code>marketing-posts/</code> — one folder per platform (<code>square/</code>, <code>story/</code>, <code>x-twitter/</code>), full-resolution PNGs, plus <code>_raw-screenshots/</code> and <code>scripts/</code> that produced them.<br>
+    Files live in <code>tools/marketing/</code> — one folder per platform (<code>square/</code>, <code>story/</code>, <code>x-twitter/</code>), full-resolution PNGs, plus <code>_raw-screenshots/</code> and <code>scripts/</code> that produced them.<br>
     Compliance line baked into every image: <b>Not a bookmaker · 18+ · GambleAware</b>.
   </footer>
 </div>`;

@@ -22,7 +22,7 @@
  *
  * See docs/DEPLOYMENT.md "Backfill a leg missing from a locked round".
  *
- *   DATABASE_URL=... npx tsx scripts/backfill-missing-leg.ts --local-proxy \
+ *   DATABASE_URL=... npx tsx scripts/ops/backfill-missing-leg.ts --local-proxy \
  *     --invite-code NBMXERFG \
  *     --email tdonnelly453@gmail.com \
  *     --home "Stoke City" --away "Swansea City" \

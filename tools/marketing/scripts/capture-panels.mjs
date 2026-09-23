@@ -7,7 +7,7 @@
  *   3. npm run dev
  *
  * Run from the repository root:
- *   node marketing-posts/scripts/capture-panels.mjs
+ *   node tools/marketing/scripts/capture-panels.mjs
  *
  * Override the local web address with MARKETING_BASE_URL when needed.
  */
@@ -18,9 +18,8 @@ import { chromium } from "playwright";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const POSTS_ROOT = join(SCRIPT_DIR, "..");
-const REPO_ROOT = join(POSTS_ROOT, "..");
 const SHOTS = join(POSTS_ROOT, "_raw-screenshots");
-const require = createRequire(join(REPO_ROOT, "package.json"));
+const require = createRequire(import.meta.url);
 const sharp = require("sharp");
 
 const BASE_URL = process.env.MARKETING_BASE_URL ?? "http://localhost:3000";

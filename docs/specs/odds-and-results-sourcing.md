@@ -349,7 +349,7 @@ Rule of thumb #2: only trials count. Probes ran locally on 22–23 Sept 2026; re
   - TheStatsAPI (7 days);
   - UK Odds API Starter (ask for a trial and confirm **which** 10 bookmakers).
 - [ ] Fixed probe set, used for every source: 1 EPL, 1 Championship, 1 League Two, 1 Europa or Conference League, 1 Eredivisie, and 1 cup tie that goes to **extra time**. Include both upcoming fixtures (odds) and finished ones (results).
-- [x] **Probe v1:** `node scripts/probe-sources.mjs`, dev-only and read-only. It reads keys from the environment or `apps/web/.env.local` and never prints them. It reports:
+- [x] **Probe v1:** `node scripts/ops/probe-sources.mjs`, dev-only and read-only. It reads keys from the environment or `apps/web/.env.local` and never prints them. It reports:
   - **The Odds API** (~20 credits a run):
     - every soccer sport key (the list itself is free);
     - `/scores` for a few keys, including Nations League when active;

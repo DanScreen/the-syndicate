@@ -7,9 +7,9 @@
  * text report that is safe to paste into an issue or chat: keys are never
  * printed, and any that appear in an error body are redacted.
  *
- *   node scripts/probe-sources.mjs
- *   node scripts/probe-sources.mjs --sport soccer_epl --events 3
- *   node scripts/probe-sources.mjs --scores soccer_epl,soccer_uefa_nations_league
+ *   node scripts/ops/probe-sources.mjs
+ *   node scripts/ops/probe-sources.mjs --sport soccer_epl --events 3
+ *   node scripts/ops/probe-sources.mjs --scores soccer_epl,soccer_uefa_nations_league
  *
  * Keys (each optional; a provider without a key is skipped):
  *   ODDS_API_KEY           The Odds API. About 20 credits per run at the defaults
@@ -24,7 +24,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
 const ODDS_API_BASE = "https://api.the-odds-api.com/v4";
 const FOOTBALL_DATA_BASE = "https://api.football-data.org/v4";
@@ -85,7 +85,7 @@ const LEAGUES_OF_INTEREST = [
   { label: "MLS", country: /^USA$/, name: /^Major League Soccer$/ },
 ];
 
-const HELP = `Usage: node scripts/probe-sources.mjs [--sport <odds-api-key>] [--events <n>] [--scores <k1,k2>]
+const HELP = `Usage: node scripts/ops/probe-sources.mjs [--sport <odds-api-key>] [--events <n>] [--scores <k1,k2>]
 
   --sport   The Odds API sport key for the market/bookmaker sample (default: first active of
             ${SAMPLE_SPORT_PREFERENCE.join(", ")})

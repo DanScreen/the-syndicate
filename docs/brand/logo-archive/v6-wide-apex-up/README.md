@@ -28,7 +28,7 @@ git restore --source=6d2c576 -- \
   apps/web/src/components/logo.tsx \
   apps/web/src/lib/brand/rondo-icon.tsx \
   apps/web/src/lib/share/render-performance-image.ts \
-  scripts/generate-brand-assets.mjs
+  scripts/brand/generate-brand-assets.mjs
 ```
 
 Then update `docs/BRAND.md` and `docs/CURRENT_STATE.md` to identify v6 as live.

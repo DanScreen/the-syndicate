@@ -14,8 +14,7 @@ import { fileURLToPath } from "node:url";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const POSTS_ROOT = join(SCRIPT_DIR, "..");
-const REPO_ROOT = join(POSTS_ROOT, "..");
-const require = createRequire(join(REPO_ROOT, "package.json"));
+const require = createRequire(import.meta.url);
 const sharp = require("sharp");
 
 const W = 1500;

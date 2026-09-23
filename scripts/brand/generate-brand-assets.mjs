@@ -15,14 +15,14 @@
  *
  * Glyph geometry mirrors logo.tsx — extra-wide apex-up rondo.
  *
- * Usage: node scripts/generate-brand-assets.mjs
+ * Usage: node scripts/brand/generate-brand-assets.mjs
  */
 import sharp from "sharp";
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const brandSource = readFileSync(join(root, "packages/shared/src/brand.ts"), "utf8");
 const colorsBlock = brandSource.match(/BRAND_COLORS\s*=\s*\{([\s\S]*?)\}\s*as const/);
 if (!colorsBlock) throw new Error("Could not find BRAND_COLORS in brand.ts");

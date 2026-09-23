@@ -1,15 +1,15 @@
 /**
  * Tiki Acca — marketing post composer.
  *
- * Frames each raw mobile screenshot (marketing-posts/_raw-screenshots/*.jpg) as a
+ * Frames each raw mobile screenshot (tools/marketing/_raw-screenshots/*.jpg) as a
  * device card on the Floodlight-branded background, adds a headline + subhead, the
  * Triangle rondo wordmark, and the compliance line — then exports one PNG per
- * platform into marketing-posts/{square,story,x-twitter}/.
+ * platform into tools/marketing/{square,story,x-twitter}/.
  *
  * EDIT THE MARKETING MESSAGE: update scripts/concepts.mjs. This composer and the
  * review gallery both read that shared manifest.
  *
- * Run:  node marketing-posts/scripts/make-posts.mjs
+ * Run:  node tools/marketing/scripts/make-posts.mjs
  * Deps: sharp (already in the repo root node_modules).
  */
 import { createRequire } from "node:module";
@@ -18,10 +18,9 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { shots } from "./concepts.mjs";
 
-const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));   // <repo>/marketing-posts/scripts
-const POSTS_ROOT = join(SCRIPT_DIR, "..");                    // <repo>/marketing-posts
-const REPO_ROOT = join(POSTS_ROOT, "..");                    // <repo>
-const require = createRequire(join(REPO_ROOT, "package.json"));
+const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));   // <repo>/tools/marketing/scripts
+const POSTS_ROOT = join(SCRIPT_DIR, "..");                    // <repo>/tools/marketing
+const require = createRequire(import.meta.url);
 const sharp = require("sharp");
 
 const SHOTS = join(POSTS_ROOT, "_raw-screenshots");

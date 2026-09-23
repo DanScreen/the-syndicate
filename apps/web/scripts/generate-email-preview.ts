@@ -1,22 +1,22 @@
 /**
- * Regenerate scripts/preview-notification-emails.html from live templates.
+ * Regenerate apps/web/scripts/preview-notification-emails.html from live templates.
  *
- *   cd apps/web && npx tsx ../../scripts/generate-email-preview.ts
+ *   npm run email:preview --workspace=@tiki-acca/web
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import type { EmailDocument } from "../apps/web/src/lib/notifications/email-layout";
+import type { EmailDocument } from "../src/lib/notifications/email-layout";
 import {
   pickReminderEmail,
   roundLockedEmail,
   roundSettledEmail,
-} from "../apps/web/src/lib/notifications/templates";
+} from "../src/lib/notifications/templates";
 
 process.env.NEXTAUTH_URL ??= "https://www.tikiacca.com";
 
 const logoPath = resolve(
   import.meta.dirname,
-  "../apps/web/public/brand/email-logo.png"
+  "../public/brand/email-logo.png"
 );
 const logoDataUri = `data:image/png;base64,${readFileSync(logoPath).toString("base64")}`;
 
@@ -90,18 +90,21 @@ const settled = withLocalLogo(
       {
         memberName: "Alex",
         selectionLabel: "Arsenal",
+        marketLabel: "Match winner",
         outcome: "won",
         pointsLabel: "0.85",
       },
       {
         memberName: "Sam",
         selectionLabel: "Over 2.5",
+        marketLabel: "Totals",
         outcome: "won",
         pointsLabel: "0.9",
       },
       {
         memberName: "Jordan",
         selectionLabel: "BTTS Yes",
+        marketLabel: "Both teams to score",
         outcome: "lost",
         pointsLabel: "-1",
       },
@@ -143,7 +146,7 @@ const page = `<!DOCTYPE html>
 <body>
 <header>
   <h1>Notification email previews</h1>
-  <p>Generated from <code>lib/notifications/templates.ts</code>. Logo inlined for local preview. Regenerate: <code>cd apps/web &amp;&amp; npx tsx ../../scripts/generate-email-preview.ts</code></p>
+  <p>Generated from <code>lib/notifications/templates.ts</code>. Logo inlined for local preview. Regenerate: <code>npm run email:preview --workspace=@tiki-acca/web</code></p>
 </header>
 ${section("Pick reminder", reminder)}
 ${section("Acca locked (everyone in)", lockedFull)}

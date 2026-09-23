@@ -57,7 +57,7 @@ Behaviour:
 
 The 2026–27 league phase fills the long September–October international break (matchdays 1–4 on 24 Sept – 6 Oct, 5–6 on 12–17 Nov). Added as `nations-league` (Odds API key `soccer_uefa_nations_league`), flagged `manualSettlement: true` like B2 — football-data.org's free tier doesn't carry it.
 
-Checked on 22 Sept 2026 with the provider probe from [#60](https://github.com/DanScreen/the-syndicate/pull/60) (`scripts/probe-sources.mjs`, `docs/specs/odds-and-results-sourcing.md`): the key is active with 45 fixtures listed; match result has 11 UK books and BTTS 7, but corners, cards and anytime scorer are near-empty, so expect the **Corners & cards** tier to show little for these fixtures.
+Checked on 22 Sept 2026 with the provider probe from [#60](https://github.com/DanScreen/the-syndicate/pull/60) (`scripts/ops/probe-sources.mjs`, `docs/specs/odds-and-results-sourcing.md`): the key is active with 45 fixtures listed; match result has 11 UK books and BTTS 7, but corners, cards and anytime scorer are near-empty, so expect the **Corners & cards** tier to show little for these fixtures.
 
 - [x] Add the competition (disabled by default) with the `manualSettlement` flag.
 - [ ] Enable via `/admin/competitions` before matchday 1 (24 Sept).

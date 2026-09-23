@@ -64,7 +64,7 @@ Loaded in `apps/web/src/app/layout.tsx`.
 Source of truth: `BRAND_COLORS` in `packages/shared/src/brand.ts`. The web app mirrors
 it as CSS variables in `apps/web/src/app/globals.css`; mobile imports `BRAND_COLORS`
 directly. `npm run check:brand` (also run by `npm run lint`) fails if the two drift —
-`node scripts/check-brand-sync.mjs --fix-hint` prints the expected `:root` block.
+`node scripts/brand/check-brand-sync.mjs --fix-hint` prints the expected `:root` block.
 
 | Token | Value | Usage |
 |-------|-------|-------|
@@ -84,7 +84,7 @@ red, and amber regardless of the brand colour (this is what made the Turf Green 
 Floodlight switch safe).
 
 **Re-theme procedure:** update `BRAND_COLORS` in `packages/shared/src/brand.ts`; run
-`node scripts/check-brand-sync.mjs --fix-hint` and paste the printed block into
+`node scripts/brand/check-brand-sync.mjs --fix-hint` and paste the printed block into
 `globals.css` (re-tint `--glow` to the new accent); update the two fills in
 `app/icon.svg`; run `npm run generate:brand-assets` to regenerate `favicon.ico` and
 `apps/mobile/assets/*.png`; bump the `?v=` favicon cache-bust in `layout.tsx`; update
@@ -116,7 +116,7 @@ The same identity applies to **website**, **in-app mobile**, and **App Store / P
 | Website | SVG `apps/web/src/components/logo.tsx` | `apps/web/src/lib/marketing-content.ts` | `apps/web/src/app/globals.css` |
 | Mobile app | PNG assets `apps/mobile/assets/` + in-app SVG `apps/mobile/src/components/logo.tsx` | Shared module (`packages/shared/src/brand.ts` for colours) | `apps/mobile/src/config.ts` imports `BRAND_COLORS` |
 | Store listings | Icon + screenshots | [apps/mobile/STORE_LISTING.md](../apps/mobile/STORE_LISTING.md) | N/A |
-| Social graphics | Real UI captures + Triangle rondo wordmark | [`marketing-posts/`](../marketing-posts/README.md) | Floodlight composer |
+| Social graphics | Real UI captures + Triangle rondo wordmark | [`tools/marketing/`](../tools/marketing/README.md) | Floodlight composer |
 
 ### Logo export (mobile / stores)
 
