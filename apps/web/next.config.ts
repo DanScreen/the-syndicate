@@ -6,7 +6,7 @@ const corsOrigin =
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  transpilePackages: ["@tiki-acca/shared", "@tiki-acca/database"],
+  transpilePackages: ["@tiki-acca/client", "@tiki-acca/shared", "@tiki-acca/database"],
   async headers() {
     if (!corsOrigin) return [];
     return [

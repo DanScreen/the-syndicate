@@ -6,7 +6,12 @@ import {
   View,
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
-import { BOOKMAKER_RANKINGS_PREVIEW_COUNT, bookmakerRankPlace, formatOdds } from "@tiki-acca/shared";
+import {
+  BOOKMAKER_RANKINGS_PREVIEW_COUNT,
+  accaSummaryCopy,
+  bookmakerRankPlace,
+  formatOdds,
+} from "@tiki-acca/shared";
 import type { AccaBookmakerRanking } from "@tiki-acca/shared";
 import { BetslipDisclosure } from "@/components/compliance";
 import { Button, Card } from "@/components/ui";
@@ -24,6 +29,7 @@ export function AccaSummary({
   betslipLinkQuality = null,
   betslipHasAllLegLinks = false,
   legCount = 1,
+  inProgress = false,
   preview = false,
   showBookmakerCompare = true,
   compareDefaultOpen = true,
@@ -37,6 +43,9 @@ export function AccaSummary({
   betslipLinkQuality?: "deeplink" | "hub" | null;
   betslipHasAllLegLinks?: boolean;
   legCount?: number;
+  /** Locked acca — frozen odds copy; outcomes may be in progress. */
+  inProgress?: boolean;
+  /** Open round — live current odds from legs so far. */
   preview?: boolean;
   showBookmakerCompare?: boolean;
   /** Initial expanded/collapsed state of the compare list (collapse once the bet is underway). */
@@ -58,60 +67,43 @@ export function AccaSummary({
   const visibleBookmakerRankings = showAllBookmakers
     ? bookmakerRankings
     : bookmakerRankings.slice(0, BOOKMAKER_RANKINGS_PREVIEW_COUNT);
-  const ctaBookmaker = bookmakerName || topBookmaker?.bookmakerName || null;
-  const linkQuality =
-    betslipLinkQuality ??
-    topBookmaker?.linkQuality ??
-    (topBookmaker?.url ? "deeplink" : null);
-  const multiLeg = legCount > 1;
-  const ctaLabel =
-    linkQuality === "hub"
-      ? ctaBookmaker
-        ? `Open ${ctaBookmaker}`
-        : "Open bookmaker"
-      : multiLeg
-        ? `Open first pick${ctaBookmaker ? ` · ${ctaBookmaker}` : ""}`
-        : `Open betslip${ctaBookmaker ? ` · ${ctaBookmaker}` : ""}`;
-  const ctaHint =
-    linkQuality === "hub"
-      ? "Opens the football section. Add each pick on-site, or use Open on a pick when available."
-      : multiLeg
-        ? betslipHasAllLegLinks
-          ? "Opens the first selection. Use Open on each pick to add the rest."
-          : "Opens the closest selection. Use Open on each pick to build the acca."
-        : null;
+  const labels = accaSummaryCopy({
+    inProgress,
+    preview,
+    bookmakerName,
+    topBookmakerName: topBookmaker?.bookmakerName,
+    linkQuality:
+      betslipLinkQuality ??
+      topBookmaker?.linkQuality ??
+      (topBookmaker?.url ? "deeplink" : null),
+    legCount,
+    hasAllLegLinks: betslipHasAllLegLinks,
+    singleBookmaker,
+  });
 
   return (
     <View style={styles.stack}>
       <View style={styles.accaCard}>
         <View style={styles.accaMain}>
-          <Text style={styles.accaLabel}>
-            {preview ? "Current combined odds" : "Locked combined odds"}
-          </Text>
+          <Text style={styles.accaLabel}>{labels.oddsLabel}</Text>
           <Text style={styles.accaOdds}>{formatOdds(combinedOdds)}</Text>
           {singleBookmaker && bookmakerName ? (
             <View style={styles.lockedAtRow}>
               {bookmakerId ? (
                 <BookmakerLogo bookmakerId={bookmakerId} name={bookmakerName} size={18} />
               ) : null}
-              <Text style={styles.meta}>
-                {preview ? `Best so far at ${bookmakerName}` : `Locked at ${bookmakerName}`}
-              </Text>
+              <Text style={styles.meta}>{labels.bookmakerLine}</Text>
             </View>
           ) : null}
-          {preview ? (
-            <Text style={styles.meta}>
-              Based on legs submitted so far. Final odds lock when the bet closes.
-            </Text>
-          ) : null}
-          {!singleBookmaker && !preview ? (
-            <Text style={styles.warnText}>Best per-leg odds locked at submission</Text>
+          {labels.previewNote ? <Text style={styles.meta}>{labels.previewNote}</Text> : null}
+          {labels.multiBookmakerNote ? (
+            <Text style={styles.warnText}>{labels.multiBookmakerNote}</Text>
           ) : null}
         </View>
         {betslipLink ? (
           <>
-            <Button label={ctaLabel} onPress={() => Linking.openURL(betslipLink)} />
-            {ctaHint ? <Text style={styles.meta}>{ctaHint}</Text> : null}
+            <Button label={labels.ctaLabel} onPress={() => Linking.openURL(betslipLink)} />
+            {labels.ctaHint ? <Text style={styles.meta}>{labels.ctaHint}</Text> : null}
             <BetslipDisclosure />
           </>
         ) : null}

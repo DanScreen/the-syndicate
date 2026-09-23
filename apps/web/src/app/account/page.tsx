@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { greetingFirstName } from "@/lib/user-display";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { BlockedMembers } from "@/components/blocked-members";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -57,6 +58,7 @@ export default async function AccountPage() {
           </div>
         </section>
 
+        <BlockedMembers />
         <section className="mt-10 border-t border-border pt-8">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
             Session

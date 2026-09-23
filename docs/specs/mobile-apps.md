@@ -40,6 +40,12 @@ flowchart TB
   end
   Web --> API
   Mobile -->|"Bearer JWT"| API
+  subgraph clientpkg [packages/client]
+    Hooks["Data hooks: group data, chat, leg picker"]
+  end
+  Web --> Hooks
+  Mobile --> Hooks
+  Hooks --> Shared
   Web --> Shared
   Mobile --> Shared
   API --> DB
@@ -51,6 +57,8 @@ flowchart TB
 |------|-----------|
 | **No direct DB access** from mobile | Single source of truth on server |
 | **No duplicated business logic** in `apps/mobile` | Odds, settlement, scoring, acca ranking live in `apps/web/src/lib/` only |
+| **No duplicated client logic** in either app | Data fetching/state goes in `packages/client` hooks; derived view state (e.g. `deriveRoundView`), copy and display helpers go in `packages/shared`. Apps keep only rendering, navigation and platform APIs (share sheet, dialogs, scrolling) |
+| **One response contract** | Routes return `serialized(body) satisfies <X>Response` from `packages/shared/src/api-types.ts`; both clients read the same types |
 | **API changes ship on web first** | Mobile follows; web deploy is the contract owner |
 | **Validate requests with shared Zod** | `packages/shared/src/schemas.ts` — e.g. `submitLegSchema` requires `competitionId` |
 | **Display points from server data** | Use `packages/shared/src/scoring.ts` for display helpers only; never reimplement settlement rules on device |
@@ -89,14 +97,16 @@ Web uses Auth.js cookies; mobile uses a random **Bearer session token** on every
 | Create / join | `/groups/create`, `/groups/join` | `create-group.tsx`, `join-group.tsx` |
 | Group round | `components/group/` (full) | `(main)/groups/[id]/index.tsx` + `components/round/` |
 | Concurrent bets | Active-bet switcher + guarded member creation | Same switcher, stable Bet # labels, owner 1–5 setting |
-| Group chat | Dedicated permanent Chat tab + group-scoped API | Same longstanding Chat tab, Bet-labelled lifecycle events, reactions, unread badge |
+| Group chat | Dedicated permanent Chat tab + group-scoped API; Report / Block on hover | Same tab on `useGroupThread`; Report / Block via long-press |
 | Leg picker | Progressive 4-step + competition + market tiers | `SubmitLegForm` — competition, tiers (core + load more), grouped markets; selected competition / fixture / market each collapse with Change controls |
 | Locked acca | `AccaSummary`, compare bookmakers until first result | `AccaSummary` + `LegsList` with outcomes; 60s poll when locked |
 | Group tabs | Bet / Leaderboard / History / Chat (+ Settings for owners) | `groups/[id]/_layout.tsx` + tab screens |
-| Cross-group performance | `/performance` | `(main)/performance.tsx` |
+| Cross-group performance | `/performance` (group filter, share) | `(main)/performance.tsx` (group filter, share sheet) |
+| Invite | Copy invite link | Share invite link (native share sheet) |
+| Blocked members | Account → Blocked members | Account → Blocked members |
 | Admin | `/admin/*` | **Out of scope** |
 
-**Tech debt (remaining):** Zod response schemas still implicit; deep links (Phase 4). Line charts use `react-native-svg` on mobile (member multi-series still tabular).
+**Tech debt (remaining):** response contract is enforced at compile time only (no runtime Zod response schemas yet). Web shares a rendered performance image; mobile shares text.
 
 ---
 
@@ -110,13 +120,17 @@ Parity means **same flows and data**, not pixel-identical UI. Web uses Tailwind;
 |----------|-------|----------------------|
 | Types (`Fixture`, `AccaBookmakerRanking`, etc.) | `packages/shared` | Extend as APIs evolve |
 | Request schemas | `packages/shared/src/schemas.ts` | Mobile imports before every POST |
-| Response schemas | Mostly implicit in API routes | Add Zod response schemas in shared (Phase 0 backlog) |
+| Response types | `packages/shared/src/api-types.ts`; routes checked with `serialized(body) satisfies <X>Response` (`apps/web/src/lib/api-response.ts`) | Optional runtime Zod response schemas |
+| Client data hooks | `packages/client` — `GroupDataProvider`, `useGroupThread`, `useLegPicker`, `useBlockedMembers`, Bet-tab actions; each app passes its `ApiFetcher` | Extend for new screens instead of fetching inline |
+| Bet tab view state | `packages/shared/src/round-view.ts` (`deriveRoundView`, `accaSummaryCopy`) | — |
+| User-facing copy | `packages/shared/src/copy.ts` (`copy`, `COMPLIANCE`, `NOTIFICATION_PREFERENCE_SECTIONS`) | Move remaining inline strings as screens are touched |
 | Scoring / points display | `packages/shared/src/scoring.ts` | Import on mobile; never recompute server rules |
 | Competitions catalogue | `packages/shared/src/competitions.ts` | Shared picker labels |
 | Brand colours + tagline | `packages/shared/src/brand.ts` + web `globals.css` | Mobile `config.ts` imports `BRAND_COLORS` from shared |
 | Logo | Web SVG `apps/web/src/components/logo.tsx` | Export PNGs for app icon / splash — see [../BRAND.md](../BRAND.md#cross-platform-brand) |
 | API response types | `packages/shared/src/api-types.ts` | Extend as APIs evolve |
-| Market grouping + best odds | `packages/shared/src/market-groups.ts`, `bookmakers.ts` | Web re-exports from shared; mobile leg picker uses same helpers |
+| Market grouping + best odds | `packages/shared/src/market-groups.ts`, `bookmakers.ts` | Both leg pickers use them via `useLegPicker` |
+| Stats display | `packages/shared/src/stats-display.ts` (`filterUserStatsByGroup`, `buildShareText`), `MEMBER_CHART_COLORS` in `brand.ts` | — |
 
 ### Release discipline
 
@@ -164,7 +178,7 @@ Checklist for implementation. Web route → API → mobile screen.
 ### Phase 0 — Spec and contracts (this document)
 
 - [x] Document vision, architecture, parity matrix, release process
-- [ ] Add Zod response schemas for key API payloads in `packages/shared`
+- [x] One response contract for key API payloads — `api-types.ts`, enforced on routes at compile time (runtime Zod schemas still optional)
 - [x] Centralize brand tokens (`packages/shared/src/brand.ts`); marketing copy still web-only
 
 ### Phase 1 — Foundation

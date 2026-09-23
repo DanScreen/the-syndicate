@@ -5,10 +5,12 @@ import {
   MAX_MESSAGE_LENGTH,
   REACTION_EMOJIS,
   REACTION_PICKER_EMOJIS,
+  copy,
   type ReactionEmoji,
   type RoundMessageDto,
-  type RoundMessagesResponse,
 } from "@tiki-acca/shared";
+import { canModerateMessage, useGroupThread } from "@tiki-acca/client";
+import { apiFetcher } from "@/lib/api-client";
 import {
   useCallback,
   useEffect,
@@ -19,25 +21,14 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 
-const POLL_MS = 20_000;
+function isPageVisible() {
+  return document.visibilityState === "visible";
+}
 
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString("en-GB", {
     hour: "2-digit",
     minute: "2-digit",
-  });
-}
-
-function mergeMessages(
-  existing: RoundMessageDto[],
-  incoming: RoundMessageDto[]
-): RoundMessageDto[] {
-  if (incoming.length === 0) return existing;
-  const byId = new Map(existing.map((m) => [m.id, m]));
-  for (const m of incoming) byId.set(m.id, m);
-  return [...byId.values()].sort((a, b) => {
-    const t = a.createdAt.localeCompare(b.createdAt);
-    return t !== 0 ? t : a.id.localeCompare(b.id);
   });
 }
 
@@ -58,76 +49,37 @@ export function GroupThread({
   onRead?: () => void;
   refreshKey?: number;
 }) {
-  const [messages, setMessages] = useState<RoundMessageDto[]>([]);
-  const [legAnnouncements, setLegAnnouncements] = useState<RoundMessageDto[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [input, setInput] = useState("");
-  const [posting, setPosting] = useState(false);
-  const [hasMore, setHasMore] = useState(false);
-  const [loadingEarlier, setLoadingEarlier] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
   const scrollRef = useRef<HTMLDivElement>(null);
-  const lastIdRef = useRef<string | null>(null);
   const atBottomRef = useRef(true);
-  const loadedEarlierRef = useRef(false);
-
-  useEffect(() => {
-    setMessages([]);
-    setLegAnnouncements([]);
-    lastIdRef.current = null;
-    loadedEarlierRef.current = false;
-    setError(null);
-  }, [groupId]);
-
-  useEffect(() => {
-    onMessagesChange?.(mergeMessages(messages, legAnnouncements));
-  }, [messages, legAnnouncements, onMessagesChange]);
-
-  const load = useCallback(
-    async (signal?: AbortSignal) => {
-      // Reload the latest page so reaction toggles (which do not create a new
-      // message cursor) reconcile on every poll.
-      const res = await fetch(`/api/groups/${groupId}/messages`, { signal });
-      if (!res.ok) throw new Error("Failed to load messages");
-      const json = (await res.json()) as RoundMessagesResponse;
-      if (json.messages.length > 0) {
-        lastIdRef.current = json.messages[json.messages.length - 1]!.id;
-      }
-      setMessages((prev) => mergeMessages(prev, json.messages));
-      if (json.legAnnouncements) setLegAnnouncements(json.legAnnouncements);
-      if (!loadedEarlierRef.current) setHasMore(Boolean(json.hasMore));
-      onRead?.();
-    },
-    [groupId, onRead]
-  );
-
-  // Initial load.
-  useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    load(controller.signal)
-      .catch(() => {
-        if (!controller.signal.aborted) setError("Couldn't load the chat.");
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
-    return () => controller.abort();
-  }, [load]);
-
-  useEffect(() => {
-    if (refreshKey > 0) void load().catch(() => {});
-  }, [load, refreshKey]);
-
-  // Poll for new messages while the tab is visible (interactive threads only).
-  useEffect(() => {
-    if (readOnly) return;
-    const interval = setInterval(() => {
-      if (document.visibilityState === "visible") void load().catch(() => {});
-    }, POLL_MS);
-    return () => clearInterval(interval);
-  }, [load, readOnly]);
+  const [notice, setNotice] = useState("");
+  const holdScroll = useCallback(() => {
+    atBottomRef.current = false;
+  }, []);
+  const {
+    messages,
+    loading,
+    error,
+    input,
+    setInput,
+    posting,
+    hasMore,
+    loadingEarlier,
+    send,
+    remove,
+    react,
+    report,
+    block,
+    loadEarlier,
+  } = useGroupThread({
+    groupId,
+    fetcher: apiFetcher,
+    readOnly,
+    refreshKey,
+    isVisible: isPageVisible,
+    onRead,
+    onMessagesChange,
+    onPrepend: holdScroll,
+  });
 
   // Keep pinned to the bottom when new messages arrive and we were already there.
   useEffect(() => {
@@ -141,102 +93,37 @@ export function GroupThread({
     atBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
   }
 
-  async function submit(e: FormEvent) {
+  function submit(e: FormEvent) {
     e.preventDefault();
-    const body = input.trim();
-    if (!body || posting) return;
-    setPosting(true);
-    setError(null);
     atBottomRef.current = true;
-    try {
-      const res = await fetch(`/api/groups/${groupId}/messages`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body }),
-      });
-      if (res.status === 429) {
-        setError("You're posting too fast. Slow down a moment.");
-        return;
-      }
-      if (!res.ok) {
-        const json = (await res.json().catch(() => null)) as {
-          error?: string;
-        } | null;
-        setError(
-          typeof json?.error === "string"
-            ? json.error
-            : "Couldn't send that message."
-        );
-        return;
-      }
-      const json = (await res.json()) as { message: RoundMessageDto };
-      lastIdRef.current = json.message.id;
-      setMessages((prev) => mergeMessages(prev, [json.message]));
-      setInput("");
-    } catch {
-      setError("Couldn't send that message.");
-    } finally {
-      setPosting(false);
-    }
+    void send();
   }
 
   function onKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      void submit(e);
+      submit(e);
     }
   }
 
-  async function remove(id: string) {
-    try {
-      const res = await fetch(`/api/messages/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete");
-      const json = (await res.json()) as { message: RoundMessageDto };
-      setMessages((prev) => prev.map((m) => (m.id === id ? json.message : m)));
-    } catch {
-      setError("Couldn't delete that message.");
+  async function reportMessage(message: RoundMessageDto) {
+    if (!window.confirm(`${copy.chat.reportConfirmTitle}\n\n${copy.chat.reportConfirmBody}`)) {
+      return;
     }
+    if (await report(message.id)) setNotice(copy.chat.reported);
   }
 
-  async function toggleReaction(messageId: string, emoji: ReactionEmoji) {
-    try {
-      const res = await fetch(`/api/messages/${messageId}/reactions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ emoji }),
-      });
-      if (!res.ok) throw new Error("Failed to react");
-      const json = (await res.json()) as { message: RoundMessageDto };
-      setMessages((prev) =>
-        prev.map((message) => (message.id === messageId ? json.message : message))
-      );
-      setLegAnnouncements((prev) =>
-        prev.map((message) => (message.id === messageId ? json.message : message))
-      );
-    } catch {
-      setError("Couldn't update that reaction.");
+  async function blockAuthor(message: RoundMessageDto) {
+    const author = message.user;
+    if (!author) return;
+    if (
+      !window.confirm(
+        `${copy.chat.blockConfirmTitle(author.name)}\n\n${copy.chat.blockConfirmBody}`
+      )
+    ) {
+      return;
     }
-  }
-
-  async function loadEarlier() {
-    const oldestId = messages[0]?.id;
-    if (!oldestId || loadingEarlier) return;
-    setLoadingEarlier(true);
-    loadedEarlierRef.current = true;
-    atBottomRef.current = false;
-    try {
-      const res = await fetch(
-        `/api/groups/${groupId}/messages?before=${encodeURIComponent(oldestId)}`
-      );
-      if (!res.ok) throw new Error("Failed to load earlier messages");
-      const json = (await res.json()) as RoundMessagesResponse;
-      setMessages((current) => mergeMessages(current, json.messages));
-      setHasMore(Boolean(json.hasMore));
-    } catch {
-      setError("Couldn't load earlier messages.");
-    } finally {
-      setLoadingEarlier(false);
-    }
+    if (await block(author.id)) setNotice(copy.chat.blocked(author.name));
   }
 
   const remaining = MAX_MESSAGE_LENGTH - input.length;
@@ -282,8 +169,11 @@ export function GroupThread({
                 m.body !== DELETED_MESSAGE_BODY &&
                 (isOwner || m.user?.id === currentUserId)
               }
+              canModerate={!readOnly && canModerateMessage(m, currentUserId)}
               onDelete={remove}
-              onReact={toggleReaction}
+              onReact={react}
+              onReport={reportMessage}
+              onBlock={blockAuthor}
               readOnly={readOnly}
             />
           ))
@@ -313,6 +203,8 @@ export function GroupThread({
           <div className="mt-1 flex items-center justify-between">
             {error ? (
               <span className="text-xs text-danger">{error}</span>
+            ) : notice ? (
+              <span className="text-xs text-muted">{notice}</span>
             ) : (
               <span />
             )}
@@ -332,14 +224,20 @@ export function GroupThread({
 function ChatMessage({
   message,
   canDelete,
+  canModerate,
   onDelete,
   onReact,
+  onReport,
+  onBlock,
   readOnly,
 }: {
   message: RoundMessageDto;
   canDelete: boolean;
+  canModerate: boolean;
   onDelete: (id: string) => void;
   onReact: (id: string, emoji: ReactionEmoji) => void;
+  onReport: (message: RoundMessageDto) => void;
+  onBlock: (message: RoundMessageDto) => void;
   readOnly: boolean;
 }) {
   const deleted = message.body === DELETED_MESSAGE_BODY;
@@ -370,16 +268,38 @@ function ChatMessage({
         <span className="text-xs tabular-nums text-muted">
           {formatTime(message.createdAt)}
         </span>
-        {canDelete && (
-          <button
-            type="button"
-            onClick={() => onDelete(message.id)}
-            className="ml-auto text-xs text-muted opacity-0 transition-opacity hover:text-danger group-hover:opacity-100"
-            aria-label="Delete message"
-          >
-            Delete
-          </button>
-        )}
+        {canDelete || canModerate ? (
+          <span className="ml-auto flex gap-3 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+            {canModerate ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => onReport(message)}
+                  className="text-xs text-muted hover:text-foreground"
+                >
+                  Report
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onBlock(message)}
+                  className="text-xs text-muted hover:text-danger"
+                >
+                  Block
+                </button>
+              </>
+            ) : null}
+            {canDelete ? (
+              <button
+                type="button"
+                onClick={() => onDelete(message.id)}
+                className="text-xs text-muted hover:text-danger"
+                aria-label="Delete message"
+              >
+                Delete
+              </button>
+            ) : null}
+          </span>
+        ) : null}
       </div>
       <p
         className={

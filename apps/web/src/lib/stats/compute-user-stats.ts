@@ -3,7 +3,6 @@ import {
   betTypeForLeg,
   bestWorstCategory,
   favouriteCategory,
-  formatBetAxisLabel,
   formatRoundDateLabel,
   legPoints,
   memberNetPointsAcrossRounds,
@@ -14,62 +13,16 @@ import {
   roundsForPerformanceStats,
   sortedSettledRounds,
   teamForLeg,
-  CHART_ORIGIN_LABEL,
-  type BestWorstInsight,
   type RoundWithLegs,
 } from "./helpers";
-
-export type UserStatsSummary = {
-  groupCount: number;
-  settledRounds: number;
-  legsPlayed: number;
-  netPoints: number;
-  averagePointsPerLeg: number | null;
-  /** Individual pick win rate: won / (won + lost), voids excluded. */
-  winRate: number | null;
-  averageOdds: number | null;
-  netAccaPlGbp: number;
-};
-
-export type UserCategoryStats = {
-  favourite: string | null;
-  bestWorst: BestWorstInsight | null;
-};
-
-export type UserStatsGroupBreakdown = {
-  groupId: string;
-  groupName: string;
-  netPoints: number;
-  legsPlayed: number;
-  settledRounds: number;
-  averagePointsPerLeg: number | null;
-  winRate: number | null;
-  averageOdds: number | null;
-  competition: UserCategoryStats;
-  market: UserCategoryStats;
-  team: UserCategoryStats;
-};
-
-export type UserStatsChartPoint = {
-  roundNumber: number;
-  label: string;
-  dateLabel: string;
-  roundPoints: number;
-  cumulativePoints: number;
-  groupId: string;
-  groupName: string;
-  accaWon: boolean;
-  roundPlGbp: number;
-};
-
-export type UserStatsResult = {
-  summary: UserStatsSummary;
-  chart: UserStatsChartPoint[];
-  groups: UserStatsGroupBreakdown[];
-  competition: UserCategoryStats;
-  market: UserCategoryStats;
-  team: UserCategoryStats;
-};
+import {
+  CHART_ORIGIN_LABEL,
+  formatBetAxisLabel,
+  type UserCategoryStats,
+  type UserStatsChartPoint,
+  type UserStatsGroupBreakdown,
+  type UserStatsResponse,
+} from "@tiki-acca/shared";
 
 type UserRoundEntry = {
   round: RoundWithLegs;
@@ -145,7 +98,7 @@ export function computeUserStats(
     group: { rounds: RoundWithLegs[] };
   }[],
   userId: string
-): UserStatsResult {
+): UserStatsResponse {
   const groups: UserStatsGroupBreakdown[] = [];
   const userRoundEntries: UserRoundEntry[] = [];
   const allUserLegs: Leg[] = [];
@@ -261,84 +214,4 @@ export function computeUserStats(
     groups: groups.sort((a, b) => b.netPoints - a.netPoints),
     ...overallCategories,
   };
-}
-
-export function filterUserStatsByGroup(
-  stats: UserStatsResult,
-  groupId: string | null
-): UserStatsResult {
-  if (!groupId) return stats;
-
-  const group = stats.groups.find((g) => g.groupId === groupId);
-  if (!group) return stats;
-
-  const roundPoints = stats.chart.filter(
-    (point) => point.roundNumber > 0 && point.groupId === groupId
-  );
-
-  let cumulativePoints = 0;
-  const chartPoints: UserStatsChartPoint[] = roundPoints.map((point, index) => {
-    const roundNumber = index + 1;
-    cumulativePoints += point.roundPoints;
-    return {
-      ...point,
-      roundNumber,
-      label: formatBetAxisLabel(roundNumber),
-      cumulativePoints: Number(cumulativePoints.toFixed(2)),
-    };
-  });
-
-  const chart: UserStatsChartPoint[] =
-    chartPoints.length === 0
-      ? []
-      : [
-          {
-            roundNumber: 0,
-            label: CHART_ORIGIN_LABEL,
-            dateLabel: "",
-            roundPoints: 0,
-            cumulativePoints: 0,
-            groupId: "",
-            groupName: "",
-            accaWon: false,
-            roundPlGbp: 0,
-          },
-          ...chartPoints,
-        ];
-
-  const netAccaPlGbp = roundPoints.reduce((sum, point) => sum + point.roundPlGbp, 0);
-
-  return {
-    summary: {
-      groupCount: 1,
-      settledRounds: group.settledRounds,
-      legsPlayed: group.legsPlayed,
-      netPoints: group.netPoints,
-      averagePointsPerLeg: group.averagePointsPerLeg,
-      winRate: group.winRate,
-      averageOdds: group.averageOdds,
-      netAccaPlGbp: Number(netAccaPlGbp.toFixed(2)),
-    },
-    chart,
-    groups: stats.groups,
-    competition: group.competition,
-    market: group.market,
-    team: group.team,
-  };
-}
-
-export function buildShareText(
-  title: string,
-  stats: { netPoints: number; legsPlayed: number; winRate: number | null }
-): string {
-  const lines = [
-    `${title} on Tiki Acca`,
-    `Net points: ${stats.netPoints >= 0 ? "+" : ""}${stats.netPoints.toFixed(2)}`,
-    `Legs: ${stats.legsPlayed}`,
-  ];
-  if (stats.winRate != null) {
-    lines.push(`Pick win rate: ${stats.winRate}%`);
-  }
-  lines.push("https://www.tikiacca.com");
-  return lines.join("\n");
 }

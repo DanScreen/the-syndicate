@@ -17,6 +17,10 @@ flowchart TB
   Web --> Stats[lib/stats]
   Cron[Cloud Scheduler] -->|sync-matches, warm-odds-cache| Web
   Mobile[apps/mobile] -.-> Web
+  Web --> Client[packages/client]
+  Mobile --> Client
+  Client --> Shared
+  Mobile --> Shared
 ```
 
 ---
@@ -129,7 +133,7 @@ Production URL: **https://www.tikiacca.com** (Cloudflare → Cloud Run, `europe-
 
 Expo app in `apps/mobile/` — member-facing parity includes the round lifecycle, stats, history, notifications, and group chat.
 
-**Target:** functional parity with the website for member-facing flows. **Strategy:** [specs/mobile-apps.md](./specs/mobile-apps.md) — API-first, shared `packages/shared` contracts, EAS release for iOS + Android.
+**Target:** functional parity with the website for member-facing flows. **Strategy:** [specs/mobile-apps.md](./specs/mobile-apps.md) — API-first, shared `packages/shared` contracts (types, view logic such as `deriveRoundView`, copy), shared `packages/client` React hooks for data (group data, chat, leg picker), EAS release for iOS + Android. Each app keeps only its UI.
 
 **Auth:** `POST /api/auth/mobile/sign-in` → revocable bearer session; `POST /api/auth/mobile/sign-out` revokes it; `requireSession()` accepts Bearer or Auth.js cookie.
 

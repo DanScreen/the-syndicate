@@ -2,7 +2,7 @@ import { ApiError, api } from "@/api/client";
 import { useAuth } from "@/auth/AuthProvider";
 import { Button, Card, ErrorText } from "@/components/ui";
 import { colors } from "@/config";
-import { useGroupData } from "@/context/group-data";
+import { useGroupData } from "@tiki-acca/client";
 import {
   DEFAULT_LEGS_PER_MEMBER,
   DEFAULT_MAX_ACTIVE_BETS,

@@ -5,7 +5,9 @@ import type { ReactionEmoji, RoundMessageDto } from "@tiki-acca/shared";
 import { ReactionBar } from "@/components/group/chat";
 import { legOutcomeClass } from "./round-helpers";
 import { legOutcomeLabel } from "@tiki-acca/shared";
-import type { Leg } from "./round-helpers";
+import type { GroupLeg as Leg } from "@tiki-acca/shared";
+import { toggleReaction } from "@tiki-acca/client";
+import { apiFetcher } from "@/lib/api-client";
 
 export function LegsList({
   legs,
@@ -48,14 +50,11 @@ export function LegsList({
   );
 
   async function react(messageId: string, emoji: ReactionEmoji) {
-    const res = await fetch(`/api/messages/${messageId}/reactions`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ emoji }),
-    });
-    if (!res.ok) return;
-    const json = (await res.json()) as { message: RoundMessageDto };
-    onAnnouncementChanged?.(json.message);
+    try {
+      onAnnouncementChanged?.(await toggleReaction(apiFetcher, messageId, emoji));
+    } catch {
+      // The thread will reconcile the reaction on its next poll.
+    }
   }
 
   return (

@@ -1,22 +1,3 @@
-export type Leg = {
-  id: string;
-  user: { id: string; name: string };
-  legIndex?: number;
-  fixtureId: string;
-  homeTeam: string;
-  awayTeam: string;
-  competition: string;
-  kickoff: string;
-  selectionLabel: string;
-  marketLabel: string;
-  odds: number;
-  bookmakerName: string;
-  outcome: string;
-  pointsAwarded: number;
-};
-
-export type Member = { id: string; name: string; role: string };
-
 export function CheckIcon({ className = "" }: { className?: string }) {
   return (
     <svg

@@ -1,4 +1,6 @@
 import { requireSession } from "@/lib/api-auth";
+import { serialized } from "@/lib/api-response";
+import type { GroupHistoryResponse } from "@tiki-acca/shared";
 import { mapHistoryRound } from "@/lib/groups/map-history-round";
 import { prisma } from "@tiki-acca/database";
 import { NextResponse } from "next/server";
@@ -31,7 +33,9 @@ export async function GET(_request: Request, { params }: Params) {
     },
   });
 
-  return NextResponse.json({
-    rounds: rounds.map(mapHistoryRound),
-  });
+  return NextResponse.json(
+    serialized({
+      rounds: rounds.map(mapHistoryRound),
+    }) satisfies GroupHistoryResponse
+  );
 }

@@ -51,7 +51,7 @@ export function RoundProgress({
           {status === "open" && firstKickoff && pending.length > 0 ? (
             <Text style={styles.bannerHint}>
               Locks {formatKickoff(firstKickoff.toISOString())}. Members who
-              haven't finished their picks will miss this acca.
+              haven&apos;t finished their picks will miss this acca.
             </Text>
           ) : null}
         </View>

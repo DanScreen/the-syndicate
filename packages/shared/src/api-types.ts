@@ -102,7 +102,7 @@ export type GroupLeg = {
   fixtureId: string;
   homeTeam: string;
   awayTeam: string;
-  competition?: string;
+  competition: string;
   kickoff: string;
   marketType: string;
   selectionLabel: string;
@@ -163,9 +163,6 @@ export type GroupHistoryResponse = {
   rounds: HistoryRound[];
 };
 
-/** @deprecated Prefer HistoryRound — kept for older mobile clients during rollout. */
-export type RecentRoundSummary = HistoryRound;
-
 export type ActiveRound = {
   id: string;
   betNumber: number | null;
@@ -204,7 +201,7 @@ export type GroupDetailResponse = {
   /** Latest pick announcement per active leg, for mirrored reactions. */
   legAnnouncements: RoundMessageDto[];
   isOwner: boolean;
-  recentRounds?: RecentRoundSummary[];
+  recentRounds: HistoryRound[];
 };
 
 export type CompetitionOption = {
@@ -249,7 +246,9 @@ export type GroupStatsSummary = {
 export type GroupStatsChartPoint = {
   roundNumber: number;
   roundId: string;
+  /** Unique X-axis category, e.g. "Bet 3" or "Start". */
   label: string;
+  /** Settlement date for tooltips; empty at origin. */
   dateLabel: string;
   roundPoints: number;
   cumulativePoints: number;
@@ -260,11 +259,12 @@ export type MemberSeries = {
   name: string;
 };
 
+/** One X-axis point on the per-member chart; each member's cumulative points is keyed by userId. */
 export type MemberChartPoint = {
   roundNumber: number;
   label: string;
   dateLabel: string;
-  [key: string]: number | string;
+  [userId: string]: number | string;
 };
 
 export type GroupStatsResponse = {
@@ -280,6 +280,7 @@ export type UserStatsSummary = {
   legsPlayed: number;
   netPoints: number;
   averagePointsPerLeg: number | null;
+  /** Individual pick win rate: won / (won + lost), voids excluded. */
   winRate: number | null;
   averageOdds: number | null;
   netAccaPlGbp: number;
@@ -292,9 +293,14 @@ export type CategoryInsight = {
   netPoints: number;
 };
 
+export type BestWorstInsight = {
+  best: CategoryInsight;
+  worst: CategoryInsight;
+};
+
 export type UserCategoryStats = {
   favourite: string | null;
-  bestWorst: { best: CategoryInsight; worst: CategoryInsight } | null;
+  bestWorst: BestWorstInsight | null;
 };
 
 export type UserStatsGroupBreakdown = {
@@ -317,7 +323,10 @@ export type UserStatsChartPoint = {
   dateLabel: string;
   roundPoints: number;
   cumulativePoints: number;
+  groupId: string;
   groupName: string;
+  accaWon: boolean;
+  roundPlGbp: number;
 };
 
 export type UserStatsResponse = {
@@ -340,31 +349,41 @@ export type LegHighlight = {
 
 export type MemberStatsSummary = {
   netPoints: number;
+  /** Average points per settled individual leg (won/lost/void). */
   averagePointsPerLeg: number | null;
   legsPlayed: number;
+  /** Individual pick win rate: won / (won + lost), voids excluded. */
   winRate: number | null;
   averageOdds: number | null;
   bestLeg: LegHighlight | null;
   worstLeg: LegHighlight | null;
 };
 
-export type MemberCategoryStats = {
-  favourite: string | null;
-  bestWorst: { best: CategoryInsight; worst: CategoryInsight } | null;
+export type MemberCategoryStats = UserCategoryStats;
+
+export type MemberStatsChartPoint = {
+  roundNumber: number;
+  label: string;
+  dateLabel: string;
+  roundPoints: number;
+  cumulativePoints: number;
 };
 
 export type MemberStatsResponse = {
   userId: string;
   name: string;
   summary: MemberStatsSummary;
-  chart: {
-    roundNumber: number;
-    label: string;
-    dateLabel: string;
-    roundPoints: number;
-    cumulativePoints: number;
-  }[];
+  chart: MemberStatsChartPoint[];
   competition: MemberCategoryStats;
   market: MemberCategoryStats;
   team: MemberCategoryStats;
+};
+
+export type BlockedMember = {
+  userId: string;
+  name: string;
+};
+
+export type BlockedMembersResponse = {
+  blocks: BlockedMember[];
 };

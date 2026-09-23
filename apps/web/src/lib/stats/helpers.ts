@@ -5,6 +5,8 @@ import {
   groupAccaRoundPoints,
   memberAccaLegPoints,
   marketFamilyKey,
+  type BestWorstInsight,
+  type CategoryInsight,
   type LegOutcome,
 } from "@tiki-acca/shared";
 
@@ -105,14 +107,6 @@ export function roundsForPerformanceStats(rounds: RoundWithLegs[]): RoundWithLeg
 }
 
 /** X-axis label for the zero baseline prepended to performance chart series. */
-export const CHART_ORIGIN_LABEL = "Start";
-
-/** Axis / list label for performance charts — unique per bet (avoids same-day collisions). */
-export function formatBetAxisLabel(roundNumber: number): string {
-  if (roundNumber === 0) return CHART_ORIGIN_LABEL;
-  return `Bet ${roundNumber}`;
-}
-
 /** Settlement date for chart tooltips (not used as the X-axis category). */
 export function formatSettledDateLabel(
   settledAt: Date | string | null | undefined
@@ -129,11 +123,6 @@ export function formatSettledDateLabel(
 /** Tooltip date for a performance round — settledAt, or lockedAt while in play. */
 export function formatRoundDateLabel(round: Round): string {
   return formatSettledDateLabel(round.settledAt ?? round.lockedAt) ?? "";
-}
-
-/** @deprecated Prefer formatBetAxisLabel + formatSettledDateLabel for charts. */
-export function formatRoundLabel(round: Round, roundNumber: number): string {
-  return formatBetAxisLabel(roundNumber);
 }
 
 /** Sum of recomputed member points across performance rounds (matches Performance UI). */
@@ -162,18 +151,6 @@ type CategoryAgg = {
   count: number;
   points: number;
   avgPoints: number;
-};
-
-export type CategoryInsight = {
-  key: string;
-  avgPoints: number;
-  legs: number;
-  netPoints: number;
-};
-
-export type BestWorstInsight = {
-  best: CategoryInsight;
-  worst: CategoryInsight;
 };
 
 function aggregateByKey(

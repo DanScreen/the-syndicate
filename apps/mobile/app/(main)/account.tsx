@@ -1,9 +1,14 @@
 import { ApiError, api } from "@/api/client";
+import { useApiFetcher } from "@/api/use-api-fetcher";
 import { useAuth } from "@/auth/AuthProvider";
+import { useBlockedMembers } from "@tiki-acca/client";
 import { Button, Card, ErrorText, Field, Title } from "@/components/ui";
 import { colors, WEB_URL } from "@/config";
-import { copy } from "@/lib/copy";
-import type { NotificationPreferences } from "@tiki-acca/shared";
+import { copy } from "@tiki-acca/shared";
+import {
+  NOTIFICATION_PREFERENCE_SECTIONS,
+  type NotificationPreferences,
+} from "@tiki-acca/shared";
 import {
   isPushEnabled,
   registerForPushNotifications,
@@ -20,59 +25,6 @@ import {
   Text,
   View,
 } from "react-native";
-
-type PrefKey = keyof NotificationPreferences;
-
-const SECTIONS: {
-  title: string;
-  items: { key: PrefKey; label: string; hint: string }[];
-}[] = [
-  {
-    title: "Email",
-    items: [
-      {
-        key: "emailPickReminder",
-        label: "Pick reminders",
-        hint: "Before the acca locks at kickoff",
-      },
-      {
-        key: "emailRoundLocked",
-        label: "Acca locked",
-        hint: "When your group acca is ready",
-      },
-      {
-        key: "emailRoundSettled",
-        label: "Round settled",
-        hint: "When results are in",
-      },
-    ],
-  },
-  {
-    title: "Push",
-    items: [
-      {
-        key: "pushPickReminder",
-        label: "Pick reminders",
-        hint: "Last-minute nudges on your phone",
-      },
-      {
-        key: "pushRoundLocked",
-        label: "Acca locked",
-        hint: "When the acca locks",
-      },
-      {
-        key: "pushRoundSettled",
-        label: "Round settled",
-        hint: "When results are in",
-      },
-      {
-        key: "pushChat",
-        label: "Group chat",
-        hint: "Batched alerts for new group chat",
-      },
-    ],
-  },
-];
 
 let cachedPrefs: { token: string; data: NotificationPreferences } | null = null;
 
@@ -103,7 +55,8 @@ export default function AccountScreen() {
   const [pushStatus, setPushStatus] = useState<string | null>(null);
   // null = still checking; hides the enable button once push is authorised.
   const [pushEnabled, setPushEnabled] = useState<boolean | null>(null);
-  const [blocked, setBlocked] = useState<{ userId: string; name: string }[]>([]);
+  const fetcher = useApiFetcher();
+  const { blocked, error: blockedError, unblock } = useBlockedMembers(fetcher);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
   const [deleteBusy, setDeleteBusy] = useState(false);
@@ -135,28 +88,6 @@ export default function AccountScreen() {
       .then(setPushEnabled)
       .catch(() => setPushEnabled(false));
   }, []);
-
-  useEffect(() => {
-    if (!token) return;
-    api<{ blocks: { userId: string; name: string }[] }>("/api/user/blocks", {
-      token,
-    })
-      .then((data) => setBlocked(data.blocks))
-      .catch(() => {});
-  }, [token]);
-
-  async function unblock(userId: string) {
-    if (!token) return;
-    try {
-      await api<{ ok: boolean }>(`/api/users/${userId}/block`, {
-        method: "DELETE",
-        token,
-      });
-      setBlocked((current) => current.filter((b) => b.userId !== userId));
-    } catch {
-      setError("Couldn't unblock that member.");
-    }
-  }
 
   function confirmDelete() {
     if (!deletePassword.trim()) {
@@ -198,7 +129,7 @@ export default function AccountScreen() {
     }
   }
 
-  async function update(key: PrefKey, value: boolean) {
+  async function update(key: keyof NotificationPreferences, value: boolean) {
     if (!token || !prefs) return;
     const prev = prefs;
     setPrefs({ ...prefs, [key]: value });
@@ -275,14 +206,14 @@ export default function AccountScreen() {
             {pushStatus ? <Text style={styles.hint}>{pushStatus}</Text> : null}
           </Card>
 
-          {SECTIONS.map((section) => (
-            <View key={section.title} style={styles.section}>
+          {NOTIFICATION_PREFERENCE_SECTIONS.map((section) => (
+            <View key={section.channel} style={styles.section}>
               <Text style={styles.sectionTitle}>{section.title}</Text>
               {section.items.map((item) => (
                 <View key={item.key} style={styles.row}>
                   <View style={styles.rowText}>
                     <Text style={styles.rowLabel}>{item.label}</Text>
-                    <Text style={styles.hint}>{item.hint}</Text>
+                    <Text style={styles.hint}>{item.description}</Text>
                   </View>
                   <Switch
                     value={prefs[item.key]}
@@ -299,7 +230,7 @@ export default function AccountScreen() {
 
       {blocked.length > 0 ? (
         <Card>
-          <Text style={styles.cardTitle}>Blocked members</Text>
+          <Text style={styles.cardTitle}>{copy.blockedMembers.title}</Text>
           <Text style={styles.hint}>
             You won&apos;t see chat messages from blocked members.
           </Text>
@@ -307,10 +238,11 @@ export default function AccountScreen() {
             <View key={b.userId} style={styles.blockedRow}>
               <Text style={styles.blockedName}>{b.name}</Text>
               <Pressable onPress={() => void unblock(b.userId)}>
-                <Text style={styles.link}>Unblock</Text>
+                <Text style={styles.link}>{copy.blockedMembers.unblock}</Text>
               </Pressable>
             </View>
           ))}
+          <ErrorText message={blockedError} />
         </Card>
       ) : null}
 

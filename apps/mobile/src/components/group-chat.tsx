@@ -1,15 +1,16 @@
-import { api, ApiError } from "@/api/client";
+import { useApiFetcher } from "@/api/use-api-fetcher";
 import { colors } from "@/config";
 import {
   DELETED_MESSAGE_BODY,
   MAX_MESSAGE_LENGTH,
   REACTION_EMOJIS,
   REACTION_PICKER_EMOJIS,
+  copy,
   type ReactionEmoji,
   type RoundMessageDto,
-  type RoundMessagesResponse,
 } from "@tiki-acca/shared";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { canModerateMessage, useGroupThread } from "@tiki-acca/client";
+import { useCallback, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -23,18 +24,8 @@ import {
   View,
 } from "react-native";
 
-const POLL_MS = 20_000;
-
-function mergeMessages(
-  existing: RoundMessageDto[],
-  incoming: RoundMessageDto[]
-): RoundMessageDto[] {
-  const byId = new Map(existing.map((message) => [message.id, message]));
-  for (const message of incoming) byId.set(message.id, message);
-  return [...byId.values()].sort(
-    (a, b) =>
-      a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id)
-  );
+function isAppActive() {
+  return AppState.currentState === "active";
 }
 
 function formatTime(iso: string) {
@@ -46,7 +37,6 @@ function formatTime(iso: string) {
 
 export function GroupThread({
   groupId,
-  token,
   currentUserId,
   isOwner = false,
   readOnly = false,
@@ -55,7 +45,6 @@ export function GroupThread({
   refreshKey = 0,
 }: {
   groupId: string;
-  token: string;
   currentUserId?: string;
   isOwner?: boolean;
   readOnly?: boolean;
@@ -63,232 +52,73 @@ export function GroupThread({
   onRead?: () => void;
   refreshKey?: number;
 }) {
-  const [messages, setMessages] = useState<RoundMessageDto[]>([]);
-  const [legAnnouncements, setLegAnnouncements] = useState<RoundMessageDto[]>([]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [posting, setPosting] = useState(false);
-  const [hasMore, setHasMore] = useState(false);
-  const [loadingEarlier, setLoadingEarlier] = useState(false);
-  const [error, setError] = useState("");
-  const lastId = useRef<string | null>(null);
+  const fetcher = useApiFetcher();
   const scrollRef = useRef<ScrollView>(null);
-  const loadedEarlier = useRef(false);
   const skipNextAutoScroll = useRef(false);
-
-  useEffect(() => {
-    onMessagesChange?.(mergeMessages(messages, legAnnouncements));
-  }, [messages, legAnnouncements, onMessagesChange]);
-
-  const load = useCallback(async () => {
-    const response = await api<RoundMessagesResponse>(
-      `/api/groups/${groupId}/messages`,
-      { token }
-    );
-    if (response.messages.length > 0) {
-      lastId.current = response.messages[response.messages.length - 1]!.id;
-      setMessages((current) => mergeMessages(current, response.messages));
-    }
-    if (response.legAnnouncements) {
-      setLegAnnouncements(response.legAnnouncements);
-    }
-    if (!loadedEarlier.current) setHasMore(Boolean(response.hasMore));
-    onRead?.();
-  }, [groupId, token, onRead]);
-
-  useEffect(() => {
-    let cancelled = false;
-    lastId.current = null;
-    loadedEarlier.current = false;
-    setMessages([]);
-    setLegAnnouncements([]);
-    setLoading(true);
-    load()
-      .catch(() => {
-        if (!cancelled) setError("Couldn't load the chat.");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    if (readOnly) return () => {
-      cancelled = true;
-    };
-    const interval = setInterval(() => {
-      if (AppState.currentState === "active") void load().catch(() => {});
-    }, POLL_MS);
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [load, readOnly]);
-
-  useEffect(() => {
-    if (refreshKey > 0 && AppState.currentState === "active") {
-      void load().catch(() => {});
-    }
-  }, [load, refreshKey]);
-
-  async function send() {
-    const body = input.trim();
-    if (!body || posting) return;
-    setPosting(true);
-    setError("");
-    try {
-      const response = await api<{ message: RoundMessageDto }>(
-        `/api/groups/${groupId}/messages`,
-        {
-          method: "POST",
-          token,
-          body: JSON.stringify({ body }),
-        }
-      );
-      lastId.current = response.message.id;
-      setMessages((current) => mergeMessages(current, [response.message]));
-      setInput("");
-    } catch (caught) {
-      setError(
-        caught instanceof ApiError
-          ? caught.status === 429
-            ? "You're posting too fast. Slow down a moment."
-            : caught.message
-          : "Couldn't send that message."
-      );
-    } finally {
-      setPosting(false);
-    }
-  }
-
-  async function remove(messageId: string) {
-    try {
-      const response = await api<{ message: RoundMessageDto }>(
-        `/api/messages/${messageId}`,
-        { method: "DELETE", token }
-      );
-      setMessages((current) =>
-        current.map((message) =>
-          message.id === messageId ? response.message : message
-        )
-      );
-      setLegAnnouncements((current) =>
-        current.map((message) =>
-          message.id === messageId ? response.message : message
-        )
-      );
-    } catch {
-      setError("Couldn't delete that message.");
-    }
-  }
-
-  async function react(messageId: string, emoji: ReactionEmoji) {
-    try {
-      const response = await api<{ message: RoundMessageDto }>(
-        `/api/messages/${messageId}/reactions`,
-        { method: "POST", token, body: JSON.stringify({ emoji }) }
-      );
-      setMessages((current) =>
-        current.map((message) =>
-          message.id === messageId ? response.message : message
-        )
-      );
-      setLegAnnouncements((current) =>
-        current.map((message) =>
-          message.id === messageId ? response.message : message
-        )
-      );
-    } catch {
-      setError("Couldn't update that reaction.");
-    }
-  }
-
-  async function report(messageId: string) {
-    try {
-      await api<{ ok: boolean }>(`/api/messages/${messageId}/report`, {
-        method: "POST",
-        token,
-        body: JSON.stringify({}),
-      });
-      Alert.alert("Reported", "Thanks — we'll review this message.");
-    } catch {
-      setError("Couldn't report that message.");
-    }
-  }
-
-  async function block(userId: string, name: string) {
-    try {
-      await api<{ ok: boolean }>(`/api/users/${userId}/block`, {
-        method: "POST",
-        token,
-      });
-      setMessages((current) =>
-        current.filter((m) => !(m.kind === "user" && m.user?.id === userId))
-      );
-      Alert.alert(
-        "Blocked",
-        `${name}'s messages are now hidden. You can unblock them from Account.`
-      );
-    } catch {
-      setError("Couldn't block that member.");
-    }
-  }
+  const holdScroll = useCallback(() => {
+    skipNextAutoScroll.current = true;
+  }, []);
+  const {
+    messages,
+    loading,
+    error,
+    input,
+    setInput,
+    posting,
+    hasMore,
+    loadingEarlier,
+    send,
+    remove,
+    react,
+    report,
+    block,
+    loadEarlier,
+  } = useGroupThread({
+    groupId,
+    fetcher,
+    readOnly,
+    refreshKey,
+    isVisible: isAppActive,
+    onRead,
+    onMessagesChange,
+    onPrepend: holdScroll,
+  });
 
   function moderate(message: RoundMessageDto) {
-    const authorId = message.user?.id;
-    if (readOnly || message.kind !== "user" || !authorId) return;
-    if (authorId === currentUserId) return;
-    if (message.body === DELETED_MESSAGE_BODY) return;
-    const name = message.user?.name ?? "this member";
+    const author = message.user;
+    if (readOnly || !author || !canModerateMessage(message, currentUserId)) return;
     Alert.alert("Message options", undefined, [
       {
-        text: "Report message",
+        text: copy.chat.report,
         onPress: () =>
-          Alert.alert("Report message", "Report this message for review?", [
+          Alert.alert(copy.chat.reportConfirmTitle, copy.chat.reportConfirmBody, [
             { text: "Cancel", style: "cancel" },
             {
               text: "Report",
               style: "destructive",
-              onPress: () => void report(message.id),
+              onPress: async () => {
+                if (await report(message.id)) Alert.alert("Reported", copy.chat.reported);
+              },
             },
           ]),
       },
       {
-        text: `Block ${name}`,
+        text: copy.chat.block(author.name),
         style: "destructive",
         onPress: () =>
-          Alert.alert(
-            `Block ${name}?`,
-            "You won't see their messages anywhere. You can unblock them from Account.",
-            [
-              { text: "Cancel", style: "cancel" },
-              {
-                text: "Block",
-                style: "destructive",
-                onPress: () => void block(authorId, name),
+          Alert.alert(copy.chat.blockConfirmTitle(author.name), copy.chat.blockConfirmBody, [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Block",
+              style: "destructive",
+              onPress: async () => {
+                if (await block(author.id)) Alert.alert("Blocked", copy.chat.blocked(author.name));
               },
-            ]
-          ),
+            },
+          ]),
       },
       { text: "Cancel", style: "cancel" },
     ]);
-  }
-
-  async function loadEarlier() {
-    const oldestId = messages[0]?.id;
-    if (!oldestId || loadingEarlier) return;
-    setLoadingEarlier(true);
-    loadedEarlier.current = true;
-    try {
-      const response = await api<RoundMessagesResponse>(
-        `/api/groups/${groupId}/messages?before=${encodeURIComponent(oldestId)}`,
-        { token }
-      );
-      skipNextAutoScroll.current = true;
-      setMessages((current) => mergeMessages(current, response.messages));
-      setHasMore(Boolean(response.hasMore));
-    } catch {
-      setError("Couldn't load earlier messages.");
-    } finally {
-      setLoadingEarlier(false);
-    }
   }
 
   return (

@@ -3,16 +3,18 @@
 import { CopyInviteButton } from "@/components/layout/site-footer";
 import { GroupNav } from "@/components/group/nav";
 import { AppHeader } from "@/components/layout/header";
-import { GroupDataProvider, useGroupData } from "@/context/group-data";
+import { apiFetcher } from "@/lib/api-client";
+import { GroupDataProvider, useGroupData } from "@tiki-acca/client";
 import { greetingFirstName } from "@/lib/user-display";
 import { formatRoundStatusBadge } from "@tiki-acca/shared";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 
 function GroupShell({ groupId, children }: { groupId: string; children: React.ReactNode }) {
   const { data: session } = useSession();
-  const { data, loading } = useGroupData();
+  const { data, loading, error } = useGroupData();
   const [inviteUrl, setInviteUrl] = useState("");
 
   useEffect(() => {
@@ -26,7 +28,7 @@ function GroupShell({ groupId, children }: { groupId: string; children: React.Re
   if (loading || !data) {
     return (
       <div className="flex min-h-screen items-center justify-center text-muted">
-        Loading group...
+        {!loading && error ? error : "Loading group..."}
       </div>
     );
   }
@@ -76,8 +78,10 @@ export function GroupLayoutClient({
   groupId: string;
   children: React.ReactNode;
 }) {
+  const router = useRouter();
+  const leaveGroup = useCallback(() => router.push("/dashboard"), [router]);
   return (
-    <GroupDataProvider groupId={groupId}>
+    <GroupDataProvider groupId={groupId} fetcher={apiFetcher} onUnavailable={leaveGroup}>
       <GroupShell groupId={groupId}>{children}</GroupShell>
     </GroupDataProvider>
   );

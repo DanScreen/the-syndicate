@@ -1,5 +1,13 @@
-import { SOLO_MAX_LEGS, formatOdds } from "@tiki-acca/shared";
-import { ApiError, api } from "@/api/client";
+import {
+  SOLO_MAX_LEGS,
+  announcementsByLegId,
+  changeLegTitle,
+  deriveRoundView,
+  formatKickoff,
+  formatOdds,
+  legAddedCelebration,
+} from "@tiki-acca/shared";
+import { useApiFetcher } from "@/api/use-api-fetcher";
 import { useAuth } from "@/auth/AuthProvider";
 import { AccaSummary } from "@/components/round/acca-summary";
 import { RoundHistory } from "@/components/round/history";
@@ -9,7 +17,13 @@ import { SubmitLegForm } from "@/components/round/submit-leg-form";
 import type { RoundMessageDto } from "@tiki-acca/shared";
 import { Button, Card, ErrorText } from "@/components/ui";
 import { colors } from "@/config";
-import { useGroupData } from "@/context/group-data";
+import {
+  ApiError,
+  createRound,
+  lockRound,
+  removeLeg,
+  useGroupData,
+} from "@tiki-acca/client";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -24,11 +38,11 @@ import {
   Text,
   View,
 } from "react-native";
-import { formatKickoff } from "@tiki-acca/shared";
 
 export default function GroupRoundScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { token, user } = useAuth();
+  const { user } = useAuth();
+  const fetcher = useApiFetcher();
   const { data, error, reload } = useGroupData();
   const [refreshing, setRefreshing] = useState(false);
   const [editingLegId, setEditingLegId] = useState<string | null>(null);
@@ -48,14 +62,12 @@ export default function GroupRoundScreen() {
   const previousRoundRef = useRef<string | null>(null);
   const previousLegCountRef = useRef(0);
 
-  const activeRounds =
-    data?.activeRounds?.length
-      ? data.activeRounds
-      : data?.activeRound
-        ? [data.activeRound]
-        : [];
+  const view = data
+    ? deriveRoundView({ data, selectedRoundId, userId: user?.id })
+    : null;
+  const activeRounds = view?.activeRounds;
   useEffect(() => {
-    if (activeRounds.length === 0) return;
+    if (!activeRounds || activeRounds.length === 0) return;
     if (!activeRounds.some((round) => round.id === selectedRoundId)) {
       setSelectedRoundId(activeRounds[0]!.id);
     }
@@ -68,165 +80,26 @@ export default function GroupRoundScreen() {
     setLegAnnouncements(data?.legAnnouncements ?? []);
   }, [data?.legAnnouncements]);
 
-  if (!data) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator color={colors.accent} />
-      </View>
-    );
-  }
-
-  const round =
-    activeRounds.find((item) => item.id === selectedRoundId) ??
-    activeRounds[0] ??
-    null;
-  const members = data.group.members ?? [];
-  const isSolo = Boolean(round?.unlimitedLegs);
-  const legsPerMember = isSolo
-    ? SOLO_MAX_LEGS
-    : (round?.legsPerMember ?? data.group.legsPerMember ?? 1);
-  const myLegs = round?.legs.filter((l) => l.user.id === user?.id) ?? [];
-  const canSubmitMore =
-    round?.status === "open" && myLegs.length < legsPerMember && Boolean(user?.id);
-  const isLocked = round?.status === "locked";
-  const isOpen = round?.status === "open";
-  const activeBetLimit = data.group.maxActiveBets ?? 1;
-  const emptyOpenBet = activeRounds.some(
-    (item) => item.status === "open" && item.legs.length === 0
-  );
-  const canCreateRound =
-    activeBetLimit > 1 &&
-    activeRounds.length < activeBetLimit &&
-    !emptyOpenBet;
-
-  const firstKickoff =
-    round && round.legs.length > 0
-      ? new Date(Math.min(...round.legs.map((l) => new Date(l.kickoff).getTime())))
-      : null;
-  const editWindowOpen =
-    (isOpen || isLocked) && (!firstKickoff || Date.now() < firstKickoff.getTime());
-  // The bet is underway once the first fixture kicks off (betting has closed).
-  const accaStarted = Boolean(firstKickoff && Date.now() >= firstKickoff.getTime());
-  const resolvedLegs = round?.legs.filter((l) => l.outcome !== "pending").length ?? 0;
-  const lockedBookmakerName =
-    round?.accaBookmakerRankings?.find((r) => r.bookmakerId === round.bestBookmakerId)
-      ?.bookmakerName ?? round?.legs[0]?.bookmakerName;
-
-  let lockedBanner = "Acca locked — place your bet at the bookmaker";
-  if (isLocked && round) {
-    if (resolvedLegs > 0 && resolvedLegs < round.legs.length) {
-      lockedBanner = `Acca in progress — ${resolvedLegs} of ${round.legs.length} legs settled`;
-    } else if (resolvedLegs === round.legs.length && round.legs.length > 0) {
-      lockedBanner = "All legs settled — acca will finalize shortly";
-    }
-  }
-
-  async function onRefresh() {
-    setRefreshing(true);
-    try {
-      await reload();
-    } finally {
-      setRefreshing(false);
-    }
-  }
-
-  async function createRound() {
-    if (!token || !data) return;
-    setCreatingRound(true);
-    setCreateRoundError("");
-    try {
-      const body = await api<{ round: { id: string } }>(
-        `/api/groups/${data.group.id}/rounds`,
-        { method: "POST", token }
-      );
-      await reload();
-      setSelectedRoundId(body.round.id);
-    } catch (error) {
-      setCreateRoundError(
-        error instanceof ApiError ? error.message : "Failed to create bet"
-      );
-    } finally {
-      setCreatingRound(false);
-    }
-  }
-
-  async function lockSoloRound() {
-    if (!token || !round) return;
-
-    Alert.alert(
-      "Lock this acca?",
-      `You have ${round.legs.length} leg${
-        round.legs.length === 1 ? "" : "s"
-      }. You won't be able to add more.`,
-      [
-        { text: "Keep building", style: "cancel" },
-        {
-          text: "Lock acca",
-          onPress: async () => {
-            setLockingRound(true);
-            setLockError("");
-            try {
-              await api(`/api/rounds/${round.id}/lock`, {
-                method: "POST",
-                token,
-              });
-              await reload();
-            } catch (e) {
-              setLockError(
-                e instanceof ApiError ? e.message : "Failed to lock acca"
-              );
-            } finally {
-              setLockingRound(false);
-            }
-          },
-        },
-      ]
-    );
-  }
-
-  async function removeLeg(legId: string) {
-    if (!token) return;
-
-    setRemovingLegId(legId);
-    setRemoveError("");
-    try {
-      await api(`/api/legs/${legId}`, { method: "DELETE", token });
-      await reload();
-    } catch (e) {
-      setRemoveError(
-        e instanceof ApiError ? e.message : "Failed to remove leg"
-      );
-    } finally {
-      setRemovingLegId(null);
-    }
-  }
-
-  const nextSlot = myLegs.length + 1;
-  const announcementByLegId = new Map<string, RoundMessageDto>();
-  for (const message of legAnnouncements) {
-    if (
-      message.legId &&
-      (message.eventType === "leg_submitted" || message.eventType === "leg_changed")
-    ) {
-      announcementByLegId.set(message.legId, message);
-    }
-  }
+  const userLegCount = view?.userLegs.length ?? 0;
+  const legsPerMember = view?.legsPerMember ?? 1;
+  const selectedRoundKey = view?.round?.id ?? null;
+  const selectedRoundStatus = view?.round?.status ?? null;
 
   useEffect(() => {
-    if (!round) return;
-    if (previousRoundRef.current !== round.id) {
-      previousRoundRef.current = round.id;
-      previousLegCountRef.current = myLegs.length;
+    if (!selectedRoundKey) return;
+    if (previousRoundRef.current !== selectedRoundKey) {
+      previousRoundRef.current = selectedRoundKey;
+      previousLegCountRef.current = userLegCount;
       setLegCelebration(null);
       return;
     }
 
     const previousCount = previousLegCountRef.current;
-    if (round.status === "open" && myLegs.length > previousCount && !editingLegId) {
-      setLegCelebration(myLegs.length >= legsPerMember ? "All legs added" : "Leg added");
+    if (selectedRoundStatus === "open" && userLegCount > previousCount && !editingLegId) {
+      setLegCelebration(legAddedCelebration(userLegCount, legsPerMember));
     }
-    previousLegCountRef.current = myLegs.length;
-  }, [editingLegId, legsPerMember, myLegs.length, round]);
+    previousLegCountRef.current = userLegCount;
+  }, [editingLegId, legsPerMember, userLegCount, selectedRoundKey, selectedRoundStatus]);
 
   useEffect(() => {
     if (!legCelebration) return;
@@ -261,6 +134,91 @@ export default function GroupRoundScreen() {
     });
   }, [celebrationOpacity, celebrationScale, legCelebration]);
 
+  if (!data || !view) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator color={colors.accent} />
+      </View>
+    );
+  }
+
+  const { round, acca, isLocked, isOpen, isSolo, firstKickoff, editWindowOpen } = view;
+  const myLegs = view.userLegs;
+  const members = data.group.members ?? [];
+  const announcementByLegId = announcementsByLegId(legAnnouncements);
+
+  async function onRefresh() {
+    setRefreshing(true);
+    try {
+      await reload();
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
+  async function createBet() {
+    if (!data) return;
+    setCreatingRound(true);
+    setCreateRoundError("");
+    try {
+      const body = await createRound(fetcher, data.group.id);
+      await reload();
+      setSelectedRoundId(body.round.id);
+    } catch (error) {
+      setCreateRoundError(
+        error instanceof ApiError ? error.message : "Failed to create bet"
+      );
+    } finally {
+      setCreatingRound(false);
+    }
+  }
+
+  async function lockSoloRound() {
+    if (!round) return;
+
+    Alert.alert(
+      "Lock this acca?",
+      `You have ${round.legs.length} leg${
+        round.legs.length === 1 ? "" : "s"
+      }. You won't be able to add more.`,
+      [
+        { text: "Keep building", style: "cancel" },
+        {
+          text: "Lock acca",
+          onPress: async () => {
+            setLockingRound(true);
+            setLockError("");
+            try {
+              await lockRound(fetcher, round.id);
+              await reload();
+            } catch (e) {
+              setLockError(
+                e instanceof ApiError ? e.message : "Failed to lock acca"
+              );
+            } finally {
+              setLockingRound(false);
+            }
+          },
+        },
+      ]
+    );
+  }
+
+  async function removeUserLeg(legId: string) {
+    setRemovingLegId(legId);
+    setRemoveError("");
+    try {
+      await removeLeg(fetcher, legId);
+      await reload();
+    } catch (e) {
+      setRemoveError(
+        e instanceof ApiError ? e.message : "Failed to remove leg"
+      );
+    } finally {
+      setRemovingLegId(null);
+    }
+  }
+
   return (
     <ScrollView
       style={styles.scroll}
@@ -269,23 +227,23 @@ export default function GroupRoundScreen() {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
       }
     >
-      {activeBetLimit > 1 ? (
+      {view.activeBetLimit > 1 ? (
         <Card>
           <View style={styles.activeBetsHeader}>
             <View>
               <Text style={styles.activeBetsTitle}>Active Bets</Text>
               <Text style={styles.meta}>
-                {activeRounds.length} of {activeBetLimit} available
+                {view.activeRounds.length} of {view.activeBetLimit} available
               </Text>
             </View>
             <Pressable
               accessibilityRole="button"
-              disabled={!canCreateRound || creatingRound}
-              onPress={() => void createRound()}
+              disabled={!view.canCreateRound || creatingRound}
+              onPress={() => void createBet()}
               style={({ pressed }) => [
                 styles.newBetButton,
-                (!canCreateRound || creatingRound) && styles.newBetButtonDisabled,
-                pressed && canCreateRound && styles.newBetButtonPressed,
+                (!view.canCreateRound || creatingRound) && styles.newBetButtonDisabled,
+                pressed && view.canCreateRound && styles.newBetButtonPressed,
               ]}
             >
               <Text style={styles.newBetButtonText}>
@@ -298,7 +256,7 @@ export default function GroupRoundScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.betSwitcher}
           >
-            {activeRounds.map((item) => {
+            {view.activeRounds.map((item) => {
               const selected = item.id === round?.id;
               return (
                 <Pressable
@@ -327,9 +285,7 @@ export default function GroupRoundScreen() {
               );
             })}
           </ScrollView>
-          {!canCreateRound &&
-          activeRounds.length < activeBetLimit &&
-          emptyOpenBet ? (
+          {view.showEmptyBetHint ? (
             <Text style={styles.betRule}>
               Add a leg to the empty open bet before creating another.
             </Text>
@@ -352,7 +308,7 @@ export default function GroupRoundScreen() {
 
       {isLocked ? (
         <View style={styles.lockedBanner}>
-          <Text style={styles.lockedBannerText}>{lockedBanner}</Text>
+          <Text style={styles.lockedBannerText}>{view.lockedBanner}</Text>
         </View>
       ) : null}
 
@@ -385,12 +341,11 @@ export default function GroupRoundScreen() {
           ) : null}
           <LegsList
             legs={round.legs}
-            legLinks={(round.betslipLinks ?? data.betslipLinks)?.legLinks}
-            showOpenLinks={isLocked && resolvedLegs === 0}
+            legLinks={view.legLinks}
+            showOpenLinks={view.showOpenLinks}
             inProgress={isLocked}
-            showLegIndex={isSolo || legsPerMember > 1}
+            showLegIndex={view.showLegIndex}
             announcementByLegId={announcementByLegId}
-            token={token ?? undefined}
             onAnnouncementChanged={(updated) => {
               setLegAnnouncements((current) =>
                 current.map((message) =>
@@ -402,48 +357,27 @@ export default function GroupRoundScreen() {
         </View>
       ) : null}
 
-      {(() => {
-        const rankings = round?.accaBookmakerRankings ?? [];
-        const combinedOdds = round?.combinedOdds ?? rankings[0]?.combinedOdds ?? null;
-        const bestBookmakerId = round?.bestBookmakerId ?? rankings[0]?.bookmakerId ?? null;
-        const bookmakerName =
-          rankings.find((r) => r.bookmakerId === bestBookmakerId)?.bookmakerName ??
-          lockedBookmakerName;
-        const show =
-          Boolean(combinedOdds) &&
-          (isLocked || (isOpen && (round?.legs.length ?? 0) > 0 && rankings.length > 0));
-        if (!show || combinedOdds == null) return null;
-        return (
-          <AccaSummary
-            combinedOdds={combinedOdds}
-            bookmakerId={bestBookmakerId}
-            bookmakerName={bookmakerName}
-            singleBookmaker={Boolean(bestBookmakerId)}
-            bookmakerRankings={rankings}
-            betslipLink={
-              isLocked && resolvedLegs === 0
-                ? round?.betslipLink ?? data.betslipLink
-                : isOpen
-                  ? round?.betslipLink ?? data.betslipLink
-                  : null
-            }
-            betslipLinkQuality={
-              (round?.betslipLinks ?? data.betslipLinks)?.primaryLinkQuality ?? null
-            }
-            betslipHasAllLegLinks={
-              (round?.betslipLinks ?? data.betslipLinks)?.primaryHasAllLegLinks ?? false
-            }
-            legCount={round?.legs.length ?? 1}
-            // Show the ranked best-odds-across-bookmakers list while open
-            // (using current odds) and once locked (odds captured at lock) — locked is
-            // when members go place the bet, so the comparison is essential.
-            // Collapse it once the bet is underway (past first kickoff).
-            showBookmakerCompare={isOpen || isLocked}
-            compareDefaultOpen={!accaStarted}
-            preview={isOpen}
-          />
-        );
-      })()}
+      {acca.show && acca.combinedOdds != null ? (
+        <AccaSummary
+          combinedOdds={acca.combinedOdds}
+          bookmakerId={acca.bestBookmakerId}
+          bookmakerName={acca.bookmakerName}
+          singleBookmaker={Boolean(acca.bestBookmakerId)}
+          bookmakerRankings={acca.rankings}
+          betslipLink={acca.betslipLink}
+          betslipLinkQuality={acca.betslipLinkQuality}
+          betslipHasAllLegLinks={acca.betslipHasAllLegLinks}
+          legCount={round?.legs.length ?? 1}
+          // Show the ranked best-odds-across-bookmakers list while open
+          // (using current odds) and once locked (odds captured at lock) — locked is
+          // when members go place the bet, so the comparison is essential.
+          // Collapse it once the bet is underway (past first kickoff).
+          showBookmakerCompare={isOpen || isLocked}
+          compareDefaultOpen={acca.compareDefaultOpen}
+          inProgress={isLocked}
+          preview={isOpen}
+        />
+      ) : null}
 
       {myLegs.length > 0 && editWindowOpen && !editingLegId ? (
         <Card>
@@ -479,7 +413,7 @@ export default function GroupRoundScreen() {
                           {
                             text: "Remove",
                             style: "destructive",
-                            onPress: () => void removeLeg(leg.id),
+                            onPress: () => void removeUserLeg(leg.id),
                           },
                         ]
                       )
@@ -501,7 +435,7 @@ export default function GroupRoundScreen() {
         </Card>
       ) : null}
 
-      {canSubmitMore && !editingLegId && round && token ? (
+      {view.canSubmitMore && !editingLegId && round ? (
         <View style={styles.legSubmitWrap}>
           {legCelebration ? (
             <Animated.View
@@ -516,26 +450,18 @@ export default function GroupRoundScreen() {
           <SubmitLegForm
             key={`submit-leg-${myLegs.length}`}
             roundId={round.id}
-            token={token}
             onSubmitted={reload}
             existingLegs={round.legs}
-            legSlot={nextSlot}
+            legSlot={view.nextSlot}
             legsPerMember={legsPerMember}
-            title={
-              isSolo
-                ? `Add leg ${nextSlot}`
-                : legsPerMember > 1
-                  ? `Submit leg ${nextSlot} of ${legsPerMember}`
-                  : undefined
-            }
+            title={view.submitTitle}
           />
         </View>
       ) : null}
 
-      {editingLegId && editWindowOpen && round && token ? (
+      {editingLegId && editWindowOpen && round ? (
         <SubmitLegForm
           roundId={round.id}
-          token={token}
           editLegId={editingLegId}
           existingLegs={round.legs}
           onSubmitted={() => {
@@ -543,13 +469,7 @@ export default function GroupRoundScreen() {
             void reload();
           }}
           onCancel={() => setEditingLegId(null)}
-          title={
-            legsPerMember > 1
-              ? `Change leg ${
-                  myLegs.find((l) => l.id === editingLegId)?.legIndex ?? ""
-                }`
-              : undefined
-          }
+          title={changeLegTitle(view, editingLegId)}
         />
       ) : null}
 

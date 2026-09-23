@@ -2,7 +2,7 @@ import { useAuth } from "@/auth/AuthProvider";
 import { Leaderboard } from "@/components/round/leaderboard";
 import { GroupStatsPanel } from "@/components/stats";
 import { colors } from "@/config";
-import { useGroupData } from "@/context/group-data";
+import { useGroupData } from "@tiki-acca/client";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function GroupLeaderboardScreen() {
@@ -15,7 +15,7 @@ export default function GroupLeaderboardScreen() {
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Leaderboard</Text>
       <Text style={styles.subtitle}>
-        Who's ahead in this group — points from settled and in-progress legs.
+        Who&apos;s ahead in this group — points from settled and in-progress legs.
       </Text>
       <Leaderboard entries={data.leaderboard} />
 
@@ -24,7 +24,7 @@ export default function GroupLeaderboardScreen() {
         <Text style={styles.subtitle}>
           Group charts, stake converter, and member breakdowns.
         </Text>
-        <GroupStatsPanel groupId={data.group.id} token={token} />
+        <GroupStatsPanel groupId={data.group.id} groupName={data.group.name} token={token} />
       </View>
     </ScrollView>
   );

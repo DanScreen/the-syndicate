@@ -1,4 +1,6 @@
 import { createMobileToken } from "@/lib/mobile-token";
+import { serialized } from "@/lib/api-response";
+import type { MobileSignInResponse } from "@tiki-acca/shared";
 import { resolveUserRole } from "@/lib/admin/auth";
 import { normalizeEmail } from "@/lib/auth-email";
 import { recordAnalyticsEventAsync } from "@/lib/analytics";
@@ -56,16 +58,18 @@ export async function POST(request: Request) {
       name: user.name,
     });
 
-    return NextResponse.json({
-      token,
-      user: {
-        id: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        name: user.name,
-        email: user.email,
-      },
-    });
+    return NextResponse.json(
+      serialized({
+        token,
+        user: {
+          id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          name: user.name,
+          email: user.email,
+        },
+      }) satisfies MobileSignInResponse
+    );
   } catch {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }

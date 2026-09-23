@@ -34,7 +34,7 @@ Omit `ODDS_API_KEY` for mock fixtures. Add `FOOTBALL_DATA_API_KEY` and/or `API_F
 
 ### Deploy
 
-PRs and pushes to `main` → `.github/workflows/ci.yml`: lint, typecheck, tests against Postgres.
+PRs and pushes to `main` → `.github/workflows/ci.yml`: lint (web, mobile, `packages/client`), typecheck, tests against Postgres.
 
 Push to `main` → GitHub Actions (`.github/workflows/deploy.yml`): build → `db:migrate:deploy` → Cloud Run.
 
@@ -45,13 +45,15 @@ Match sync + odds warm: Cloud Scheduler (Terraform) → `POST /api/internal/sync
 | Subsystem | Path |
 |-----------|------|
 | API routes | `apps/web/src/app/api/` |
-| Shared schemas/types | `packages/shared/src/` |
+| Shared schemas/types | `packages/shared/src/` — request schemas (`schemas.ts`) and the API response contract (`api-types.ts`). Member-facing routes check their output against it with `serialized(body) satisfies <X>Response` (`apps/web/src/lib/api-response.ts`) |
+| Shared client hooks | `packages/client/src/` (`@tiki-acca/client`, React without DOM/RN): `createApiFetcher`/`ApiError`, `GroupDataProvider`/`useGroupData`, `useGroupThread` (chat), `useLegPicker`, `useBlockedMembers`, Bet-tab actions (`createRound`, `lockRound`, `removeLeg`, `toggleReaction`). Web fetcher: `apps/web/src/lib/api-client.ts`; mobile: `apps/mobile/src/api/use-api-fetcher.ts` |
+| Shared view logic & copy | `packages/shared/src/round-view.ts` (`deriveRoundView` — everything the Bet tab shows; `accaSummaryCopy`), `stats-display.ts` (`filterUserStatsByGroup`, `buildShareText`, chart labels), `copy.ts` (`copy`, `COMPLIANCE` gambling wording + helpline, `NOTIFICATION_PREFERENCE_SECTIONS`) |
 | Market conflict helpers | `packages/shared/src/market-conflicts.ts` |
 | Prisma schema | `packages/database/prisma/schema.prisma` |
 | Odds | `apps/web/src/lib/odds/` |
 | Settlement | `apps/web/src/lib/settlement/`, `apps/web/src/lib/results/` |
 | Stats | `apps/web/src/lib/stats/` |
-| Group chat | Dedicated web/mobile Chat tabs, `apps/web/src/components/group/chat.tsx`, `apps/mobile/src/components/group-chat.tsx`, APIs under `api/groups/[id]/messages` + `api/messages/[id]`, lifecycle writers/tests in `apps/web/src/lib/chat/`, shared contract `packages/shared/src/chat.ts` |
+| Group chat | Dedicated web/mobile Chat tabs, `apps/web/src/components/group/chat.tsx`, `apps/mobile/src/components/group-chat.tsx` (both on `useGroupThread`; Report / Block on both), APIs under `api/groups/[id]/messages` + `api/messages/[id]`, lifecycle writers/tests in `apps/web/src/lib/chat/`, shared contract `packages/shared/src/chat.ts` |
 | Notifications | `apps/web/src/lib/notifications/` (branded email templates + layout; logo at `public/brand/email-logo.png`) |
 | Auth | `apps/web/src/lib/auth.ts`, `apps/web/src/lib/auth.config.ts` |
 | Settlement (auto) | `apps/web/src/lib/settlement/auto-settle-round.ts` |
@@ -63,7 +65,8 @@ Match sync + odds warm: Cloud Scheduler (Terraform) → `POST /api/internal/sync
 | SEO | `apps/web/src/app/sitemap.ts`, `robots.ts` — public pages set self-referencing `alternates.canonical` (`/`, `/about`, `/privacy`, `/cookies`, `/terms`, `/support`, blog). Auth/account routes are `noindex` and listed in `robots` disallow. Canonical host is `https://www.tikiacca.com` (`metadataBase`). Apex/`*.run.app` redirects or 403s in Search Console are expected (www via Cloudflare; origin auth blocks direct Cloud Run crawls). |
 | Favicon / app icons | `apps/web/src/app/icon.svg`, `favicon.ico` (16/32/48), `apple-icon.tsx` (`lib/brand/rondo-icon.tsx`) — extra-wide apex-up Triangle rondo disc; glyph source in `logo.tsx`. Metadata URLs use `?v=` cache-bust (`layout.tsx`) — bump when the mark changes |
 | Brand archive | `docs/brand/logo-archive/v6-wide-apex-up/` (previous live logo vectors + rollback instructions); rejected explorations live in git history — see [BRAND.md](./BRAND.md#archived-explorations) |
-| Group layout | `apps/web/src/app/groups/[id]/layout.tsx`, `components/group/layout-client.tsx`, `context/group-data.tsx` |
+| Group layout | `apps/web/src/app/groups/[id]/layout.tsx`, `components/group/layout-client.tsx` (`GroupDataProvider` from `@tiki-acca/client`; 403/404 → dashboard) |
+| Group list | `apps/web/src/lib/groups/list-group-summaries.ts` — one builder for the dashboard and `GET /api/groups` (unread counts in one query) |
 | Scoring | `packages/shared/src/scoring.ts` |
 | Competitions catalogue | `packages/shared/src/competitions.ts` |
 | Platform admin | `apps/web/src/lib/admin/` (`auth.ts` = `requireAdmin` / `ADMIN_EMAILS`), `lib/competitions/settings.ts`, `app/admin/`, `components/admin/` |
@@ -115,6 +118,8 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 | Blog (file-based MDX, static, `/blog`) + sitemap.xml + robots.txt | ✅ |
 | Longstanding group Chat tab + Bet-labelled lifecycle messages + reactions (web + mobile) | ✅ |
 | Chat unread badges + batched push preference | ✅ |
+| Chat Report / Block + blocked-members list with Unblock (web + mobile) | ✅ |
+| Mobile: share invite link (native share sheet), home points summary + new-user steps, Performance group filter, share performance / group stats, per-member line chart | ✅ |
 
 \*Asian handicap only from exchange bookmakers in current World Cup UK feed — filtered out; handicap UI empty for those fixtures.
 
@@ -208,10 +213,9 @@ Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_
 | `apps/web/src/components/group/submit-leg-form.tsx` | Progressive 4-step leg picker (competition, fixture, and market lists collapse after selection; **Change competition** / **Change fixture** / **Change market** to browse again; multi-leg rounds reset picker after each submit, show leg progress copy, and trigger brief **Leg added** / **All legs added** celebrations), locked round picks, settle UI |
 | `apps/web/src/components/layout/app-nav.tsx` | Header nav (desktop): Home / About / Groups / Performance / Admin / Blog |
 | `apps/web/src/components/layout/mobile-nav.tsx` | Compact hamburger menu below `md` for marketing + app headers |
-| `apps/web/src/app/account/page.tsx` | Account — profile, notification prefs, sign out (greeting in header links here) |
+| `apps/web/src/app/account/page.tsx` | Account — profile, notification prefs, blocked members (`components/blocked-members.tsx`), sign out, delete (greeting in header links here) |
 | `apps/web/src/components/group/nav.tsx` | Group tabs: Bet / Leaderboard / History / Chat (/ Settings for owners) |
 | `apps/web/src/components/group/layout-client.tsx` | Shared group shell + `GroupDataProvider` |
-| `apps/web/src/context/group-data.tsx` | Group data context for sub-pages |
 
 ---
 
@@ -225,7 +229,7 @@ Protected routes enforced in `apps/web/src/middleware.ts` / `auth.config.ts`: `/
 | `/about` | Product story, what we are/aren’t, responsible gambling (reachable when signed in) |
 | `/blog`, `/blog/[slug]` | File-based MDX blog (static; drafts hidden in prod) |
 | `/sign-in`, `/sign-up` | Auth — sign-up collects **first name** + **last name**; both preserve `callbackUrl` (e.g. invite return) |
-| `/account` | Account — profile, notification prefs, sign out (via header greeting) |
+| `/account` | Account — profile, notification prefs, blocked members (unblock), sign out, delete (via header greeting) |
 | `/settings/notifications` | Redirect → `/account#notifications` (legacy / List-Unsubscribe) |
 | `/dashboard` | **Groups home** — list of user's groups; **group/your points**; **current betslip** legs (fixture, market, selection, odds); waiting status if you haven't picked |
 | `/performance` | Cross-group stats (`DashboardStats`) — group filter dropdown, charts, share cards |
@@ -576,7 +580,7 @@ Recent migrations include `20260718190000_concurrent_group_bets` and `2026071819
 7. **The Odds API quota** — credits = `markets × regions`. Cron warm: **3** bulk + **5 × N** core per enabled competition every 6 h (`N` = fixtures within `ODDS_WARM_CORE_WITHIN_HOURS`, default 72). User “specials” tier = **7** per fixture on demand only (allowed even when `ODDS_DB_ONLY=true`, because specials are not cron-warmed). Set `ODDS_DB_ONLY=true` so bulk/core user traffic does not call the API. See [DEPLOYMENT.md](./DEPLOYMENT.md#the-odds-api--calls-credits--cron).
 8. **Terraform CI** needs `storage.objectAdmin` on the deploy SA for the GCS state bucket. If CI fails with `storage.objects.list` denied, grant bucket access once (see [infra/terraform/README.md](../infra/terraform/README.md#terraform-ci-state-bucket-access)), then re-run the workflow. `deploy.yml` bootstraps `CRON_SECRET` in Secret Manager from the GitHub secret when missing.
 9. **Odds snapshots in PostgreSQL** — shared across Cloud Run instances; refreshed by `POST /api/internal/warm-odds-cache` (Cloud Scheduler job in Terraform) or admin **Warm odds cache now** on `/admin/odds`. Set `ODDS_DB_ONLY=true` so bulk/core user routes never burn API credits (specials still on-demand). In-memory cache remains for quota block/snapshot and football-data only.
-10. **Mobile app** — Native app code complete, feature parity across iOS/Android (single codebase, no platform forks). **iOS live in App Store Connect** (submitted, build 5). **Android** built and ready (Firebase push wired up) but not yet submitted — blocked on Play Console ID verification, see [ANDROID_LAUNCH.md](../apps/mobile/ANDROID_LAUNCH.md). Dev testing: Expo Go or `expo run:ios --device` ([DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md)); friend distribution via [FRIEND_TESTING.md](../apps/mobile/FRIEND_TESTING.md). Leg-edit parity shipped (same "Change my pick" flow as web). Admin pages are web-only by design.
+10. **Mobile app** — Native app code complete, feature parity across iOS/Android (single codebase, no platform forks). **iOS live in App Store Connect** (submitted, build 5). **Android** built and ready (Firebase push wired up) but not yet submitted — blocked on Play Console ID verification, see [ANDROID_LAUNCH.md](../apps/mobile/ANDROID_LAUNCH.md). Dev testing: Expo Go or `expo run:ios --device` ([DEVELOPER_TESTING.md](../apps/mobile/DEVELOPER_TESTING.md)); friend distribution via [FRIEND_TESTING.md](../apps/mobile/FRIEND_TESTING.md). Leg-edit parity shipped (same "Change my pick" flow as web). Admin pages are web-only by design. Web and mobile share their data layer (`@tiki-acca/client`), Bet-tab view logic (`deriveRoundView`) and copy — see [specs/mobile-apps.md](./specs/mobile-apps.md#reducing-duplicated-effort-and-artifacts).
 11. **Auth JWT** — middleware uses edge-safe `auth.config.ts` (no Prisma); `auth.ts` refreshes `role` from DB on each session update.
 12. **Chat realtime** — the permanent group thread polls every 20 seconds while the Chat tab is visible; no WebSocket/SSE, typing indicators, read receipts, media, or reaction notifications in v1. Chat push needs Expo/APNs/FCM setup on a physical device.
 13. **Concurrent-bet notification links** — reminder/lock/settle payloads carry `roundId`, but current web/mobile group URLs do not preselect that bet; the user lands on the group’s default active bet and can switch manually.

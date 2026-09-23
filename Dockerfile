@@ -8,6 +8,7 @@ FROM base AS deps
 COPY package.json package-lock.json ./
 COPY apps/web/package.json ./apps/web/
 COPY apps/mobile/package.json ./apps/mobile/
+COPY packages/client/package.json ./packages/client/
 COPY packages/database/package.json ./packages/database/
 COPY packages/shared/package.json ./packages/shared/
 COPY tools/marketing/package.json ./tools/marketing/
@@ -16,6 +17,7 @@ COPY tools/marketing/package.json ./tools/marketing/
 # above because npm ci checks them against the lockfile.
 RUN npm ci --include-workspace-root \
   --workspace=@tiki-acca/web \
+  --workspace=@tiki-acca/client \
   --workspace=@tiki-acca/database \
   --workspace=@tiki-acca/shared
 

@@ -1,55 +1,26 @@
 import type { Leg } from "@prisma/client";
-import { bestWorstLegHighlights } from "@tiki-acca/shared";
-import type { LegHighlight } from "@tiki-acca/shared";
+import {
+  bestWorstLegHighlights,
+  CHART_ORIGIN_LABEL,
+  formatBetAxisLabel,
+  type MemberStatsChartPoint,
+  type MemberStatsResponse,
+} from "@tiki-acca/shared";
 import {
   favouriteCategory,
   bestWorstCategory,
   betTypeForLeg,
-  formatBetAxisLabel,
   formatRoundDateLabel,
   legPoints,
   memberPointsInRound,
   roundById,
   roundsForPerformanceStats,
-  CHART_ORIGIN_LABEL,
   teamForLeg,
-  type BestWorstInsight,
   type RoundWithLegs,
 } from "./helpers";
 
-export type MemberStatsSummary = {
-  netPoints: number;
-  /** Average points per settled individual leg (won/lost/void). */
-  averagePointsPerLeg: number | null;
-  legsPlayed: number;
-  /** Individual pick win rate: won / (won + lost), voids excluded. */
-  winRate: number | null;
-  averageOdds: number | null;
-  bestLeg: LegHighlight | null;
-  worstLeg: LegHighlight | null;
-};
-
-export type MemberStatsChartPoint = {
-  roundNumber: number;
-  label: string;
-  dateLabel: string;
-  roundPoints: number;
-  cumulativePoints: number;
-};
-
-export type MemberCategoryStats = {
-  favourite: string | null;
-  bestWorst: BestWorstInsight | null;
-};
-
-export type MemberStatsResult = {
-  userId: string;
-  summary: MemberStatsSummary;
-  chart: MemberStatsChartPoint[];
-  competition: MemberCategoryStats;
-  market: MemberCategoryStats;
-  team: MemberCategoryStats;
-};
+/** Member stats as returned by the API, minus the member's name (added by the route). */
+export type MemberStatsResult = Omit<MemberStatsResponse, "name">;
 
 export function computeMemberStats(
   userId: string,
