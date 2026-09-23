@@ -2,7 +2,7 @@ import { api } from "@/api/client";
 import { useAuth } from "@/auth/AuthProvider";
 import { RoundHistory } from "@/components/round/history";
 import { colors } from "@/config";
-import { useGroupData } from "@/context/group-data";
+import { useGroupData } from "@tiki-acca/client";
 import type { GroupHistoryResponse, HistoryRound } from "@tiki-acca/shared";
 import { useCallback, useEffect, useState } from "react";
 import {

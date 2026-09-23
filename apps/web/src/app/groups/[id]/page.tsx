@@ -5,7 +5,14 @@ import { LegsList } from "@/components/group/legs-list";
 import { RoundProgress } from "@/components/group/round-progress";
 import { SubmitLegForm } from "@/components/group/submit-leg-form";
 import { RoundHistory } from "@/components/group/history";
-import { useGroupData } from "@/context/group-data";
+import {
+  ApiError,
+  createRound,
+  lockRound,
+  removeLeg,
+  useGroupData,
+} from "@tiki-acca/client";
+import { apiFetcher } from "@/lib/api-client";
 import { useSession } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -103,23 +110,16 @@ export default function GroupRoundPage() {
   const { acca, isLocked, isOpen, isSolo, firstKickoff, editWindowOpen } = view;
   const announcementByLegId = announcementsByLegId(legAnnouncements);
 
-  async function removeLeg(legId: string, selectionLabel: string) {
+  async function removeUserLeg(legId: string, selectionLabel: string) {
     if (!window.confirm(`Remove ${selectionLabel} from this acca?`)) return;
 
     setRemovingLegId(legId);
     setRemoveError("");
     try {
-      const response = await fetch(`/api/legs/${legId}`, { method: "DELETE" });
-      const body = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        setRemoveError(
-          typeof body.error === "string" ? body.error : "Failed to remove leg"
-        );
-        return;
-      }
+      await removeLeg(apiFetcher, legId);
       await reload();
-    } catch {
-      setRemoveError("Failed to remove leg");
+    } catch (caught) {
+      setRemoveError(caught instanceof ApiError ? caught.message : "Failed to remove leg");
     } finally {
       setRemovingLegId(null);
     }
@@ -139,42 +139,24 @@ export default function GroupRoundPage() {
     setLockingRound(true);
     setLockError("");
     try {
-      const response = await fetch(`/api/rounds/${activeRound.id}/lock`, {
-        method: "POST",
-      });
-      const body = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        setLockError(
-          typeof body.error === "string" ? body.error : "Failed to lock acca"
-        );
-        return;
-      }
+      await lockRound(apiFetcher, activeRound.id);
       await reload();
-    } catch {
-      setLockError("Failed to lock acca");
+    } catch (caught) {
+      setLockError(caught instanceof ApiError ? caught.message : "Failed to lock acca");
     } finally {
       setLockingRound(false);
     }
   }
 
-  async function createRound() {
+  async function createBet() {
     setCreatingRound(true);
     setCreateRoundError("");
     try {
-      const response = await fetch(`/api/groups/${group.id}/rounds`, {
-        method: "POST",
-      });
-      const body = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        setCreateRoundError(
-          typeof body.error === "string" ? body.error : "Failed to create bet"
-        );
-        return;
-      }
+      const body = await createRound(apiFetcher, group.id);
       await reload();
       setSelectedRoundId(body.round.id);
-    } catch {
-      setCreateRoundError("Failed to create bet");
+    } catch (caught) {
+      setCreateRoundError(caught instanceof ApiError ? caught.message : "Failed to create bet");
     } finally {
       setCreatingRound(false);
     }
@@ -194,7 +176,7 @@ export default function GroupRoundPage() {
             <button
               type="button"
               disabled={!view.canCreateRound || creatingRound}
-              onClick={() => void createRound()}
+              onClick={() => void createBet()}
               className="rounded-lg bg-accent px-3 py-2 text-sm font-medium text-on-accent hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-50"
             >
               {creatingRound ? "Creating…" : "New Bet"}
@@ -321,7 +303,7 @@ export default function GroupRoundPage() {
             canRemove={isOpen}
             removingLegId={removingLegId}
             onChangeLeg={(legId) => setEditingLegId(legId)}
-            onRemoveLeg={(leg) => void removeLeg(leg.id, leg.selectionLabel)}
+            onRemoveLeg={(leg) => void removeUserLeg(leg.id, leg.selectionLabel)}
           />
         </div>
       </section>

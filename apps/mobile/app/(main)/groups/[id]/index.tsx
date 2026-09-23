@@ -7,7 +7,7 @@ import {
   formatOdds,
   legAddedCelebration,
 } from "@tiki-acca/shared";
-import { ApiError, api } from "@/api/client";
+import { useApiFetcher } from "@/api/use-api-fetcher";
 import { useAuth } from "@/auth/AuthProvider";
 import { AccaSummary } from "@/components/round/acca-summary";
 import { RoundHistory } from "@/components/round/history";
@@ -17,7 +17,13 @@ import { SubmitLegForm } from "@/components/round/submit-leg-form";
 import type { RoundMessageDto } from "@tiki-acca/shared";
 import { Button, Card, ErrorText } from "@/components/ui";
 import { colors } from "@/config";
-import { useGroupData } from "@/context/group-data";
+import {
+  ApiError,
+  createRound,
+  lockRound,
+  removeLeg,
+  useGroupData,
+} from "@tiki-acca/client";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -35,7 +41,8 @@ import {
 
 export default function GroupRoundScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { token, user } = useAuth();
+  const { user } = useAuth();
+  const fetcher = useApiFetcher();
   const { data, error, reload } = useGroupData();
   const [refreshing, setRefreshing] = useState(false);
   const [editingLegId, setEditingLegId] = useState<string | null>(null);
@@ -149,15 +156,12 @@ export default function GroupRoundScreen() {
     }
   }
 
-  async function createRound() {
-    if (!token || !data) return;
+  async function createBet() {
+    if (!data) return;
     setCreatingRound(true);
     setCreateRoundError("");
     try {
-      const body = await api<{ round: { id: string } }>(
-        `/api/groups/${data.group.id}/rounds`,
-        { method: "POST", token }
-      );
+      const body = await createRound(fetcher, data.group.id);
       await reload();
       setSelectedRoundId(body.round.id);
     } catch (error) {
@@ -170,7 +174,7 @@ export default function GroupRoundScreen() {
   }
 
   async function lockSoloRound() {
-    if (!token || !round) return;
+    if (!round) return;
 
     Alert.alert(
       "Lock this acca?",
@@ -185,10 +189,7 @@ export default function GroupRoundScreen() {
             setLockingRound(true);
             setLockError("");
             try {
-              await api(`/api/rounds/${round.id}/lock`, {
-                method: "POST",
-                token,
-              });
+              await lockRound(fetcher, round.id);
               await reload();
             } catch (e) {
               setLockError(
@@ -203,13 +204,11 @@ export default function GroupRoundScreen() {
     );
   }
 
-  async function removeLeg(legId: string) {
-    if (!token) return;
-
+  async function removeUserLeg(legId: string) {
     setRemovingLegId(legId);
     setRemoveError("");
     try {
-      await api(`/api/legs/${legId}`, { method: "DELETE", token });
+      await removeLeg(fetcher, legId);
       await reload();
     } catch (e) {
       setRemoveError(
@@ -240,7 +239,7 @@ export default function GroupRoundScreen() {
             <Pressable
               accessibilityRole="button"
               disabled={!view.canCreateRound || creatingRound}
-              onPress={() => void createRound()}
+              onPress={() => void createBet()}
               style={({ pressed }) => [
                 styles.newBetButton,
                 (!view.canCreateRound || creatingRound) && styles.newBetButtonDisabled,
@@ -347,7 +346,6 @@ export default function GroupRoundScreen() {
             inProgress={isLocked}
             showLegIndex={view.showLegIndex}
             announcementByLegId={announcementByLegId}
-            token={token ?? undefined}
             onAnnouncementChanged={(updated) => {
               setLegAnnouncements((current) =>
                 current.map((message) =>
@@ -415,7 +413,7 @@ export default function GroupRoundScreen() {
                           {
                             text: "Remove",
                             style: "destructive",
-                            onPress: () => void removeLeg(leg.id),
+                            onPress: () => void removeUserLeg(leg.id),
                           },
                         ]
                       )
@@ -437,7 +435,7 @@ export default function GroupRoundScreen() {
         </Card>
       ) : null}
 
-      {view.canSubmitMore && !editingLegId && round && token ? (
+      {view.canSubmitMore && !editingLegId && round ? (
         <View style={styles.legSubmitWrap}>
           {legCelebration ? (
             <Animated.View
@@ -452,7 +450,6 @@ export default function GroupRoundScreen() {
           <SubmitLegForm
             key={`submit-leg-${myLegs.length}`}
             roundId={round.id}
-            token={token}
             onSubmitted={reload}
             existingLegs={round.legs}
             legSlot={view.nextSlot}
@@ -462,10 +459,9 @@ export default function GroupRoundScreen() {
         </View>
       ) : null}
 
-      {editingLegId && editWindowOpen && round && token ? (
+      {editingLegId && editWindowOpen && round ? (
         <SubmitLegForm
           roundId={round.id}
-          token={token}
           editLegId={editingLegId}
           existingLegs={round.legs}
           onSubmitted={() => {

@@ -1,9 +1,10 @@
+import { useApiFetcher } from "@/api/use-api-fetcher";
 import { GroupNav } from "@/components/group-nav";
 import { ErrorText } from "@/components/ui";
 import { colors } from "@/config";
 import { copy } from "@tiki-acca/shared";
 import { formatRoundStatusBadge } from "@tiki-acca/shared";
-import { GroupDataProvider, useGroupData } from "@/context/group-data";
+import { GroupDataProvider, useGroupData } from "@tiki-acca/client";
 import { router, Slot, useLocalSearchParams } from "expo-router";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -59,11 +60,12 @@ function GroupLayoutInner() {
 
 export default function GroupLayout() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const fetcher = useApiFetcher();
 
   if (!id) return null;
 
   return (
-    <GroupDataProvider groupId={id}>
+    <GroupDataProvider groupId={id} fetcher={fetcher}>
       <GroupLayoutInner />
     </GroupDataProvider>
   );

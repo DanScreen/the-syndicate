@@ -1,35 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useLegPicker } from "@tiki-acca/client";
 import {
+  copy,
   findOutrightMixConflict,
   formatFixtureLabel,
   formatOdds,
-  groupMarkets,
   isFixtureTaken,
   isOutrightFixtureId,
   sortQuotesByBestOdds,
   sortQuotesForDisplay,
 } from "@tiki-acca/shared";
-import type { Fixture, Market, MarketConflictLeg } from "@tiki-acca/shared";
-import { MARKET_TIERS } from "@/lib/odds/market-tiers";
+import type { MarketConflictLeg } from "@tiki-acca/shared";
+import { apiFetcher } from "@/lib/api-client";
 import { CheckIcon } from "./round-helpers";
 import { formatKickoff } from "@tiki-acca/shared";
-import { mergeFixtureMarkets } from "@tiki-acca/shared";
-
-type MarketTierInfo = {
-  id: string;
-  label: string;
-  description: string;
-};
-
-const MARKET_TIER_OPTIONS: MarketTierInfo[] = MARKET_TIERS.map((tier) => ({
-  id: tier.id,
-  label: tier.label,
-  description: tier.description,
-}));
-
-type Competition = { id: string; name: string };
 
 export function SubmitLegForm({
   roundId,
@@ -55,197 +40,45 @@ export function SubmitLegForm({
   /** Other legs already on this round — used to block occupied fixtures. */
   existingLegs?: MarketConflictLeg[];
 }) {
-  const [competitions, setCompetitions] = useState<Competition[]>([]);
-  const [loadingCompetitions, setLoadingCompetitions] = useState(true);
-  const [competitionId, setCompetitionId] = useState("");
-  const [fixtures, setFixtures] = useState<Fixture[]>([]);
-  const [source, setSource] = useState<"live" | "mock">("live");
-  const [oddsConfigured, setOddsConfigured] = useState(true);
-  const [loadingFixtures, setLoadingFixtures] = useState(false);
-  const [fixtureId, setFixtureId] = useState("");
-  const [fixtureMarkets, setFixtureMarkets] = useState<Market[]>([]);
-  const [loadedTiers, setLoadedTiers] = useState<string[]>([]);
-  const [availableTiers, setAvailableTiers] = useState<MarketTierInfo[]>([]);
-  const [loadingMarkets, setLoadingMarkets] = useState(false);
-  const [loadingTierId, setLoadingTierId] = useState("");
-  const [marketType, setMarketType] = useState("");
-  const [selectionId, setSelectionId] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [marketsError, setMarketsError] = useState("");
+  const {
+    competitions,
+    loadingCompetitions,
+    competitionId,
+    setCompetitionId,
+    competition,
+    fixtures,
+    source,
+    oddsConfigured,
+    loadingFixtures,
+    setFixtureId,
+    fixture,
+    hasTakenFixtures,
+    loadingMarkets,
+    marketsError,
+    unloadedTiers,
+    loadingTierId,
+    loadMarketTier,
+    marketGroups,
+    marketType,
+    setMarketType,
+    market,
+    selectionId,
+    setSelectionId,
+    selection,
+    submitting,
+    error,
+    submit,
+  } = useLegPicker({ fetcher: apiFetcher, roundId, editLegId, existingLegs, onSubmitted });
 
-  useEffect(() => {
-    fetch("/api/competitions")
-      .then((r) => r.json())
-      .then((d) => {
-        const list = d.competitions ?? [];
-        setCompetitions(list);
-        if (list.length === 1) {
-          setCompetitionId(list[0].id);
-        }
-      })
-      .finally(() => setLoadingCompetitions(false));
-  }, []);
-
-  useEffect(() => {
-    if (!competitionId) {
-      setFixtures([]);
-      setFixtureId("");
-      return;
-    }
-
-    setLoadingFixtures(true);
-    setFixtureId("");
-    setMarketType("");
-    setSelectionId("");
-    fetch(`/api/fixtures?competition=${encodeURIComponent(competitionId)}`)
-      .then((r) => r.json())
-      .then((d) => {
-        setFixtures(d.fixtures ?? []);
-        setSource(d.source === "mock" ? "mock" : "live");
-        setOddsConfigured(d.oddsConfigured !== false);
-      })
-      .finally(() => setLoadingFixtures(false));
-  }, [competitionId]);
-
-  useEffect(() => {
-    if (!fixtureId || !competitionId) {
-      setFixtureMarkets([]);
-      setLoadedTiers([]);
-      setAvailableTiers([]);
-      return;
-    }
-
-    setLoadingMarkets(true);
-    setMarketsError("");
-    setFixtureMarkets([]);
-    setLoadedTiers([]);
-    setAvailableTiers(MARKET_TIER_OPTIONS);
-    fetch(
-      `/api/fixtures/${fixtureId}/markets?competition=${encodeURIComponent(competitionId)}&tier=core`
-    )
-      .then(async (r) => {
-        const d = await r.json();
-        if (!r.ok) {
-          setFixtureMarkets([]);
-          setMarketsError(d.error ?? "Failed to load extra markets");
-          return;
-        }
-        setFixtureMarkets(d.markets ?? []);
-        setLoadedTiers(["core"]);
-      })
-      .catch(() => {
-        setFixtureMarkets([]);
-        setMarketsError("Failed to load extra markets");
-      })
-      .finally(() => setLoadingMarkets(false));
-  }, [fixtureId, competitionId]);
-
-  async function loadMarketTier(tierId: string) {
-    if (!fixtureId || !competitionId || loadedTiers.includes(tierId)) return;
-
-    setLoadingTierId(tierId);
-    setMarketsError("");
-    try {
-      const res = await fetch(
-        `/api/fixtures/${fixtureId}/markets?competition=${encodeURIComponent(competitionId)}&tier=${encodeURIComponent(tierId)}`
-      );
-      const data = await res.json();
-      if (!res.ok) {
-        setMarketsError(data.error ?? "Failed to load markets");
-        return;
-      }
-      const markets = (data.markets ?? []) as Market[];
-      setFixtureMarkets((prev) => {
-        const byType = new Map(prev.map((m) => [m.type, m]));
-        for (const market of markets) byType.set(market.type, market);
-        return [...byType.values()];
-      });
-      setLoadedTiers((prev) => [...prev, tierId]);
-      if (markets.length === 0) {
-        const label =
-          availableTiers.find((t) => t.id === tierId)?.label ?? "Those markets";
-        setMarketsError(
-          `${label} aren't available for this fixture from UK bookmakers right now.`
-        );
-      }
-    } catch {
-      setMarketsError("Failed to load markets");
-    } finally {
-      setLoadingTierId("");
-    }
-  }
-
-  const competition = competitions.find((c) => c.id === competitionId);
-  const fixture = fixtures.find((f) => f.id === fixtureId);
-  const allMarkets = useMemo(
-    () => mergeFixtureMarkets(fixture?.markets ?? [], fixtureMarkets),
-    [fixture, fixtureMarkets]
-  );
-  const marketGroups = useMemo(() => groupMarkets(allMarkets), [allMarkets]);
-  const market = allMarkets.find((m) => m.type === marketType);
-  const selection = market?.selections.find((s) => s.id === selectionId);
-  const hasTakenFixtures = fixtures.some((f) =>
-    isFixtureTaken(existingLegs, f.id, editLegId)
-  );
-
-  function resetLegSelection() {
-    setFixtureId("");
-    setMarketType("");
-    setSelectionId("");
-    setFixtureMarkets([]);
-    setLoadedTiers([]);
-    setAvailableTiers([]);
-    setMarketsError("");
-    setError("");
-    if (competitions.length === 1) {
-      setCompetitionId(competitions[0]!.id);
-    } else {
-      setCompetitionId("");
-    }
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    const res = editLegId
-      ? await fetch(`/api/legs/${editLegId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ competitionId, fixtureId, marketType, selectionId }),
-        })
-      : await fetch("/api/legs", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ roundId, competitionId, fixtureId, marketType, selectionId }),
-        });
-
-    const data = await res.json();
-    setLoading(false);
-
-    if (!res.ok) {
-      setError(
-        typeof data.error === "string"
-          ? data.error
-          : editLegId
-            ? "Failed to update leg"
-            : "Failed to submit leg"
-      );
-      return;
-    }
-
-    if (!editLegId) {
-      resetLegSelection();
-    }
-    onSubmitted();
+    void submit();
   }
 
   if (loadingCompetitions) {
     return (
       <div className="rounded-xl border border-border bg-card p-4 text-sm text-muted">
-        Loading competitions...
+        {copy.legPicker.loadingCompetitions}
       </div>
     );
   }
@@ -253,7 +86,7 @@ export function SubmitLegForm({
   if (competitions.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-card p-4 text-sm text-muted">
-        No competitions are available for picks right now. Check back soon.
+        {copy.legPicker.noCompetitions}
       </div>
     );
   }
@@ -285,8 +118,8 @@ export function SubmitLegForm({
           }`}
         >
           {legSlot === 1
-            ? `You'll pick ${legsPerMember} legs from different fixtures — start with leg 1.`
-            : `Leg ${legSlot - 1} saved. Pick a different fixture for leg ${legSlot}.`}
+            ? copy.legPicker.multiLegFirst(legsPerMember)
+            : copy.legPicker.multiLegNext(legSlot - 1, legSlot)}
         </div>
       )}
 
@@ -353,14 +186,12 @@ export function SubmitLegForm({
       )}
 
       {competitionId && loadingFixtures && (
-        <p className="text-sm text-muted">Loading fixtures...</p>
+        <p className="text-sm text-muted">{copy.legPicker.loadingFixtures}</p>
       )}
 
       {competitionId && !loadingFixtures && fixtures.length === 0 && (
         <p className="text-sm text-muted">
-          {source === "mock"
-            ? "No demo fixtures available."
-            : "No upcoming fixtures with bookmaker odds right now. Try again closer to kickoff."}
+          {source === "mock" ? copy.legPicker.noFixturesMock : copy.legPicker.noFixturesLive}
         </p>
       )}
 
@@ -447,7 +278,7 @@ export function SubmitLegForm({
         <div className="space-y-3">
           <p className="text-xs font-medium uppercase tracking-wide text-muted">3. Pick a market</p>
           {loadingMarkets && (
-            <p className="text-sm text-muted">Loading popular markets…</p>
+            <p className="text-sm text-muted">{copy.legPicker.loadingMarkets}</p>
           )}
           {marketsError && (
             <p className="text-sm text-warning">{marketsError}</p>
@@ -478,13 +309,11 @@ export function SubmitLegForm({
               </div>
             </div>
           ))}
-          {!loadingMarkets && availableTiers.some((t) => !loadedTiers.includes(t.id)) && (
+          {!loadingMarkets && unloadedTiers.length > 0 && (
             <div className="space-y-2 border-t border-border pt-3">
               <p className="text-xs font-medium text-muted">Load more markets</p>
               <div className="flex flex-wrap gap-2">
-                {availableTiers
-                  .filter((t) => !loadedTiers.includes(t.id))
-                  .map((tier) => (
+                {unloadedTiers.map((tier) => (
                     <button
                       key={tier.id}
                       type="button"
@@ -575,10 +404,10 @@ export function SubmitLegForm({
       {error && <p className="text-sm text-danger">{error}</p>}
       <button
         type="submit"
-        disabled={loading || !selectionId}
+        disabled={submitting || !selectionId}
         className="w-full rounded-lg bg-accent py-2.5 text-sm font-medium text-on-accent hover:bg-accent-bright disabled:opacity-50"
       >
-        {loading
+        {submitting
           ? editLegId
             ? "Updating…"
             : "Submitting…"

@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@react-native-community/datetimepicker": "8.4.4",
+    "@tiki-acca/client": "*",
     "@tiki-acca/shared": "*",
     "expo": "~54.0.36",
     "expo-asset": "~12.0.13",

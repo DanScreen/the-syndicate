@@ -11,7 +11,8 @@ import type {
   ReactionEmoji,
   RoundMessageDto,
 } from "@tiki-acca/shared";
-import { api } from "@/api/client";
+import { useApiFetcher } from "@/api/use-api-fetcher";
+import { toggleReaction } from "@tiki-acca/client";
 import { ReactionBar } from "@/components/group-chat";
 import { outcomeColors } from "./helpers";
 import { legOutcomeLabel } from "@tiki-acca/shared";
@@ -24,7 +25,6 @@ export function LegsList({
   inProgress = false,
   showLegIndex = false,
   announcementByLegId,
-  token,
   onAnnouncementChanged,
 }: {
   legs: GroupLeg[];
@@ -33,9 +33,10 @@ export function LegsList({
   inProgress?: boolean;
   showLegIndex?: boolean;
   announcementByLegId?: Map<string, RoundMessageDto>;
-  token?: string;
   onAnnouncementChanged?: (message: RoundMessageDto) => void;
 }) {
+  const fetcher = useApiFetcher();
+
   if (legs.length === 0) {
     return <Text style={styles.meta}>No legs submitted yet.</Text>;
   }
@@ -45,13 +46,8 @@ export function LegsList({
   );
 
   async function react(messageId: string, emoji: ReactionEmoji) {
-    if (!token) return;
     try {
-      const response = await api<{ message: RoundMessageDto }>(
-        `/api/messages/${messageId}/reactions`,
-        { method: "POST", token, body: JSON.stringify({ emoji }) }
-      );
-      onAnnouncementChanged?.(response.message);
+      onAnnouncementChanged?.(await toggleReaction(fetcher, messageId, emoji));
     } catch {
       // The thread will reconcile the reaction on its next poll.
     }
