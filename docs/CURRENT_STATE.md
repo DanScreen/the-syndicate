@@ -243,7 +243,7 @@ Protected routes enforced in `apps/web/src/middleware.ts` / `auth.config.ts`: `/
 | `/about` | Product story, what we are/aren’t, responsible gambling (reachable when signed in) |
 | `/blog`, `/blog/[slug]` | File-based MDX blog (static; drafts hidden in prod) |
 | `/sign-in`, `/sign-up` | Auth — sign-up collects **first name** + **last name**; both preserve `callbackUrl` (e.g. invite return). Unverified users land on `/verify-email` after either |
-| `/verify-email` | Confirm-your-email gate (noindex). `?token=` consumes an emailed link (works signed-out); otherwise shows the pending screen: I've confirmed it / Resend / Wrong email address? / Sign out. Returns to `callbackUrl` once verified |
+| `/verify-email` | Confirm-your-email gate (noindex). `?token=` consumes an emailed link (works signed-out); otherwise shows the pending screen: I've confirmed it / Resend / Wrong email address? / Sign out. Returns to `callbackUrl` once verified. After a token succeeds while signed in, the page refreshes the session cookie **once** (Continue is disabled until that finishes); `update()`'s transient `"loading"` status is treated as still signed in so the UI doesn't swap |
 | `/account` | Account — profile, notification prefs, blocked members (unblock), sign out, delete (via header greeting) |
 | `/settings/notifications` | Redirect → `/account#notifications` (legacy / List-Unsubscribe) |
 | `/dashboard` | **Groups home** — list of user's groups; **group/your points**; **current betslip** legs (fixture, market, selection, odds); waiting status if you haven't picked |
