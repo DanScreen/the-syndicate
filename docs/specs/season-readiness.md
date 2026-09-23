@@ -53,6 +53,16 @@ Behaviour:
 - [ ] Operator note: settle CL-qual / Europa League legs manually each qualifier round — there is no auto-sync on the current tier.
 - [ ] Optional: revisit the football-data.org Standard plan (~€49/mo) if manual settlement becomes a burden; it would also cover Conference League. See odds/settlement provider notes. *(2026-09-22: a cheaper option is proposed instead. API-Football, $19/mo, covers all of these plus the FA Cup — see [odds-and-results-sourcing.md](./odds-and-results-sourcing.md).)*
 
+## Workstream B3 — UEFA Nations League (shipped, manual settlement)
+
+The 2026–27 league phase fills the long September–October international break (matchdays 1–4 on 24 Sept – 6 Oct, 5–6 on 12–17 Nov). Added as `nations-league` (Odds API key `soccer_uefa_nations_league`), flagged `manualSettlement: true` like B2 — football-data.org's free tier doesn't carry it.
+
+Checked on 22 Sept 2026 with the provider probe from [#60](https://github.com/DanScreen/the-syndicate/pull/60) (`scripts/probe-sources.mjs`, `docs/specs/odds-and-results-sourcing.md`): the key is active with 45 fixtures listed; match result has 11 UK books and BTTS 7, but corners, cards and anytime scorer are near-empty, so expect the **Corners & cards** tier to show little for these fixtures.
+
+- [x] Add the competition (disabled by default) with the `manualSettlement` flag.
+- [ ] Enable via `/admin/competitions` before matchday 1 (24 Sept).
+- [ ] Operator note: settle Nations League legs manually each matchday until the API-Football results feed ships (Phase 1 of the sourcing spec), then drop the flag.
+
 ## Workstream C — quiet-period UX (code)
 
 - [ ] Leg picker empty state: replace bare "no fixtures" with copy + the next known kickoff across enabled competitions (from `Match` table / odds snapshots), e.g. *"Pre-season break — the 2026–27 season kicks off {date}."*
@@ -63,7 +73,7 @@ Behaviour:
 
 ## Recurring checklist (every season)
 
-Add to operator docs: each May/June, review competition end dates, plan the summer gap (tournament years vs. fallow years), and pre-verify next season's API IDs. Fallow summers (2027) have **no default competition** from late May to August — revisit whether to add summer competitions (MLS, international friendlies) before then. Summer bridges available now: **Brazil Série A** (free-tier auto-settle) and the **UEFA qualifiers** (CL Qualification + Europa League, manual settlement — see Workstream B2). If UEFA qualifiers are enabled, confirm someone owns manual settlement for those rounds.
+Add to operator docs: each May/June, review competition end dates, plan the summer gap (tournament years vs. fallow years), and pre-verify next season's API IDs. Fallow summers (2027) have **no default competition** from late May to August — revisit whether to add summer competitions (MLS, international friendlies) before then. Summer bridges available now: **Brazil Série A** (free-tier auto-settle) and the **UEFA qualifiers** (CL Qualification + Europa League, manual settlement — see Workstream B2). International breaks: the **Nations League** (manual settlement — see Workstream B3). If UEFA qualifiers are enabled, confirm someone owns manual settlement for those rounds.
 
 ---
 
