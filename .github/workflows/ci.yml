@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    # The web tests include integration tests that read and write Postgres.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: tikiacca
+          POSTGRES_PASSWORD: tikiacca
+          POSTGRES_DB: tiki_acca
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U tikiacca -d tiki_acca"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://tikiacca:tikiacca@localhost:5432/tiki_acca
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      # Node 22: the test scripts use node --test's built-in glob support.
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run db:generate
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Apply migrations
+        run: npm run db:migrate:deploy
+
+      - name: Test
+        run: npm test

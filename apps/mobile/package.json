@@ -20,7 +20,8 @@
     "update:preview": "eas update --branch preview",
     "update:production": "eas update --branch production",
     "sync:native-version": "node scripts/sync-native-version.js",
-    "eas-build-post-install": "node scripts/sync-native-version.js"
+    "eas-build-post-install": "node scripts/sync-native-version.js",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@react-native-community/datetimepicker": "8.4.4",
