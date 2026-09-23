@@ -1,7 +1,7 @@
 "use client";
 
-import { GroupStats } from "@/components/group-stats";
-import { Leaderboard } from "@/components/group-ui";
+import { GroupStats } from "@/components/group/stats";
+import { Leaderboard } from "@/components/group/leaderboard";
 import { useGroupData } from "@/context/group-data";
 
 export default function GroupLeaderboardPage() {

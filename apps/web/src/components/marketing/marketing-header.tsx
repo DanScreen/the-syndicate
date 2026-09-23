@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Logo } from "@/components/logo";
-import { MobileNav } from "@/components/mobile-nav";
+import { MobileNav } from "@/components/layout/mobile-nav";
 
 type MarketingHeaderProps = {
   /** Reserved — signed-in marketing pages use AppHeader instead. */

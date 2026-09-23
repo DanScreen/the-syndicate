@@ -1,6 +1,6 @@
 "use client";
 
-import { GroupBetHistory } from "@/components/group-history";
+import { GroupBetHistory } from "@/components/group/history";
 import { useGroupData } from "@/context/group-data";
 import type { GroupHistoryResponse, HistoryRound } from "@tiki-acca/shared";
 import { useEffect, useState } from "react";

@@ -7,7 +7,7 @@ import {
   oddsApiRegions,
 } from "./config";
 import type { OddsApiBookmaker, OddsApiEvent } from "./api-types";
-import { isRetailBookmaker } from "./bookmakers";
+import { isRetailBookmaker } from "@tiki-acca/shared";
 import { getCached, setCached } from "./cache";
 import { fillMarketsWithEstimates } from "./estimated-odds-fill";
 import { isQuotaExhaustedError, OddsApiQuotaExhaustedError, toOddsApiError } from "./errors";

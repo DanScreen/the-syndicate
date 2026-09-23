@@ -1,4 +1,4 @@
-import { AppHeader } from "@/components/header";
+import { AppHeader } from "@/components/layout/header";
 import { DashboardStats } from "@/components/dashboard-stats";
 import { auth } from "@/lib/auth";
 import { greetingFirstName } from "@/lib/user-display";

@@ -1,26 +1,15 @@
 "use client";
 
-import {
-  AccaSummary,
-  LegsList,
-  RoundProgress,
-  SubmitLegForm,
-} from "@/components/group-ui";
-import { RoundHistory } from "@/components/group-history";
+import { AccaSummary } from "@/components/group/acca-summary";
+import { LegsList } from "@/components/group/legs-list";
+import { RoundProgress } from "@/components/group/round-progress";
+import { SubmitLegForm } from "@/components/group/submit-leg-form";
+import { RoundHistory } from "@/components/group/history";
 import { useGroupData } from "@/context/group-data";
 import { useSession } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
 import { SOLO_MAX_LEGS, type RoundMessageDto } from "@tiki-acca/shared";
-
-function formatCutoff(date: Date) {
-  return date.toLocaleString("en-GB", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+import { formatKickoff } from "@tiki-acca/shared";
 
 export default function GroupRoundPage() {
   const { data: session } = useSession();
@@ -374,7 +363,7 @@ export default function GroupRoundPage() {
           <p className="mt-1 text-sm text-muted">
             You can change {isOpen ? "or remove " : ""}your pick
             {userLegs.length === 1 ? "" : "s"} until the first kickoff
-            {firstKickoff ? ` (${formatCutoff(firstKickoff)})` : ""}.
+            {firstKickoff ? ` (${formatKickoff(firstKickoff)})` : ""}.
             {isLocked && " Changing a pick reprices the whole acca at current odds."}
           </p>
         )}

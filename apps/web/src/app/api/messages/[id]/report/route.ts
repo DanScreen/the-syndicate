@@ -1,4 +1,4 @@
-import { getAdminEmails } from "@/lib/admin";
+import { getAdminEmails } from "@/lib/admin/auth";
 import { requireSession } from "@/lib/api-auth";
 import { sendEmail } from "@/lib/notifications/email";
 import { prisma } from "@tiki-acca/database";

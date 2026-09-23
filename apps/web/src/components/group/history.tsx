@@ -12,29 +12,13 @@ import {
   type LegOutcome,
 } from "@tiki-acca/shared";
 import Link from "next/link";
-
-function legOutcomeLabel(outcome: string): string {
-  if (outcome === "won") return "Won";
-  if (outcome === "lost") return "Lost";
-  if (outcome === "void") return "Void";
-  return "Awaiting";
-}
+import { formatKickoff, legOutcomeLabel } from "@tiki-acca/shared";
 
 function legOutcomeClass(outcome: string): string {
   if (outcome === "won") return "border-success-strong/40 bg-success-strong/10 text-success";
   if (outcome === "lost") return "border-danger-strong/40 bg-danger-strong/10 text-danger";
   if (outcome === "void") return "border-border bg-card text-muted";
   return "border-border bg-card text-muted";
-}
-
-function formatKickoff(iso: string) {
-  return new Date(iso).toLocaleString("en-GB", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 function formatSettledAt(iso: string | null) {

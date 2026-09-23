@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/admin";
+import { requireAdmin } from "@/lib/admin/auth";
 import { warmOddsCache } from "@/lib/odds/warm-cache";
 import { NextResponse } from "next/server";
 

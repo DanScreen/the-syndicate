@@ -1,6 +1,6 @@
 import type { Market } from "@tiki-acca/shared";
 import type { OddsApiBookmaker, OddsApiEvent } from "./api-types";
-import { isRetailBookmaker } from "./bookmakers";
+import { isRetailBookmaker } from "@tiki-acca/shared";
 import { fillMarketsWithEstimates } from "./estimated-odds-fill";
 import {
   buildAlternateSpreadsMarkets,

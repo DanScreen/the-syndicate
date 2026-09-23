@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/admin";
+import { requireAdmin } from "@/lib/admin/auth";
 import { deleteRedundantMarketLegs } from "@/lib/legs/purge-duplicate-markets";
 import {
   applyDeferredLegOutcome,

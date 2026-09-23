@@ -3,16 +3,7 @@
 import type { AdminResultsMatch } from "@/lib/admin/compute-admin-results";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-
-function formatKickoff(iso: string) {
-  return new Date(iso).toLocaleString("en-GB", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+import { formatKickoff } from "@tiki-acca/shared";
 
 function outcomeClass(outcome: string): string {
   if (outcome === "won") return "text-success";

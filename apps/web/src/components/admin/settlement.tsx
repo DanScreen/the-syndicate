@@ -5,16 +5,7 @@ import { formatFixtureLabel, formatOdds } from "@tiki-acca/shared";
 import type { SettlementQueueRound } from "@/lib/admin/compute-settlement-queue";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-
-function formatKickoff(iso: string) {
-  return new Date(iso).toLocaleString("en-GB", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+import { formatKickoff } from "@tiki-acca/shared";
 
 function hoursSince(iso: string): number {
   return Math.floor((Date.now() - new Date(iso).getTime()) / (60 * 60 * 1000));

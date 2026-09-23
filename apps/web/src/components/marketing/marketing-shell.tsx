@@ -1,4 +1,4 @@
-import { GamblingFooter } from "@/components/site-footer";
+import { GamblingFooter } from "@/components/layout/site-footer";
 import { SessionAwareMarketingHeader } from "./session-aware-marketing-header";
 
 export function MarketingShell({

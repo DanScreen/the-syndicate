@@ -1,7 +1,7 @@
 import { memberAccaLegPoints } from "@tiki-acca/shared";
 import type { LegOutcome } from "@tiki-acca/shared";
 import { DEFAULT_STAKE_GBP } from "@tiki-acca/shared";
-import { calculateCombinedOdds } from "./odds/betslip-links";
+import { calculateCombinedOdds } from "../odds/betslip-links";
 
 export function pointsForMemberLeg(
   accaOutcomes: LegOutcome[],

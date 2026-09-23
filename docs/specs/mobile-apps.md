@@ -87,7 +87,7 @@ Web uses Auth.js cookies; mobile uses a random **Bearer session token** on every
 | Auth | Auth.js | Sign-in / sign-up + JWT |
 | Groups list | `/dashboard` | `app/(main)/home.tsx` |
 | Create / join | `/groups/create`, `/groups/join` | `create-group.tsx`, `join-group.tsx` |
-| Group round | `group-ui.tsx` (full) | `groups/[id].tsx` + `components/group-round.tsx` |
+| Group round | `components/group/` (full) | `(main)/groups/[id]/index.tsx` + `components/round/` |
 | Concurrent bets | Active-bet switcher + guarded member creation | Same switcher, stable Bet # labels, owner 1–5 setting |
 | Group chat | Dedicated permanent Chat tab + group-scoped API | Same longstanding Chat tab, Bet-labelled lifecycle events, reactions, unread badge |
 | Leg picker | Progressive 4-step + competition + market tiers | `SubmitLegForm` — competition, tiers (core + load more), grouped markets; selected competition / fixture / market each collapse with Change controls |

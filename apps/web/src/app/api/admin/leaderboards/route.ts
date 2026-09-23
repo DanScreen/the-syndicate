@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/admin";
+import { requireAdmin } from "@/lib/admin/auth";
 import { computePlatformLeaderboards } from "@/lib/admin/compute-platform-leaderboards";
 import { NextResponse } from "next/server";
 

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { AppHeader } from "@/components/header";
-import { AdminNav } from "@/components/admin-nav";
-import { requireAdminPage } from "@/lib/admin";
+import { AppHeader } from "@/components/layout/header";
+import { AdminNav } from "@/components/admin/nav";
+import { requireAdminPage } from "@/lib/admin/auth";
 import { greetingFirstName } from "@/lib/user-display";
 
 export async function AdminPageShell({

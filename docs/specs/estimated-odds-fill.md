@@ -175,7 +175,7 @@ Add all four to `apps/web/.env.example` and the CURRENT_STATE env table.
 #### Admin runtime toggle
 
 In addition to the env flag, `/admin/odds` exposes an admin-only runtime
-toggle (`apps/web/src/components/admin-estimated-odds-toggle.tsx`,
+toggle (`apps/web/src/components/admin/estimated-odds-toggle.tsx`,
 `GET`/`PATCH /api/admin/estimated-odds`) so the fill can be switched on or off
 without a redeploy. Precedence:
 
@@ -204,10 +204,10 @@ same gate protecting `/admin/competitions` and every other admin route.
 
 ### 5. Display — web + mobile
 
-- `apps/web/src/components/group-ui.tsx` — bookmaker table: estimates render
+- `apps/web/src/components/group/acca-summary.tsx` — bookmaker table: estimates render
   muted/italic with an **"est."** badge and no tap-through. Best-price
   highlight uses `sortQuotesByBestOdds` (real only) — unchanged.
-- `apps/mobile/src/components/group-round.tsx` — same treatment. The
+- `apps/mobile/src/components/round/acca-summary.tsx` — same treatment. The
   `estimated` flag travels through the shared `Fixture` type, so mobile needs
   only the render change, no data work.
 

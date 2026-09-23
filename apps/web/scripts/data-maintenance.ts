@@ -31,7 +31,7 @@ import {
   calculateGroupProfitLoss,
   deriveCombinedOddsFromLegs,
   pointsForMemberLeg,
-} from "../src/lib/settlement";
+} from "../src/lib/settlement/points";
 import { applyRoundSettlement } from "../src/lib/settlement/apply-round-settlement";
 import { resolveRoundOutcomes } from "../src/lib/settlement/resolve-round-outcomes";
 import { openRound } from "../src/lib/rounds/open-round";

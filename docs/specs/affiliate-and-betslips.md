@@ -86,7 +86,7 @@
 | `apps/web/src/lib/odds/quotes.ts` | Deeplink resolution at quote time |
 | `apps/web/src/lib/odds/lock-round.ts` | Lock-time link storage |
 | `apps/web/.env.example` | Affiliate env vars |
-| `apps/web/src/components/group-ui.tsx` | Disclosure copy near CTAs |
+| `apps/web/src/components/group/acca-summary.tsx` | Disclosure copy near CTAs |
 | `apps/web/src/components/marketing/` | Footer compliance links |
 
 ---

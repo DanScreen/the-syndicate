@@ -1,8 +1,8 @@
 "use client";
 
-import { CopyInviteButton } from "@/components/site-footer";
-import { GroupNav } from "@/components/group-nav";
-import { AppHeader } from "@/components/header";
+import { CopyInviteButton } from "@/components/layout/site-footer";
+import { GroupNav } from "@/components/group/nav";
+import { AppHeader } from "@/components/layout/header";
 import { GroupDataProvider, useGroupData } from "@/context/group-data";
 import { greetingFirstName } from "@/lib/user-display";
 import { formatRoundStatusBadge } from "@tiki-acca/shared";

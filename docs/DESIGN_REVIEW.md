@@ -38,7 +38,7 @@ class sweep, `check:brand` guard) before this triage.
 | Skeleton loaders | O | Polish; low value relative to effort now |
 | "Who it's for" marketing section redesign | F | Design-taste exercise, separate pass |
 | Chat SSE/websockets | F | Infrastructure, not design |
-| `group-round.tsx` (1,312-line) refactor | F | No visual change; do when next touching that screen |
+| ~~`group-round.tsx` (1,312-line) refactor~~ | F | **Done** in the repo-structure clean-up — split into `apps/mobile/src/components/round/` |
 
 ## Rejected / open decisions
 
