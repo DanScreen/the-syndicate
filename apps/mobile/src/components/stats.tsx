@@ -2,7 +2,7 @@ import { ApiError, api } from "@/api/client";
 import { PointsLineChart } from "@/components/points-chart";
 import { Card, EmptyState, ErrorText, OptionRow } from "@/components/ui";
 import { colors } from "@/config";
-import { copy } from "@/lib/copy";
+import { copy } from "@tiki-acca/shared";
 import type {
   GroupStatsChartPoint,
   GroupStatsResponse,

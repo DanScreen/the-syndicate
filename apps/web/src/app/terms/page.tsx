@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MarketingShell } from "@/components/marketing/marketing-shell";
+import { COMPLIANCE } from "@tiki-acca/shared";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
@@ -56,12 +57,12 @@ export default function TermsPage() {
             suspend accounts we reasonably believe belong to under-18s. Gambling
             should be fun — if it stops being fun, visit{" "}
             <a
-              href="https://www.begambleaware.org"
+              href={COMPLIANCE.begambleawareUrl}
               className="text-accent hover:underline"
               rel="noopener noreferrer"
               target="_blank"
             >
-              BeGambleAware.org
+              {COMPLIANCE.begambleawareLabel}
             </a>{" "}
             for free, confidential support.
           </p>

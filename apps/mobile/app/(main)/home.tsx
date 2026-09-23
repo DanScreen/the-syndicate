@@ -18,7 +18,7 @@ import {
 import { useAuth } from "@/auth/AuthProvider";
 import { Button, Card, EmptyState, Screen, Title } from "@/components/ui";
 import { colors } from "@/config";
-import { copy } from "@/lib/copy";
+import { copy } from "@tiki-acca/shared";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import {

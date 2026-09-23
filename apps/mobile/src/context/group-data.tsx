@@ -1,6 +1,6 @@
 import { ApiError, api } from "@/api/client";
 import { useAuth } from "@/auth/AuthProvider";
-import { copy } from "@/lib/copy";
+import { copy } from "@tiki-acca/shared";
 import type { GroupDetailResponse } from "@tiki-acca/shared";
 import {
   createContext,

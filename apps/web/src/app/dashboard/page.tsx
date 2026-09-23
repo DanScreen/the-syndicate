@@ -6,6 +6,7 @@ import {
 import { PointsText } from "@/components/points-text";
 import { listGroupSummaries } from "@/lib/groups/list-group-summaries";
 import {
+  copy,
   formatLegPoints,
   formatRoundStatusBadge,
   yourLegStatusMessage,
@@ -69,20 +70,18 @@ export default async function DashboardPage() {
 
         {isNewUser && (
           <section className="mt-8 rounded-xl border border-accent/30 bg-accent-muted/20 p-6">
-            <h2 className="font-semibold text-accent">Welcome To Tiki Acca</h2>
-            <p className="mt-2 text-sm text-muted">
-              Get your mates together in three steps:
-            </p>
+            <h2 className="font-semibold text-accent">{copy.dashboard.welcomeTitle}</h2>
+            <p className="mt-2 text-sm text-muted">{copy.dashboard.welcomeIntro}</p>
             <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm text-muted">
-              <li>Create a group and share the invite link</li>
-              <li>Each member picks their legs in the open round</li>
-              <li>When everyone&apos;s in, the acca locks and you get the best combined odds</li>
+              {copy.dashboard.welcomeSteps.map((step) => (
+                <li key={step}>{step}</li>
+              ))}
             </ol>
             <Link
               href="/groups/create"
               className="mt-4 inline-block rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:bg-accent-bright"
             >
-              Create your first group
+              {copy.dashboard.welcomeCta}
             </Link>
           </section>
         )}

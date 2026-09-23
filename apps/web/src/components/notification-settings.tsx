@@ -1,63 +1,10 @@
 "use client";
 
-import type { NotificationPreferences } from "@tiki-acca/shared";
+import {
+  NOTIFICATION_PREFERENCE_SECTIONS,
+  type NotificationPreferences,
+} from "@tiki-acca/shared";
 import { useEffect, useState } from "react";
-
-type PrefRow = {
-  key: keyof NotificationPreferences;
-  label: string;
-  description: string;
-};
-
-const ROWS: { title: string; channel: "email" | "push"; items: PrefRow[] }[] = [
-  {
-    title: "Email",
-    channel: "email",
-    items: [
-      {
-        key: "emailPickReminder",
-        label: "Pick reminders",
-        description: "Nudge you to submit before the acca locks at kickoff.",
-      },
-      {
-        key: "emailRoundLocked",
-        label: "Acca locked",
-        description: "When your group acca is locked and ready to place.",
-      },
-      {
-        key: "emailRoundSettled",
-        label: "Round settled",
-        description: "When a round finishes and points are updated.",
-      },
-    ],
-  },
-  {
-    title: "Push (mobile app)",
-    channel: "push",
-    items: [
-      {
-        key: "pushPickReminder",
-        label: "Pick reminders",
-        description: "Same as email. Best for last-minute nudges on your phone.",
-      },
-      {
-        key: "pushRoundLocked",
-        label: "Acca locked",
-        description: "Push when the acca locks.",
-      },
-      {
-        key: "pushRoundSettled",
-        label: "Round settled",
-        description: "Push when results are in.",
-      },
-      {
-        key: "pushChat",
-        label: "Group chat",
-        description: "Batched alerts when your group starts chatting.",
-      },
-    ],
-  },
-];
 
 function Toggle({
   checked,
@@ -141,10 +88,10 @@ export function NotificationSettings() {
       </p>
       {message ? <p className="text-sm text-danger">{message}</p> : null}
 
-      {ROWS.map((section) => (
-        <section key={section.title} className="space-y-3">
+      {NOTIFICATION_PREFERENCE_SECTIONS.map((section) => (
+        <section key={section.channel} className="space-y-3">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
-            {section.title}
+            {section.channel === "push" ? `${section.title} (mobile app)` : section.title}
           </h2>
           <div className="space-y-2">
             {section.items.map((item) => (

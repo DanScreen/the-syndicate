@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { MarketingCtas } from "@/components/marketing/marketing-ctas";
 import { MarketingShell } from "@/components/marketing/marketing-shell";
 import { howItWorks } from "@/lib/marketing-content";
+import { COMPLIANCE } from "@tiki-acca/shared";
 
 export const metadata: Metadata = {
   title: "About",
@@ -93,14 +94,14 @@ export default async function AboutPage() {
             We encourage setting limits, never chasing losses, and seeking help if gambling stops
             being fun. Visit{" "}
             <a
-              href="https://www.begambleaware.org"
+              href={COMPLIANCE.begambleawareUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="text-accent hover:underline"
             >
-              BeGambleAware.org
+              {COMPLIANCE.begambleawareLabel}
             </a>{" "}
-            or call <strong className="text-foreground">0808 8020 133</strong>.
+            or call <strong className="text-foreground">{COMPLIANCE.helplineNumber}</strong>.
           </p>
         </section>
 

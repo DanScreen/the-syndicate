@@ -2,8 +2,11 @@ import { ApiError, api } from "@/api/client";
 import { useAuth } from "@/auth/AuthProvider";
 import { Button, Card, ErrorText, Field, Title } from "@/components/ui";
 import { colors, WEB_URL } from "@/config";
-import { copy } from "@/lib/copy";
-import type { NotificationPreferences } from "@tiki-acca/shared";
+import { copy } from "@tiki-acca/shared";
+import {
+  NOTIFICATION_PREFERENCE_SECTIONS,
+  type NotificationPreferences,
+} from "@tiki-acca/shared";
 import {
   isPushEnabled,
   registerForPushNotifications,
@@ -20,59 +23,6 @@ import {
   Text,
   View,
 } from "react-native";
-
-type PrefKey = keyof NotificationPreferences;
-
-const SECTIONS: {
-  title: string;
-  items: { key: PrefKey; label: string; hint: string }[];
-}[] = [
-  {
-    title: "Email",
-    items: [
-      {
-        key: "emailPickReminder",
-        label: "Pick reminders",
-        hint: "Before the acca locks at kickoff",
-      },
-      {
-        key: "emailRoundLocked",
-        label: "Acca locked",
-        hint: "When your group acca is ready",
-      },
-      {
-        key: "emailRoundSettled",
-        label: "Round settled",
-        hint: "When results are in",
-      },
-    ],
-  },
-  {
-    title: "Push",
-    items: [
-      {
-        key: "pushPickReminder",
-        label: "Pick reminders",
-        hint: "Last-minute nudges on your phone",
-      },
-      {
-        key: "pushRoundLocked",
-        label: "Acca locked",
-        hint: "When the acca locks",
-      },
-      {
-        key: "pushRoundSettled",
-        label: "Round settled",
-        hint: "When results are in",
-      },
-      {
-        key: "pushChat",
-        label: "Group chat",
-        hint: "Batched alerts for new group chat",
-      },
-    ],
-  },
-];
 
 let cachedPrefs: { token: string; data: NotificationPreferences } | null = null;
 
@@ -198,7 +148,7 @@ export default function AccountScreen() {
     }
   }
 
-  async function update(key: PrefKey, value: boolean) {
+  async function update(key: keyof NotificationPreferences, value: boolean) {
     if (!token || !prefs) return;
     const prev = prefs;
     setPrefs({ ...prefs, [key]: value });
@@ -275,14 +225,14 @@ export default function AccountScreen() {
             {pushStatus ? <Text style={styles.hint}>{pushStatus}</Text> : null}
           </Card>
 
-          {SECTIONS.map((section) => (
-            <View key={section.title} style={styles.section}>
+          {NOTIFICATION_PREFERENCE_SECTIONS.map((section) => (
+            <View key={section.channel} style={styles.section}>
               <Text style={styles.sectionTitle}>{section.title}</Text>
               {section.items.map((item) => (
                 <View key={item.key} style={styles.row}>
                   <View style={styles.rowText}>
                     <Text style={styles.rowLabel}>{item.label}</Text>
-                    <Text style={styles.hint}>{item.hint}</Text>
+                    <Text style={styles.hint}>{item.description}</Text>
                   </View>
                   <Switch
                     value={prefs[item.key]}

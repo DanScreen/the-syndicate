@@ -35,7 +35,7 @@ import {
   OptionRow,
 } from "@/components/ui";
 import { colors } from "@/config";
-import { copy } from "@/lib/copy";
+import { copy } from "@tiki-acca/shared";
 import { formatKickoff } from "@tiki-acca/shared";
 import { styles } from "./styles";
 import { mergeFixtureMarkets } from "@tiki-acca/shared";

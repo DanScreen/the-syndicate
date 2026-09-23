@@ -13,7 +13,6 @@ import {
   formatBetAxisLabel,
   type GroupStatsChartPoint,
   type GroupStatsResponse,
-  type GroupStatsSummary,
   type MemberSeries,
 } from "@tiki-acca/shared";
 

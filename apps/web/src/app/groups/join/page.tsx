@@ -4,6 +4,7 @@ import { AppHeader } from "@/components/layout/header";
 import { MarketingHeader } from "@/components/marketing/marketing-header";
 import { withCallbackUrl } from "@/lib/callback-url";
 import { greetingFirstName } from "@/lib/user-display";
+import { copy } from "@tiki-acca/shared";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -145,11 +146,11 @@ function JoinGroupContent() {
         <MarketingHeader />
       )}
       <main className="mx-auto max-w-md px-4 py-8">
-        <h1 className="font-display text-2xl font-bold">Join A Group</h1>
+        <h1 className="font-display text-2xl font-bold">{copy.join.title}</h1>
         <p className="mt-2 text-sm text-muted">
           {status === "unauthenticated"
             ? "You've been invited to a Tiki Acca group."
-            : "Enter the invite code shared by your group owner, or open their invite link directly."}
+            : copy.join.subtitle}
         </p>
         {status === "loading" ? (
           <p className="mt-6 text-sm text-muted">Loading...</p>
@@ -171,7 +172,7 @@ export default function JoinGroupPage() {
           <>
             <MarketingHeader />
             <main className="mx-auto max-w-md px-4 py-8">
-              <h1 className="font-display text-2xl font-bold">Join A Group</h1>
+              <h1 className="font-display text-2xl font-bold">{copy.join.title}</h1>
               <p className="mt-6 text-sm text-muted">Loading...</p>
             </main>
           </>

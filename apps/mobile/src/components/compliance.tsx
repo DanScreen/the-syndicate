@@ -1,20 +1,34 @@
-import { copy } from "@/lib/copy";
+import { COMPLIANCE } from "@tiki-acca/shared";
 import { colors } from "@/config";
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 
+function openBeGambleAware() {
+  void Linking.openURL(COMPLIANCE.begambleawareUrl);
+}
+
 export function BetslipDisclosure() {
   return (
-    <Text style={styles.disclosure}>{copy.compliance.betslip}</Text>
+    <Text style={styles.disclosure}>
+      {COMPLIANCE.betslipDisclosure}{" "}
+      <Text style={styles.link} onPress={openBeGambleAware}>
+        {COMPLIANCE.begambleawareLabel}
+      </Text>
+      .
+    </Text>
   );
 }
 
 export function GambleResponsiblyFooter() {
   return (
     <View style={styles.footer}>
-      <Text style={styles.footerTitle}>{copy.compliance.footerTitle}</Text>
-      <Text style={styles.footerBody}>{copy.compliance.footerBody}</Text>
-      <Pressable onPress={() => Linking.openURL(copy.compliance.begambleawareUrl)}>
-        <Text style={styles.link}>{copy.compliance.helpline}</Text>
+      <Text style={styles.footerTitle}>{COMPLIANCE.footerTitle}</Text>
+      <Text style={styles.footerBody}>{COMPLIANCE.footerBody}</Text>
+      <Pressable onPress={openBeGambleAware}>
+        <Text style={styles.footerBody}>
+          Need support? Visit{" "}
+          <Text style={styles.link}>{COMPLIANCE.begambleawareLabel}</Text> or call the{" "}
+          {COMPLIANCE.helplineName} on {COMPLIANCE.helplineNumber}.
+        </Text>
       </Pressable>
     </View>
   );

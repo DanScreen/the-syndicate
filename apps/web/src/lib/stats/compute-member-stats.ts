@@ -3,7 +3,6 @@ import {
   bestWorstLegHighlights,
   CHART_ORIGIN_LABEL,
   formatBetAxisLabel,
-  type MemberCategoryStats,
   type MemberStatsChartPoint,
   type MemberStatsResponse,
 } from "@tiki-acca/shared";

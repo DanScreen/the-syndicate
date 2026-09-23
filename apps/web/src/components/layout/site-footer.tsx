@@ -1,5 +1,6 @@
 "use client";
 
+import { COMPLIANCE, copy } from "@tiki-acca/shared";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -7,24 +8,20 @@ export function GamblingFooter() {
   return (
     <footer className="border-t border-border bg-card/30">
       <div className="mx-auto max-w-5xl px-4 py-8 text-sm text-muted">
-        <p className="font-medium text-foreground">Gamble responsibly</p>
-        <p className="mt-2 max-w-2xl">
-          Tiki Acca helps groups coordinate accumulator ideas. We do not take
-          bets or handle money. You place bets directly with licensed bookmakers.
-          We may earn commission if you sign up or bet via bookmaker links on
-          this site.
-        </p>
+        <p className="font-medium text-foreground">{COMPLIANCE.footerTitle}</p>
+        <p className="mt-2 max-w-2xl">{COMPLIANCE.footerBody}</p>
         <p className="mt-3">
           Need support? Visit{" "}
           <a
-            href="https://www.begambleaware.org"
+            href={COMPLIANCE.begambleawareUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="text-accent hover:underline"
           >
-            BeGambleAware.org
+            {COMPLIANCE.begambleawareLabel}
           </a>{" "}
-          or call the National Gambling Helpline on <strong>0808 8020 133</strong>.
+          or call the {COMPLIANCE.helplineName} on{" "}
+          <strong>{COMPLIANCE.helplineNumber}</strong>.
         </p>
         <nav className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs">
           <Link href="/about" className="hover:text-foreground hover:underline">
@@ -49,7 +46,7 @@ export function GamblingFooter() {
 export function CopyInviteButton({ inviteUrl }: { inviteUrl: string }) {
   const [copied, setCopied] = useState(false);
 
-  async function copy() {
+  async function copyLink() {
     try {
       await navigator.clipboard.writeText(inviteUrl);
       setCopied(true);
@@ -62,10 +59,10 @@ export function CopyInviteButton({ inviteUrl }: { inviteUrl: string }) {
   return (
     <button
       type="button"
-      onClick={copy}
+      onClick={copyLink}
       className="mt-2 w-full rounded-lg border border-border px-3 py-2 text-xs font-medium hover:bg-background"
     >
-      {copied ? "Copied!" : "Copy invite link"}
+      {copied ? copy.invite.copied : copy.invite.copyLink}
     </button>
   );
 }
