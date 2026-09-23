@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { AdminEstimatedOddsToggle } from "@/components/admin-estimated-odds-toggle";
-import { AdminOddsDiagnosticsPanel } from "@/components/admin-odds-diagnostics";
-import { AdminPageShell } from "@/components/admin-page-shell";
+import { AdminEstimatedOddsToggle } from "@/components/admin/estimated-odds-toggle";
+import { AdminOddsDiagnosticsPanel } from "@/components/admin/odds-diagnostics";
+import { AdminPageShell } from "@/components/admin/page-shell";
 
 export const metadata: Metadata = {
   title: "Odds diagnostics",

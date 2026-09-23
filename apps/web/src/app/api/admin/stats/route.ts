@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/admin";
+import { requireAdmin } from "@/lib/admin/auth";
 import { computeAdminStats } from "@/lib/admin/compute-admin-stats";
 import { NextResponse } from "next/server";
 

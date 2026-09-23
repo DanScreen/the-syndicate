@@ -89,7 +89,7 @@ Computed on read from settled rounds. Group + member + **cross-group user** APIs
 ### Group chat
 Each group has one permanent polling thread in a dedicated web/mobile Chat tab. `RoundMessage.groupId` owns every message; nullable `roundId` preserves **Bet #N** context for lifecycle system events while user messages remain group-wide. Existing round messages were backfilled by `20260718200000_group_scoped_chat`. Lifecycle messages are persisted at event time and gated by the lock/settlement atomic claims. Reactions attach to messages; pick rows mirror the latest announcement selected by `legId`. `GroupMember.lastReadMessageAt` drives Chat-tab and group-card unread badges. Chat push is push-only, sender-suppressed, foreground-suppressed from active polling, limited to one delivery per user/group ten-minute bucket, and deep-links to Chat.
 
-→ `apps/web/src/lib/chat/` · `apps/web/src/components/group-chat.tsx` · `apps/mobile/src/components/group-chat.tsx` · [spec](./specs/group-chat.md)
+→ `apps/web/src/lib/chat/` · `apps/web/src/components/group/chat.tsx` · `apps/mobile/src/components/group-chat.tsx` · [spec](./specs/group-chat.md)
 
 ### Web UI layout
 - **Header:** Logo + “Social Group Betting” tagline; `AppNav` — Home → About → Groups → Performance → Admin (admins) → Blog (rightmost); greeting **Hi, {name}** → `/account`; logo + Home → `/`

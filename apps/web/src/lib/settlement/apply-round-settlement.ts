@@ -2,7 +2,7 @@ import {
   postLegResultMessage,
   postRoundSettledMessage,
 } from "@/lib/chat/system-messages";
-import { calculateGroupProfitLoss, pointsForMemberLeg } from "@/lib/settlement";
+import { calculateGroupProfitLoss, pointsForMemberLeg } from "@/lib/settlement/points";
 import { notifyRoundSettled } from "@/lib/notifications/round-notifications";
 import { openRound } from "@/lib/rounds/open-round";
 import { prisma } from "@tiki-acca/database";

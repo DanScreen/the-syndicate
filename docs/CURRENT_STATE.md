@@ -34,6 +34,8 @@ Omit `ODDS_API_KEY` for mock fixtures. Add `FOOTBALL_DATA_API_KEY` and/or `API_F
 
 ### Deploy
 
+PRs and pushes to `main` → `.github/workflows/ci.yml`: lint, typecheck, tests against Postgres.
+
 Push to `main` → GitHub Actions (`.github/workflows/deploy.yml`): build → `db:migrate:deploy` → Cloud Run.
 
 Match sync + odds warm: Cloud Scheduler (Terraform) → `POST /api/internal/sync-matches` (every 5 min UTC) and `POST /api/internal/warm-odds-cache` (every 6 h UTC) with Bearer `CRON_SECRET` from Secret Manager. See [DEPLOYMENT.md](./DEPLOYMENT.md).
@@ -49,22 +51,22 @@ Match sync + odds warm: Cloud Scheduler (Terraform) → `POST /api/internal/sync
 | Odds | `apps/web/src/lib/odds/` |
 | Settlement | `apps/web/src/lib/settlement/`, `apps/web/src/lib/results/` |
 | Stats | `apps/web/src/lib/stats/` |
-| Group chat | Dedicated web/mobile Chat tabs, `apps/web/src/components/group-chat.tsx`, `apps/mobile/src/components/group-chat.tsx`, APIs under `api/groups/[id]/messages` + `api/messages/[id]`, lifecycle writers/tests in `apps/web/src/lib/chat/`, shared contract `packages/shared/src/chat.ts` |
+| Group chat | Dedicated web/mobile Chat tabs, `apps/web/src/components/group/chat.tsx`, `apps/mobile/src/components/group-chat.tsx`, APIs under `api/groups/[id]/messages` + `api/messages/[id]`, lifecycle writers/tests in `apps/web/src/lib/chat/`, shared contract `packages/shared/src/chat.ts` |
 | Notifications | `apps/web/src/lib/notifications/` (branded email templates + layout; logo at `public/brand/email-logo.png`) |
 | Auth | `apps/web/src/lib/auth.ts`, `apps/web/src/lib/auth.config.ts` |
 | Settlement (auto) | `apps/web/src/lib/settlement/auto-settle-round.ts` |
 | Round lifecycle | `apps/web/src/lib/rounds/open-round.ts`, `create-additional-round.ts`, `claim-lock-round.ts`, `lock-open-rounds-at-kickoff.ts`, `first-kickoff.ts` |
-| Group UI | `apps/web/src/components/group-ui.tsx`, `group-stats.tsx` |
-| App navigation | `apps/web/src/components/app-nav.tsx`, `mobile-nav.tsx`, `group-nav.tsx`, `header.tsx` |
-| Logo & marketing | `apps/web/src/components/logo.tsx`, `components/marketing/` (`marketing-shell.tsx`, `session-aware-marketing-header.tsx`, `marketing-header.tsx`, `marketing-ctas.tsx`), `lib/marketing-content.ts`; reusable social assets, X profile header, and capture/composer workflow in `marketing-posts/` |
+| Group UI | `apps/web/src/components/group/` — round screen split into `submit-leg-form.tsx`, `acca-summary.tsx`, `legs-list.tsx`, `round-progress.tsx`, `leaderboard.tsx` (+ `round-helpers.tsx`); `stats.tsx`, `history.tsx`, `chat.tsx`. Mobile equivalent: `apps/mobile/src/components/round/`. Shared display helpers (`formatKickoff`, `legOutcomeLabel`, `mergeFixtureMarkets`): `packages/shared/src/round-display.ts` |
+| App navigation | `apps/web/src/components/layout/` (`app-nav.tsx`, `mobile-nav.tsx`, `app-tab-bar.tsx`, `header.tsx`, `site-footer.tsx`), `components/group/nav.tsx` |
+| Logo & marketing | `apps/web/src/components/logo.tsx`, `components/marketing/` (`marketing-shell.tsx`, `session-aware-marketing-header.tsx`, `marketing-header.tsx`, `marketing-ctas.tsx`), `lib/marketing-content.ts`; reusable social assets, X profile header, and capture/composer workflow in `tools/marketing/` |
 | Blog | `apps/web/content/blog/*.mdx` (posts), `apps/web/src/lib/blog.ts`, `app/blog/` — publish = git push; `draft: true` hides in prod. SEO frontmatter-driven (canonical, OG image, `BlogPosting` JSON-LD, tag hubs). Strict authoring standards: [BLOG.md](./BLOG.md) |
 | SEO | `apps/web/src/app/sitemap.ts`, `robots.ts` — public pages set self-referencing `alternates.canonical` (`/`, `/about`, `/privacy`, `/cookies`, `/terms`, `/support`, blog). Auth/account routes are `noindex` and listed in `robots` disallow. Canonical host is `https://www.tikiacca.com` (`metadataBase`). Apex/`*.run.app` redirects or 403s in Search Console are expected (www via Cloudflare; origin auth blocks direct Cloud Run crawls). |
 | Favicon / app icons | `apps/web/src/app/icon.svg`, `favicon.ico` (16/32/48), `apple-icon.tsx` (`lib/brand/rondo-icon.tsx`) — extra-wide apex-up Triangle rondo disc; glyph source in `logo.tsx`. Metadata URLs use `?v=` cache-bust (`layout.tsx`) — bump when the mark changes |
-| Brand archive | `apps/web/src/lib/brand/archive.ts`, `logo-alternatives.tsx` (unused alternatives), `docs/brand/logo-archive/v6-wide-apex-up/` (previous live logo vectors + rollback instructions) |
-| Group layout | `apps/web/src/app/groups/[id]/layout.tsx`, `group-layout-client.tsx`, `context/group-data.tsx` |
+| Brand archive | `docs/brand/logo-archive/v6-wide-apex-up/` (previous live logo vectors + rollback instructions); rejected explorations live in git history — see [BRAND.md](./BRAND.md#archived-explorations) |
+| Group layout | `apps/web/src/app/groups/[id]/layout.tsx`, `components/group/layout-client.tsx`, `context/group-data.tsx` |
 | Scoring | `packages/shared/src/scoring.ts` |
 | Competitions catalogue | `packages/shared/src/competitions.ts` |
-| Platform admin | `apps/web/src/lib/admin.ts`, `lib/admin/`, `lib/competitions/settings.ts`, `app/admin/`, `components/admin-*` |
+| Platform admin | `apps/web/src/lib/admin/` (`auth.ts` = `requireAdmin` / `ADMIN_EMAILS`), `lib/competitions/settings.ts`, `app/admin/`, `components/admin/` |
 | Analytics | `apps/web/src/lib/analytics.ts`, global web tracker in `components/analytics/authenticated-page-tracker.tsx`, mobile tracker in `apps/mobile/src/analytics/activity-tracker.tsx`, admin report at `/admin/activity` |
 
 ### What's next (July 2026)
@@ -179,7 +181,7 @@ Full budgeting: [DEPLOYMENT.md — The Odds API](./DEPLOYMENT.md#the-odds-api--c
 
 At lock, `rankAccaBookmakers()` in `apps/web/src/lib/odds/acca.ts` ranks all retail bookmakers by combined acca odds. Stored as `Round.accaBookmakerRankings` (JSON). Older locked rounds backfill lazily on `GET /api/groups/[id]`. **Open rounds** use a live current ranking for the Compare UI. **Locked rounds** show the ranking captured at lock. Web and mobile display the top three by default, with **Show all {N} bookmakers** / **Show top 3** controls for the complete ranking. `GET /api/groups/[id]` refreshes Odds API deeplinks for the CTA and per-leg Open (odds remain frozen at lock). Multi-leg CTAs label **Open first pick** (or **Open {bookmaker}** for hubs) — UK books rarely expose a one-click full-acca URL.
 
-**Bookmaker logos** (Compare / rankings UI): Google favicons via `packages/shared/src/bookmaker-branding.ts` (`BOOKMAKER_DOMAINS` → `bookmakerLogoUrl`). Web: `apps/web/src/components/bookmaker-logo.tsx`; mobile: same helper in `group-round.tsx`. Odds API key for 888sport is `sport888` — mapped to `888sport.com` (naive guess would hit `sport888.com` and show a generic globe).
+**Bookmaker logos** (Compare / rankings UI): Google favicons via `packages/shared/src/bookmaker-branding.ts` (`BOOKMAKER_DOMAINS` → `bookmakerLogoUrl`). Web: `apps/web/src/components/bookmaker-logo.tsx`; mobile: `apps/mobile/src/components/round/bookmaker-logo.tsx`. Odds API key for 888sport is `sport888` — mapped to `888sport.com` (naive guess would hit `sport888.com` and show a generic globe).
 
 Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_rankings`.
 
@@ -200,15 +202,15 @@ Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_
 | `apps/web/src/lib/odds/betslip-links.ts` | Ranked/per-leg links; hub detection; CTA link quality |
 | `apps/web/src/lib/odds/acca.ts` | Acca bookmaker ranking + best combined |
 | `apps/web/src/lib/odds/lock-round.ts` | Lock + reprice + store deeplinks; live link enrichment |
-| `apps/web/src/lib/odds/bookmakers.ts` | Retail filter, sort best odds |
+| `packages/shared/src/bookmakers.ts` | Retail filter, sort best odds |
 | `packages/shared/src/bookmaker-branding.ts` | Favicon logo domains (incl. `sport888` → 888sport.com) |
 | `apps/web/src/components/bookmaker-logo.tsx` | Bookmaker logo + initials fallback (web) |
-| `apps/web/src/components/group-ui.tsx` | Progressive 4-step leg picker (competition, fixture, and market lists collapse after selection; **Change competition** / **Change fixture** / **Change market** to browse again; multi-leg rounds reset picker after each submit, show leg progress copy, and trigger brief **Leg added** / **All legs added** celebrations), locked round picks, settle UI |
-| `apps/web/src/components/app-nav.tsx` | Header nav (desktop): Home / About / Groups / Performance / Admin / Blog |
-| `apps/web/src/components/mobile-nav.tsx` | Compact hamburger menu below `md` for marketing + app headers |
+| `apps/web/src/components/group/submit-leg-form.tsx` | Progressive 4-step leg picker (competition, fixture, and market lists collapse after selection; **Change competition** / **Change fixture** / **Change market** to browse again; multi-leg rounds reset picker after each submit, show leg progress copy, and trigger brief **Leg added** / **All legs added** celebrations), locked round picks, settle UI |
+| `apps/web/src/components/layout/app-nav.tsx` | Header nav (desktop): Home / About / Groups / Performance / Admin / Blog |
+| `apps/web/src/components/layout/mobile-nav.tsx` | Compact hamburger menu below `md` for marketing + app headers |
 | `apps/web/src/app/account/page.tsx` | Account — profile, notification prefs, sign out (greeting in header links here) |
-| `apps/web/src/components/group-nav.tsx` | Group tabs: Bet / Leaderboard / History / Chat (/ Settings for owners) |
-| `apps/web/src/components/group-layout-client.tsx` | Shared group shell + `GroupDataProvider` |
+| `apps/web/src/components/group/nav.tsx` | Group tabs: Bet / Leaderboard / History / Chat (/ Settings for owners) |
+| `apps/web/src/components/group/layout-client.tsx` | Shared group shell + `GroupDataProvider` |
 | `apps/web/src/context/group-data.tsx` | Group data context for sub-pages |
 
 ---
@@ -324,8 +326,8 @@ Members can change **their own leg** via `PATCH /api/legs/[id]` while the round 
 | `apps/web/src/app/api/legs/[id]/route.ts` | Change/remove own leg (PATCH/DELETE) — cutoff, authorization, locked-round edit reprice |
 | `apps/web/src/lib/admin/compute-settlement-queue.ts` | Locked + early-settled-pending queue + 3h overdue-leg flags |
 | `apps/web/src/lib/admin/compute-admin-results.ts` | Recent matches for admin score override UI |
-| `apps/web/src/components/admin-settlement.tsx` | Settlement queue UI + manual settle / correct outcome |
-| `apps/web/src/components/admin-results.tsx` | Match score override + per-leg outcome correction |
+| `apps/web/src/components/admin/settlement.tsx` | Settlement queue UI + manual settle / correct outcome |
+| `apps/web/src/components/admin/results.tsx` | Match score override + per-leg outcome correction |
 | `apps/web/src/app/api/admin/rounds/[id]/settle/route.ts` | Admin manual settle (locked) or deferred leg resolve (settled) |
 | `apps/web/src/app/api/admin/matches/[id]/route.ts` | Admin match score override (locks score, re-resolves legs) |
 | `apps/web/src/app/api/admin/legs/[id]/correct-outcome/route.ts` | Admin correction of a resolved leg outcome |
@@ -402,14 +404,14 @@ Admin-only for now; public rollout planned when user base grows.
 |------|------|
 | `apps/web/src/lib/auth.config.ts` | Edge-safe Auth.js (middleware) |
 | `apps/web/src/lib/auth.ts` | Credentials sign-in, JWT role refresh |
-| `apps/web/src/lib/admin.ts` | `requireAdmin`, `ADMIN_EMAILS` promotion |
+| `apps/web/src/lib/admin/auth.ts` | `requireAdmin`, `ADMIN_EMAILS` promotion |
 | `apps/web/src/lib/admin/compute-admin-stats.ts` | Overview aggregates |
 | `apps/web/src/lib/admin/compute-platform-leaderboards.ts` | Leaderboard queries (excludes marketing demo accounts) |
 | `apps/web/src/lib/admin/demo-accounts.ts` | `@demo.tikiacca.com` / `DEMO24` filters for admin leaderboards |
 | `apps/web/src/lib/analytics.ts` | `recordAnalyticsEvent` |
-| `apps/web/src/components/admin-page-shell.tsx` | Admin layout + nav |
-| `apps/web/src/components/admin-stats.tsx` | Overview UI |
-| `apps/web/src/components/platform-leaderboards.tsx` | Leaderboard tables |
+| `apps/web/src/components/admin/page-shell.tsx` | Admin layout + nav |
+| `apps/web/src/components/admin/stats.tsx` | Overview UI |
+| `apps/web/src/components/admin/platform-leaderboards.tsx` | Leaderboard tables |
 | `apps/web/src/components/stake-profit.tsx` | Points → profit converter |
 | `GET /api/admin/stats` | JSON overview (admin session) |
 | `GET /api/admin/leaderboards` | JSON leaderboards (admin session) |
@@ -437,7 +439,7 @@ Member summary **best / worst leg** = highest / lowest decimal odds across the m
 | `apps/web/src/lib/stats/compute-user-stats.ts` | Cross-group user stats + personal competition/bet-type/team insights |
 | `apps/web/src/lib/stats/compute-member-chart.ts` | Multi-member chart series |
 | `apps/web/src/lib/stats/helpers.ts` | Shared helpers (favourites, best/worst, live net points); chart labels `formatBetAxisLabel` + `formatSettledDateLabel`; `CHART_ORIGIN_LABEL` (`Start`) at 0 pts |
-| `apps/web/src/components/group-stats.tsx` | Group performance UI (Recharts) |
+| `apps/web/src/components/group/stats.tsx` | Group performance UI (Recharts) |
 | `apps/web/src/components/dashboard-stats.tsx` | Cross-group performance UI (`/performance`) |
 | `apps/web/src/components/share-card.tsx` | Shareable performance image (PNG) + copy text fallback |
 | `apps/web/src/lib/share/render-performance-image.ts` | Canvas renderer for branded share cards |

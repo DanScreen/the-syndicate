@@ -75,7 +75,7 @@ Scope:
    on the existing group poll (tighten to 20s while the thread is visible).
 3. History tab: read-only thread per settled round.
 
-Match the surrounding code's conventions (group-ui.tsx, group-data context,
+Match the surrounding code's conventions (components/group/, group-data context,
 existing API route patterns). No reactions, unread badges, push, or mobile in
 this step. When done: run the test suite and a local end-to-end check (post,
 delete, see a system message appear on pick submit), update the spec

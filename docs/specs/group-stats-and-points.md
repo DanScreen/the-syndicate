@@ -41,7 +41,7 @@ Member totals on a winning acca **do not** sum to the group total (e.g. legs 1.6
 
 ## Group summary (shipped)
 
-**"Group stats"** section on group page via `group-stats.tsx`.
+**"Group stats"** section on group page via `components/group/stats.tsx`.
 
 | Stat | Definition |
 |------|------------|

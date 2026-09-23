@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { signInSchema } from "@tiki-acca/shared";
-import { resolveUserRole, getSessionUserRole } from "@/lib/admin";
+import { resolveUserRole, getSessionUserRole } from "@/lib/admin/auth";
 import { authConfig } from "@/lib/auth.config";
 import { normalizeEmail } from "@/lib/auth-email";
 import { recordAnalyticsEventAsync } from "@/lib/analytics";

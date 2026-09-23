@@ -1,6 +1,6 @@
 "use client";
 
-import { AppHeader } from "@/components/header";
+import { AppHeader } from "@/components/layout/header";
 import { MarketingHeader } from "@/components/marketing/marketing-header";
 import { withCallbackUrl } from "@/lib/callback-url";
 import { greetingFirstName } from "@/lib/user-display";

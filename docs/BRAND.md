@@ -4,7 +4,7 @@ Visual identity for Tiki Acca.
 
 **Renamed (July 2026):** **The Syndicate → Tiki Acca** — tiki-taka pun; everyone touches the ball, each member adds one leg. Groups are called **"groups"** (the noun "syndicate" is retired). Full rationale + rename scope: [specs/rename-tiki-acca.md](./specs/rename-tiki-acca.md). Legacy internals that deliberately keep old names: GCP resources (Cloud SQL `the_syndicate`, Cloud Run `the-syndicate-web`, artifact repo), mobile SecureStore keys, GitHub repo name, `lib/brand/archive.ts` history.
 
-**Palette (July 2026):** **Floodlight** — sky-blue accent on floodlit navy, chosen from the eight-scheme exploration (replaced Turf Green, which had doubled as both brand and success colour). Logo remains the **Triangle rondo** (see [brand/tiki-logo-review/](./brand/tiki-logo-review/LOGO_REVIEW.md)).
+**Palette (July 2026):** **Floodlight** — sky-blue accent on floodlit navy, chosen from the eight-scheme exploration (replaced Turf Green, which had doubled as both brand and success colour). Logo remains the **Triangle rondo**.
 
 **Messaging & copy direction:** [MARKETING_BRIEF.md](./MARKETING_BRIEF.md) — positioning territories, tagline options, homepage/about page structure (draft, tagline decision open).
 
@@ -64,7 +64,7 @@ Loaded in `apps/web/src/app/layout.tsx`.
 Source of truth: `BRAND_COLORS` in `packages/shared/src/brand.ts`. The web app mirrors
 it as CSS variables in `apps/web/src/app/globals.css`; mobile imports `BRAND_COLORS`
 directly. `npm run check:brand` (also run by `npm run lint`) fails if the two drift —
-`node scripts/check-brand-sync.mjs --fix-hint` prints the expected `:root` block.
+`node scripts/brand/check-brand-sync.mjs --fix-hint` prints the expected `:root` block.
 
 | Token | Value | Usage |
 |-------|-------|-------|
@@ -84,7 +84,7 @@ red, and amber regardless of the brand colour (this is what made the Turf Green 
 Floodlight switch safe).
 
 **Re-theme procedure:** update `BRAND_COLORS` in `packages/shared/src/brand.ts`; run
-`node scripts/check-brand-sync.mjs --fix-hint` and paste the printed block into
+`node scripts/brand/check-brand-sync.mjs --fix-hint` and paste the printed block into
 `globals.css` (re-tint `--glow` to the new accent); update the two fills in
 `app/icon.svg`; run `npm run generate:brand-assets` to regenerate `favicon.ico` and
 `apps/mobile/assets/*.png`; bump the `?v=` favicon cache-bust in `layout.tsx`; update
@@ -116,7 +116,7 @@ The same identity applies to **website**, **in-app mobile**, and **App Store / P
 | Website | SVG `apps/web/src/components/logo.tsx` | `apps/web/src/lib/marketing-content.ts` | `apps/web/src/app/globals.css` |
 | Mobile app | PNG assets `apps/mobile/assets/` + in-app SVG `apps/mobile/src/components/logo.tsx` | Shared module (`packages/shared/src/brand.ts` for colours) | `apps/mobile/src/config.ts` imports `BRAND_COLORS` |
 | Store listings | Icon + screenshots | [apps/mobile/STORE_LISTING.md](../apps/mobile/STORE_LISTING.md) | N/A |
-| Social graphics | Real UI captures + Triangle rondo wordmark | [`marketing-posts/`](../marketing-posts/README.md) | Floodlight composer |
+| Social graphics | Real UI captures + Triangle rondo wordmark | [`tools/marketing/`](../tools/marketing/README.md) | Floodlight composer |
 
 ### Logo export (mobile / stores)
 
@@ -139,13 +139,16 @@ Mobile strategy: [specs/mobile-apps.md](./specs/mobile-apps.md).
 
 ## Archived explorations
 
-Rejected logo and palette options are kept for reference (not linked in the app):
+Rejected logo explorations were removed from the tree in the repo-structure clean-up. They remain in git history; check out commit `9809a75` to see them:
 
-| Path | Contents |
+| Path at `9809a75` | Contents |
 |------|----------|
 | `apps/web/src/lib/brand/archive.ts` | Archived design concepts + logo variant metadata |
 | `apps/web/src/lib/brand/logo-alternatives.tsx` | SVG components: crest, pitch, monogram, nodes |
-| `docs/brand/logo-review/LOGO_REVIEW.md` | **July 2026** — AI-generated betslip concepts (2 won + 1 pending legs); not shipped |
+| `docs/brand/tiki-logo-review/` | **July 2026** — Triangle rondo selection board and variants |
+| `docs/brand/logo-review/` | **July 2026** — AI-generated betslip concepts (2 won + 1 pending legs); not shipped |
+
+The previous live logo vectors and rollback instructions are still in the tree at [`brand/logo-archive/v6-wide-apex-up/`](./brand/logo-archive/v6-wide-apex-up/).
 
 ---
 

@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/admin";
+import { requireAdmin } from "@/lib/admin/auth";
 import { correctLegOutcome } from "@/lib/settlement/correct-leg-outcome";
 import { tryAutoSettleRound } from "@/lib/settlement/auto-settle-round";
 import { propagateSelectionOutcomes } from "@/lib/settlement/propagate-selection-outcome";

@@ -37,6 +37,7 @@ flowchart LR
 | CI/CD | Add `.github/workflows/deploy.yml` | Done |
 | IaC | Add `infra/terraform/` for GCP resources | Done |
 | IaC CI | Add `.github/workflows/terraform.yml` | Done |
+| PR checks | Add `.github/workflows/ci.yml` (lint, typecheck, tests) | Done |
 | Health | Add `GET /api/health` for Cloud Run probes | Done |
 | Security | Require `AUTH_SECRET` in production; tighten CORS | Done |
 | Docs | Update README + ARCHITECTURE | Done |
@@ -223,7 +224,7 @@ User preferences: `/account` (web), mobile Account screen. Legacy `/settings/not
 
 Omit either email variable to skip emails (no-op).
 
-Templates: Turf Green branded HTML in `apps/web/src/lib/notifications/templates.ts` + `email-layout.ts`. Logo asset: `apps/web/public/brand/email-logo.png` (served at `/brand/email-logo.png`). Local preview: `scripts/preview-notification-emails.html` (regenerate with `cd apps/web && npx tsx ../../scripts/generate-email-preview.ts`).
+Templates: Turf Green branded HTML in `apps/web/src/lib/notifications/templates.ts` + `email-layout.ts`. Logo asset: `apps/web/public/brand/email-logo.png` (served at `/brand/email-logo.png`). Local preview: `apps/web/scripts/preview-notification-emails.html` (git-ignored; regenerate with `npm run email:preview --workspace=@tiki-acca/web`).
 
 ### Deliverability (avoid junk / spam)
 
@@ -580,7 +581,7 @@ One-off fixes (solo test rounds, re-settle after a bug) use `apps/web/scripts/da
 
 ### Backfill a leg missing from a locked round
 
-`scripts/backfill-missing-leg.ts` adds a leg to an already-locked round, for the case where the selection **is on the physical bookmaker slip** but never reached the database (e.g. a member locked out of their account at submission time). It deliberately bypasses the kickoff cutoff in `apps/web/src/lib/rounds/first-kickoff.ts`, so it must never be used to add a selection that was not actually struck with the bookmaker before kickoff.
+`scripts/ops/backfill-missing-leg.ts` adds a leg to an already-locked round, for the case where the selection **is on the physical bookmaker slip** but never reached the database (e.g. a member locked out of their account at submission time). It deliberately bypasses the kickoff cutoff in `apps/web/src/lib/rounds/first-kickoff.ts`, so it must never be used to add a selection that was not actually struck with the bookmaker before kickoff.
 
 Unlike the tasks above it is not part of `data-maintenance.ts` — it is run directly with `tsx`.
 
@@ -598,7 +599,7 @@ The script passes `--local-proxy` to rewrite the secret's Cloud SQL socket host 
 
 ```bash
 DATABASE_URL="$(gcloud secrets versions access latest --secret=DATABASE_URL)" \
-  npx tsx scripts/backfill-missing-leg.ts --local-proxy \
+  npx tsx scripts/ops/backfill-missing-leg.ts --local-proxy \
     --invite-code ABCD1234 \
     --email member@example.com \
     --home "Stoke City" --away "Swansea City" \

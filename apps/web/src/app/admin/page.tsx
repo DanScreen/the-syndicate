@@ -1,5 +1,5 @@
-import { AdminPageShell } from "@/components/admin-page-shell";
-import { AdminStats } from "@/components/admin-stats";
+import { AdminPageShell } from "@/components/admin/page-shell";
+import { AdminStats } from "@/components/admin/stats";
 import { computeAdminStats } from "@/lib/admin/compute-admin-stats";
 import type { Metadata } from "next";
 

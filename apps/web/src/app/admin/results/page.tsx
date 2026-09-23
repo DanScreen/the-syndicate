@@ -1,5 +1,5 @@
-import { AdminPageShell } from "@/components/admin-page-shell";
-import { AdminResults } from "@/components/admin-results";
+import { AdminPageShell } from "@/components/admin/page-shell";
+import { AdminResults } from "@/components/admin/results";
 import { computeAdminResultsMatches } from "@/lib/admin/compute-admin-results";
 import { RESULT_CONFIRMATION_MS } from "@tiki-acca/shared";
 import type { Metadata } from "next";

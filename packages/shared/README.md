@@ -22,7 +22,7 @@ Everything is re-exported from `src/index.ts`; consumers import from `@tiki-acca
 - `group-summary-display.ts` — formatting for group summary cards/notifications.
 - `notification-types.ts` — push/email notification payload types.
 - `profanity.ts` — chat message filtering.
-- `brand.ts` — brand tokens (name, colours) consumed by both apps and `scripts/generate-brand-assets.mjs` / `scripts/check-brand-sync.mjs`.
+- `brand.ts` — brand tokens (name, colours) consumed by both apps and `scripts/brand/generate-brand-assets.mjs` / `scripts/brand/check-brand-sync.mjs`.
 
 ## Testing
 

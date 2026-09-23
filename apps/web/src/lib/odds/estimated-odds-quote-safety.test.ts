@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { sortQuotesByBestOdds } from "./bookmakers";
+import { sortQuotesByBestOdds } from "@tiki-acca/shared";
 import { rankAccaBookmakers } from "./acca";
 import type { BookmakerQuote } from "@tiki-acca/shared";
 

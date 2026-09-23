@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/admin";
+import { requireAdmin } from "@/lib/admin/auth";
 import { getCompetitionSettings, setCompetitionEnabled } from "@/lib/competitions/settings";
 import { updateCompetitionSettingSchema } from "@tiki-acca/shared";
 import { NextResponse } from "next/server";

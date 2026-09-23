@@ -1,4 +1,4 @@
-import { AppHeader } from "@/components/header";
+import { AppHeader } from "@/components/layout/header";
 import {
   ActiveBetslipSummary,
   ActiveBetsSummary,

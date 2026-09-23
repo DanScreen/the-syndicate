@@ -433,7 +433,7 @@ The spec's §10 lists sources and a confidence level for each claim.
 
 ### Probe results (22–23 Sept 2026)
 
-Run locally with `scripts/probe-sources.mjs` plus a one-off Nations League
+Run locally with `scripts/ops/probe-sources.mjs` plus a one-off Nations League
 check. API-Football was on Pro; The Odds API on region `uk`.
 
 **The Odds API**

@@ -2,7 +2,7 @@ import { postLegResultCorrectedMessage } from "@/lib/chat/system-messages";
 import {
   calculateGroupProfitLoss,
   pointsForMemberLeg,
-} from "@/lib/settlement";
+} from "@/lib/settlement/points";
 import { prisma } from "@tiki-acca/database";
 import type { LegOutcome } from "@tiki-acca/shared";
 

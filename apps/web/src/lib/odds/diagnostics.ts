@@ -6,7 +6,7 @@ import {
   oddsCacheTtlMs,
 } from "@/lib/odds/config";
 import { getCached } from "@/lib/odds/cache";
-import { isRetailBookmaker } from "@/lib/odds/bookmakers";
+import { isRetailBookmaker } from "@tiki-acca/shared";
 import { isQuotaExhaustedError, OddsApiError } from "@/lib/odds/errors";
 import { readBulkFixtures } from "@/lib/odds/odds-store";
 import {

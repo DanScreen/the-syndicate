@@ -4,7 +4,7 @@ import {
   embeddedOverUnderLineFromType,
   overUnderLineFromType,
   prefixedHandicapLineFromType,
-} from "@/lib/odds/market-groups";
+} from "@tiki-acca/shared";
 import { slugify } from "@/lib/odds/market-builders";
 
 /** Standard markets settle on 90-minute (regulation) score, not extra time. */

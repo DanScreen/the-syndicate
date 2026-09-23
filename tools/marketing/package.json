@@ -1,0 +1,17 @@
+{
+  "name": "@tiki-acca/marketing",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "capture": "node scripts/capture-panels.mjs",
+    "posts": "node scripts/make-posts.mjs",
+    "gallery": "node scripts/build-gallery.mjs",
+    "x-header": "node scripts/make-x-header.mjs",
+    "appstore": "node scripts/frame-appstore.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.61.1",
+    "sharp": "0.34.5"
+  }
+}

@@ -1,5 +1,5 @@
-import { AdminPageShell } from "@/components/admin-page-shell";
-import { PlatformLeaderboards } from "@/components/platform-leaderboards";
+import { AdminPageShell } from "@/components/admin/page-shell";
+import { PlatformLeaderboards } from "@/components/admin/platform-leaderboards";
 import { computePlatformLeaderboards } from "@/lib/admin/compute-platform-leaderboards";
 import type { Metadata } from "next";
 

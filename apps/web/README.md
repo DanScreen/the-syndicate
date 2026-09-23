@@ -10,12 +10,13 @@ For product/architecture context (data model, odds pipeline, settlement flow, ch
 - `src/lib/` — server-side business logic, organized by domain. Each subdirectory is a slice of a subsystem described in `docs/ARCHITECTURE.md`:
   - `odds/` — third-party odds ingestion (`the-odds-api.ts`), market building/merging (`market-builders.ts`, `merge-markets.ts`, `event-markets.ts`), caching (`cache.ts`, `warm-cache.ts`, `odds-store.ts`), and a `mock-provider.ts` for local dev without hitting the real API.
   - `settlement/` — round settlement and outcome resolution (`auto-settle-round.ts`, `resolve-round-outcomes.ts`). Business-critical: settles bets and awards points, so changes here need care and a matching test.
-  - `chat/`, `groups/`, `legs/`, `rounds/`, `competitions/`, `results/`, `stats/`, `share/`, `notifications/`, `admin/`, `brand/` — one directory per domain area, generally mirroring the API routes of the same name.
-- `src/components/` — shared React components, including `analytics/` and `marketing/` subtrees.
+  - `chat/`, `groups/`, `legs/`, `rounds/`, `competitions/`, `results/`, `stats/`, `share/`, `notifications/`, `admin/`, `brand/` — one directory per domain area, generally mirroring the API routes of the same name. `admin/auth.ts` holds `requireAdmin` / `ADMIN_EMAILS`; `settlement/points.ts` holds the per-leg points maths.
+- `src/components/` — React components, grouped by area: `admin/` (admin screens), `group/` (group round, chat, history, stats, leaderboard), `layout/` (header, navs, tab bar, footer), `marketing/`, `analytics/`; cross-cutting pieces (logo, bookmaker logo, points text, share card) sit at the top level.
 - `src/context/` — React context providers.
 - `src/types/` — web-app-specific types (cross-app types live in `@tiki-acca/shared`).
 - `content/` — MDX content (blog posts, legal pages) rendered via `next-mdx-remote`.
 - `scripts/data-maintenance.ts` — one-off/periodic data-maintenance script, run via `npm run db:maintenance`.
+- `scripts/generate-email-preview.ts` — renders every notification email to `scripts/preview-notification-emails.html` (git-ignored), run via `npm run email:preview`.
 
 ## Running locally
 
@@ -35,8 +36,10 @@ Run from this directory or via workspace-scoped `npm run <script> --workspace=ap
 
 - `dev` — `next dev --turbopack`
 - `build` / `start` — production build/serve
-- `lint` — `next lint`
-- `test` — runs the Node test runner directly against the handful of `*.test.ts` files under `src/lib/` (analytics, chat exactly-once/group-scope/leg-removal, odds fixture-conflicts/merge-markets, round creation). There is no separate test framework config — new tests must be added to the file list in the `test` script in `package.json` to be picked up.
+- `lint` — ESLint (`eslint.config.mjs`: `next/core-web-vitals` + `next/typescript`)
+- `typecheck` — `tsc --noEmit`
+- `test` — Node test runner over every `src/**/*.test.ts` (no extra framework config; new test files are picked up automatically). Some tests are integration tests against Postgres, so set `DATABASE_URL` (or `.env.local`) to a migrated database first.
+- `email:preview` — regenerates the notification email preview page.
 - `db:maintenance` — runs `scripts/data-maintenance.ts` via `tsx`.
 
 ## Odds and settlement — where to look before changing behavior
