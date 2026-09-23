@@ -38,6 +38,8 @@ PRs and pushes to `main` → `.github/workflows/ci.yml`: lint (web, mobile, `pac
 
 Push to `main` → GitHub Actions (`.github/workflows/deploy.yml`): build → `db:migrate:deploy` → Cloud Run.
 
+Push to `main` that bumps `expo.version` in `apps/mobile/app.json` → `.github/workflows/eas.yml`: production EAS build with `--auto-submit` to the stores (platforms from repo variable `MOBILE_RELEASE_PLATFORMS`, default `ios`). Other mobile changes ship via `eas update` (OTA). See [apps/mobile/README.md → CI](../apps/mobile/README.md#ci).
+
 Match sync + odds warm: Cloud Scheduler (Terraform) → `POST /api/internal/sync-matches` (every 5 min UTC) and `POST /api/internal/warm-odds-cache` (every 6 h UTC) with Bearer `CRON_SECRET` from Secret Manager. See [DEPLOYMENT.md](./DEPLOYMENT.md).
 
 ### Code map

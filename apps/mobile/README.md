@@ -143,4 +143,9 @@ xcrun simctl openurl booted "tikiacca://groups/join?code=YOURCODE"
 
 ## CI
 
-`.github/workflows/eas.yml` — manual dispatch or `mobile-v*` tags. Requires `EXPO_TOKEN` secret.
+`.github/workflows/eas.yml` releases on a **version bump**: when a push to `main` changes `expo.version` in `app.json` (e.g. `1.0.0` → `1.1.0`), it starts a `production` EAS build with `--auto-submit`, so the binary goes to App Store Connect (TestFlight) / the Play `internal` track as soon as it finishes. Pushes that don't change the version don't build — ship those as OTA updates (above). The workflow uses `--no-wait`, so the GitHub job finishes once the build is queued; follow it on expo.dev.
+
+- **Platforms:** repo variable `MOBILE_RELEASE_PLATFORMS` (`ios`, `android` or `all`; default `ios`). Set it to `all` once Play submission works ([ANDROID_LAUNCH.md](./ANDROID_LAUNCH.md) step 4).
+- **Manual builds:** Actions → *EAS Build (mobile)* → Run workflow — pick platform/profile, and tick *submit* to auto-submit a `production` build.
+- **Requires:** `EXPO_TOKEN` GitHub secret, plus store credentials saved on EAS so `eas submit` can run non-interactively — an App Store Connect API key (iOS) and a Google service account key (Android).
+- Still tag the release afterwards (`npm run tag:release`, above).
