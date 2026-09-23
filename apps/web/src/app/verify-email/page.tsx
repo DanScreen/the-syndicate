@@ -27,12 +27,23 @@ function errorMessage(data: unknown, fallback: string): string {
   );
 }
 
+/**
+ * `update()` flips status to "loading" while it refetches but keeps the
+ * current session, so treat that as still signed in rather than swapping UI.
+ */
+function isSignedIn(status: ReturnType<typeof useSession>["status"], session: unknown): boolean {
+  return status === "authenticated" || (status === "loading" && session != null);
+}
+
 /** Emailed link landing: consumes `?token=`. Works signed-out too. */
 function TokenVerifier({ token, callbackUrl }: { token: string; callbackUrl: string }) {
-  const { status, update } = useSession();
+  const { data: session, status, update } = useSession();
+  const signedIn = isSignedIn(status, session);
   const [state, setState] = useState<"verifying" | "done" | "failed">("verifying");
   const [error, setError] = useState("");
+  const [refreshed, setRefreshed] = useState(false);
   const attempted = useRef(false);
+  const refreshStarted = useRef(false);
 
   useEffect(() => {
     if (attempted.current) return;
@@ -54,8 +65,12 @@ function TokenVerifier({ token, callbackUrl }: { token: string; callbackUrl: str
   }, [token]);
 
   // Re-issue the session cookie so middleware stops sending them back here.
+  // Once only: update() cycles status through "loading" and returns a new
+  // function each render, so re-running on those deps loops forever.
   useEffect(() => {
-    if (state === "done" && status === "authenticated") void update();
+    if (state !== "done" || status !== "authenticated" || refreshStarted.current) return;
+    refreshStarted.current = true;
+    void update().finally(() => setRefreshed(true));
   }, [state, status, update]);
 
   if (state === "verifying") {
@@ -66,7 +81,7 @@ function TokenVerifier({ token, callbackUrl }: { token: string; callbackUrl: str
     return (
       <div className="mt-4 space-y-4">
         <p className="text-sm text-danger">{error}</p>
-        {status === "authenticated" ? (
+        {signedIn ? (
           <PendingVerification callbackUrl={callbackUrl} />
         ) : (
           <p className="text-sm text-muted">
@@ -85,8 +100,13 @@ function TokenVerifier({ token, callbackUrl }: { token: string; callbackUrl: str
       <p className="rounded-lg border border-accent/30 bg-accent-muted/20 px-3 py-2 text-sm text-accent">
         Email confirmed — you&apos;re all set.
       </p>
-      {status === "authenticated" ? (
-        <button type="button" className={buttonPrimary} onClick={() => window.location.assign(callbackUrl)}>
+      {status !== "unauthenticated" ? (
+        <button
+          type="button"
+          className={buttonPrimary}
+          disabled={!refreshed}
+          onClick={() => window.location.assign(callbackUrl)}
+        >
           Continue
         </button>
       ) : (
@@ -275,6 +295,7 @@ function VerifyEmailContent() {
   const token = searchParams.get("token") ?? "";
   const callbackUrl = safeCallbackUrl(searchParams.get("callbackUrl"));
   const { data: session, status } = useSession();
+  const signedIn = isSignedIn(status, session);
   const verified = session?.user?.isEmailVerified !== false;
 
   // Covers a link clicked in another tab/device: SessionProvider refetches on
@@ -287,7 +308,7 @@ function VerifyEmailContent() {
 
   if (token) return <TokenVerifier token={token} callbackUrl={callbackUrl} />;
 
-  if (status === "loading" || (status === "authenticated" && verified)) {
+  if ((status === "loading" && !signedIn) || (signedIn && verified)) {
     return <p className="mt-4 text-sm text-muted">Loading…</p>;
   }
 
