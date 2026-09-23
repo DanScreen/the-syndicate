@@ -4,12 +4,12 @@ import {
   ActiveBetsSummary,
 } from "@/components/active-betslip-summary";
 import { PointsText } from "@/components/points-text";
-import { yourLegStatusMessage } from "@tiki-acca/shared";
-import { activeLegsInRound, yourLegInRound } from "@/lib/groups/your-leg-summary";
-import { activeBetSummaries } from "@/lib/groups/active-bet-summaries";
-import { openRound } from "@/lib/rounds/open-round";
-import { groupNetPoints, memberNetPointsAcrossRounds } from "@/lib/stats/helpers";
-import { formatLegPoints, formatRoundStatusBadge } from "@tiki-acca/shared";
+import { listGroupSummaries } from "@/lib/groups/list-group-summaries";
+import {
+  formatLegPoints,
+  formatRoundStatusBadge,
+  yourLegStatusMessage,
+} from "@tiki-acca/shared";
 import { auth } from "@/lib/auth";
 import { greetingFirstName } from "@/lib/user-display";
 import { prisma } from "@tiki-acca/database";
@@ -20,73 +20,21 @@ export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/sign-in");
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { firstName: true, name: true },
-  });
+  const [user, groups] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { firstName: true, name: true },
+    }),
+    listGroupSummaries(session.user.id),
+  ]);
 
-  const memberships = await prisma.groupMember.findMany({
-    where: { userId: session.user.id },
-    include: {
-      group: {
-        include: {
-          owner: { select: { name: true } },
-          _count: { select: { members: true } },
-          rounds: {
-            include: {
-              legs: {
-                include: { user: { select: { id: true, name: true } } },
-              },
-            },
-            orderBy: { createdAt: "desc" },
-          },
-        },
-      },
-    },
-    orderBy: { joinedAt: "desc" },
-  });
-
-  const isNewUser = memberships.length === 0;
+  const isNewUser = groups.length === 0;
 
   // Your live points tally across all groups (same rule as each group card and
-  // Performance). User.totalPoints is denormalized and can be stale, so sum the
-  // recomputed per-group member points instead.
+  // Performance).
   const yourTotalPoints = Number(
-    memberships
-      .reduce(
-        (sum, m) =>
-          sum + memberNetPointsAcrossRounds(m.group.rounds, session.user.id),
-        0
-      )
-      .toFixed(2)
+    groups.reduce((sum, g) => sum + g.points, 0).toFixed(2)
   );
-
-  // One query for unread counts across all groups (was one COUNT per group card).
-  const unreadSinceByGroup = new Map(
-    memberships.map((m) => [
-      m.group.id,
-      m.lastReadMessageAt && m.lastReadMessageAt > m.joinedAt
-        ? m.lastReadMessageAt
-        : m.joinedAt,
-    ])
-  );
-  const unreadCountByGroup = new Map<string, number>();
-  if (memberships.length > 0) {
-    const unreadMessages = await prisma.roundMessage.findMany({
-      where: {
-        OR: memberships.map((m) => ({
-          groupId: m.group.id,
-          createdAt: { gt: unreadSinceByGroup.get(m.group.id)! },
-          OR: [{ userId: null }, { userId: { not: session.user.id } }],
-        })),
-      },
-      select: { groupId: true },
-    });
-    for (const msg of unreadMessages) {
-      const gid = msg.groupId;
-      unreadCountByGroup.set(gid, (unreadCountByGroup.get(gid) ?? 0) + 1);
-    }
-  }
 
   return (
     <div className="min-h-screen">
@@ -96,7 +44,7 @@ export default async function DashboardPage() {
           <div>
             <h1 className="font-display text-2xl font-bold">Your Groups</h1>
             <p className="mt-1 text-sm text-muted">
-              {memberships.length} group{memberships.length === 1 ? "" : "s"} ·{" "}
+              {groups.length} group{groups.length === 1 ? "" : "s"} ·{" "}
               {formatLegPoints(yourTotalPoints)} pts total ·{" "}
               <Link href="/performance" className="text-accent hover:underline">
                 View performance
@@ -141,159 +89,55 @@ export default async function DashboardPage() {
 
         <section className="mt-8">
           {/* New users get the welcome panel above — no second empty state. */}
-          {memberships.length === 0 ? null : (
+          {groups.length === 0 ? null : (
             <div className="grid gap-4 md:grid-cols-2">
-              {(await Promise.all(
-                memberships.map(async (m) => {
-                  const allRounds = m.group.rounds;
-                  const activeRoundRow =
-                    allRounds.find((r) => r.status === "open") ??
-                    allRounds.find((r) => r.status === "locked") ??
-                    null;
-                  let openedSummaryRound: {
-                    id: string;
-                    betNumber: number | null;
-                    status: string;
-                    combinedOdds: number | null;
-                    legsPerMember: number;
-                    unlimitedLegs: boolean;
-                    legs: never[];
-                  } | null = null;
-                  let activeRound: {
-                    id: string;
-                    status: string;
-                    combinedOdds: number | null;
-                    legsPerMember: number;
-                  } | null = activeRoundRow
-                    ? {
-                        id: activeRoundRow.id,
-                        status: activeRoundRow.status,
-                        combinedOdds: activeRoundRow.combinedOdds,
-                        legsPerMember: activeRoundRow.legsPerMember,
-                      }
-                    : null;
-                  if (!activeRound) {
-                    const opened = await openRound(m.group.id);
-                    openedSummaryRound = {
-                      id: opened.id,
-                      betNumber: opened.betNumber,
-                      status: opened.status,
-                      combinedOdds: opened.combinedOdds,
-                      legsPerMember: opened.legsPerMember,
-                      unlimitedLegs: opened.unlimitedLegs,
-                      legs: [],
-                    };
-                    activeRound = {
-                      id: opened.id,
-                      status: opened.status,
-                      combinedOdds: opened.combinedOdds,
-                      legsPerMember: opened.legsPerMember,
-                    };
-                  }
-                  const legs = activeRoundRow?.legs ?? [];
-                  const groupPoints = groupNetPoints(allRounds);
-                  // Live member points (same rule as leaderboard / Performance).
-                  // GroupMember.points is denormalized and can be stale after
-                  // scoring-rule changes, so never render it directly.
-                  const yourPoints = memberNetPointsAcrossRounds(
-                    allRounds,
-                    session.user.id
-                  );
-                  const yourLeg = yourLegInRound(legs, session.user.id);
-                  const yourLegCount = legs.filter(
-                    (l) => l.userId === session.user.id
-                  ).length;
-                  const activeLegs = activeLegsInRound(legs, session.user.id);
-                  const activeBets = activeBetSummaries(
-                    openedSummaryRound
-                      ? [...allRounds, openedSummaryRound]
-                      : allRounds,
-                    session.user.id,
-                    m.group._count.members
-                  );
-                  const unreadMessageCount =
-                    unreadCountByGroup.get(m.group.id) ?? 0;
-                  const roundStatus = activeRound?.status ?? "open";
-                  const legsPerMember =
-                    activeRound?.legsPerMember ?? m.group.legsPerMember ?? 1;
-                  return {
-                    membership: m,
-                    activeRound,
-                    groupPoints,
-                    yourPoints,
-                    yourLeg,
-                    yourLegCount,
-                    legsPerMember,
-                    activeLegs,
-                    roundStatus,
-                    unreadMessageCount,
-                    activeBetCount: activeBets.length,
-                    activeBets,
-                  };
-                })
-              )).map(
-                ({
-                  membership: m,
-                  activeRound,
-                  groupPoints,
-                  yourPoints,
-                  yourLeg,
-                  yourLegCount,
-                  legsPerMember,
-                  activeLegs,
-                  roundStatus,
-                  unreadMessageCount,
-                  activeBetCount,
-                  activeBets,
-                }) => (
-                  <Link
-                    key={m.group.id}
-                    href={`/groups/${m.group.id}`}
-                    className="rounded-xl border border-border bg-card p-5 hover:border-accent/50"
-                  >
-                    <div className="flex items-start justify-between">
-                      <h3 className="font-semibold">{m.group.name}</h3>
-                      <div className="flex items-center gap-2">
-                        {unreadMessageCount > 0 ? (
-                          <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-on-accent">
-                            {unreadMessageCount} new
-                          </span>
-                        ) : null}
-                        <span className="rounded-full bg-accent-muted px-2 py-0.5 text-xs text-accent">
-                          {activeBetCount > 1
-                            ? `${activeBetCount} Active`
-                            : formatRoundStatusBadge(activeRound?.status ?? "open")}
+              {groups.map((g) => (
+                <Link
+                  key={g.id}
+                  href={`/groups/${g.id}`}
+                  className="rounded-xl border border-border bg-card p-5 hover:border-accent/50"
+                >
+                  <div className="flex items-start justify-between">
+                    <h3 className="font-semibold">{g.name}</h3>
+                    <div className="flex items-center gap-2">
+                      {g.unreadMessageCount > 0 ? (
+                        <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-on-accent">
+                          {g.unreadMessageCount} new
                         </span>
-                      </div>
+                      ) : null}
+                      <span className="rounded-full bg-accent-muted px-2 py-0.5 text-xs text-accent">
+                        {g.activeBetCount > 1
+                          ? `${g.activeBetCount} Active`
+                          : formatRoundStatusBadge(g.status)}
+                      </span>
                     </div>
-                    <p className="mt-2 text-sm text-muted">
-                      {m.group._count.members} members · Owner: {m.group.owner.name}
-                      {activeBetCount > 1
-                        ? ` · ${activeBetCount} active bets`
-                        : ""}
-                    </p>
-                    <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
-                      <PointsText points={groupPoints} label="Group points" />
-                      <PointsText points={yourPoints} label="Your points" />
-                    </div>
-                    {activeBetCount > 1 ? (
-                      <ActiveBetsSummary bets={activeBets} />
-                    ) : (
-                      <ActiveBetslipSummary
-                        legs={activeLegs}
-                        currentUserId={session.user.id}
-                        combinedOdds={activeRound?.combinedOdds}
-                        waitingMessage={
-                          yourLegStatusMessage(roundStatus, yourLeg, {
-                            yourLegCount,
-                            legsPerMember,
-                          }) || undefined
-                        }
-                      />
-                    )}
-                  </Link>
-                )
-              )}
+                  </div>
+                  <p className="mt-2 text-sm text-muted">
+                    {g.memberCount} members · Owner: {g.ownerName}
+                    {g.activeBetCount > 1 ? ` · ${g.activeBetCount} active bets` : ""}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+                    <PointsText points={g.groupPoints} label="Group points" />
+                    <PointsText points={g.points} label="Your points" />
+                  </div>
+                  {g.activeBetCount > 1 ? (
+                    <ActiveBetsSummary bets={g.activeBets} />
+                  ) : (
+                    <ActiveBetslipSummary
+                      legs={g.activeLegs}
+                      currentUserId={session.user.id}
+                      combinedOdds={g.activeRound?.combinedOdds}
+                      waitingMessage={
+                        yourLegStatusMessage(g.status, g.yourLeg, {
+                          yourLegCount: g.yourLegCount,
+                          legsPerMember:
+                            g.activeRound?.legsPerMember ?? g.legsPerMember ?? 1,
+                        }) || undefined
+                      }
+                    />
+                  )}
+                </Link>
+              ))}
             </div>
           )}
         </section>
