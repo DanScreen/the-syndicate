@@ -86,6 +86,7 @@ docs/
     ├── platform-admin.md             ← Admin, analytics, points-first UX (shipped)
     ├── affiliate-and-betslips.md     ← Affiliate tracking + betslip deeplink improvements (backlog)
     ├── affiliate-disclosures.md      ← Partner button design, disclosure pattern, per-bookmaker requirements
+    ├── affiliate-disclosures-research.md ← Evidence + open verification tasks for the above
     ├── round-deadline-lock.md        ← Lock at first kickoff + pick reminders (Phase 1 shipped)
     ├── notifications.md              ← Email + push notification plan (planned)
     ├── estimated-odds-fill.md        ← Median-backfill for missing bookmaker quotes (planned)

@@ -5,6 +5,7 @@
 | **Status** | Design + research (September 2026). No code yet |
 | **Depends on** | Affiliate tracking env config — [affiliate-and-betslips.md](./affiliate-and-betslips.md) Phase A |
 | **As-built reference** | [../CURRENT_STATE.md](../CURRENT_STATE.md) |
+| **Research log** | [affiliate-disclosures-research.md](./affiliate-disclosures-research.md): confidence per finding and open verification tasks |
 
 This spec covers the button that carries affiliate links in the odds tables, what we must show next to it, and how we show it. [affiliate-and-betslips.md](./affiliate-and-betslips.md) covers tracking and deeplinks.
 
