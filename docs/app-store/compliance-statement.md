@@ -43,7 +43,8 @@ app, under that operator's own licence, terms, and player protections.
   jurisdiction in which all linked operators are licensed.
 - The app's age rating is **18+**, and the app independently enforces a
   minimum age of 18 at registration via server-side date-of-birth validation.
-- Responsible-gambling signposting (BeGambleAware) is presented in the app.
+- Responsible-gambling signposting (GambleAware.org and the National Gambling
+  Helpline) is presented in the app.
 
 **4. Data rights.**
 Odds and betslip links are licensed via our subscription to The Odds API

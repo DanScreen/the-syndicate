@@ -94,12 +94,12 @@ export default async function AboutPage() {
             We encourage setting limits, never chasing losses, and seeking help if gambling stops
             being fun. Visit{" "}
             <a
-              href={COMPLIANCE.begambleawareUrl}
+              href={COMPLIANCE.gambleawareUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="text-accent hover:underline"
             >
-              {COMPLIANCE.begambleawareLabel}
+              {COMPLIANCE.gambleawareLabel}
             </a>{" "}
             or call <strong className="text-foreground">{COMPLIANCE.helplineNumber}</strong>.
           </p>

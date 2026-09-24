@@ -122,12 +122,12 @@ export function AccaSummary({
         <p className="text-xs leading-snug text-muted">
           {COMPLIANCE.betslipDisclosure}{" "}
           <a
-            href={COMPLIANCE.begambleawareUrl}
+            href={COMPLIANCE.gambleawareUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="text-accent hover:underline"
           >
-            {COMPLIANCE.begambleawareLabel}
+            {COMPLIANCE.gambleawareLabel}
           </a>
           .
         </p>
