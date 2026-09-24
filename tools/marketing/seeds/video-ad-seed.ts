@@ -262,6 +262,7 @@ async function main() {
       dateOfBirth: new Date(m.dob),
       passwordHash,
       role: "user",
+      emailVerifiedAt: new Date(),
     };
     users[m.key] = await prisma.user.upsert({
       where: { email: emailFor(m.key) },
