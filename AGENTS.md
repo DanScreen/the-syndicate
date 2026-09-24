@@ -80,6 +80,8 @@ npm run test:e2e         # Playwright golden path etc. — builds the app, wipes
 
 CI (`.github/workflows/ci.yml`) runs lint, typecheck, tests against Postgres and the Playwright E2E suite on every PR. Run them locally before pushing, and run `test:e2e` when you change a user flow.
 
+**After merging a PR:** GitHub deletes the remote branch automatically; delete the local one yourself. PRs are squash-merged, so `git branch -d` won't see it as merged. Confirm the PR shows as merged (`gh pr view <n> --json state`), then `git branch -D <branch>`. In a worktree, `git checkout --detach` first, since a checked-out branch can't be deleted.
+
 See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for GCP setup.
 
 **Infrastructure:** All durable GCP resources (including Cloud Scheduler) live in [`infra/terraform/`](infra/terraform/) — not manual `gcloud`. App images and releases use `deploy.yml`.
