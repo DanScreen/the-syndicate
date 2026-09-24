@@ -99,8 +99,8 @@ flowchart LR
 **Consensus rules for goal-based markets** (90-minute score):
 
 1. **Admin lock wins** (unchanged).
-2. **Two-source agreement (C2).** At least 2 observations agree on terminal status and 90' score, and none disagree. Timing is unchanged: the FT score must be stable for 1h, capped at 4h. A faster confirmation for agreed results is open decision 5.
-3. **Single source (C1).** Only one provider covers the match: today's rule applies (stable 1h, 4h cap). This is the rule every match uses today, because today there's only one feed.
+2. **Two-source agreement (C2).** At least 2 observations agree on terminal status and 90' score, and none disagree. Timing: the FT score must be stable for 15 min, capped at 4h (was 1h until 24 Sep 2026 — see decision 5).
+3. **Single source (C1).** Only one provider covers the match: same timing (stable 15 min, 4h cap).
 4. **Disagreement.** Hold. If it's still unresolved at the 4h cap, run the AI resolver (§3.5):
    - If its answer matches one side **and** cites ≥2 independent publishers, that side wins.
    - Otherwise the match goes to the admin queue with every observation and the AI evidence shown side by side.
@@ -493,7 +493,7 @@ Catalogue fields: `apiFootballLeagueId?`, `fixtureSource?` (§3.6). Quote fields
 | 2 | The Odds API plan after Phase 3 | Current plan until a month of metered usage fits 20K |
 | 3 | Cards settlement convention ([ODDS_PROVIDERS #4](../ODDS_PROVIDERS.md#5-open-decisions)) | Manual |
 | 4 | Offer goalscorer markets (Phase 3b) | Not before Phase 3 ships |
-| 5 | Faster confirmation when two sources agree (e.g. 20 min instead of 1h) | Off; decide after a month of observation data |
+| 5 | Faster confirmation when two sources agree (e.g. 20 min instead of 1h) | **Decided 2026-09-24 (owner):** window cut to 15 min for every match, one source or two. Leg outcomes are written provisionally at the first FT reading; only round settlement waits for confirmation, because a settled round is never reopened (a provisional loss must not bust the acca). The 24h reconcile corrects provisional outcomes |
 | 6 | Can a bookmaker without deeplinks be the recommended acca bookmaker? | **Decided 2026-09-22 (owner): yes.** Deeplinks are low priority |
 | 7 | AI resolver: auto-accept, or suggest-only | Suggest-only until the eval passes |
 | 8 | Kambi public-API experiment | No |

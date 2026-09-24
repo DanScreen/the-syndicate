@@ -23,8 +23,10 @@ function wonLostDeltas(
 
 /**
  * Correct a leg outcome after it was written (wrong feed score, admin override).
- * Adjusts member/user points and won/lost counters by delta, updates the leg,
- * recalculates settled-round P/L, and posts a correction chat message.
+ * Updates the leg and posts a correction chat message. On a settled round it
+ * also adjusts member/user points and won/lost counters by delta and
+ * recalculates P/L; on a locked round nothing has been awarded yet
+ * (`applyRoundSettlement` awards every leg in full), so only the outcome moves.
  *
  * Does not reopen a settled round — early-settle + replacement open rounds stay
  * as they are; only the corrected leg's points and the round's stored P/L move.
@@ -66,6 +68,27 @@ export async function correctLegOutcome(
     }
 
     const previousOutcome = leg.outcome;
+
+    if (leg.round.status === "locked") {
+      await tx.leg.update({
+        where: { id: legId },
+        data: { outcome: newOutcome },
+      });
+      await postLegResultCorrectedMessage(
+        tx,
+        leg,
+        previousOutcome as DecidedOutcome | "pending",
+        newOutcome
+      );
+      return {
+        corrected: true,
+        previousOutcome,
+        outcome: newOutcome,
+        pointsDelta: 0,
+        roundId: leg.roundId,
+      };
+    }
+
     const previewOutcomes = leg.round.legs.map((l) =>
       l.id === legId ? newOutcome : (l.outcome as LegOutcome)
     );

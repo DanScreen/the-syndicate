@@ -2,8 +2,8 @@ import { prisma } from "@tiki-acca/database";
 import { isOutrightFixtureId } from "@tiki-acca/shared";
 
 /** A pending leg is flagged for intervention this long after its scheduled kickoff.
- *  Match duration (~2h) + RESULT_CONFIRMATION_MS (1h after FT) means legs can
- *  legitimately stay pending for ~3h — flag after that. */
+ *  Match duration (~2h, longer with extra time) + RESULT_CONFIRMATION_MS after FT
+ *  means legs can legitimately stay pending for a while — flag after 3h. */
 export const OVERDUE_AFTER_HOURS = 3;
 
 export type SettlementQueueLeg = {
