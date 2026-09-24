@@ -10,12 +10,15 @@ export const POINTS = {
 export const DEFAULT_STAKE_GBP = 10;
 
 /**
- * How long a FINISHED score must remain unchanged before auto-settle writes
- * leg outcomes. football-data.org (and similar feeds) sometimes publish a
- * provisional FT score and correct it minutes later (disallowed goals / VAR).
- * Each feed score change resets this stability clock (`Match.scoreStableSince`).
+ * How long a FINISHED score must remain unchanged before auto-settle settles
+ * a round from it. Leg outcomes are written (provisionally) at the first FT
+ * reading; only the round settlement — acca busted/won, settle notifications,
+ * next round opening — waits, because a settled round is never reopened.
+ * Feeds sometimes publish a provisional FT score and correct it minutes later
+ * (disallowed goals / VAR). Each feed score change resets this stability clock
+ * (`Match.scoreStableSince`).
  */
-export const RESULT_CONFIRMATION_MS = 60 * 60 * 1000;
+export const RESULT_CONFIRMATION_MS = 15 * 60 * 1000;
 
 /**
  * Hard cap from first FINISHED observation (`Match.finishedAt`). Even if the

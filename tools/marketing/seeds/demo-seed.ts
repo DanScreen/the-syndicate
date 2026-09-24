@@ -52,6 +52,7 @@ async function main() {
         dateOfBirth: new Date(u.dob),
         passwordHash,
         role: "user",
+        emailVerifiedAt: new Date(),
       },
     });
     users[u.key] = created;

@@ -17,9 +17,21 @@ import {
 
 export type PendingLeg = { legId: string; reason: string };
 
+/**
+ * `resolved` includes provisional outcomes: legs on a FINISHED match whose FT
+ * score is not yet confirmed. They may be written to the leg (members see the
+ * result straight away; reconcile corrects them if the feed changes), but must
+ * not settle the round — `provisional` lists them, and they also appear in
+ * `pending`.
+ */
 export type ResolveRoundResult =
   | { ready: true; outcomeMap: Map<string, LegOutcome> }
-  | { ready: false; pending: PendingLeg[]; resolved: Map<string, LegOutcome> };
+  | {
+      ready: false;
+      pending: PendingLeg[];
+      resolved: Map<string, LegOutcome>;
+      provisional: Set<string>;
+    };
 
 function cornersPendingReason(leg: Leg, extraTime: boolean, hasStats: boolean): string {
   if (extraTime) {
@@ -37,6 +49,7 @@ export async function resolveRoundOutcomes(
 ): Promise<ResolveRoundResult> {
   const outcomeMap = new Map<string, LegOutcome>();
   const pending: PendingLeg[] = [];
+  const provisional = new Set<string>();
 
   for (const leg of legs) {
     // Outrights have no match behind them and no feed that reports a league
@@ -78,17 +91,6 @@ export async function resolveRoundOutcomes(
       continue;
     }
 
-    // Hold auto-settle until the feed's FT score has been stable long enough
-    // (disallowed goals / VAR corrections reset the stability clock).
-    if (!isMatchResultConfirmed(matchData.match)) {
-      const mins = Math.ceil(RESULT_CONFIRMATION_MS / 60_000);
-      pending.push({
-        legId: leg.id,
-        reason: `Result confirming for ${formatFixtureLabel(leg)} — waiting for FT score to stay unchanged for ${mins}m`,
-      });
-      continue;
-    }
-
     const outcome = resolveLegOutcome(
       {
         marketType: leg.marketType,
@@ -117,10 +119,21 @@ export async function resolveRoundOutcomes(
     }
 
     outcomeMap.set(leg.id, outcome);
+
+    // Provisional until the FT score has been stable long enough (disallowed
+    // goals / VAR corrections reset the stability clock).
+    if (!isMatchResultConfirmed(matchData.match)) {
+      const mins = Math.ceil(RESULT_CONFIRMATION_MS / 60_000);
+      provisional.add(leg.id);
+      pending.push({
+        legId: leg.id,
+        reason: `Result confirming for ${formatFixtureLabel(leg)} — ${outcome} provisionally; round settles once the FT score stays unchanged for ${mins}m`,
+      });
+    }
   }
 
   if (pending.length > 0) {
-    return { ready: false, pending, resolved: outcomeMap };
+    return { ready: false, pending, resolved: outcomeMap, provisional };
   }
 
   return { ready: true, outcomeMap };

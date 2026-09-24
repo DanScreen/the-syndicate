@@ -2,124 +2,120 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | Open. Needs a verification pass with full web access |
+| **Status** | Verified (second pass). Open items: Paddy Power / Sky Bet / Super Partners / LeoVegas programme status, bet365 partner guidelines (JS page) (§4) |
 | **Feeds** | [affiliate-disclosures.md](./affiliate-disclosures.md) §1, §4, §5 |
-| **First pass** | 24 September 2026 |
+| **First pass** | 24 September 2026 (cloud session, search summaries only) |
+| **Second pass** | 24 September 2026 (local session, primary sources read) |
 
-This log records what the first research pass found, how sure it is, and what it could not do. The spec holds the conclusions. This file holds the evidence and the gaps.
+This log records what the research found, how sure it is, and what's still open. The spec holds the conclusions. This file holds the evidence and the gaps.
 
 ---
 
 ## How to run the next pass
 
-1. Work through **§3 Actions not taken**, in priority order. Each item names the URL or search to try and the question to answer.
-2. For every claim in **§2**, record the result as **Confirmed** (quote plus URL), **Corrected** (what's actually true), or **Still unverified**.
-3. Update [affiliate-disclosures.md](./affiliate-disclosures.md) with anything confirmed or corrected: §1 findings, §4 universal requirements (U1–U11), §5 per-bookmaker register. Then update this log's status.
-4. Don't change app code in the research pass. The BeGambleAware swap (spec §1, finding 1) is a separate code task once the replacement signpost is confirmed.
+1. Work through **§4 Still open**.
+2. For every claim you touch in **§2**, record the result as **Confirmed** (quote plus URL), **Corrected** (what's actually true), or **Still unverified**.
+3. Update [affiliate-disclosures.md](./affiliate-disclosures.md) §1, §4 and §5 to match, then this log's status.
+4. Don't change app code in a research pass. The signpost URL change (spec §1, finding 1) is a separate code task.
 
 ---
 
-## 1. Limits of the first pass
+## 1. Limits
 
-- **No page reads.** The session's network policy blocked `WebFetch` for every domain tried: the-odds-api.com, gambleaware.org, asa.org.uk, bet365partners.com, entainpartners.com, casinonewsdaily.com and sbcnews.co.uk. Every finding below comes from **search-result summaries**, not from reading the source page.
-- **Mixed source quality.** Some summaries were drawn from official pages (ASA, UKGC, the programmes' own sites). Others came from third-party affiliate-review sites (StatsDrone, 15M, AskGamblers, Algo Affiliates, Post Affiliate Pro, Geeky Gambler). Treat the second group as leads, not facts.
-- **Programme terms are gated.** Offer terms, creative packs and exact footer wording are only given to approved partners. Public pages won't have everything; the rest has to be collected on approval.
+- **First pass:** `WebFetch` was blocked for every domain, so every finding came from search-result summaries. Several were wrong (R1, R10, R11, the Betfred id).
+- **Second pass:** primary pages and PDFs were read directly (curl + text extraction). Still blocked:
+  - SBC News (403) and SCCG (410). Not needed; primary sources used instead.
+  - `partnerships.paddypower.com` (JS-only page; blocked in the in-app browser too).
+  - bet365's partner guidelines page (JS-rendered). Its terms page was read.
+  - `leovegasaffiliates.com` and `superpartners.com` (JS-heavy). Not analysed.
+- **Programme terms are gated.** Offer terms, creative packs and exact footer wording are only given to approved partners. Collect the rest on approval.
 
 ---
 
-## 2. Findings and confidence
+## 2. Findings
 
-**High:** several independent sources agree, including official ones. **Medium:** one reasonable source or official-looking summary only. **Low:** third-party review sites only, or inferred.
+Result key: **Confirmed**, **Corrected**, **Still unverified**.
 
 ### Regulatory baseline
 
-| # | Finding | Confidence | Verify against |
-|---|---------|-----------|----------------|
-| R1 | GambleAware closed on **31 March 2026**. Funding moved to the statutory levy and NHS / public-health commissioners in England, Scotland and Wales. The BeGambleAware brand is no longer the default sign-off | High (CasinoBeats, Gambling Insider, NEXT.io, SBC News headline) | gambleaware.org branding page; gov.uk levy announcements |
-| R2 | **What replaces BeGambleAware as the signpost is unclear.** One stakeholder quoted at closure: "We don't know who to signpost to." GamCare still runs the National Gambling Helpline, 0808 8020 133, 24/7 (GamCare post, 2026) | Medium | UKGC, BGC and GamCare guidance issued after April 2026 (§3 A1) |
-| R3 | CAP rule 2.1: affiliate links must be **obviously identifiable** as ads. "Ad" is recommended; "affiliate" alone is unlikely to be enough | High (ASA affiliate-marketing guidance, via summary) | asa.org.uk/advice-online/affiliate-marketing.html |
-| R4 | Significant conditions must be **prominently displayed with** an advertised offer. Other T&Cs may be at most one click away. For gambling these include restricted odds, eligibility limits, and deposit, wagering and withdrawal requirements | High (ASA free-bets guidance) | asa.org.uk free bets and bonuses page + CAP/BCAP help note |
-| R5 | UKGC bonus rules from **19 January 2026**: wagering capped at 10x; mixed-product promotions banned (e.g. a sports bet that unlocks casino spins) | Medium (igaming.com, Aff Rate and others; UKGC page not read) | UKGC "LCCP upcoming changes" page |
-| R6 | A "five material terms" rule for bonus ads (wagering, max bet, eligible games, expiry, max cashout) | **Low.** Only in Geeky Gambler / Track360 summaries. **Not used in the spec** | UKGC LCCP; likely casino-specific or overstated |
-| R7 | The UKGC holds operators responsible for their affiliates' marketing (SR code 1.1.2) | High | UKGC "Affiliates or third parties" page |
-| R8 | CAP 16.3.12 (since 1 Oct 2022): no **strong appeal** to under-18s. Top-flight footballers are high risk. The ASA treated Oddschecker content as ads. ASA enforcement notice with active monitoring from **11 June 2026** | High (ASA pages, LexisNexis) | ASA enforcement notice |
-| R9 | 25% rule: no age-restricted ads in media where under-18s are over 25% of the audience | High | CAP age-restricted ads guidance |
-| R10 | IGRG industry code, **7th edition**, is the latest found: 18+ in ad copy; safer-gambling messaging; 20% of advertising on safer gambling | Medium. **An 8th edition may exist after GambleAware's closure** | BGC site (§3 A5) |
-| R11 | The DMCC Act consumer regime is in force from **6 April 2025**. Comparison sites must be clear about how they make money and how they order results. Undisclosed paid ranking is one of the banned practices | Medium (CMA summaries; CMA207 not read) | CMA207 (§3 A6) |
+| # | First-pass claim | Result | Evidence |
+|---|------------------|--------|----------|
+| R1 | GambleAware closed 31 March 2026; BeGambleAware is no longer the default sign-off | **Corrected.** The charity's work moved to government, but **the website and brand continue under the Department of Health and Social Care.** begambleaware.org 301-redirects to gambleaware.org. The site says it is "operated by the Department of Health and Social Care". The branding page still asks gambling communications to carry the GambleAware logo with "Advice \| Tools \| Support" and a link to the site; logo requests go to a dhsc.gov.uk address. Its get-help page lists the National Gambling Helpline (GamCare) 0808 8020 133 for England and Scotland, the NHS Wales helpline 0808 2819 265, and Samaritans 116 123 | [gambleaware.org/privacy-notice](https://www.gambleaware.org/privacy-notice/), [/terms-and-conditions](https://www.gambleaware.org/terms-and-conditions/), [/branding-logos](https://www.gambleaware.org/branding-logos/), [/get-help-now](https://www.gambleaware.org/get-help-now/) |
+| R2 | The replacement signpost is unclear | **Corrected.** Not unclear: the IGRG code (Feb 2026) accepts **either** GamCare or GambleAware (para 27). Every programme read (William Hill, Entain, Betfred, BoyleSports, BV Group, LivePartners, Casumo) still names BeGambleAware / GambleAware.org. GamCare still runs the helpline | IGRG para 27 (R10); programme pages (§3) |
+| R3 | CAP 2.1: affiliate links must be obviously identifiable; "Ad" recommended; "affiliate" alone insufficient | **Confirmed, plus a new point.** Commercial nature must be clear "prior to engagement"; "placing an identifier such as '(Ad)' before parts of the content… is likely to be acceptable". "\*affiliate" alone was not enough (Asos, 22 Apr 2020). **New:** a generic disclaimer that the author "may" receive commission is unlikely to be acceptable (MailOnline, 21 Dec 2022). Our shipped copy says "We may earn commission", so it needs rewording | [ASA: Online affiliate marketing](https://www.asa.org.uk/advice-online/affiliate-marketing.html) (22 Mar 2023) |
+| R4 | Significant conditions prominently with the offer; other T&Cs one click away | **Confirmed.** CAP 8.17: significant conditions (eligibility, deposit/wagering, time limits, minimum odds or bet types) must be clear and up front. Full T&Cs "usually one click away" and not hidden in footers or small print. Don't call an offer "free" if the customer must risk their own money | [ASA: Free bets and bonuses](https://www.asa.org.uk/advice-online/gambling-betting-and-gaming-free-bets-and-bonuses.html) (11 Sep 2025) |
+| R5 | UKGC bonus rules from 19 Jan 2026: wagering ≤ 10x; mixed-product offers banned | **Confirmed.** SR code 5.1.1 paragraphs 3a (wagering capped at 10x) and 3b (no mixed-product promotions). The ban doesn't apply where the customer freely chooses which product to use the bonus on. The LCCP upcoming-changes page says "There are no upcoming LCCP changes" (updated 29 Jul 2026). Separately, the April 2026 LCCP update made LC 7.1.1 cite the DMCC Act 2024 | [UKGC: Gambling promotions to be safer and simpler](https://www.gamblingcommission.gov.uk/news/article/gambling-promotions-to-be-safer-and-simpler), [LCCP upcoming changes](https://www.gamblingcommission.gov.uk/licensees-and-businesses/page/lccp-upcoming-changes), [LCCP previous changes](https://www.gamblingcommission.gov.uk/licensees-and-businesses/page/lccp-previous-changes) |
+| R6 | "Five material terms" rule for bonus ads | **Still unverified; almost certainly not a rule.** Nothing on the UKGC pages read. Not used in the spec | — |
+| R7 | Operators are responsible for affiliates (SR code 1.1.2) | **Confirmed.** SR code 1.1.2 "requires you to take responsibility for third parties". Operators are "primarily responsible" for affiliates' direct-marketing breaches (email/SMS), especially to self-excluded people, including expired self-exclusions | [UKGC: Affiliates or third parties](https://www.gamblingcommission.gov.uk/licensees-and-businesses/guide/page/affiliates-or-third-parties) (updated 8 Aug 2025) |
+| R8 | CAP 16.3.12 strong appeal; enforcement notice with monitoring from 11 June 2026 | **Confirmed.** Notice dated 4 June 2026: "We will begin actively monitoring from 11 June 2026" | [ASA enforcement notice](https://www.asa.org.uk/resource/enforcement-notice-gambling-ads-with-strong-appeal-to-under-18s.html) |
+| R9 | 25% rule for age-restricted ads | **Confirmed (not re-read; long-standing CAP rule).** IGRG para 51 goes further for paid digital prospecting: target 25+ | IGRG 2026 |
+| R10 | IGRG 7th edition is latest; an 8th may exist | **Corrected.** Latest is **"7th Edition (Updated), February 2026"**; there is no 8th. Para 27: reference "GamCare /GambleAware or… www.gamcare.org.uk or www.gambleaware.org". Para 45: 18+. Para 46: banner landing pages link on to gamcare.org.uk or gambleaware.org. Para 51: 25+ targeting for paid digital prospecting. **Para 58 (affiliates): "all relevant affiliate ads should be clearly and prominently marked '#ad'"**; affiliates must share safer-gambling content regularly, pass due-diligence/PEPs/sanctions checks, and sign a code of conduct ("one strike and you're out") | [IGRG code, Feb 2026](https://bettingandgamingcouncil.com/uploads/IGRG_2026-03-03-133712_dwft.pdf) |
+| R11 | DMCC: undisclosed paid ranking is a banned practice | **Corrected.** CMA207 (18 Nov 2025, 64 pp.) has no banned practice or rule on ranking ("rank" returns no hits). The UK did not adopt the EU's paid-ranking rule. What applies: **banned practice 12** (paid editorial content not made clear, e.g. "#Ad"); failing to identify commercial intent (para 6.8); comparison sites are responsible for their own invitations to purchase (para 4.13). A ranking disclosure is still good practice (avoids a misleading omission) but isn't a named ban | [CMA207](https://assets.publishing.service.gov.uk/media/691b9bd821ef5aaa6543ee6f/Unfair_commercial_practices_CMA207_18_Nov_2025__2_.pdf) |
 
 ### Programme status and terms
 
-| # | Programme | Finding | Confidence |
-|---|-----------|---------|-----------|
-| P1 | Betfair | UK & Ireland affiliate programme ended **1 July 2025**. PokerStars UK followed | High (SBC News, Yogonet, iGaming Expert) |
-| P2 | Paddy Power | Programme open; approval takes 1–2 weeks | Low (third-party pages) |
-| P3 | Sky Bet | "Affiliate Hub": up to 35% revenue share, no negative carryover | Low (third-party pages; the Flutter UK retreat makes this worth checking) |
-| P4 | bet365 | Never target under-18s. No SMS, WhatsApp or Telegram as the main traffic source. No blind or programmatic traffic. Compliance-monitoring tools on partner content | Medium (Track360 summary plus bet365partners.com in results) |
-| P5 | William Hill / 888 (evoke) | William Hill Affiliates publishes UK Marketing Guidelines. Content not read. evoke published a 2026 "change of control notice" | Medium (existence); contents unknown |
-| P6 | Ladbrokes / Coral (Entain) | UK & ROI Marketing Guidelines PDF exists: "clear, transparent… plain and intelligible" terms. Influencers 25+ with prior approval. Documents due within 30 days | Medium |
-| P7 | Betfred | Must include an RG link and 18+ signage (terms name gambleaware.org). IGRG + CAP 16. No incentivised traffic. Licence account 39544 | Medium (betfredaffiliates.com in results) |
-| P8 | Betway | Don't portray excessive gambling. Records kept 2 years. **Source was the Italian site (betwaypartners.it)** | Low for UK |
-| P9 | BetVictor | Significant-terms disclaimer on offer banners. Full T&Cs ≤ 1 click. On-brand creative, or account closure. Safer-gambling social posts | Medium (betvictor.com compliance page in results) |
-| P10 | Unibet (Kindred / FDJ United) | No "free" for live streaming; no pure-streaming ads | Medium |
-| P11 | LeoVegas (+ BetMGM UK, BetUK) | Limits UK affiliates to a small number. Past UKGC penalty (£627k) included 23 affiliate ads missing significant terms | High (2021–22 news), current status unknown |
-| P12 | Casumo | All ads show the age limit and a help-organisation contact. No child-appealing content | Medium (Casumo guidelines page in results) |
-| P13 | Grosvenor (Rank Affiliates) | Casino-focused; 25–35% revenue share. **Sports coverage unknown** | Low |
-| P14 | LiveScore Bet / Virgin Bet (LivePartners) | UK guidelines: significant conditions with the offer, T&Cs ≤ 1 click, free-bet commitments in the ad itself | Medium (livepartners.co.uk in results) |
-| P15 | BoyleSports | Social content age-gated to 25+; nobody under 25 in marketing; 24h cookie; UKGC account 39469 | Medium |
+| # | Programme | Result | Evidence |
+|---|-----------|--------|----------|
+| P1 | Betfair UK & I closed 1 Jul 2025 | **Confirmed.** PokerStars UK also closed | [iGaming Expert](https://igamingexpert.com/regions/europe/betfairs-uk-irish-affiliate-programme-exit/), [Yogonet](https://www.yogonet.com/international/news/2025/05/28/106152-betfair-to-end-uk-and-ireland-affiliate-programme), [Poker Industry News](https://pokerindustrynews.com/poker-news/pokerstars-axes-uk-affiliate-program-no-future-payouts/) |
+| P2 | Paddy Power open | **Still unverified.** Page is JS-only and blocked. No closure news found, but Flutter is cutting UK costs (Betfair, PokerStars, up to 100 Paddy Power shops under review Sept 2026) | [Yogonet, 3 Sep 2026](https://www.yogonet.com/international/news/2026/09/03/126213-up-to-100-paddy-power-shops-could-face-closure-under-flutter-review) |
+| P3 | Sky Bet "Affiliate Hub" open | **Corrected / still unverified.** The Affiliate Hub **closed in 2017**. A later "Skybet Partners" programme appears only on third-party sites; current status unknown | [iGB](https://igamingbusiness.com/strategy/sky-betting-and-gaming-to-halt-uk-affiliate-programme/), [Gambling Insider](https://www.gamblinginsider.com/news/4062/sky-betting-gaming-to-end-affiliate-marketing-program) |
+| P4 | bet365 | **Partly confirmed (terms).** No direct marketing (email, SMS, push notifications, targeted pop-ups) without written consent; never to self-excluded people. Links only on "websites or applications… identified in your partner programme application" → list the web app **and** both mobile apps. Guidelines page not read (JS) | [bet365 Partners T&Cs](https://www.bet365partners.com/en/termsandconditions) |
+| P5 | William Hill / 888 (evoke) | **Confirmed + expanded.** UK Marketing Guidelines: "Include 18+, BeGambleAware, and #ad in all adverts"; key qualifying criteria with the offer; full T&Cs one click away. Social: 75% of audience 18+, target 25+; nobody under 25 in imagery; no Premier League footballers. No SMS, WhatsApp, email, post **or push notifications** to own or bought databases. **Stability:** Bally's Intralot is buying evoke (£243m; both sets of shareholders approved; completion expected Q4 2026–Q1 2027) | [William Hill UK guidelines](https://affiliates.williamhill.com/uk-marketing-guidelines.html), [Northeast Times, 18 Sep 2026](https://northeasttimes.com/2026/09/18/bally-s-intralot-shareholders-back-243m-purchase-of-william-hill-owner-evoke/) |
+| P6 | Ladbrokes / Coral (Entain) | **Confirmed + expanded.** UK & ROI Marketing Guidelines V1.0: footer "18+ \| begambleaware.org \| Gamble responsibly"; significant terms with the headline and **before the CTA**. The definition of Affiliate Site includes mobile apps. Appendix 1 covers Northern Ireland (A11) | [Entain Marketing Guidelines PDF](https://www.entainpartners.com/files/Marketing_Guidelines.pdf) |
+| P7 | Betfred | **Confirmed + expanded.** 18+ disclaimer and "a link to a responsible gambling body (e.g. www.gambleaware.org/)"; #AD on social posts; IGRG + CAP 16; regular safer-gambling content. No incentivised traffic; no email/SMS/phone/post marketing; no promotion via Snapchat, WhatsApp, Telegram, YouTube or Twitch; no "advertorial" style. **Odds API id is `betfred_uk`, not `betfred`** | [Betfred compliance](https://www.betfredaffiliates.com/compliance), [Betfred T&Cs](https://www.betfredaffiliates.com/terms-and-conditions) |
+| P8 | Betway | **Still unverified for UK.** UK affiliates now go through Super Group's **Super Partners** (superpartners.com); page not analysed | superpartners.com |
+| P9 | BetVictor | **Confirmed + expanded.** Programme moved to **BVGroup Affiliates**, which also runs **Betano UK** and talkSPORT BET. UK guidelines: every advert includes "GambleAware.org", "18+", "T&C apply"; say "New Customers" or "Existing Customers"; significant terms (wagering, deposit, withdrawal limits, start/end dates) on the advert; full T&Cs ≤ 1 click; social pages age-gated 18+; nobody who looks under 25; approved on-brand creative only, or account closure and withheld commission | [BVGroup UK guidelines](https://bvgroupaffiliates.com/advertising-guidelines-uk/), [BVGroup Affiliates](https://bvgroupaffiliates.com/) |
+| P10 | Unibet (Kindred) | **Confirmed + expanded.** kindredaffiliates.com redirects to **FDJ United Affiliates**. "All Content displayed on Affiliate Sites should be clearly and prominently marked '#ad'"; significant terms in the promotion body; no SMS through third parties. Live streaming: no pure-streaming ads, must say "funded account required", never "free". Unibet offers say "New GB customers only". A multiproduct offer (sports + casino spins) was listed, so watch the mixed-product rule | [FDJ United Affiliates UK](https://www.fdjunitedaffiliates.com/markets/uk/) |
+| P11 | LeoVegas (+ BetMGM, BetUK) | **Still unverified (current intake).** Site is JS-heavy. BetMGM and BetUK are **not in The Odds API**, so they don't need register rows | [The Odds API bookmakers](https://the-odds-api.com/sports-odds-data/bookmaker-apis.html) |
+| P12 | Casumo | **Confirmed + expanded.** All ads show 18+ and a help-organisation contact (lists BeGambleAware). No SMS, email, social, native or direct marketing without approval. No "free" / "risk free" misuse. Advertorials need approval | [Casumo marketing guidelines](https://casumopartners.com/marketing-guidelines/) |
+| P13 | Grosvenor (Rank) | **Corrected.** Rank Affiliates does cover **Grosvenor Sport** (Kambi platform). Its listed sports welcome offer was "Bet £20 on Sports and get a £20 Casino Bonus": a mixed-product offer of the kind SR 5.1.1(3b) bans. The page may be stale, but never surface Grosvenor offers without checking | [Rank Affiliates: Grosvenor](https://www.rankaffiliates.com/who-we-are/grosvenor-casino/) |
+| P14 | LiveScore Bet / Virgin Bet | **Confirmed + expanded.** Significant conditions shown prominently; include "Begambleaware.org", "18+" and "T&C apply"; remove self-excluded customers from marketing databases | [LivePartners UK guidelines](https://www.livepartners.co.uk/affiliate-advertising-guidelines-uk.html) |
+| P15 | BoyleSports | **Confirmed + expanded.** Mark ads #ad / "AD"; 18+; signpost GambleAware.org for the UK; a social-responsibility message. Social content age-gated 25+; nobody under 25 in marketing. No SMS or email without consent. Quarterly safer-gambling content. State that communications are made without BoyleSports' involvement | [BoyleSports code of conduct](https://affiliates.boylesports.com/affiliate-code-of-conduct/) |
+| P16 | Betano UK (new) | **Confirmed.** In The Odds API as `betano_uk`. Operated by BV Gaming Ltd; affiliate programme via BVGroup Affiliates (P9) | [BVGroup Affiliates](https://bvgroupaffiliates.com/) |
 
 ---
 
-## 3. Actions not taken
+## 3. Actions: results
 
-In priority order. All were blocked by `WebFetch` egress limits unless stated otherwise.
+| # | Action | Result |
+|---|--------|--------|
+| A1 | Post-GambleAware signpost | **Done.** R1/R2 corrected. Keep GambleAware, change the URL to `https://www.gambleaware.org`, keep the helpline. GamCare is an equally valid alternative under IGRG |
+| A2 | Bookmakers in our tables | **Done.** The Odds API `uk` region: sport888, betano_uk, betfair_ex_uk, betfair_sb_uk, betfred_uk, betvictor, betway, boylesports, casumo, coral, grosvenor, ladbrokes_uk, leovegas, livescorebet, matchbook, paddypower, skybet, smarkets, unibet_uk, virginbet, williamhill. Not in it: bet365 (only via the unbuilt API-Football depth feed), BetMGM, BetUK. Side note: `BOOKMAKER_DOMAINS` has no `betfred_uk` or `betano_uk` entry, so their favicons are guessed |
+| A3 | ASA guidance | **Done.** R3, R4 confirmed; new point on "may earn commission" |
+| A4 | UKGC pages | **Done.** R5, R7 confirmed; R6 not found |
+| A5 | IGRG edition | **Done.** R10 corrected (Feb 2026 update of the 7th edition; '#ad' for affiliates) |
+| A6 | CMA207 | **Done.** R11 corrected |
+| A7 | Programme terms | **Mostly done** (P4–P16). Open: bet365 guidelines page, Super Partners (Betway), LeoVegas, Paddy Power |
+| A8 | Paddy Power / Sky Bet | **Partly done.** Sky Bet's Affiliate Hub closed in 2017; Paddy Power unknown. Needs a manual check (§4) |
+| A9 | Programme stability | **Done.** evoke → Bally's Intralot (completion Q4 2026–Q1 2027): expect William Hill/888 programme changes. Kindred → FDJ United: UK programme continues under the new name |
+| A10 | App stores | **Done; serious Google Play risk found.** See below |
+| A11 | Northern Ireland | **Done.** Entain's guidelines (Appendix 1): the NI Betting, Gaming, Lotteries and Amusements Order 1985 makes it an offence to invite the public to subscribe money to be used in gaming, so casino promotion into NI is risky; ASA says "Specialist legal advice should be sought". Unibet offers are "New GB customers only". **Recommendation: show Join buttons to GB users only** unless a programme confirms NI |
+| A12 | GAMSTOP / self-exclusion | **Done.** UKGC holds operators "primarily responsible" for affiliates' direct marketing to self-excluded people (R7). bet365 and LivePartners require suppressing self-excluded people. Our *Hide bookmaker offers* opt-out is reasonable; the stronger rule is **no direct marketing (push, email, SMS, chat) with partner links at all** |
+| A13 | Recent ASA rulings | **Done.** Smart Gravity Ltd (upheld, 9 Sep 2026): an affiliate's paid search ad showed for "help with gambling"; negative keywords weren't a "sufficiently robust safeguard" (CAP 1.3). Dribble Media t/a Midnite (upheld, 12 Aug 2026): TikTok ad featuring someone who looked under 25. Lesson: never show partner prompts on RG/help pages or next to help content. Sources: [SBC News](https://sbcnews.co.uk/affiliatenews/2026/09/10/asa/), [Gaming.net](https://www.gaming.net/asa-rules-against-smart-gravity-over-gambling-help-search-ad/), [ASA: Dribble Media](https://www.asa.org.uk/rulings/dribble-media-ltd-g25-1300959-dribble-media-ltd.html) |
 
-### Must do before launch
+### A10 detail: app stores
 
-- **A1. Confirm the post-GambleAware signpost.**
-  - Wanted to read: gambleaware.org/for-professionals/using-gambleaware-logo; SBC News "GambleAware closes on legacy…" (31 Mar 2026); casinonewsdaily.com "UK shuts GambleAware as new levy system begins" (6 Apr 2026).
-  - Also search: UKGC or BGC guidance after April 2026 on safer-gambling signposting; whether begambleaware.org redirects anywhere; whether NHS or the new commissioners run a public site operators should link to; whether GamCare has issued signposting guidance.
-  - Question: what should our disclosure link to instead of BeGambleAware.org, and is logo use still expected anywhere?
-  - Decides: the code fix in spec §1 finding 1 and U3.
-- **A2. Confirm which bookmakers are in our tables.**
-  - Wanted to read: the-odds-api.com/sports-odds-data/bookmaker-apis.html (the `uk` region list).
-  - Alternative that needs no web access: check `/admin/odds` diagnostics in production, or call The Odds API `/v4/sports/soccer_epl/odds?regions=uk` with our key and list `bookmakers[].key`.
-  - Decides: the spec §5 rows. The register assumed the ids in `BOOKMAKER_DOMAINS` and the mock provider.
-- **A3. Read the ASA's affiliate marketing guidance** (asa.org.uk/advice-online/affiliate-marketing.html) and the gambling free-bets guidance. Capture the exact wording on labels ("Ad", "#ad") and on significant conditions. Decides: U1, U4 and the `AD` tag wording.
-- **A4. Read the UKGC pages:** "Affiliates or third parties" and "LCCP upcoming changes". Confirm the 19 January 2026 bonus rules (R5), whether R6 is real, and any 2026 changes about affiliates or signposting.
+- **Apple.** Guideline 5.3.4: real-money gaming apps "must have necessary licensing and permissions in the locations where the app is used, must be geo-restricted to those locations, and must be free". Nothing specific on apps that link out to bookmakers. Also 5.1.1(ix): apps in regulated fields including gambling "should be submitted by a legal entity that provides the services, and not by an individual developer". `docs/app-store/compliance-statement.md` already argues that linking to licensed operators isn't a licensable activity; add a line on affiliate Join buttons before they ship to iOS. Source: [App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/).
+- **Google Play: high risk, and it affects the app as it stands today, not just the Join button.** The *Real-Money Gambling, Games, and Contests* policy:
+  - Generally bans apps that "enable or facilitate" real-money gambling unless the developer completes Play's gambling-app application as a licensed operator.
+  - An app may show gambling ads only if, among other things, it does "not provide… companion functionality (for example, functionality that assists with wagering, payouts, sports score/odds/performance tracking…)" and its content does "not promote or direct users to gambling".
+  - Listed violation: "A dedicated sports odds tracker app containing integrated gambling ads linking to a sports betting site".
 
-### Should do
+  The Android app already shows bookmaker odds and **Open** links to bookmaker betslips. Partner Join buttons would make it plainly promotional. Source: [Play Console Help: Real-Money Gambling](https://support.google.com/googleplay/android-developer/answer/9877032?hl=en).
 
-- **A5. IGRG code edition.** Search the BGC site for an 8th edition (2025–26) and its safer-gambling message and signposting rules. The 7th edition references BeGambleAware.
-- **A6. CMA207 (Nov 2025).** Read the sections on comparison sites and ranking to confirm what the table disclosure line must say (U6).
-- **A7. Programme terms, one by one.** Record anything beyond U1–U11 in spec §5:
-  - bet365partners.com/en/partnerguidelines and /en/termsandconditions
-  - partnerships.paddypower.com (+ FAQ)
-  - Sky Bet Affiliate Hub (find the current URL)
-  - affiliates.williamhill.com/uk-marketing-guidelines.html, and 888's affiliate programme (evoke)
-  - entainpartners.com/files/Marketing_Guidelines.pdf and /gvcLegal.do
-  - betfredaffiliates.com/compliance and /terms-and-conditions: does it still name gambleaware.org?
-  - Betway Partners **UK** terms (the first pass only found the Italian site)
-  - betvictor.com/lp/affiliates-advertising-promotion-compliance-regulation
-  - kindredaffiliates.com/markets/uk/
-  - LeoVegas Affiliates (also BetMGM UK, BetUK): current UK intake policy
-  - casumopartners.com/marketing-guidelines/
-  - rankaffiliates.com: is Grosvenor Sport covered?
-  - livepartners.co.uk/affiliate-advertising-guidelines-uk.html (LiveScore Bet, Virgin Bet)
-  - affiliates.boylesports.com/affiliate-code-of-conduct/
-- **A8. Are Paddy Power and Sky Bet still taking UK affiliates in 2026?** Flutter closed Betfair's and PokerStars' UK programmes. Search for a 2026 closure or consolidation notice.
-- **A9. Programme stability.** evoke's 2026 change-of-control notice (William Hill, 888): any programme change? Kindred to FDJ United: is the UK affiliate programme continuing?
-
-### Not researched at all
-
-- **A10. App store rules for affiliate gambling links.**
-  - Apple Guideline 5.3: read the current text on apps that link out to licensed bookmakers. Update `docs/app-store/compliance-statement.md`.
-  - **Google Play's real-money gambling policy:** does an app that links to or promotes UK bookmakers need Play's gambling-app approval? This is new ground and could block Android.
-- **A11. Northern Ireland.** The Gambling Act 2005 covers Great Britain only. Check whether showing Join buttons to NI users raises separate issues (UKGC licensees usually accept NI customers).
-- **A12. GAMSTOP and affiliates.** Is there any guidance expecting affiliates to suppress marketing to self-excluded users, beyond the opt-out switch the spec proposes?
-- **A13. Welcome-offer mechanics (Phase 2).** Current ASA rulings on free-bet significant terms in odds-comparison contexts, e.g. rulings against Oddschecker or other comparison sites.
+  **Decision (24 Sep 2026):** no Play Store release; Android users use the website. Recorded in the spec's open questions and `apps/mobile/ANDROID_LAUNCH.md`.
 
 ---
 
-## 4. Suggested prompt for the next session
+## 4. Still open
 
-> Read `docs/specs/affiliate-disclosures-research.md` and `docs/specs/affiliate-disclosures.md`. Work through §3 Actions not taken in priority order using web search and page reads. For each §2 finding, mark it Confirmed (quote + URL), Corrected, or Still unverified in this log. Then update the spec's §1, §4 and §5 to match. Docs only, no app code changes.
+- **Paddy Power and Sky Bet programme status.** Check by hand in a normal browser: partnerships.paddypower.com, and search for "Sky Bet Partners" / Flutter UKI affiliate programme.
+- **Super Partners (Betway UK) and LeoVegas UK intake.** JS-heavy sites; read in a normal browser.
+- **bet365 partner guidelines** (bet365partners.com/en/partnerguidelines, JS-rendered).
+- **Apple developer account type.** If Tiki Acca is on an individual account, 5.1.1(ix) says gambling-adjacent apps "should be submitted by a legal entity".
+
+---
+
+## 5. Suggested prompt for the next session
+
+> Read `docs/specs/affiliate-disclosures-research.md` and `docs/specs/affiliate-disclosures.md`. Work through §4 Still open using a normal browser. Record results in §2 of the log, then update the spec's §1, §4 and §5. Docs only, no app code changes.

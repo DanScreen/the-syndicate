@@ -88,12 +88,12 @@ export const copy = {
  */
 export const COMPLIANCE = {
   betslipDisclosure:
-    "18+. Bets are placed with licensed bookmakers, not Tiki Acca. We may earn commission if you sign up or bet via these links. Gamble responsibly:",
+    "18+. Bets are placed with licensed bookmakers, not Tiki Acca. We earn commission from some bookmakers if you sign up or bet via these links. Gamble responsibly:",
   footerTitle: "Gamble responsibly",
   footerBody:
-    "Tiki Acca helps groups coordinate accumulator ideas. We do not take bets or handle money. You place bets directly with licensed bookmakers. We may earn commission if you sign up or bet via bookmaker links.",
-  begambleawareLabel: "BeGambleAware.org",
-  begambleawareUrl: "https://www.begambleaware.org",
+    "Tiki Acca helps groups coordinate accumulator ideas. We do not take bets or handle money. You place bets directly with licensed bookmakers. We earn commission from some bookmakers if you sign up or bet via our links.",
+  gambleawareLabel: "GambleAware.org",
+  gambleawareUrl: "https://www.gambleaware.org",
   helplineName: "National Gambling Helpline",
   helplineNumber: "0808 8020 133",
 } as const;

@@ -8,7 +8,7 @@ import {
   isLegOrientationDirect,
   isLegOrientationReversed,
 } from "@/lib/results/football-data";
-import { isMatchResultConfirmed } from "@/lib/results/result-confirmation";
+import { isResultHeldForReview } from "@/lib/results/result-confirmation";
 import { prisma } from "@tiki-acca/database";
 import { RESULT_RECONCILE_MS, type LegOutcome } from "@tiki-acca/shared";
 import type { Leg, Match, Round } from "@prisma/client";
@@ -121,9 +121,11 @@ export async function reconcileMatchLegOutcomes(
     );
     if (!outcome || outcome === "pending") continue;
 
-    // Hold first-write until the score is confirmed; corrections of already
-    // written outcomes always apply (feed score beat the provisional result).
-    if (leg.outcome === "pending" && !isMatchResultConfirmed(match)) {
+    // First-write is provisional until the score is confirmed —
+    // tryAutoSettleRound only settles the round from confirmed results.
+    // Sources in conflict hold even the first write for an admin; corrections
+    // of already written outcomes always apply.
+    if (leg.outcome === "pending" && isResultHeldForReview(match)) {
       continue;
     }
 

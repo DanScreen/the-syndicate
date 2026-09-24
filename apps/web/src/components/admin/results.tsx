@@ -142,9 +142,9 @@ function MatchOverrideCard({ match }: { match: AdminResultsMatch }) {
           )}
           {confirming && (
             <p className="mt-1 text-xs text-accent">
-              Waiting for FT score to stay unchanged ~{remainingMins}m (VAR /
-              disallowed goals). Late feed corrections still auto-reconcile for
-              24h.
+              Leg outcomes are provisional — rounds settle once the FT score
+              stays unchanged ~{remainingMins}m (VAR / disallowed goals). Late
+              feed corrections still auto-reconcile for 24h.
             </p>
           )}
         </div>

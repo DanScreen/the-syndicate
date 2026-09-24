@@ -20,16 +20,17 @@ describe("result confirmation window", () => {
   });
 
   it("does not confirm a finished match until the stability window elapses", () => {
+    const elapsed = RESULT_CONFIRMATION_MS / 3;
     const match = {
       status: "FINISHED",
-      finishedAt: new Date(now.getTime() - 30 * 60 * 1000),
-      scoreStableSince: new Date(now.getTime() - 30 * 60 * 1000),
+      finishedAt: new Date(now.getTime() - elapsed),
+      scoreStableSince: new Date(now.getTime() - elapsed),
       scoreLocked: false,
     };
     assert.equal(isMatchResultConfirmed(match, now), false);
     assert.equal(
       resultConfirmationRemainingMs(match, now),
-      30 * 60 * 1000
+      RESULT_CONFIRMATION_MS - elapsed
     );
   });
 
@@ -44,16 +45,17 @@ describe("result confirmation window", () => {
   });
 
   it("restarts the wait when the FT score changed recently", () => {
+    const stableFor = RESULT_CONFIRMATION_MS / 3;
     const match = {
       status: "FINISHED",
       finishedAt: new Date(now.getTime() - 90 * 60 * 1000),
-      scoreStableSince: new Date(now.getTime() - 20 * 60 * 1000),
+      scoreStableSince: new Date(now.getTime() - stableFor),
       scoreLocked: false,
     };
     assert.equal(isMatchResultConfirmed(match, now), false);
     assert.equal(
       resultConfirmationRemainingMs(match, now),
-      40 * 60 * 1000
+      RESULT_CONFIRMATION_MS - stableFor
     );
   });
 

@@ -19,8 +19,8 @@ AGE AND RESPONSIBLE GAMBLING
 
 - Sign-up requires date of birth; 18+ is enforced server-side.
 - Age rating is set to 18+.
-- Responsible gambling guidance (BeGambleAware) is shown in the app, with a
-  link to begambleaware.org.
+- Responsible gambling guidance (GambleAware) is shown in the app, with a
+  link to gambleaware.org.
 
 USER-GENERATED CONTENT (GROUP CHAT)
 

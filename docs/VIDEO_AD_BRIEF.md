@@ -314,7 +314,7 @@ better.
 |------|------|-----|
 | **Primary generator** | **Google Veo 3.1** (via Google Flow) | Strongest photorealism and prompt adherence; native 4K landscape *and* portrait; native audio gives usable temp boot/ball/laughter |
 | **Volume + motion** | **Kling 3.0** | Best value per generation; strongest on ball physics, fabric, water spray. Multi-shot storyboard mode holds a look across cuts |
-| **Control shots** | **Runway Gen-4.5** | Motion brush and explicit camera control for the tracking shots and the ball-over-the-fence arc; best reference-driven identity hold |
+| **Control shots** | **Runway Gen-4.5** | Explicit camera control for the tracking shots and the ball-over-the-fence arc; reference-driven identity hold. **Act-Two** (performance capture) for shots 9–10; **Aleph** to fix near-miss clips from any generator (remove a stray logo, relight) instead of regenerating. Verify current feature names and plan tiers before buying |
 | **Character bible (stills)** | **Midjourney** or **Flux** | The eight reference faces — and the profile pictures — *before* any video |
 | **Upscale / cleanup** | **Topaz Video AI** | Rescue soft or low-res generations |
 | **Music** | **Suno** or **Udio** | Owned licence — do not use library music in paid media. Confirm export and commercial terms first (§12) |
@@ -322,6 +322,9 @@ better.
 | **Edit + grade** | **DaVinci Resolve** (free) | Resolve's colour tools pull everything to Floodlight |
 
 Reasonable minimum: one month of Google AI Pro/Ultra plus one Kling or Runway tier.
+
+Ready-to-paste prompts for every still and shot, with a per-shot tool pick, are in
+[`tools/marketing/video-ad/PROMPTS.md`](../tools/marketing/video-ad/PROMPTS.md).
 
 ---
 
@@ -395,6 +398,10 @@ sponsor logos, no text overlays, no young faces, no teenagers`.
    Hands, boots striking the ball, and faces at distance are the common failures.
    **Shot 9 (the treatment) will be the hardest in the film** — three simultaneous
    genuine reactions is much harder than one. Budget extra for it.
+5. **Or drive shot 9 with real performances.** Film three people reacting on a phone
+   and transfer each onto its character with Runway Act-Two, cutting shot 9 as three
+   ~1.3s close-ups instead of one mid shot (same for Kev in shot 10). Shooting guide in
+   [`PROMPTS.md` §5](../tools/marketing/video-ad/PROMPTS.md#5-act-two-driving-videos--shots-9-and-10).
 
 ---
 
@@ -647,7 +654,8 @@ produced on a single £20 month. Check the generator's monthly credit allowance 
 ## 11. Production order
 
 1. **CAP Copy Advice** — script, this brief, a storyboard. Nothing is generated until
-   it comes back.
+   it comes back. Request drafted in
+   [`tools/marketing/video-ad/CAP_COPY_ADVICE_DRAFT.md`](../tools/marketing/video-ad/CAP_COPY_ADVICE_DRAFT.md).
 2. **Kev's character bible.** He carries the ad. Confident face, deflated face, full
    body — and his profile picture. If Kev isn't likeable, nothing else matters.
 3. **Remaining seven characters** — four red in full detail, four blue built lighter.
@@ -678,7 +686,7 @@ produced on a single £20 month. Check the generator's monthly credit allowance 
 | Bookmaker shown on screen — which affiliate partner permits its name | Commercial |
 | Real fixtures and prices for the capture weekend | Edit `scenario.json`, recapture |
 | Betslip leg order — add an `orderBy` to the group API's active-round legs | Product backlog (capture works around it) |
-| Which generator wins shot 9 (Veo vs Kling vs Runway) | Decide after production step 6 |
+| Which approach wins shot 9 (Veo vs Kling prompted, vs Runway Act-Two driven by real performances) | Decide after production step 6 |
 | Music: Suno/Udio export and commercial-use terms; Topaz licensing | Verify before purchase |
 | TikTok UK eligibility for this category | Verify before planning the vertical as the lead |
 | Campaign line: Territory A vs *"Whose leg lost the acca?"* | Test both as paid variants |

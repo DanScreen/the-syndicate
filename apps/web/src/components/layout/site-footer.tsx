@@ -13,12 +13,12 @@ export function GamblingFooter() {
         <p className="mt-3">
           Need support? Visit{" "}
           <a
-            href={COMPLIANCE.begambleawareUrl}
+            href={COMPLIANCE.gambleawareUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="text-accent hover:underline"
           >
-            {COMPLIANCE.begambleawareLabel}
+            {COMPLIANCE.gambleawareLabel}
           </a>{" "}
           or call the {COMPLIANCE.helplineName} on{" "}
           <strong>{COMPLIANCE.helplineNumber}</strong>.

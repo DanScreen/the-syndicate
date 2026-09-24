@@ -2,16 +2,16 @@ import { COMPLIANCE } from "@tiki-acca/shared";
 import { colors } from "@/config";
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 
-function openBeGambleAware() {
-  void Linking.openURL(COMPLIANCE.begambleawareUrl);
+function openGambleAware() {
+  void Linking.openURL(COMPLIANCE.gambleawareUrl);
 }
 
 export function BetslipDisclosure() {
   return (
     <Text style={styles.disclosure}>
       {COMPLIANCE.betslipDisclosure}{" "}
-      <Text style={styles.link} onPress={openBeGambleAware}>
-        {COMPLIANCE.begambleawareLabel}
+      <Text style={styles.link} onPress={openGambleAware}>
+        {COMPLIANCE.gambleawareLabel}
       </Text>
       .
     </Text>
@@ -23,10 +23,10 @@ export function GambleResponsiblyFooter() {
     <View style={styles.footer}>
       <Text style={styles.footerTitle}>{COMPLIANCE.footerTitle}</Text>
       <Text style={styles.footerBody}>{COMPLIANCE.footerBody}</Text>
-      <Pressable onPress={openBeGambleAware}>
+      <Pressable onPress={openGambleAware}>
         <Text style={styles.footerBody}>
           Need support? Visit{" "}
-          <Text style={styles.link}>{COMPLIANCE.begambleawareLabel}</Text> or call the{" "}
+          <Text style={styles.link}>{COMPLIANCE.gambleawareLabel}</Text> or call the{" "}
           {COMPLIANCE.helplineName} on {COMPLIANCE.helplineNumber}.
         </Text>
       </Pressable>

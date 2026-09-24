@@ -51,12 +51,12 @@ Core loop and MVP polish are **shipped**:
 | 2 | **Season readiness (2026–27)** | Mostly ops | Leagues can be enabled via `/admin/competitions` when ready; remaining code: FA Cup + quiet-period empty states (Carabao Cup / EFL Cup and UEFA Nations League shipped, manual settlement) — [specs/season-readiness.md](./specs/season-readiness.md) |
 | 3 | **Live matchday** | Code | Per-leg result push + acca-won push + live round view — [specs/live-matchday.md](./specs/live-matchday.md) |
 | 4 | **Settle-day recap share card** | Code | Auto recap image per settled round; invite loop — [specs/settle-recap-share.md](./specs/settle-recap-share.md) |
-| 5 | **Affiliate links** | Code + ops | Bookmaker affiliate programmes (start applications early — approval takes weeks) — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md) Phase A. Partner button design, disclosure pattern and per-bookmaker requirements: [specs/affiliate-disclosures.md](./specs/affiliate-disclosures.md). **Do now:** swap BeGambleAware (closed 31 Mar 2026) for the National Gambling Helpline |
+| 5 | **Affiliate links** | Code + ops | Bookmaker affiliate programmes (start applications early — approval takes weeks) — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md) Phase A. Partner button design, disclosure pattern and per-bookmaker requirements: [specs/affiliate-disclosures.md](./specs/affiliate-disclosures.md). Research verified 24 Sep 2026 ([log](./specs/affiliate-disclosures-research.md)). Signpost now points at gambleaware.org and commission copy is definite (done 24 Sep 2026). Join buttons: `Ad` tag, GB-only via Cloudflare geo headers |
 | 6 | **Better betslip deeplinks** | Code | Remaining: acca-builder patterns + link-quality audit — [specs/affiliate-and-betslips.md](./specs/affiliate-and-betslips.md) Phase B (hubs/per-leg/CTA honesty shipped) |
 | 7 | **Seasons + public leaderboards** | Code | Season windows, `/leaderboards`, monthly awards — [specs/seasons-and-public-leaderboards.md](./specs/seasons-and-public-leaderboards.md) (supersedes old "public platform leaderboards" item) |
 | 8 | **Streaks & badges** | Code | Light gamification; needs chat for thread moments — [specs/streaks-and-badges.md](./specs/streaks-and-badges.md) |
 | 9 | **GCP cost reduction** | Ops/infra | Cloud SQL ~90% of spend; see [DEPLOYMENT.md](./DEPLOYMENT.md#cost-optimization) |
-| 10 | **Android store submission** | Product | Build/push/Firebase done ([ANDROID_LAUNCH.md](../apps/mobile/ANDROID_LAUNCH.md)); blocked on Play Console ID verification (submitted 2026-07-27), then create app + submit |
+| 10 | ~~**Android store submission**~~ | Product | **Not releasing on Play (decided 24 Sep 2026).** Google Play bars apps that show odds and link to bookmakers unless they're licensed gambling apps, and affiliate links are our income. Android users use the website. Possible later: an Android build with ads instead of bookmaker links — [affiliate-disclosures.md](./specs/affiliate-disclosures.md) finding 6 |
 | 11 | **Expo push setup** | Mobile ops | See checklist below — Android FCM done; iOS APNs still to verify on a production build |
 | 12 | Terraform CI GCS permissions fix | Infra | App deploy unaffected |
 | 13 | **Competitive proof messaging** | Brand/copy | Future secondary theme: **“Think you know football? Prove it. Real picks. Real odds. Real results.”** Keep the social group headline primary; planned uses and guardrails in [MARKETING_BRIEF.md](./MARKETING_BRIEF.md#territory-d--prove-it-competitive-proof-approved-for-future-use) |
@@ -81,11 +81,9 @@ Group-vs-group challenges (needs user density), copy-a-pick between your own gro
 
 ## Mobile apps
 
-Native **iPhone** and **Android** apps via Expo (`apps/mobile/`), targeting **functional parity** with the member-facing website.
+Native **iPhone** app via Expo (`apps/mobile/`), targeting **functional parity** with the member-facing website. The same codebase builds for Android, but **Android isn't being released on Google Play** (decided 24 Sep 2026: Play's gambling policy bars odds + bookmaker links). Android users use the website.
 
-**Status:** EAS project linked at `@the-syndicate/tiki-acca`. **iOS** is live in App Store Connect (submitted, build 5 of version 1.0.0 as of 2026-07-22). **Android** has a production build (`versionCode 3`, Firebase push baked in, finished 2026-07-27) but is not yet submitted to Play — blocked on Google Play Console identity verification (submitted 2026-07-27, pending). See [ANDROID_LAUNCH.md](../apps/mobile/ANDROID_LAUNCH.md) for the full status/checklist.
-
-**Next:** once Play ID verification clears, create the Play Console app, a release service account, and run `npm run submit:android`.
+**Status:** EAS project linked at `@the-syndicate/tiki-acca`. **iOS** is live in App Store Connect (submitted, build 5 of version 1.0.0 as of 2026-07-22). **Android** has a production build (`versionCode 3`, Firebase push baked in, finished 2026-07-27) but **won't be submitted to Play** (see above). [ANDROID_LAUNCH.md](../apps/mobile/ANDROID_LAUNCH.md) keeps the checklist in case an ads-instead-of-links Android build is revisited.
 
 **Release process:** version/build-number distinction, git tagging (`npm run tag:release`), and OTA updates (`eas update`) are documented in [apps/mobile/README.md](../apps/mobile/README.md#versioning).
 

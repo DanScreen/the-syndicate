@@ -50,7 +50,7 @@ flowchart TB
 | **GroupMember** | Membership, group role, group-scoped points, chat `lastReadMessageAt` |
 | **Round** | One acca: group-scoped `betNumber`; open → locked → settled; `legsPerMember` snapshot; `accaBookmakerRankings` JSON at lock |
 | **Leg** | Pick slot (`legIndex` 1..quota) per member: fixture, `competitionId`, market, odds, outcome |
-| **Match** | Canonical fixture result, written by consensus over provider observations; `finishedAt` + `scoreStableSince` (1h stability, 4h max); 24h feed→leg reconcile; `scoreLocked` for admin overrides; `stats` (corners) for stats markets; reused for auto-settle |
+| **Match** | Canonical fixture result, written by consensus over provider observations; `finishedAt` + `scoreStableSince` (provisional leg outcomes at FT; round settles after 15 min stability, 4h max); 24h feed→leg reconcile; `scoreLocked` for admin overrides; `stats` (corners) for stats markets; reused for auto-settle |
 | **MatchObservation** | One provider's latest reading of a Match (football-data.org, API-Football); `resolveMatchConsensus` combines them — [specs/odds-and-results-sourcing.md](./specs/odds-and-results-sourcing.md) |
 | **TeamAlias** | Learned team-name equivalences for mapping provider fixtures onto Matches |
 | **AnalyticsEvent** | Product analytics: `sign_up`, `login`, `page_view` |
