@@ -50,7 +50,9 @@ export async function POST(request: Request) {
         },
       },
       rounds: {
-        create: { status: "open", legsPerMember, betNumber: 1 },
+        // The owner is the only member, so the first acca opens solo like any
+        // other round in a one-member group (see openRound).
+        create: { status: "open", legsPerMember, betNumber: 1, unlimitedLegs: true },
       },
     },
     include: {

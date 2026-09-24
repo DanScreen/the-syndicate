@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
-import { NextResponse } from "next/server";
+import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 import { authConfig } from "@/lib/auth.config";
+import { withoutSessionCookie } from "@/lib/session-cookie";
 
 /**
  * Origin bypass protection: when ORIGIN_AUTH_SECRET is set, only requests
@@ -14,7 +15,7 @@ import { authConfig } from "@/lib/auth.config";
  *
  * Unset ORIGIN_AUTH_SECRET (local dev) disables the check.
  */
-export default NextAuth(authConfig).auth((req) => {
+const authMiddleware = NextAuth(authConfig).auth((req) => {
   const secret = process.env.ORIGIN_AUTH_SECRET;
   if (!secret) return;
 
@@ -25,6 +26,14 @@ export default NextAuth(authConfig).auth((req) => {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 });
+
+// Auth.js re-sends the request's (possibly stale) session cookie on every
+// middleware response; see withoutSessionCookie for why that's dropped.
+export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
+  // Typed as a route handler; as middleware it always resolves to a Response.
+  const response = (await authMiddleware(req, ev as never)) as Response;
+  return withoutSessionCookie(response);
+}
 
 export const config = {
   // Everything except Next.js static assets — the origin check must cover

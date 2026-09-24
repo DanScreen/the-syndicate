@@ -75,9 +75,10 @@ npm run db:generate
 npm run lint             # brand sync check + ESLint (web, mobile, client)
 npm run typecheck        # web, mobile, shared, client
 npm test                 # web + shared + client; web tests need a migrated DATABASE_URL
+npm run test:e2e         # Playwright golden path etc. — builds the app, wipes tiki_acca_e2e
 ```
 
-CI (`.github/workflows/ci.yml`) runs lint, typecheck and tests against Postgres on every PR — run them locally before pushing.
+CI (`.github/workflows/ci.yml`) runs lint, typecheck, tests against Postgres and the Playwright E2E suite on every PR. Run them locally before pushing, and run `test:e2e` when you change a user flow.
 
 See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for GCP setup.
 
@@ -94,6 +95,7 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for GCP setup.
 - Anything both apps need goes in a package, not copied into each app: pure logic, types, derived view state and copy in `packages/shared`; data fetching/state hooks in `packages/client`. Apps keep rendering, navigation and platform APIs only
 - API routes return shared response types: `NextResponse.json(serialized(body) satisfies XResponse)` (`@/lib/api-response`)
 - Tests sit next to the code as `*.test.ts` (node:test); the test scripts glob them, so new files run automatically
+- Browser flows are covered by `apps/web/e2e/*.spec.ts` (Playwright). When a change alters a flow those specs walk, update the spec in the same PR. Specs that settle legs must use their own fixtures (see `e2e/support/fixtures-data.ts`)
 
 ### Web (`apps/web`)
 
