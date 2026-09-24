@@ -29,6 +29,7 @@
     "build:mobile:preview": "npm run build:preview:ios --workspace=@tiki-acca/mobile",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
+    "test:e2e": "npm run test:e2e --workspace=@tiki-acca/web",
     "marketing:appstore": "npm run appstore --workspace=@tiki-acca/marketing"
   },
   "overrides": {

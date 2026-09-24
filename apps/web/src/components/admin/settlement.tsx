@@ -174,6 +174,7 @@ function SettleRoundCard({ round }: { round: SettlementQueueRound }) {
                   setOutcomes((prev) => ({ ...prev, [leg.id]: e.target.value }))
                 }
                 className="rounded border border-border bg-background px-2 py-1 text-sm"
+                aria-label={`Outcome for ${leg.selectionLabel}`}
               >
                 <option value="" disabled>
                   Outcome…

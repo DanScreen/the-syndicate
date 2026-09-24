@@ -1,6 +1,6 @@
 import type { NextAuthConfig } from "next-auth";
 import { NextResponse } from "next/server";
-import { isProtectedPath, verifyEmailHref } from "@/lib/auth-paths";
+import { isProtectedPath, signInHref, verifyEmailHref } from "@/lib/auth-paths";
 
 /**
  * Edge-safe Auth.js config — no Prisma or Node-only imports.
@@ -20,11 +20,16 @@ export const authConfig = {
       // Invite links must be viewable signed-out so we can prompt sign-in/up
       // while preserving `?code=` (see `/groups/join`).
       if (!isProtectedPath(path)) return true;
-      if (!isLoggedIn) return false;
+      const returnTo = `${path}${request.nextUrl.search}`;
+      // Redirect explicitly rather than returning false: middleware wraps its
+      // own handler (the origin check), and Auth.js skips its default sign-in
+      // redirect whenever a handler is passed.
+      if (!isLoggedIn) {
+        return NextResponse.redirect(new URL(signInHref(returnTo), request.nextUrl));
+      }
       // Edge can't reach the DB, so this reads the cookie's copy. The node-side
       // jwt callback refreshes it; API routes re-check against the DB.
       if (auth?.user?.isEmailVerified === false) {
-        const returnTo = `${path}${request.nextUrl.search}`;
         return NextResponse.redirect(new URL(verifyEmailHref(returnTo), request.nextUrl));
       }
       return true;

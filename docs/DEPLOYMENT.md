@@ -38,6 +38,7 @@ flowchart LR
 | IaC | Add `infra/terraform/` for GCP resources | Done |
 | IaC CI | Add `.github/workflows/terraform.yml` | Done |
 | PR checks | Add `.github/workflows/ci.yml` (lint, typecheck, tests) | Done |
+| E2E checks | `e2e` job in `ci.yml`: Playwright against a production build + Postgres service; report and traces uploaded on failure ([CURRENT_STATE → Tests](./CURRENT_STATE.md#tests)) | Done |
 | Health | Add `GET /api/health` for Cloud Run probes | Done |
 | Security | Require `AUTH_SECRET` in production; tighten CORS | Done |
 | Docs | Update README + ARCHITECTURE | Done |

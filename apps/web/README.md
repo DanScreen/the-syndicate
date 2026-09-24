@@ -39,6 +39,7 @@ Run from this directory or via workspace-scoped `npm run <script> --workspace=ap
 - `lint` — ESLint (`eslint.config.mjs`: `next/core-web-vitals` + `next/typescript`)
 - `typecheck` — `tsc --noEmit`
 - `test` — Node test runner over every `src/**/*.test.ts` (no extra framework config; new test files are picked up automatically). Some tests are integration tests against Postgres, so set `DATABASE_URL` (or `.env.local`) to a migrated database first.
+- `test:e2e` — Playwright browser tests in `e2e/` against a production build on port 3100 and a wiped `tiki_acca_e2e` database. Needs Docker Postgres and `npx playwright install chromium`. See [CURRENT_STATE → Tests](../../docs/CURRENT_STATE.md#tests).
 - `email:preview` — regenerates the notification email preview page.
 - `db:maintenance` — runs `scripts/data-maintenance.ts` via `tsx`.
 

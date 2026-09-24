@@ -10,7 +10,8 @@
     "test": "node --env-file-if-exists=.env.local --import tsx --test --test-force-exit \"src/**/*.test.ts\"",
     "db:maintenance": "npx tsx scripts/data-maintenance.ts",
     "typecheck": "tsc --noEmit",
-    "email:preview": "tsx scripts/generate-email-preview.ts"
+    "email:preview": "tsx scripts/generate-email-preview.ts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@tiki-acca/client": "*",
@@ -29,6 +30,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
+    "@playwright/test": "1.61.1",
     "@tailwindcss/postcss": "^4.0.14",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",

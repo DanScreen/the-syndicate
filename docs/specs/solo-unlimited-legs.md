@@ -46,11 +46,16 @@ model Round {
 }
 ```
 
-Set at round-open time when the group has exactly one member. Both creation
-paths need it:
+Set at round-open time when the group has exactly one member. Every creation
+path needs it:
 
 - `apps/web/src/lib/rounds/open-round.ts:36`
 - `apps/web/src/lib/rounds/create-additional-round.ts:74`
+- `apps/web/src/app/api/groups/route.ts` — the group's first round, created
+  inline with the group. The owner is always its only member, so this one
+  is unconditionally `true`. *(Missed in the first cut and found by the E2E
+  suite in September 2026: a new group's first acca locked on the owner's
+  first pick.)*
 
 Both already read the group to snapshot `legsPerMember`; extend those `select`s
 with a member count.
