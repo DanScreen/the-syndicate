@@ -29,24 +29,22 @@ The button goes in the **Compare bookmakers** ranking (`acca-summary.tsx`, mobil
 
 ### Visual
 
-- **Colour: new `partner` token, warm orange `#FF8A3D`** (hover `#FFA566`, text `#1A0D00`). Every current CTA and the rank-1 row use the sky-blue accent. Orange is its complement on the navy background, so the partner button is the only warm, filled control in the table. Contrast with the text is about 8:1. Add the token to `BRAND_COLORS` + `globals.css` and keep them in sync (`npm run check:brand`).
-- **Shape:** a filled pill, larger than the existing outline **Open** pill (min 40px tall on touch), with an external-link arrow. The existing **Open** link stays as the plain bet link.
-- **Placement:** a full-width **partner strip** under the bookmaker row, not squeezed into the row. At 375–400px the row already holds rank, logo, name, odds and **Open**. The strip holds the **Ad** chip, the button, and (when an offer is shown) its significant terms.
-- **Motion:** one soft shine sweep when the strip first scrolls into view, never looping. Disabled under `prefers-reduced-motion`. No pulsing, countdowns or urgency copy (CAP 16, socially responsible).
-- **Label:** `Bet at {Bookmaker}` for a link-only strip. `Claim offer` only when a verbatim offer and its significant terms are present.
+- **Colour: new `partner` token, violet `#A78BFA`** (gradient to `#8B7CF8`, hover `#C4B5FD`, text `#120A2E`, contrast 5.7:1 or better). Violet sits next to the brand's sky blue on the colour wheel, so it matches the theme but is clearly different from every other control (all current CTAs and the rank-1 row use sky blue). A warm orange was tried first and rejected as too far from the theme. Add the token to `BRAND_COLORS` + `globals.css` and keep them in sync (`npm run check:brand`).
+- **Shape:** a filled pill, 70 × 30px, with a 44px-tall tap area. It's the only filled control in the row; **Open** stays an outline.
+- **Placement: in the row, to the right of Open.** The row doesn't grow a second line. To make room, the odds move under the bookmaker name (the row gets about 4px taller). Every row reserves the same 70px Join slot, so the **Open** buttons line up whether or not the bookmaker is a partner. The rank badge is a fixed 38px wide. Long names shorten with "…". Built for 360px+ phones; below that (rows under 280px wide) the logo hides so the name still shows.
+- **Label:** `AD` tag + `Join`. No bookmaker name, so the width is the same on every row. Accessible name: "Join {Bookmaker} (advert, opens in new tab)".
+- **Motion:** one soft shine across the button on load, never looping. Disabled under `prefers-reduced-motion`. No pulsing, countdowns or urgency copy (CAP 16, socially responsible).
+- **Mockup:** [Tiki Acca Partner Button](https://claude.ai/artifact/9ye4n5MvGCzshQb19jVYJi) (private until shared).
 
-### Two variants
+### Offers
 
-| Variant | Shows | Compliance load | Use |
-|---------|-------|-----------------|-----|
-| **A: link only** | `Ad` chip · `Bet at {Bookmaker} ↗` · `18+` | Low. No offer terms to keep current | **Launch with this** |
-| **B: with offer** | A + one-line headline offer + significant terms inline + `Full T&Cs` link | High. Terms must be verbatim and current; a stale term is a breach | Add once admin-managed offer copy exists (Phase 2 below) |
+A welcome offer can't sit in the row, because its significant terms must be shown with it (U4). Launch with the Join button only. If offers come later (admin-managed copy, Phase 2), they get their own block below the table with the terms inline.
 
 ### Guardrails
 
-- **Ranking stays odds-only.** The button never changes the order, the "Best" badge or the primary CTA's bookmaker. Show a table-level line: *"Ranked by combined odds. Partner links don't change the order."* Paid or undisclosed ranking is a banned practice under the DMCC Act 2024 (in force 6 April 2025).
-- **Only for eligible viewers:** signed-in users (DOB-verified 18+ at sign-up) in the UK. Hide the strip on public or marketing pages without an age gate, and outside the UK.
-- **User opt-out:** a *Hide bookmaker offers* switch on `/account` hides all partner strips. This covers users who have self-excluded (GAMSTOP) and don't want to see betting prompts.
+- **Ranking stays odds-only.** The button never changes the order, the "Best" badge or the primary CTA's bookmaker. Show a table-level line: *"18+ · Ranked by combined odds. AD links earn us commission and don't change the order."* Paid or undisclosed ranking is a banned practice under the DMCC Act 2024 (in force 6 April 2025).
+- **Only for eligible viewers:** signed-in users (DOB-verified 18+ at sign-up) in the UK. Hide the button on public or marketing pages without an age gate, and outside the UK.
+- **User opt-out:** a *Hide bookmaker offers* switch on `/account` hides all Join buttons. This covers users who have self-excluded (GAMSTOP) and don't want to see betting prompts.
 - **No partner links in group chat, push or email** until each programme confirms that channel is allowed. bet365, for example, refuses direct-messaging-style traffic (SMS, WhatsApp, Telegram).
 
 ---
@@ -57,8 +55,8 @@ The button goes in the **Compare bookmakers** ranking (`acca-summary.tsx`, mobil
 
 | Layer | Where | Contains | Visibility |
 |-------|-------|----------|-----------|
-| **1. Inline** | On the partner strip | `Ad` chip, `18+`, and for variant B the headline offer plus its **significant terms** | Always visible. Required |
-| **2. Details** | An `ⓘ Terms & how we're paid` toggle on the strip. It opens on click/tap, hover (fine pointers), and keyboard focus | Full-terms link (one click away), operator name and licence line, commission sentence, helpline | On demand |
+| **1. Inline** | On each Join button + one line at the top of the table | `AD` tag on the button. Table line: `18+`, ranked by combined odds, AD links earn us commission and don't change the order | Always visible. Required |
+| **2. Details** | One `How we're paid` toggle in the table line, for the whole table. Opens on click/tap and keyboard | Commission explained, bookmakers are licensed and their T&Cs apply, helpline, link to layer 3 | On demand |
 | **3. Page** | `/affiliate-disclosure` + site footer + app footer | How we make money, how we rank, the partner list, safer-gambling resources | Linked from layer 2 and the footer |
 
 Why hover alone fails:
@@ -77,14 +75,14 @@ These apply whichever bookmaker you partner with. Every programme found requires
 
 | # | Requirement | Source | Our implementation |
 |---|-------------|--------|--------------------|
-| U1 | Label affiliate links as advertising: **"Ad"** (not "affiliate" alone) | CAP 2.1; ASA affiliate-marketing guidance | `Ad` chip on every partner strip |
-| U2 | **18+** on gambling marketing | IGRG code; every programme's terms (e.g. Betfred requires 18+ signage) | `18+` on the strip; already in the betslip disclosure |
+| U1 | Label affiliate links as advertising: **"Ad"** (not "affiliate" alone) | CAP 2.1; ASA affiliate-marketing guidance | `AD` tag on every Join button |
+| U2 | **18+** on gambling marketing | IGRG code; every programme's terms (e.g. Betfred requires 18+ signage) | `18+` in the table disclosure line; already in the betslip disclosure |
 | U3 | **Signpost to safer-gambling support** | IGRG code; programme terms (Betfred: "a link to a responsible gambling body"; Casumo: "contact details to a help-organisation") | National Gambling Helpline 0808 8020 133 / gamcare.org.uk (**replace BeGambleAware**, finding 1) |
-| U4 | **Significant terms next to any offer**, verbatim from the operator. Full T&Cs at most **one click** away | CAP 8 + gambling free-bets guidance; BetVictor, LivePartners and Entain guidelines | Variant B only. Offer copy entered by admin from the programme, never written by us |
+| U4 | **Significant terms next to any offer**, verbatim from the operator. Full T&Cs at most **one click** away | CAP 8 + gambling free-bets guidance; BetVictor, LivePartners and Entain guidelines | Offers block only (Phase 2). Offer copy entered by admin from the programme, never written by us |
 | U5 | **Commission disclosure** ("we may earn commission") | CAP 2.1; DMCC Act (paid endorsements) | Existing `COMPLIANCE.betslipDisclosure` + layer 2 |
 | U6 | **Ranking disclosure**: how results are ordered and how we are paid | DMCC Act 2024 banned practices; CMA guidance (CMA207) | Table line + `/affiliate-disclosure` |
 | U7 | **Approved creative only.** Operator logos and brand assets unaltered | Every programme's brand terms (BetVictor: off-brand creative "can result in account closure and commission held") | Partner logos from each programme's asset pack |
-| U8 | **No strong appeal to under-18s.** No current top-flight footballers or youth-culture imagery near the button | CAP 16.3.12; ASA enforcement notice (active monitoring from 11 June 2026) | Keep the strip text-only plus the operator logo |
+| U8 | **No strong appeal to under-18s.** No current top-flight footballers or youth-culture imagery near the button | CAP 16.3.12; ASA enforcement notice (active monitoring from 11 June 2026) | The button stays text-only |
 | U9 | **Don't target under-18s or self-excluded users.** UK audience only | UKGC LCCP; every programme | Signed-in 18+ users, UK only, *Hide bookmaker offers* opt-out |
 | U10 | **Offers must be UKGC-compliant.** Wagering ≤ 10x, no mixed-product incentives (from 19 Jan 2026) | UKGC LCCP changes | Admin review before an offer goes live |
 | U11 | **No irresponsible framing.** No "guaranteed", "free money" or urgency. No "free" for live streaming (Kindred) | CAP 16; Betway, Kindred terms | Fixed copy templates; no user-editable button text |
@@ -123,20 +121,20 @@ Bookmakers that can appear in our retail tables: The Odds API `uk` region, plus 
 
 ## 6. Build phases
 
-### Phase 1: partner strip, variant A (after the first programme approves)
+### Phase 1: Join button (after the first programme approves)
 
 - [ ] Fix finding 1: swap BeGambleAware for GamCare / National Gambling Helpline in `COMPLIANCE` and the pages listed in finding 1
 - [ ] `partner` colour token in `BRAND_COLORS` + `globals.css`
 - [ ] `isAffiliatePartner(bookmakerId)` server-side (from `AFFILIATE_<ID>_PARAMS`) → `partner: boolean` on `AccaBookmakerRanking` in the group API response
-- [ ] Shared copy in `packages/shared/src/copy.ts`: strip label, `Ad`, ranking line, layer-2 text
-- [ ] Web `PartnerStrip` in `components/group/`; mobile equivalent in `src/components/round/`
-- [ ] Layer-2 details toggle (click/tap/focus, plus hover on fine pointers)
+- [ ] Shared copy in `packages/shared/src/copy.ts`: `Join`, `AD`, table disclosure line, How we're paid text
+- [ ] Web `PartnerJoinButton` in `components/group/` + row layout change in `acca-summary.tsx` (odds under name, fixed Join slot); mobile equivalent in `src/components/round/`
+- [ ] How we're paid toggle (click/tap/keyboard)
 - [ ] `/affiliate-disclosure` page + footer link
 - [ ] UK-only + signed-in gating; *Hide bookmaker offers* preference on `/account`
 - [ ] Partner logos from programme asset packs
 - [ ] Outbound click metric (Phase C of the affiliate spec)
 
-### Phase 2: offers, variant B
+### Phase 2: offers block
 
 - [ ] Admin-managed offer copy per bookmaker (headline, significant terms, full-T&Cs URL, valid-from/to) with an audit trail
 - [ ] Offers expire automatically at `validTo`, so a stale offer never renders
@@ -148,7 +146,7 @@ Bookmakers that can appear in our retail tables: The Odds API `uk` region, plus 
 
 | Question | Notes |
 |----------|-------|
-| Replace or keep the existing **Open** link on partner rows? | A partner strip plus **Open** gives two links to the same bookmaker. Tracking is already appended to **Open**, so the strip could be the only link on partner rows. Decide once we see click data |
+| Keep both **Open** and **Join** on partner rows? | Decided for now: both, side by side in the row. Tracking params are also appended to **Open**, so revisit with click data |
 | Show partner styling on the primary CTA when the best bookmaker is a partner? | Yes, as long as the bookmaker was chosen by odds, not by partnership |
 | Apple Guideline 5.3 with live affiliate links in the iOS app | Update `docs/app-store/compliance-statement.md` before shipping partner buttons to mobile |
 
