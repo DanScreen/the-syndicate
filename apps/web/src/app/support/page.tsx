@@ -109,12 +109,12 @@ export default function SupportPage() {
             . 18+. If gambling stops being fun, free and confidential support is
             available at{" "}
             <a
-              href={COMPLIANCE.begambleawareUrl}
+              href={COMPLIANCE.gambleawareUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="text-accent hover:underline"
             >
-              {COMPLIANCE.begambleawareLabel}
+              {COMPLIANCE.gambleawareLabel}
             </a>
             .
           </p>

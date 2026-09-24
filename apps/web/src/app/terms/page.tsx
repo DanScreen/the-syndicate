@@ -57,12 +57,12 @@ export default function TermsPage() {
             suspend accounts we reasonably believe belong to under-18s. Gambling
             should be fun — if it stops being fun, visit{" "}
             <a
-              href={COMPLIANCE.begambleawareUrl}
+              href={COMPLIANCE.gambleawareUrl}
               className="text-accent hover:underline"
               rel="noopener noreferrer"
               target="_blank"
             >
-              {COMPLIANCE.begambleawareLabel}
+              {COMPLIANCE.gambleawareLabel}
             </a>{" "}
             for free, confidential support.
           </p>

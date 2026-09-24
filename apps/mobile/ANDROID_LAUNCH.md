@@ -1,5 +1,7 @@
 # Android launch — Tiki Acca
 
+> **Not releasing on Google Play (decided 24 Sep 2026).** Play's *Real-Money Gambling* policy bars apps that show odds and send users to betting sites unless they're approved, licensed gambling apps. Its listed violation is "a dedicated sports odds tracker app containing integrated gambling ads linking to a sports betting site". Tiki Acca shows odds and bookmaker betslip links, and those affiliate links are our income, so Android users use the website instead. A later Android build could carry ads instead of bookmaker links, but Play also bars gambling ads in apps that show odds, so those would need to be non-gambling ads or a build without odds. Evidence: [affiliate-disclosures-research.md](../../docs/specs/affiliate-disclosures-research.md) A10. The checklist below is kept for that case.
+
 The mobile app is a single Expo / React Native codebase that builds to **both**
 iOS and Android from the same source. There is **no separate Android app** — Android
 is just the other build target. This doc covers un-pausing Android: building the
@@ -12,7 +14,7 @@ binary, wiring push, and submitting to Google Play.
 | 1 — Build the Android app bundle | **Done.** First production build `versionCode 2` finished 2026-07-25. Rebuilt as `versionCode 3` on 2026-07-27 to bake in Firebase push — finished 2026-07-27 22:58 UTC. Uses EAS-managed keystore `Build Credentials 2rrA7GYzJI (Default)`. |
 | 2 — App Links fingerprint | **Done.** Real SHA-256 from the production keystore is live in `apps/web/public/.well-known/assetlinks.json` (deployed). Still need the **Play App Signing** fingerprint too, once that's known (see step 2 below). |
 | 3 — Push notifications (FCM) | **Done.** `apps/mobile/google-services.json` committed; FCM v1 service account key (`firebase-adminsdk-fbsvc@tiki-acca.iam.gserviceaccount.com`) uploaded and assigned to the project on EAS. |
-| 4 — Submit to Google Play | **Blocked** on Google Play Console ID verification (in progress as of 2026-07-27, pending completion). Nothing else to do until that clears — then create the app, service account, and submit. |
+| 4 — Submit to Google Play | **Cancelled** (24 Sep 2026): see the note at the top. Don't set `MOBILE_RELEASE_PLATFORMS=all`. |
 
 Known non-blocking loose end: uploading/re-checking the FCM v1 key through `eas credentials`'s interactive menu (it has no non-interactive/scriptable mode) accidentally created **6 extra, unused Android keystores** in the EAS project alongside the real default one. They're inert — not referenced by any build, cost nothing — but can be pruned via `eas credentials --platform android` → `Keystore` → `Delete your keystore` if you want to tidy up.
 

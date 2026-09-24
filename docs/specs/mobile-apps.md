@@ -12,6 +12,8 @@
 
 We want **native iPhone (App Store)** and **Android (Play Store)** apps so group members can:
 
+> **Android on Play is off (decided 24 Sep 2026).** Google Play's gambling policy bars apps that show odds and link to bookmakers; Android users use the website. See [affiliate-disclosures.md](./affiliate-disclosures.md) finding 6 and [ANDROID_LAUNCH.md](../../apps/mobile/ANDROID_LAUNCH.md).
+
 - Sign in and manage groups on mobile
 - Pick legs (competition, fixture, market, selection) with the same odds behaviour as the web
 - View locked accas, compare bookmakers, and open betslips at licensed operators
