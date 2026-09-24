@@ -40,10 +40,10 @@
 - [ ] Ensure `/about` and marketing copy remain accurate (not a bookmaker; affiliate relationship stated)
 - [ ] Admin metric (optional): outbound betslip clicks — `AnalyticsEvent` type or admin counter
 
-**Compliance checklist (non-exhaustive):**
+**Compliance checklist (non-exhaustive):** full requirements, partner button design and per-bookmaker register in [affiliate-disclosures.md](./affiliate-disclosures.md).
 
 - [x] 18+ messaging on pages with betslip CTAs (web betslip disclosure line)
-- [x] BeGambleAware link near affiliate CTAs (web) + existing mobile footer
+- [x] BeGambleAware link near affiliate CTAs (web) + existing mobile footer. **Now stale:** GambleAware closed 31 March 2026, see [affiliate-disclosures.md](./affiliate-disclosures.md) §1
 - [ ] No guaranteed winnings / tipster language (align with [BRAND.md](../BRAND.md))
 
 ---
