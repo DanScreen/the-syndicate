@@ -2,8 +2,10 @@ name: Seed demo data
 
 # Manual, on-demand only. Populates the production database with the marketing
 # / App Store reviewer demo account (The Thursday Club, login danny@demo).
-# The seed is idempotent — it deletes any prior demo group + users first — so
-# re-running simply refreshes the demo data. Never runs on push/deploy.
+# The seed is idempotent — it deletes the demo users and every group they own
+# first, in one transaction — so re-running simply refreshes the demo data. It
+# stops without changing anything if a real user has joined a demo-owned group.
+# Never runs on push/deploy.
 on:
   workflow_dispatch:
 

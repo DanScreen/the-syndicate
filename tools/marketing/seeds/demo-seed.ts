@@ -10,6 +10,7 @@ import { prisma } from "@tiki-acca/database";
 import bcrypt from "bcryptjs";
 
 const INVITE_CODE = "DEMO24";
+const DEMO_EMAIL_DOMAIN = "demo.tikiacca.com";
 const PASSWORD = "DemoPass123!";
 
 const day = 24 * 60 * 60 * 1000;
@@ -36,10 +37,33 @@ const round = (n: number) => Math.round(n * 100) / 100;
 async function main() {
   const passwordHash = await bcrypt.hash(PASSWORD, 10);
 
-  // Clean any prior demo group + users so this is idempotent.
-  const existing = await prisma.group.findUnique({ where: { inviteCode: INVITE_CODE } });
-  if (existing) await prisma.group.delete({ where: { id: existing.id } });
-  await prisma.user.deleteMany({ where: { email: { in: USERS.map((u) => u.email) } } });
+  // Clean any prior demo group + users so this is idempotent. Also remove any
+  // other group a demo user owns (e.g. one an App Store reviewer created while
+  // signed in as Danny): Group.ownerId doesn't cascade, so it blocks deleting
+  // the user. Refuse, before deleting anything, if a real user is in one.
+  const emails = USERS.map((u) => u.email);
+  const groups = await prisma.group.findMany({
+    where: { OR: [{ inviteCode: INVITE_CODE }, { owner: { email: { in: emails } } }] },
+    select: { id: true, name: true, inviteCode: true, members: { select: { user: { select: { email: true } } } } },
+  });
+  const shared = groups.filter(
+    (g) =>
+      g.inviteCode !== INVITE_CODE &&
+      g.members.some((m) => !m.user.email.toLowerCase().endsWith(`@${DEMO_EMAIL_DOMAIN}`)),
+  );
+  if (shared.length) {
+    throw new Error(
+      `Demo users own groups with real members; resolve by hand first: ${shared
+        .map((g) => `${g.name} (${g.inviteCode})`)
+        .join(", ")}`,
+    );
+  }
+  await prisma.$transaction([
+    prisma.group.deleteMany({ where: { id: { in: groups.map((g) => g.id) } } }),
+    prisma.user.deleteMany({ where: { email: { in: emails } } }),
+  ]);
+  const others = groups.filter((g) => g.inviteCode !== INVITE_CODE);
+  if (others.length) console.log(`Removed other demo-owned group(s): ${others.map((g) => g.name).join(", ")}`);
 
   const users: Record<string, { id: string }> = {};
   for (const u of USERS) {
