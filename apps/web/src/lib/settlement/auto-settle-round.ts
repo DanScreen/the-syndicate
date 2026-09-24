@@ -53,11 +53,15 @@ export async function tryAutoSettleRound(roundId: string): Promise<AutoSettleRou
 
   const resolved = await resolveRoundOutcomes(round.legs);
   const fromMatches = resolved.ready ? resolved.outcomeMap : resolved.resolved;
+  // Provisional outcomes are written too, so members see results at FT…
   await persistResolvableLegOutcomes(round.legs, fromMatches);
 
+  // …but only confirmed ones can settle the round: a settled round is never
+  // reopened, so a provisional loss must not bust the acca.
+  const provisional = resolved.ready ? new Set<string>() : resolved.provisional;
   const outcomeMap = knownOutcomesForLegs(round.legs, fromMatches);
-  const settleOutcomes = round.legs.map(
-    (l) => outcomeMap.get(l.id) ?? (l.outcome as LegOutcome)
+  const settleOutcomes = round.legs.map((l) =>
+    provisional.has(l.id) ? "pending" : (outcomeMap.get(l.id) ?? (l.outcome as LegOutcome))
   );
 
   if (!roundIsSettleable(settleOutcomes)) {

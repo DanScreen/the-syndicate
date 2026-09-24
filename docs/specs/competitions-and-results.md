@@ -40,7 +40,7 @@ If no single bookmaker covers all legs → best-per-leg combined odds locked at 
 - Sync **bypasses** football-data in-memory cache (`bypassCache: true`) for fresh results every cron run
 - Stores **90-minute (regulation)** scores via `score.regularTime` when extra time is played; `fullTime` only for regular-duration matches (otherwise no 90' score → the feed abstains)
 - **Two sources (Sept 2026):** football-data.org + API-Football readings are stored as `MatchObservation` rows and combined by consensus into `Match` — see [Results sync](#results-sync-as-built) and [odds-and-results-sourcing.md](./odds-and-results-sourcing.md)
-- Stamps `Match.finishedAt` + `Match.scoreStableSince` on first terminal status; auto-settle waits until the FT score is unchanged for `RESULT_CONFIRMATION_MS` (1h), capped by `RESULT_CONFIRMATION_MAX_MS` (4h); feed score changes restart the stability clock; `scoreLocked` admin overrides skip feed overwrites and confirm immediately
+- Stamps `Match.finishedAt` + `Match.scoreStableSince` on first terminal status; leg outcomes are written provisionally at the first FT reading, but a round only settles once the FT score is unchanged for `RESULT_CONFIRMATION_MS` (15 min), capped by `RESULT_CONFIRMATION_MAX_MS` (4h); feed score changes restart the stability clock; `scoreLocked` admin overrides skip feed overwrites and confirm immediately
 - Cron reconciles Match score → leg outcomes for `RESULT_RECONCILE_MS` (24h) after FT so late VAR / disallowed-goal corrections auto-fix settled legs
 - Auto-settle reads from `Match` table via `match-store.ts` (UTC kickoff day matching)
 - Cloud Scheduler: every 5 min UTC in production (`europe-west2`, job `sync-matches`)

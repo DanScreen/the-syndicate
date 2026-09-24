@@ -18,7 +18,7 @@ export default async function AdminResultsPage() {
   return (
     <AdminPageShell
       title="Match results"
-      description={`Override a wrong FT score (locks it against the feed) or correct individual leg outcomes. Auto-settle waits ${confirmMins} minutes after first observing FINISHED so provisional feed scores can correct themselves.`}
+      description={`Override a wrong FT score (locks it against the feed) or correct individual leg outcomes. Leg outcomes are written at the first FT reading; rounds only settle once the FT score has been unchanged for ${confirmMins} minutes, so provisional feed scores can correct themselves.`}
       path="/admin/results"
     >
       <AdminResults matches={matches} />

@@ -31,7 +31,7 @@ export async function POST(request: Request) {
   const sync = footballDataConfigured ? await syncAllCompetitionMatches() : null;
   const apiFootball = apiFootballConfigured ? await syncApiFootballResults() : null;
   // After feed upserts: correct any leg outcomes that still disagree with the
-  // Match score (late VAR / disallowed-goal corrections past the 1h window).
+  // Match score (provisional FT scores, late VAR / disallowed-goal corrections).
   const reconcile = await reconcileRecentMatchOutcomes();
   const kickoffLock = await lockOpenRoundsAtKickoff();
   const autoSettle = await autoSettleLockedRounds();

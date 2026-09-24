@@ -202,9 +202,10 @@ model Match {
   /// First time we observed FINISHED (or equivalent) from the results feed.
   finishedAt     DateTime?
   /// Last time the terminal FT score (homeGoals/awayGoals) changed from the
-  /// feed. Auto-settle waits RESULT_CONFIRMATION_MS after this (capped by
+  /// feed. Leg outcomes are written provisionally at FT; round settlement
+  /// waits RESULT_CONFIRMATION_MS after this (capped by
   /// RESULT_CONFIRMATION_MAX_MS from finishedAt) so VAR / disallowed-goal
-  /// corrections can land before we write outcomes.
+  /// corrections can land before an acca is busted or won.
   scoreStableSince DateTime?
   /// When true, sync will not overwrite status/score — admin override wins.
   scoreLocked    Boolean   @default(false)
