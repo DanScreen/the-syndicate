@@ -1,23 +1,14 @@
 import { useApiFetcher } from "@/api/use-api-fetcher";
 import { GroupNav } from "@/components/group-nav";
 import { ErrorText } from "@/components/ui";
-import { colors, WEB_URL } from "@/config";
+import { colors } from "@/config";
 import {
   copy,
   formatRoundStatusBadge,
 } from "@tiki-acca/shared";
 import { GroupDataProvider, useGroupData } from "@tiki-acca/client";
 import { router, Slot, useLocalSearchParams } from "expo-router";
-import { ActivityIndicator, Pressable, Share, StyleSheet, Text, View } from "react-native";
-
-async function shareInvite(groupName: string, inviteCode: string) {
-  const url = `${WEB_URL}/groups/join?code=${encodeURIComponent(inviteCode)}`;
-  try {
-    await Share.share({ message: copy.invite.shareMessage(groupName, url), url });
-  } catch {
-    // Dismissed or unavailable — nothing to do.
-  }
-}
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 
 function goBackToGroups() {
   router.navigate("/(main)/home");
@@ -56,17 +47,6 @@ function GroupLayoutInner() {
             {formatRoundStatusBadge(data.activeRound?.status ?? data.group.status)}
           </Text>
         </Text>
-        <View style={styles.inviteCard}>
-          <Text style={styles.inviteLabel}>Invite code</Text>
-          <Text style={styles.inviteCode}>{data.group.inviteCode}</Text>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => void shareInvite(data.group.name, data.group.inviteCode)}
-            style={({ pressed }) => [styles.shareButton, pressed && { opacity: 0.7 }]}
-          >
-            <Text style={styles.shareLabel}>{copy.invite.share}</Text>
-          </Pressable>
-        </View>
         <GroupNav />
       </View>
       <View style={styles.content}>
@@ -129,37 +109,5 @@ const styles = StyleSheet.create({
   },
   status: {
     color: colors.accent,
-  },
-  inviteCard: {
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: 12,
-  },
-  inviteLabel: {
-    color: colors.muted,
-    fontSize: 13,
-  },
-  inviteCode: {
-    color: colors.accent,
-    fontSize: 22,
-    fontWeight: "600",
-    letterSpacing: 4,
-    marginTop: 4,
-  },
-  shareButton: {
-    marginTop: 10,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingVertical: 8,
-    alignItems: "center",
-  },
-  shareLabel: {
-    color: colors.text,
-    fontSize: 13,
-    fontWeight: "600",
   },
 });

@@ -24,6 +24,11 @@ export const copy = {
     placeholder: "ABCD1234",
   },
   invite: {
+    tab: "Invite",
+    title: "Invite mates",
+    subtitle: "Anyone with the code or link can join this group.",
+    codeLabel: "Invite code",
+    linkLabel: "Invite link",
     copyLink: "Copy invite link",
     copied: "Copied!",
     share: "Share invite link",

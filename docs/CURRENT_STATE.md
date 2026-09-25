@@ -1,6 +1,6 @@
 # Current state (as-built)
 
-Last updated 24 September 2026 (Playwright end-to-end suite + CI job; fixes it found: a new group's first acca now opens solo, signed-out visits to protected pages redirect to sign-in again, middleware no longer re-sends stale session cookies). Previously 23 September 2026 (email verification: stricter sign-up email checks + confirm-your-email gate on web and mobile; unconfirmed addresses get no notification emails; admin `/admin/unverified` + stale-account cleanup). Previously 19 September 2026 (FT score stability + auto-reconcile for disallowed goals / VAR; group tabs: Bet / Leaderboard / History / Chat). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
+Last updated 25 September 2026 (group invite code + link moved out of the group header into a dedicated **Invite** tab on web and mobile). Previously 24 September 2026 (Playwright end-to-end suite + CI job; fixes it found: a new group's first acca now opens solo, signed-out visits to protected pages redirect to sign-in again, middleware no longer re-sends stale session cookies). Previously 23 September 2026 (email verification: stricter sign-up email checks + confirm-your-email gate on web and mobile; unconfirmed addresses get no notification emails; admin `/admin/unverified` + stale-account cleanup). Previously 19 September 2026 (FT score stability + auto-reconcile for disallowed goals / VAR; group tabs: Bet / Leaderboard / History / Chat). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
 
 Production: **https://www.tikiacca.com** (apex → 301 to www via Cloudflare).
 
@@ -137,7 +137,7 @@ See [ROADMAP.md](./ROADMAP.md) → **Next — backlog**. MVP shipped; validate w
 | Longstanding group Chat tab + Bet-labelled lifecycle messages + reactions (web + mobile) | ✅ |
 | Chat unread badges + batched push preference | ✅ |
 | Chat Report / Block + blocked-members list with Unblock (web + mobile) | ✅ |
-| Mobile: share invite link (native share sheet), home points summary + new-user steps, Performance group filter, share performance / group stats, per-member line chart | ✅ |
+| Mobile: share invite link (native share sheet, on the group **Invite** tab), home points summary + new-user steps, Performance group filter, share performance / group stats, per-member line chart | ✅ |
 
 \*Asian handicap only from exchange bookmakers in current World Cup UK feed — filtered out; handicap UI empty for those fixtures.
 
@@ -232,7 +232,7 @@ Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_
 | `apps/web/src/components/layout/app-nav.tsx` | Header nav (desktop): Home / About / Groups / Performance / Admin / Blog |
 | `apps/web/src/components/layout/mobile-nav.tsx` | Compact hamburger menu below `md` for marketing + app headers |
 | `apps/web/src/app/account/page.tsx` | Account — profile, notification prefs, blocked members (`components/blocked-members.tsx`), sign out, delete (greeting in header links here) |
-| `apps/web/src/components/group/nav.tsx` | Group tabs: Bet / Leaderboard / History / Chat (/ Settings for owners) |
+| `apps/web/src/components/group/nav.tsx` | Group tabs: Bet / Leaderboard / History / Chat / Invite (/ Settings for owners) |
 | `apps/web/src/components/group/layout-client.tsx` | Shared group shell + `GroupDataProvider` |
 
 ---
@@ -279,9 +279,10 @@ Protected routes enforced in `apps/web/src/middleware.ts` / `auth.config.ts`: `/
 | `/groups/[id]/history` | **History** tab — every settled acca with fixtures, markets, outcomes |
 | `/groups/[id]/leaderboard` | **Leaderboard** tab — ranked members + group stats/charts (`GroupStats`); former Performance content |
 | `/groups/[id]/performance` | Redirects → `/groups/[id]/leaderboard` |
+| `/groups/[id]/invite` | **Invite** tab (all members) — invite code, full join link, copy-link button. The group header no longer shows the invite card, so it doesn't take space on every tab |
 | `/groups/[id]/settings` | **Owner** — legs per member (all eligible open bets immediately) + maximum active bets (1–5) |
 
-**Navigation:** Logo + **Social Group Betting** tagline (tagline hidden below `md`). Logo and **Home** → `/`. `AppNav` order: Home → About → Groups → Performance → Admin (admins) → **Blog** (rightmost). Below `md`, inline links collapse into `MobileNav` (hamburger) — signed-out: Home / About / Blog / Sign in / Sign up as peer links; signed-in adds **Account · {firstName}** → `/account`. Desktop greeting **Hi, {firstName}** → `/account` (notifications + sign out). Legacy `/settings/notifications` redirects to `/account#notifications`. Marketing pages use `SessionAwareMarketingHeader` (client `useSession`) so statically generated `/blog` still shows signed-in chrome. Inside a group, `GroupNav` tabs (Bet / Leaderboard / History / Chat / **Settings** for owners) share data via `GroupDataProvider` (fetched once in group layout; polls every 60s while acca locked). Chat unread counts appear on the Chat tab, which polls its permanent group thread every 20 seconds while visible.
+**Navigation:** Logo + **Social Group Betting** tagline (tagline hidden below `md`). Logo and **Home** → `/`. `AppNav` order: Home → About → Groups → Performance → Admin (admins) → **Blog** (rightmost). Below `md`, inline links collapse into `MobileNav` (hamburger) — signed-out: Home / About / Blog / Sign in / Sign up as peer links; signed-in adds **Account · {firstName}** → `/account`. Desktop greeting **Hi, {firstName}** → `/account` (notifications + sign out). Legacy `/settings/notifications` redirects to `/account#notifications`. Marketing pages use `SessionAwareMarketingHeader` (client `useSession`) so statically generated `/blog` still shows signed-in chrome. Inside a group, `GroupNav` tabs (Bet / Leaderboard / History / Chat / **Invite** / **Settings** for owners) share data via `GroupDataProvider` (fetched once in group layout; polls every 60s while acca locked). Chat unread counts appear on the Chat tab, which polls its permanent group thread every 20 seconds while visible.
 
 **Group cards (web + mobile):** one active bet keeps the detailed current betslip. Two or more active bets switch to a compact, action-first overview: up to three **Bet #N** rows with Open / Locked / In play status, pick or settlement progress, the current member's missing-pick warning, and combined odds when available; additional bets collapse into **+N more**. `GET /api/groups` exposes `activeBets` summaries for mobile, and the server-rendered web dashboard uses the same shared display helpers.
 

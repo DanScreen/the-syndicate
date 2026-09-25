@@ -60,15 +60,20 @@ test("two friends go from sign-up to a settled, winning acca", async ({ browser 
   let groupId = "";
   let inviteCode = "";
 
-  await test.step("Alice creates a group and starts a solo acca", async () => {
+  await test.step("Alice creates a group, starts a solo acca and finds the invite", async () => {
     groupId = await createGroup(alicePage, groupName);
     await expect(alicePage.getByText("Build your acca — up to 10 legs")).toBeVisible();
 
+    await submitLeg(alicePage, aliceFixture, alicePick);
+
     const group = await db.group.findUniqueOrThrow({ where: { id: groupId } });
     inviteCode = group.inviteCode;
-    await expect(alicePage.getByText(inviteCode)).toBeVisible();
-
-    await submitLeg(alicePage, aliceFixture, alicePick);
+    await alicePage.getByRole("link", { name: "Invite", exact: true }).click();
+    await expect(alicePage).toHaveURL(`/groups/${groupId}/invite`);
+    await expect(alicePage.getByText(inviteCode, { exact: true })).toBeVisible();
+    await expect(alicePage.getByText(`/groups/join?code=${inviteCode}`)).toBeVisible();
+    await alicePage.getByRole("link", { name: "Bet", exact: true }).click();
+    await expect(alicePage).toHaveURL(`/groups/${groupId}`);
   });
 
   const bobContext = await newActorContext(browser);

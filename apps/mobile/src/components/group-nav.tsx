@@ -1,5 +1,6 @@
 import { colors } from "@/config";
 import { useGroupData } from "@tiki-acca/client";
+import { copy } from "@tiki-acca/shared";
 import { router, useLocalSearchParams, useSegments } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text } from "react-native";
 
@@ -8,6 +9,7 @@ const BASE_TABS = [
   { segment: "leaderboard", label: "Leaderboard" },
   { segment: "history", label: "History" },
   { segment: "chat", label: "Chat" },
+  { segment: "invite", label: copy.invite.tab },
 ] as const;
 
 export function GroupNav() {

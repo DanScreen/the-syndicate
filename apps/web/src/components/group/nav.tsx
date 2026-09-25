@@ -1,5 +1,6 @@
 "use client";
 
+import { copy } from "@tiki-acca/shared";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -35,6 +36,11 @@ export function GroupNav({
       href: `${base}/chat`,
       label: unreadMessageCount > 0 ? `Chat (${unreadMessageCount})` : "Chat",
       active: pathname === `${base}/chat`,
+    },
+    {
+      href: `${base}/invite`,
+      label: copy.invite.tab,
+      active: pathname === `${base}/invite`,
     },
     ...(showSettings
       ? [
