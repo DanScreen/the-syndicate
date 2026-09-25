@@ -35,6 +35,7 @@ export function resetPasswordEmail(params: { resetUrl: string }): EmailDocument 
       // A dead CTA here locks someone out of their account entirely, so the URL
       // is repeated as text rather than living only in the plain-text part.
       ctaFallbackUrl: params.resetUrl,
+      showPreferencesLink: false,
     }),
     text,
   };
@@ -71,6 +72,7 @@ export function verifyEmailEmail(params: { verifyUrl: string; firstName: string 
       ctaUrl: params.verifyUrl,
       // Same as the reset email: a dead CTA would leave the account gated.
       ctaFallbackUrl: params.verifyUrl,
+      showPreferencesLink: false,
     }),
     text,
   };

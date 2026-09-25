@@ -1,4 +1,5 @@
 import { getAdminEmails } from "@/lib/admin/auth";
+import { messageReportedEmail } from "@/lib/admin/email-templates";
 import { requireSession } from "@/lib/api-auth";
 import { sendEmail } from "@/lib/notifications/email";
 import { prisma } from "@tiki-acca/database";
@@ -31,6 +32,7 @@ export async function POST(request: Request, { params }: Params) {
       userId: true,
       body: true,
       user: { select: { name: true } },
+      group: { select: { name: true } },
     },
   });
   if (!message) {
@@ -66,12 +68,18 @@ export async function POST(request: Request, { params }: Params) {
   // Alert moderation (best effort — the stored report is the source of truth).
   const admins = getAdminEmails();
   if (admins.length > 0) {
-    const preview = message.body.slice(0, 200);
+    const doc = messageReportedEmail({
+      messageId: id,
+      authorName: message.user?.name ?? null,
+      groupName: message.group.name,
+      body: message.body,
+      reason: parsed.data.reason ?? null,
+    });
     await sendEmail({
       to: admins,
-      subject: "Tiki Acca — chat message reported",
-      html: `<p>A group chat message by <strong>${message.user?.name ?? "unknown"}</strong> was reported.</p><p>Message: ${preview}</p><p>Reason: ${parsed.data.reason ?? "(none given)"}</p><p>Message id: ${id}</p>`,
-      text: `Reported message ${id} by ${message.user?.name ?? "unknown"}: ${preview}`,
+      subject: doc.subject,
+      html: doc.html,
+      text: doc.text,
     }).catch(() => false);
   }
 

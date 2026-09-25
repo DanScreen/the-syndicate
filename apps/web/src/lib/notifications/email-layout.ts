@@ -52,8 +52,9 @@ type LayoutParams = {
   eyebrow: string;
   title: string;
   bodyHtml: string;
-  ctaLabel: string;
-  ctaUrl: string;
+  /** Omit both for an email with nothing to click through to. */
+  ctaLabel?: string;
+  ctaUrl?: string;
   /**
    * Renders the URL as selectable text under the button. Set it on emails where
    * a non-rendering CTA leaves the recipient with no other route — the raw URL
@@ -62,6 +63,11 @@ type LayoutParams = {
    */
   ctaFallbackUrl?: string;
   footerNote?: string;
+  /**
+   * The "Manage notification preferences" footer link. Turn it off on emails
+   * those preferences don't control (account security, moderation alerts).
+   */
+  showPreferencesLink?: boolean;
 };
 
 /**
@@ -76,8 +82,6 @@ export function renderEmailLayout(params: LayoutParams): string {
   const preheader = escapeHtml(params.preheader);
   const eyebrow = escapeHtml(params.eyebrow);
   const title = escapeHtml(params.title);
-  const ctaLabel = escapeHtml(params.ctaLabel);
-  const ctaUrl = params.ctaUrl;
   const footerNote = params.footerNote
     ? `<p style="margin:0 0 12px;font-size:12px;line-height:1.5;color:${c.muted};">${params.footerNote}</p>`
     : "";
@@ -89,6 +93,30 @@ export function renderEmailLayout(params: LayoutParams): string {
       `<span style="color:${c.accentBright};word-break:break-all;">${escapeHtml(params.ctaFallbackUrl)}</span>` +
       `</p>`
     : "";
+
+  const cta =
+    params.ctaLabel && params.ctaUrl
+      ? `<tr>
+            <td style="padding:20px 28px 28px;" align="left">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="border-radius:8px;background-color:${c.accent};">
+                    <a href="${params.ctaUrl}" style="display:inline-block;padding:12px 22px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:700;color:${c.background};text-decoration:none;">
+                      ${escapeHtml(params.ctaLabel)}
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              ${ctaFallback}
+            </td>
+          </tr>`
+      : `<tr><td style="height:20px;font-size:0;line-height:0;">&nbsp;</td></tr>`;
+  const preferencesLink =
+    params.showPreferencesLink === false
+      ? ""
+      : `<a href="${settingsUrl}" style="color:${c.accentBright};text-decoration:underline;">Manage notification preferences</a>
+                ·
+                `;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -146,20 +174,7 @@ export function renderEmailLayout(params: LayoutParams): string {
               ${params.bodyHtml}
             </td>
           </tr>
-          <tr>
-            <td style="padding:20px 28px 28px;" align="left">
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-                <tr>
-                  <td style="border-radius:8px;background-color:${c.accent};">
-                    <a href="${ctaUrl}" style="display:inline-block;padding:12px 22px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:700;color:${c.background};text-decoration:none;">
-                      ${ctaLabel}
-                    </a>
-                  </td>
-                </tr>
-              </table>
-              ${ctaFallback}
-            </td>
-          </tr>
+          ${cta}
           <tr>
             <td style="padding:20px 28px 28px;border-top:1px solid ${c.border};font-family:Arial,Helvetica,sans-serif;">
               ${footerNote}
@@ -168,9 +183,7 @@ export function renderEmailLayout(params: LayoutParams): string {
                 <a href="https://www.gambleaware.org/" style="color:${c.accentBright};text-decoration:underline;">GambleAware</a>
               </p>
               <p style="margin:0;font-size:12px;line-height:1.5;color:${c.muted};">
-                <a href="${settingsUrl}" style="color:${c.accentBright};text-decoration:underline;">Manage notification preferences</a>
-                ·
-                <a href="${homeUrl}" style="color:${c.muted};text-decoration:underline;">tikiacca.com</a>
+                ${preferencesLink}<a href="${homeUrl}" style="color:${c.muted};text-decoration:underline;">tikiacca.com</a>
               </p>
             </td>
           </tr>
