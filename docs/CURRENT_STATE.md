@@ -1,6 +1,6 @@
 # Current state (as-built)
 
-Last updated 25 September 2026 (group invite code + link moved out of the group header into a dedicated **Invite** tab on web and mobile; group tabs now fit on a phone screen without scrolling). Previously 24 September 2026 (Playwright end-to-end suite + CI job; fixes it found: a new group's first acca now opens solo, signed-out visits to protected pages redirect to sign-in again, middleware no longer re-sends stale session cookies). Previously 23 September 2026 (email verification: stricter sign-up email checks + confirm-your-email gate on web and mobile; unconfirmed addresses get no notification emails; admin `/admin/unverified` + stale-account cleanup). Previously 19 September 2026 (FT score stability + auto-reconcile for disallowed goals / VAR; group tabs: Bet / Leaderboard / History / Chat). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
+Last updated 25 September 2026 (group invite code + link moved out of the group header into a dedicated **Invite** tab on web and mobile; group tabs now fit on a phone screen without scrolling; History tab removed — settled bets load on the Bet tab 3 at a time with **Show more**). Previously 24 September 2026 (Playwright end-to-end suite + CI job; fixes it found: a new group's first acca now opens solo, signed-out visits to protected pages redirect to sign-in again, middleware no longer re-sends stale session cookies). Previously 23 September 2026 (email verification: stricter sign-up email checks + confirm-your-email gate on web and mobile; unconfirmed addresses get no notification emails; admin `/admin/unverified` + stale-account cleanup). Previously 19 September 2026 (FT score stability + auto-reconcile for disallowed goals / VAR; group tabs: Bet / Leaderboard / History / Chat). **This file is the source of truth for agents — update when you ship. Do not rely on chat history.**
 
 Production: **https://www.tikiacca.com** (apex → 301 to www via Cloudflare).
 
@@ -232,7 +232,7 @@ Types: `packages/shared/src/acca.ts`. Migration: `20260710010000_acca_bookmaker_
 | `apps/web/src/components/layout/app-nav.tsx` | Header nav (desktop): Home / About / Groups / Performance / Admin / Blog |
 | `apps/web/src/components/layout/mobile-nav.tsx` | Compact hamburger menu below `md` for marketing + app headers |
 | `apps/web/src/app/account/page.tsx` | Account — profile, notification prefs, blocked members (`components/blocked-members.tsx`), sign out, delete (greeting in header links here) |
-| `apps/web/src/components/group/nav.tsx` | Group tabs: Bet / Leaderboard / History / Chat / Invite (/ Settings for owners) |
+| `apps/web/src/components/group/nav.tsx` | Group tabs: Bet / Leaderboard / Chat / Invite (/ Settings for owners) |
 | `apps/web/src/components/group/layout-client.tsx` | Shared group shell + `GroupDataProvider` |
 
 ---
@@ -275,14 +275,14 @@ Protected routes enforced in `apps/web/src/middleware.ts` / `auth.config.ts`: `/
 | `/admin/odds` | **Admin** — Odds API diagnostics + **Warm odds cache now** (same job as cron) |
 | `/groups/create` | Create group (auth required; legs-per-member picker) |
 | `/groups/join` | Join group — **public**; signed-out shows Sign in / Sign up (keeps `?code=`); signed-in auto-joins when `?code=` present |
-| `/groups/[id]` | **Round** tab — active-bet switcher, new-bet action, multi-leg picker, picks, lock, settle |
-| `/groups/[id]/history` | **History** tab — every settled acca with fixtures, markets, outcomes |
+| `/groups/[id]` | **Bet** tab — active-bet switcher, new-bet action, multi-leg picker, picks, lock, settle; below it the latest 3 settled bets with **Show more** (3 more per press, `useGroupHistory`) |
+| `/groups/[id]/history` | Redirects → `/groups/[id]` (former History tab; settled bets now live on the Bet tab) |
 | `/groups/[id]/leaderboard` | **Leaderboard** tab — ranked members + group stats/charts (`GroupStats`); former Performance content |
 | `/groups/[id]/performance` | Redirects → `/groups/[id]/leaderboard` |
 | `/groups/[id]/invite` | **Invite** tab (all members) — invite code, full join link, copy-link button. The group header no longer shows the invite card, so it doesn't take space on every tab |
 | `/groups/[id]/settings` | **Owner** — legs per member (all eligible open bets immediately) + maximum active bets (1–5) |
 
-**Navigation:** Logo + **Social Group Betting** tagline (tagline hidden below `md`). Logo and **Home** → `/`. `AppNav` order: Home → About → Groups → Performance → Admin (admins) → **Blog** (rightmost). Below `md`, inline links collapse into `MobileNav` (hamburger) — signed-out: Home / About / Blog / Sign in / Sign up as peer links; signed-in adds **Account · {firstName}** → `/account`. Desktop greeting **Hi, {firstName}** → `/account` (notifications + sign out). Legacy `/settings/notifications` redirects to `/account#notifications`. Marketing pages use `SessionAwareMarketingHeader` (client `useSession`) so statically generated `/blog` still shows signed-in chrome. Inside a group, `GroupNav` tabs (Bet / Leaderboard / History / Chat / **Invite** / **Settings** for owners) fit on screen without sideways scrolling on phones (tabs share the row, labels shrink below 360px; mobile app tabs flex and shrink-to-fit the same way) and share data via `GroupDataProvider` (fetched once in group layout; polls every 60s while acca locked). Chat unread counts appear on the Chat tab, which polls its permanent group thread every 20 seconds while visible.
+**Navigation:** Logo + **Social Group Betting** tagline (tagline hidden below `md`). Logo and **Home** → `/`. `AppNav` order: Home → About → Groups → Performance → Admin (admins) → **Blog** (rightmost). Below `md`, inline links collapse into `MobileNav` (hamburger) — signed-out: Home / About / Blog / Sign in / Sign up as peer links; signed-in adds **Account · {firstName}** → `/account`. Desktop greeting **Hi, {firstName}** → `/account` (notifications + sign out). Legacy `/settings/notifications` redirects to `/account#notifications`. Marketing pages use `SessionAwareMarketingHeader` (client `useSession`) so statically generated `/blog` still shows signed-in chrome. Inside a group, `GroupNav` tabs (Bet / Leaderboard / Chat / **Invite** / **Settings** for owners) fit on screen without sideways scrolling on phones (tabs share the row, labels shrink below 360px; mobile app tabs flex and shrink-to-fit the same way) and share data via `GroupDataProvider` (fetched once in group layout; polls every 60s while acca locked). Chat unread counts appear on the Chat tab, which polls its permanent group thread every 20 seconds while visible.
 
 **Group cards (web + mobile):** one active bet keeps the detailed current betslip. Two or more active bets switch to a compact, action-first overview: up to three **Bet #N** rows with Open / Locked / In play status, pick or settlement progress, the current member's missing-pick warning, and combined odds when available; additional bets collapse into **+N more**. `GET /api/groups` exposes `activeBets` summaries for mobile, and the server-rendered web dashboard uses the same shared display helpers.
 
@@ -582,8 +582,8 @@ Recent migrations include `20260923120000_email_verification`, `20260718190000_c
 | `POST /api/groups/[id]/rounds` | Member | Create another open bet when owner cap >1, below cap, and no empty open bet exists |
 | `POST /api/internal/sync-matches` | `CRON_SECRET` | Sync football-data.org + API-Football → `Match` (consensus), lock, auto-settle |
 | `POST /api/internal/warm-odds-cache` | `CRON_SECRET` | Refresh odds DB snapshots |
-| `GET /api/groups/[id]` | Member | Group + all `activeRounds` (round-scoped betslip data) + compatibility `activeRound` + recent settled bets + latest active-leg announcements/reactions + chat unread count |
-| `GET /api/groups/[id]/history` | Member | Full settled bet history (fixtures, markets, outcomes) |
+| `GET /api/groups/[id]` | Member | Group + all `activeRounds` (round-scoped betslip data) + compatibility `activeRound` + latest 3 settled bets (`recentRounds`) and `settledRoundCount` + latest active-leg announcements/reactions + chat unread count |
+| `GET /api/groups/[id]/history` | Member | Settled bets, newest first (fixtures, markets, outcomes). `?limit=1–50&before=<roundId>` pages (`groupHistoryQuerySchema`, `lib/groups/settled-history.ts`); no params returns every settled bet, which older app builds rely on |
 | `GET /api/groups/[id]/stats` | Member | Group summary stats + chart series |
 | `GET /api/groups/[id]/members/[userId]/stats` | Member | Member breakdown + favourites |
 | `GET /api/user/stats` | Session | Cross-group performance stats |

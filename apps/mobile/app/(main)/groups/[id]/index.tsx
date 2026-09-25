@@ -24,7 +24,6 @@ import {
   removeLeg,
   useGroupData,
 } from "@tiki-acca/client";
-import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -40,7 +39,6 @@ import {
 } from "react-native";
 
 export default function GroupRoundScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const fetcher = useApiFetcher();
   const { data, error, reload } = useGroupData();
@@ -476,8 +474,9 @@ export default function GroupRoundScreen() {
       {data.recentRounds && data.recentRounds.length > 0 ? (
         <View style={styles.section}>
           <RoundHistory
-            rounds={data.recentRounds}
-            onViewAll={() => router.push(`/(main)/groups/${id}/history`)}
+            groupId={data.group.id}
+            recentRounds={data.recentRounds}
+            settledRoundCount={data.settledRoundCount}
           />
         </View>
       ) : null}

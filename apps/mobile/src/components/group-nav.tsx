@@ -7,7 +7,6 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 const BASE_TABS = [
   { segment: "index", label: "Bet" },
   { segment: "leaderboard", label: "Leaderboard" },
-  { segment: "history", label: "History" },
   { segment: "chat", label: "Chat" },
   { segment: "invite", label: copy.invite.tab },
 ] as const;

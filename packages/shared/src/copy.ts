@@ -35,6 +35,12 @@ export const copy = {
     shareMessage: (groupName: string, url: string) =>
       `Join ${groupName} on Tiki Acca and add your pick to our acca: ${url}`,
   },
+  history: {
+    title: "Settled bets",
+    showMore: "Show more",
+    loadingMore: "Loading…",
+    loadFailed: "Couldn't load more bets. Try again.",
+  },
   group: {
     notFound: "Group not found or you are not a member.",
     loadFailed: "Failed to load group",

@@ -28,11 +28,6 @@ export function GroupNav({
       active: pathname === `${base}/leaderboard`,
     },
     {
-      href: `${base}/history`,
-      label: "History",
-      active: pathname === `${base}/history`,
-    },
-    {
       href: `${base}/chat`,
       label: unreadMessageCount > 0 ? `Chat (${unreadMessageCount})` : "Chat",
       active: pathname === `${base}/chat`,

@@ -364,7 +364,11 @@ export default function GroupRoundPage() {
         />
       )}
 
-      <RoundHistory rounds={data.recentRounds} groupId={group.id} />
+      <RoundHistory
+        groupId={group.id}
+        recentRounds={data.recentRounds}
+        settledRoundCount={data.settledRoundCount}
+      />
     </div>
   );
 }

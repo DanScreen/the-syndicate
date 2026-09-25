@@ -84,7 +84,7 @@ Platform admins (`ADMIN_EMAILS`) see an **Admin** tab in the header with `/admin
 - [x] Unit-stake points + leaderboard
 - [x] Group stats + member stats (charts, favourites)
 - [x] Cross-group Performance page + share cards
-- [x] Split layout: Groups home, group tabs (Bet / Leaderboard / History / Chat / Invite)
+- [x] Split layout: Groups home, group tabs (Bet / Leaderboard / Chat / Invite); settled bets sit under the current bet on the Bet tab, 3 at a time with **Show more**
 - [x] Marketing homepage + about page (Turf Green brand)
 - [x] Platform admin dashboard + leaderboards (admin-only)
 - [x] Points-first stats with stake → profit converter

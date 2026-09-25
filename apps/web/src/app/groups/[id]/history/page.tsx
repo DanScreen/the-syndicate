@@ -1,49 +1,11 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { GroupBetHistory } from "@/components/group/history";
-import { useGroupData } from "@tiki-acca/client";
-import type { GroupHistoryResponse, HistoryRound } from "@tiki-acca/shared";
-import { useEffect, useState } from "react";
+type Props = {
+  params: Promise<{ id: string }>;
+};
 
-export default function GroupHistoryPage() {
-  const { data } = useGroupData();
-  const [rounds, setRounds] = useState<HistoryRound[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!data?.group.id) return;
-    let cancelled = false;
-    setLoading(true);
-    fetch(`/api/groups/${data.group.id}/history`)
-      .then(async (res) => {
-        if (!res.ok) throw new Error("Failed to load history");
-        return (await res.json()) as GroupHistoryResponse;
-      })
-      .then((json) => {
-        if (!cancelled) setRounds(json.rounds);
-      })
-      .catch(() => {
-        if (!cancelled) setRounds([]);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [data?.group.id]);
-
-  if (!data) return null;
-
-  return (
-    <section>
-      <h2 className="text-lg font-semibold">Bet History</h2>
-      <p className="mt-1 text-sm text-muted">
-        Every settled acca for this group: fixtures, markets, and outcomes.
-      </p>
-      <div className="mt-4">
-        <GroupBetHistory rounds={rounds} loading={loading} />
-      </div>
-    </section>
-  );
+/** Former group History tab — settled bets now load on the Bet tab. */
+export default async function GroupHistoryRedirect({ params }: Props) {
+  const { id } = await params;
+  redirect(`/groups/${id}`);
 }

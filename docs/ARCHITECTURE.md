@@ -100,7 +100,7 @@ Each group has one permanent polling thread in a dedicated web/mobile Chat tab. 
 - **Header:** Logo + “Social Group Betting” tagline; `AppNav` — Home → About → Groups → Performance → Admin (admins) → Blog (rightmost); greeting **Hi, {name}** → `/account`; logo + Home → `/`
 - **Marketing chrome:** `SessionAwareMarketingHeader` (`useSession`) so force-static `/blog` still shows signed-in `AppHeader`
 - **Group shell:** `groups/[id]/layout.tsx` + `GroupDataProvider` — shared fetch for sub-pages; polls every 60s while any acca is locked
-- **Group tabs:** Round (`/groups/[id]`), Chat, History, Leaderboard, Performance, Settings (owner)
+- **Group tabs:** Bet (`/groups/[id]`, with paged settled-bet history), Leaderboard, Chat, Invite, Settings (owner)
 - **Locked round:** per-leg outcome badges (Won/Lost/Awaiting) → locked combined odds + bookmaker → betslip CTA until first result, then tracking only (no bookmaker comparison)
 
 → [CURRENT_STATE.md](./CURRENT_STATE.md#web-pages)
