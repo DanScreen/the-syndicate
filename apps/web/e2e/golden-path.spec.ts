@@ -68,6 +68,11 @@ test("two friends go from sign-up to a settled, winning acca", async ({ browser 
 
     const group = await db.group.findUniqueOrThrow({ where: { id: groupId } });
     inviteCode = group.inviteCode;
+    // Every tab fits on screen, owner's Settings included — no sideways scroll.
+    const groupTabs = alicePage.locator("nav").filter({
+      has: alicePage.getByRole("link", { name: "Invite", exact: true }),
+    });
+    expect(await groupTabs.evaluate((nav) => nav.scrollWidth <= nav.clientWidth)).toBe(true);
     await alicePage.getByRole("link", { name: "Invite", exact: true }).click();
     await expect(alicePage).toHaveURL(`/groups/${groupId}/invite`);
     await expect(alicePage.getByText(inviteCode, { exact: true })).toBeVisible();
