@@ -225,7 +225,7 @@ User preferences: `/account` (web), mobile Account screen. Legacy `/settings/not
 
 Omit either email variable to skip emails (no-op).
 
-Templates: Turf Green branded HTML in `apps/web/src/lib/notifications/templates.ts` + `email-layout.ts`. Logo asset: `apps/web/public/brand/email-logo.png` (served at `/brand/email-logo.png`). Local preview: `apps/web/scripts/preview-notification-emails.html` (git-ignored; regenerate with `npm run email:preview --workspace=@tiki-acca/web`).
+Templates: Turf Green branded HTML, all rendered through `renderEmailLayout` in `apps/web/src/lib/notifications/email-layout.ts`. Notifications are in `notifications/templates.ts`, account emails in `lib/auth-email-templates.ts`, and the admin chat-report alert in `lib/admin/email-templates.ts`. New emails get a template in one of these, never inline HTML. Logo asset: `apps/web/public/brand/email-logo.png` (served at `/brand/email-logo.png`). Local preview: `apps/web/scripts/preview-notification-emails.html` (git-ignored; regenerate with `npm run email:preview --workspace=@tiki-acca/web`; it covers every template).
 
 ### Deliverability (avoid junk / spam)
 

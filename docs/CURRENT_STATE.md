@@ -388,7 +388,9 @@ Members can change **their own leg** via `PATCH /api/legs/[id]` while the round 
 | `apps/web/src/lib/notifications/channels/` | Email + Expo push adapters |
 | `apps/web/src/lib/notifications/email.ts` | Resend client (HTML + plain text + `List-Unsubscribe`) |
 | `apps/web/src/lib/notifications/templates.ts` | Branded lock / settle / reminder copy + HTML |
-| `apps/web/src/lib/notifications/email-layout.ts` | Turf Green email shell, logo, CTAs |
+| `apps/web/src/lib/notifications/email-layout.ts` | Turf Green email shell, logo, optional CTA, prefs link (off for non-notification emails). **Every email renders through it**; never send hand-written HTML |
+| `apps/web/src/lib/auth-email-templates.ts` | Confirm-email and password-reset emails |
+| `apps/web/src/lib/admin/email-templates.ts` | Admin alert for a reported chat message (escapes the reported text) |
 | `apps/web/public/brand/email-logo.png` | Triangle rondo disc for email clients |
 | `apps/web/src/components/notification-settings.tsx` | Web preferences UI |
 | `apps/mobile/src/notifications/register.ts` | Push permission + token registration |
