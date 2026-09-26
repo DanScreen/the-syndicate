@@ -54,6 +54,9 @@ export const DEFAULT_LEGS_PER_MEMBER: LegsPerMember = 1;
  */
 export const SOLO_MAX_LEGS = 10;
 
+/** Settled bets shown on the Bet tab at first, and added by each "Show more". */
+export const HISTORY_PAGE_SIZE = 3;
+
 /** Owner-selectable cap for simultaneous open or locked bets. */
 export const MAX_ACTIVE_BETS_OPTIONS = [1, 2, 3, 4, 5] as const;
 export type MaxActiveBets = (typeof MAX_ACTIVE_BETS_OPTIONS)[number];

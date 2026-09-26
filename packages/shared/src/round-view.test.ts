@@ -78,6 +78,7 @@ function group(rounds: ActiveRound[], overrides: Partial<GroupDetailResponse["gr
     legAnnouncements: [],
     isOwner: true,
     recentRounds: [],
+    settledRoundCount: 0,
   };
   return data;
 }

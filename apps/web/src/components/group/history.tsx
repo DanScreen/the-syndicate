@@ -1,6 +1,6 @@
 "use client";
 
-import { formatOdds } from "@tiki-acca/shared";
+import { copy, formatOdds } from "@tiki-acca/shared";
 
 import { PointsText, pointsTextClass } from "@/components/points-text";
 import {
@@ -11,7 +11,8 @@ import {
   type HistoryRound,
   type LegOutcome,
 } from "@tiki-acca/shared";
-import Link from "next/link";
+import { apiFetcher } from "@/lib/api-client";
+import { useGroupHistory } from "@tiki-acca/client";
 import { formatKickoff, legOutcomeLabel } from "@tiki-acca/shared";
 
 function legOutcomeClass(outcome: string): string {
@@ -96,28 +97,28 @@ export function HistoryRoundCard({ round }: { round: HistoryRound }) {
   );
 }
 
+/** The Bet tab's settled bets: latest page first, "Show more" loads older ones. */
 export function RoundHistory({
-  rounds,
   groupId,
+  recentRounds,
+  settledRoundCount,
 }: {
-  rounds: HistoryRound[];
-  groupId?: string;
+  groupId: string;
+  recentRounds: HistoryRound[];
+  settledRoundCount: number;
 }) {
+  const { rounds, hasMore, loadingMore, error, loadMore } = useGroupHistory({
+    groupId,
+    fetcher: apiFetcher,
+    recentRounds,
+    settledRoundCount,
+  });
+
   if (rounds.length === 0) return null;
 
   return (
     <section className="mt-8">
-      <div className="flex flex-wrap items-end justify-between gap-2">
-        <h2 className="text-lg font-semibold">Recent Settled Bets</h2>
-        {groupId ? (
-          <Link
-            href={`/groups/${groupId}/history`}
-            className="text-sm text-accent hover:underline"
-          >
-            Full history
-          </Link>
-        ) : null}
-      </div>
+      <h2 className="text-lg font-semibold">{copy.history.title}</h2>
       <ul className="mt-4 space-y-4">
         {rounds.map((round) => (
           <li key={round.id}>
@@ -125,36 +126,17 @@ export function RoundHistory({
           </li>
         ))}
       </ul>
+      {error ? <p className="mt-3 text-sm text-danger">{error}</p> : null}
+      {hasMore ? (
+        <button
+          type="button"
+          onClick={() => void loadMore()}
+          disabled={loadingMore}
+          className="mt-4 w-full rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-card disabled:opacity-60"
+        >
+          {loadingMore ? copy.history.loadingMore : copy.history.showMore}
+        </button>
+      ) : null}
     </section>
-  );
-}
-
-export function GroupBetHistory({
-  rounds,
-  loading,
-}: {
-  rounds: HistoryRound[];
-  loading?: boolean;
-}) {
-  if (loading) {
-    return <p className="text-sm text-muted">Loading bet history…</p>;
-  }
-
-  if (rounds.length === 0) {
-    return (
-      <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted">
-        No settled bets yet. History appears after your first round is settled.
-      </div>
-    );
-  }
-
-  return (
-    <ul className="space-y-4">
-      {rounds.map((round) => (
-        <li key={round.id}>
-          <HistoryRoundCard round={round} />
-        </li>
-      ))}
-    </ul>
   );
 }

@@ -111,6 +111,15 @@ export const updateGroupSettingsSchema = z.object({
   { message: "At least one group setting is required" }
 );
 
+/**
+ * `GET /api/groups/[id]/history` paging. Without `limit` every settled bet is
+ * returned (older app builds rely on that); `before` is the last round id shown.
+ */
+export const groupHistoryQuerySchema = z.object({
+  before: z.string().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(50).optional(),
+});
+
 export const joinGroupSchema = z.object({
   inviteCode: z.string().min(6).max(12),
 });

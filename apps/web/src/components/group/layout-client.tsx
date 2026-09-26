@@ -1,6 +1,5 @@
 "use client";
 
-import { CopyInviteButton } from "@/components/layout/site-footer";
 import { GroupNav } from "@/components/group/nav";
 import { AppHeader } from "@/components/layout/header";
 import { apiFetcher } from "@/lib/api-client";
@@ -9,22 +8,12 @@ import { greetingFirstName } from "@/lib/user-display";
 import { formatRoundStatusBadge } from "@tiki-acca/shared";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { useSession } from "next-auth/react";
 
 function GroupShell({ groupId, children }: { groupId: string; children: React.ReactNode }) {
   const { data: session } = useSession();
   const { data, loading, error } = useGroupData();
-  const [inviteUrl, setInviteUrl] = useState("");
-
-  useEffect(() => {
-    if (data?.group.inviteCode) {
-      setInviteUrl(
-        `${window.location.origin}/groups/join?code=${data.group.inviteCode}`
-      );
-    }
-  }, [data?.group.inviteCode]);
-
   if (loading || !data) {
     return (
       <div className="flex min-h-screen items-center justify-center text-muted">
@@ -41,23 +30,14 @@ function GroupShell({ groupId, children }: { groupId: string; children: React.Re
           ← All groups
         </Link>
 
-        <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold">{data.group.name}</h1>
-            <p className="mt-1 text-sm text-muted">
-              {data.group.memberCount} members ·{" "}
-              <span className="text-accent">
-                {formatRoundStatusBadge(data.activeRound?.status ?? data.group.status)}
-              </span>
-            </p>
-          </div>
-          <div className="w-full max-w-xs rounded-xl border border-border bg-card px-4 py-3 text-sm">
-            <p className="text-muted">Invite code</p>
-            <p className="font-mono text-lg tracking-widest text-accent">
-              {data.group.inviteCode}
-            </p>
-            {inviteUrl && <CopyInviteButton inviteUrl={inviteUrl} />}
-          </div>
+        <div className="mt-4">
+          <h1 className="text-2xl font-bold">{data.group.name}</h1>
+          <p className="mt-1 text-sm text-muted">
+            {data.group.memberCount} members ·{" "}
+            <span className="text-accent">
+              {formatRoundStatusBadge(data.activeRound?.status ?? data.group.status)}
+            </span>
+          </p>
         </div>
 
         <GroupNav

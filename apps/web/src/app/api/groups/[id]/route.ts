@@ -2,6 +2,7 @@ import { requireSession } from "@/lib/api-auth";
 import { serialized } from "@/lib/api-response";
 import { serializeMessage } from "@/lib/chat/serialize";
 import { mapHistoryRound } from "@/lib/groups/map-history-round";
+import { SETTLED_ROUND_ORDER } from "@/lib/groups/settled-history";
 import { buildRoundBetslipLinks } from "@/lib/odds/betslip-links";
 import {
   computeAccaRankingsForLegs,
@@ -21,6 +22,7 @@ import type {
   RoundStatus,
 } from "@tiki-acca/shared";
 import {
+  HISTORY_PAGE_SIZE,
   allMembersFilledQuota,
   countLegsByUser,
   effectiveLegQuota,
@@ -221,13 +223,14 @@ export async function GET(_request: Request, { params }: Params) {
     });
   }
 
-  const [recentSettled, settledForLeaderboard] = await Promise.all([
+  const [recentSettled, settledRoundCount, settledForLeaderboard] = await Promise.all([
     prisma.round.findMany({
       where: { groupId: id, status: "settled" },
-      orderBy: [{ settledAt: "desc" }, { createdAt: "desc" }],
-      take: 3,
+      orderBy: SETTLED_ROUND_ORDER,
+      take: HISTORY_PAGE_SIZE,
       include: recentRoundInclude,
     }),
+    prisma.round.count({ where: { groupId: id, status: "settled" } }),
     prisma.round.findMany({
       where: { groupId: id, ...statsRoundWhere },
       include: { legs: true },
@@ -327,6 +330,7 @@ export async function GET(_request: Request, { params }: Params) {
       ),
       isOwner: membership.role === "owner",
       recentRounds: recentSettled.map(mapHistoryRound),
+      settledRoundCount,
     }) satisfies GroupDetailResponse
   );
 }
