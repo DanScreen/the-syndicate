@@ -4,6 +4,8 @@
  * Usage (from repo root, with DATABASE_URL pointing at target DB):
  *   npx tsx apps/web/scripts/data-maintenance.ts preview-solo-rounds --email you@example.com
  *   npx tsx apps/web/scripts/data-maintenance.ts remove-solo-rounds --email you@example.com --execute
+ *   npx tsx apps/web/scripts/data-maintenance.ts delete-groups --group-ids <id,id> --execute --backup groups.json
+ *   npx tsx apps/web/scripts/data-maintenance.ts move-round --round-id <cuid> --to-group <inviteCode|id> [--keep-source-numbers] --execute
  *   npx tsx apps/web/scripts/data-maintenance.ts preview-resettle --round-id <cuid>
  *   npx tsx apps/web/scripts/data-maintenance.ts resettle-round --round-id <cuid> --execute
  *   npx tsx apps/web/scripts/data-maintenance.ts find-rounds --teams Norway England
@@ -108,7 +110,7 @@ function describeRound(round: RoundWithLegs): string {
         `${l.homeTeam} vs ${l.awayTeam} (${l.selectionLabel} @ ${l.odds}, ${l.outcome}, ${l.pointsAwarded} pts)`
     )
     .join("; ");
-  return `[${round.id}] group="${round.group.name}" status=${round.status} legs=${round.legs.length} — ${legs}`;
+  return `[${round.id}] group="${round.group.name}" bet=#${round.betNumber ?? "?"} status=${round.status} legs=${round.legs.length} — ${legs}`;
 }
 
 async function previewSoloRounds(email: string) {
@@ -159,6 +161,248 @@ async function removeSoloRounds(email: string) {
 
   await reconcilePoints(true);
   console.log("Done.");
+}
+
+/**
+ * Move a settled bet to another group the leg owners belong to — for a solo
+ * acca placed in a shared group by mistake. User totals are unchanged (same
+ * legs); the per-group member points and W/L counters move with the bet.
+ *
+ * Bet numbers stay chronological in the destination (later bets shift up by
+ * one) and the gap left in the source closes (later bets shift down) unless
+ * --keep-source-numbers is passed. Chat labels read `round.betNumber` live, so
+ * they follow the renumbering.
+ */
+async function moveRound(roundId: string, toGroup: string, keepSourceNumbers: boolean) {
+  const round = await prisma.round.findUnique({
+    where: { id: roundId },
+    include: {
+      legs: { include: { user: { select: { email: true, name: true } } } },
+      group: { select: { name: true } },
+    },
+  });
+  if (!round) throw new Error(`No round ${roundId}`);
+  if (round.status !== "settled") {
+    throw new Error(`Round is ${round.status} — only settled rounds can be moved`);
+  }
+  if (round.betNumber === null) throw new Error("Round has no betNumber");
+
+  const destination = await prisma.group.findFirst({
+    where: { OR: [{ id: toGroup }, { inviteCode: toGroup }] },
+    include: { members: { select: { userId: true } } },
+  });
+  if (!destination) throw new Error(`No group with id or invite code ${toGroup}`);
+  if (destination.id === round.groupId) throw new Error("Round is already in that group");
+
+  const destinationMemberIds = new Set(destination.members.map((m) => m.userId));
+  const outsiders = [...new Set(round.legs.filter((l) => !destinationMemberIds.has(l.userId)).map((l) => l.user.email))];
+  if (outsiders.length > 0) {
+    throw new Error(`Leg owners not in "${destination.name}": ${outsiders.join(", ")}`);
+  }
+
+  const destinationRounds = await prisma.round.findMany({
+    where: { groupId: destination.id, betNumber: { not: null } },
+    select: { id: true, betNumber: true, createdAt: true },
+    orderBy: { betNumber: "desc" },
+  });
+  const newBetNumber =
+    Math.max(
+      0,
+      ...destinationRounds.filter((r) => r.createdAt < round.createdAt).map((r) => r.betNumber!)
+    ) + 1;
+  const destinationShifts = destinationRounds.filter((r) => r.betNumber! >= newBetNumber);
+
+  const sourceShifts = keepSourceNumbers
+    ? []
+    : await prisma.round.findMany({
+        where: { groupId: round.groupId, betNumber: { gt: round.betNumber } },
+        select: { id: true, betNumber: true },
+        orderBy: { betNumber: "asc" },
+      });
+
+  const legIds = round.legs.map((l) => l.id);
+  const messageWhere: Prisma.RoundMessageWhereInput = {
+    groupId: round.groupId,
+    OR: [{ roundId: round.id }, { legId: { in: legIds } }],
+  };
+  const messageCount = await prisma.roundMessage.count({ where: messageWhere });
+  // Reactions from source-group members who can't see the destination chat.
+  const strayReactionWhere: Prisma.MessageReactionWhereInput = {
+    message: messageWhere,
+    userId: { notIn: [...destinationMemberIds] },
+  };
+  const strayReactionCount = await prisma.messageReaction.count({ where: strayReactionWhere });
+
+  console.log(`Move ${describeRound(round)}`);
+  console.log(`  to group "${destination.name}" (${destination.id}) as bet #${newBetNumber}`);
+  for (const leg of round.legs) {
+    const counter = leg.outcome === "won" ? ", legsWon 1" : leg.outcome === "lost" ? ", legsLost 1" : "";
+    console.log(`  member ${leg.user.email}: move ${leg.pointsAwarded} pts${counter}`);
+  }
+  console.log(
+    destinationShifts.length > 0
+      ? `  "${destination.name}" bets #${destinationShifts.at(-1)!.betNumber}–#${destinationShifts[0]!.betNumber} shift up by one`
+      : `  no "${destination.name}" bets renumbered`
+  );
+  console.log(
+    sourceShifts.length > 0
+      ? `  "${round.group.name}" bets #${sourceShifts[0]!.betNumber}–#${sourceShifts.at(-1)!.betNumber} shift down by one`
+      : `  no "${round.group.name}" bets renumbered`
+  );
+  console.log(`  ${messageCount} chat system message(s) move with it`);
+  if (strayReactionCount > 0) {
+    console.log(`  ${strayReactionCount} reaction(s) on them from non-members of "${destination.name}" are deleted`);
+  }
+
+  if (!execute) {
+    console.log("\nDry run only. Pass --execute to move the round.");
+    return;
+  }
+
+  await prisma.$transaction(async (tx) => {
+    // Re-check inside the transaction so a concurrent change can't be moved twice.
+    const claim = await tx.round.updateMany({
+      where: { id: round.id, groupId: round.groupId, status: "settled" },
+      data: { betNumber: null },
+    });
+    if (claim.count === 0) throw new Error("Round changed since preview — re-run");
+
+    for (const leg of round.legs) {
+      const won = leg.outcome === "won" ? 1 : 0;
+      const lost = leg.outcome === "lost" ? 1 : 0;
+      await tx.groupMember.update({
+        where: { groupId_userId: { groupId: round.groupId, userId: leg.userId } },
+        data: {
+          points: { decrement: leg.pointsAwarded },
+          legsWon: { decrement: won },
+          legsLost: { decrement: lost },
+        },
+      });
+      await tx.groupMember.update({
+        where: { groupId_userId: { groupId: destination.id, userId: leg.userId } },
+        data: {
+          points: { increment: leg.pointsAwarded },
+          legsWon: { increment: won },
+          legsLost: { increment: lost },
+        },
+      });
+    }
+
+    // (groupId, betNumber) is unique: shift descending to open the slot,
+    // and ascending to close the gap.
+    for (const r of destinationShifts) {
+      await tx.round.update({ where: { id: r.id }, data: { betNumber: r.betNumber! + 1 } });
+    }
+    for (const r of sourceShifts) {
+      await tx.round.update({ where: { id: r.id }, data: { betNumber: r.betNumber! - 1 } });
+    }
+
+    await tx.round.update({
+      where: { id: round.id },
+      data: {
+        groupId: destination.id,
+        betNumber: newBetNumber,
+        unlimitedLegs: destination.members.length === 1,
+      },
+    });
+
+    await tx.messageReaction.deleteMany({ where: strayReactionWhere });
+    await tx.roundMessage.updateMany({ where: messageWhere, data: { groupId: destination.id } });
+    await tx.notificationLog.updateMany({
+      where: { roundId: round.id },
+      data: { groupId: destination.id },
+    });
+  });
+
+  console.log("Moved.");
+}
+
+/**
+ * Delete whole groups (e.g. test groups created in prod) with every bet, leg
+ * and chat message in them. Settled legs are first reversed out of each
+ * member's User totals, so personal stats no longer count them; the
+ * group-scoped stats go with the group. --execute requires --backup <file>,
+ * a JSON dump of every deleted row.
+ */
+async function deleteGroups(groupIds: string[], backupPath: string | undefined) {
+  const groups = await prisma.group.findMany({
+    where: { id: { in: groupIds } },
+    include: {
+      owner: { select: { email: true } },
+      members: { include: { user: { select: { email: true, name: true } } } },
+      rounds: { include: { legs: true }, orderBy: { betNumber: "asc" } },
+      messages: { include: { reactions: true, reports: true } },
+    },
+  });
+  const missing = groupIds.filter((id) => !groups.some((g) => g.id === id));
+  if (missing.length > 0) throw new Error(`No group(s) with id ${missing.join(", ")}`);
+
+  const roundIds = groups.flatMap((g) => g.rounds.map((r) => r.id));
+  const notificationWhere: Prisma.NotificationLogWhereInput = {
+    OR: [{ groupId: { in: groupIds } }, { roundId: { in: roundIds } }],
+  };
+  const notificationLogs = await prisma.notificationLog.findMany({ where: notificationWhere });
+
+  const emailByUser = new Map(groups.flatMap((g) => g.members.map((m) => [m.userId, m.user.email])));
+  const userImpact = new Map<string, { points: number; won: number; lost: number }>();
+
+  for (const group of groups) {
+    const statuses = group.rounds.map((r) => r.status);
+    const count = (s: string) => statuses.filter((x) => x === s).length;
+    console.log(`"${group.name}" [${group.id}] owner=${group.owner.email}`);
+    console.log(`  members: ${group.members.map((m) => `${m.user.name} <${m.user.email}>`).join(", ")}`);
+    console.log(
+      `  bets: ${group.rounds.length} (${count("settled")} settled, ${count("locked")} locked, ${count("open")} open), ` +
+        `legs: ${group.rounds.reduce((n, r) => n + r.legs.length, 0)}, chat messages: ${group.messages.length}`
+    );
+    for (const round of group.rounds) {
+      if (round.status !== "settled") continue;
+      for (const leg of round.legs) {
+        const impact = userImpact.get(leg.userId) ?? { points: 0, won: 0, lost: 0 };
+        impact.points += leg.pointsAwarded;
+        if (leg.outcome === "won") impact.won += 1;
+        if (leg.outcome === "lost") impact.lost += 1;
+        userImpact.set(leg.userId, impact);
+      }
+    }
+  }
+
+  console.log(`\nRemoved from personal totals (User.totalPoints / legsWon / legsLost):`);
+  for (const [userId, impact] of userImpact) {
+    console.log(
+      `  ${emailByUser.get(userId) ?? userId}: ${Number(impact.points.toFixed(2))} pts, ${impact.won}W, ${impact.lost}L`
+    );
+  }
+  console.log(`${notificationLogs.length} notification log row(s) deleted with them.`);
+
+  if (!execute) {
+    console.log("\nDry run only. Pass --execute --backup <file.json> to delete.");
+    return;
+  }
+  if (!backupPath) throw new Error("--backup <file.json> is required with --execute");
+
+  const { writeFileSync } = await import("node:fs");
+  writeFileSync(
+    backupPath,
+    JSON.stringify(
+      { exportedAt: new Date().toISOString(), groups: groups.map((g) => ({ ...g, owner: undefined })), notificationLogs },
+      null,
+      2
+    )
+  );
+  console.log(`\nBackup written to ${backupPath}`);
+
+  await prisma.$transaction(async (tx) => {
+    for (const group of groups) {
+      for (const round of group.rounds) await reverseSettledRound(tx, round);
+    }
+    await tx.notificationLog.deleteMany({ where: notificationWhere });
+    // Cascades members, rounds, legs, chat messages, reactions and reports.
+    const deleted = await tx.group.deleteMany({ where: { id: { in: groupIds } } });
+    if (deleted.count !== groupIds.length) throw new Error("Groups changed since preview — re-run");
+  });
+
+  console.log(`Deleted ${groups.length} group(s).`);
 }
 
 async function findRoundsByTeams(teamA: string, teamB: string) {
@@ -809,6 +1053,19 @@ async function main() {
       await removeSoloRounds(email);
       break;
     }
+    case "move-round": {
+      const roundId = argValue("--round-id");
+      const toGroup = argValue("--to-group");
+      if (!roundId || !toGroup) throw new Error("--round-id and --to-group required");
+      await moveRound(roundId, toGroup, process.argv.includes("--keep-source-numbers"));
+      break;
+    }
+    case "delete-groups": {
+      const ids = argValue("--group-ids");
+      if (!ids) throw new Error("--group-ids required (comma-separated)");
+      await deleteGroups([...new Set(ids.split(",").map((id) => id.trim()).filter(Boolean))], argValue("--backup"));
+      break;
+    }
     case "find-rounds": {
       const teams = process.argv.slice(3).filter((a) => !a.startsWith("--"));
       if (teams.length < 2) throw new Error("Usage: find-rounds <teamA> <teamB>");
@@ -874,7 +1131,7 @@ async function main() {
     default:
       console.error(`Unknown command: ${command ?? "(none)"}`);
       console.error(
-        "Commands: preview-solo-rounds, remove-solo-rounds, find-rounds, preview-resettle, resettle-round, preview-duplicate-markets, fix-duplicate-markets, reconcile-points, rescore-member-legs, resync-matches, preview-leg-announcements, backfill-leg-announcements, preview-line-keys, fix-line-keys, preview-stale-unverified, delete-stale-unverified"
+        "Commands: preview-solo-rounds, remove-solo-rounds, delete-groups, move-round, find-rounds, preview-resettle, resettle-round, preview-duplicate-markets, fix-duplicate-markets, reconcile-points, rescore-member-legs, resync-matches, preview-leg-announcements, backfill-leg-announcements, preview-line-keys, fix-line-keys, preview-stale-unverified, delete-stale-unverified"
       );
       process.exit(1);
   }
