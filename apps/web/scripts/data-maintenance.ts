@@ -4,6 +4,7 @@
  * Usage (from repo root, with DATABASE_URL pointing at target DB):
  *   npx tsx apps/web/scripts/data-maintenance.ts preview-solo-rounds --email you@example.com
  *   npx tsx apps/web/scripts/data-maintenance.ts remove-solo-rounds --email you@example.com --execute
+ *   npx tsx apps/web/scripts/data-maintenance.ts delete-groups --group-ids <id,id> --execute --backup groups.json
  *   npx tsx apps/web/scripts/data-maintenance.ts move-round --round-id <cuid> --to-group <inviteCode|id> [--keep-source-numbers] --execute
  *   npx tsx apps/web/scripts/data-maintenance.ts preview-resettle --round-id <cuid>
  *   npx tsx apps/web/scripts/data-maintenance.ts resettle-round --round-id <cuid> --execute
@@ -314,6 +315,94 @@ async function moveRound(roundId: string, toGroup: string, keepSourceNumbers: bo
   });
 
   console.log("Moved.");
+}
+
+/**
+ * Delete whole groups (e.g. test groups created in prod) with every bet, leg
+ * and chat message in them. Settled legs are first reversed out of each
+ * member's User totals, so personal stats no longer count them; the
+ * group-scoped stats go with the group. --execute requires --backup <file>,
+ * a JSON dump of every deleted row.
+ */
+async function deleteGroups(groupIds: string[], backupPath: string | undefined) {
+  const groups = await prisma.group.findMany({
+    where: { id: { in: groupIds } },
+    include: {
+      owner: { select: { email: true } },
+      members: { include: { user: { select: { email: true, name: true } } } },
+      rounds: { include: { legs: true }, orderBy: { betNumber: "asc" } },
+      messages: { include: { reactions: true, reports: true } },
+    },
+  });
+  const missing = groupIds.filter((id) => !groups.some((g) => g.id === id));
+  if (missing.length > 0) throw new Error(`No group(s) with id ${missing.join(", ")}`);
+
+  const roundIds = groups.flatMap((g) => g.rounds.map((r) => r.id));
+  const notificationWhere: Prisma.NotificationLogWhereInput = {
+    OR: [{ groupId: { in: groupIds } }, { roundId: { in: roundIds } }],
+  };
+  const notificationLogs = await prisma.notificationLog.findMany({ where: notificationWhere });
+
+  const emailByUser = new Map(groups.flatMap((g) => g.members.map((m) => [m.userId, m.user.email])));
+  const userImpact = new Map<string, { points: number; won: number; lost: number }>();
+
+  for (const group of groups) {
+    const statuses = group.rounds.map((r) => r.status);
+    const count = (s: string) => statuses.filter((x) => x === s).length;
+    console.log(`"${group.name}" [${group.id}] owner=${group.owner.email}`);
+    console.log(`  members: ${group.members.map((m) => `${m.user.name} <${m.user.email}>`).join(", ")}`);
+    console.log(
+      `  bets: ${group.rounds.length} (${count("settled")} settled, ${count("locked")} locked, ${count("open")} open), ` +
+        `legs: ${group.rounds.reduce((n, r) => n + r.legs.length, 0)}, chat messages: ${group.messages.length}`
+    );
+    for (const round of group.rounds) {
+      if (round.status !== "settled") continue;
+      for (const leg of round.legs) {
+        const impact = userImpact.get(leg.userId) ?? { points: 0, won: 0, lost: 0 };
+        impact.points += leg.pointsAwarded;
+        if (leg.outcome === "won") impact.won += 1;
+        if (leg.outcome === "lost") impact.lost += 1;
+        userImpact.set(leg.userId, impact);
+      }
+    }
+  }
+
+  console.log(`\nRemoved from personal totals (User.totalPoints / legsWon / legsLost):`);
+  for (const [userId, impact] of userImpact) {
+    console.log(
+      `  ${emailByUser.get(userId) ?? userId}: ${Number(impact.points.toFixed(2))} pts, ${impact.won}W, ${impact.lost}L`
+    );
+  }
+  console.log(`${notificationLogs.length} notification log row(s) deleted with them.`);
+
+  if (!execute) {
+    console.log("\nDry run only. Pass --execute --backup <file.json> to delete.");
+    return;
+  }
+  if (!backupPath) throw new Error("--backup <file.json> is required with --execute");
+
+  const { writeFileSync } = await import("node:fs");
+  writeFileSync(
+    backupPath,
+    JSON.stringify(
+      { exportedAt: new Date().toISOString(), groups: groups.map((g) => ({ ...g, owner: undefined })), notificationLogs },
+      null,
+      2
+    )
+  );
+  console.log(`\nBackup written to ${backupPath}`);
+
+  await prisma.$transaction(async (tx) => {
+    for (const group of groups) {
+      for (const round of group.rounds) await reverseSettledRound(tx, round);
+    }
+    await tx.notificationLog.deleteMany({ where: notificationWhere });
+    // Cascades members, rounds, legs, chat messages, reactions and reports.
+    const deleted = await tx.group.deleteMany({ where: { id: { in: groupIds } } });
+    if (deleted.count !== groupIds.length) throw new Error("Groups changed since preview — re-run");
+  });
+
+  console.log(`Deleted ${groups.length} group(s).`);
 }
 
 async function findRoundsByTeams(teamA: string, teamB: string) {
@@ -971,6 +1060,12 @@ async function main() {
       await moveRound(roundId, toGroup, process.argv.includes("--keep-source-numbers"));
       break;
     }
+    case "delete-groups": {
+      const ids = argValue("--group-ids");
+      if (!ids) throw new Error("--group-ids required (comma-separated)");
+      await deleteGroups([...new Set(ids.split(",").map((id) => id.trim()).filter(Boolean))], argValue("--backup"));
+      break;
+    }
     case "find-rounds": {
       const teams = process.argv.slice(3).filter((a) => !a.startsWith("--"));
       if (teams.length < 2) throw new Error("Usage: find-rounds <teamA> <teamB>");
@@ -1036,7 +1131,7 @@ async function main() {
     default:
       console.error(`Unknown command: ${command ?? "(none)"}`);
       console.error(
-        "Commands: preview-solo-rounds, remove-solo-rounds, move-round, find-rounds, preview-resettle, resettle-round, preview-duplicate-markets, fix-duplicate-markets, reconcile-points, rescore-member-legs, resync-matches, preview-leg-announcements, backfill-leg-announcements, preview-line-keys, fix-line-keys, preview-stale-unverified, delete-stale-unverified"
+        "Commands: preview-solo-rounds, remove-solo-rounds, delete-groups, move-round, find-rounds, preview-resettle, resettle-round, preview-duplicate-markets, fix-duplicate-markets, reconcile-points, rescore-member-legs, resync-matches, preview-leg-announcements, backfill-leg-announcements, preview-line-keys, fix-line-keys, preview-stale-unverified, delete-stale-unverified"
       );
       process.exit(1);
   }
