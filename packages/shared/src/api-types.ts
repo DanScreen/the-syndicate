@@ -212,7 +212,10 @@ export type GroupDetailResponse = {
   /** Latest pick announcement per active leg, for mirrored reactions. */
   legAnnouncements: RoundMessageDto[];
   isOwner: boolean;
+  /** The latest HISTORY_PAGE_SIZE settled bets, newest first. */
   recentRounds: HistoryRound[];
+  /** All settled bets in the group, so the Bet tab knows whether to offer "Show more". */
+  settledRoundCount: number;
 };
 
 export type CompetitionOption = {

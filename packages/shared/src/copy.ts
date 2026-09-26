@@ -24,11 +24,22 @@ export const copy = {
     placeholder: "ABCD1234",
   },
   invite: {
+    tab: "Invite",
+    title: "Invite mates",
+    subtitle: "Anyone with the code or link can join this group.",
+    codeLabel: "Invite code",
+    linkLabel: "Invite link",
     copyLink: "Copy invite link",
     copied: "Copied!",
     share: "Share invite link",
     shareMessage: (groupName: string, url: string) =>
       `Join ${groupName} on Tiki Acca and add your pick to our acca: ${url}`,
+  },
+  history: {
+    title: "Settled bets",
+    showMore: "Show more",
+    loadingMore: "Loading…",
+    loadFailed: "Couldn't load more bets. Try again.",
   },
   group: {
     notFound: "Group not found or you are not a member.",

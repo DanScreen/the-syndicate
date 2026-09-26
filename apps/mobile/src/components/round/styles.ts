@@ -404,17 +404,6 @@ export const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  historyTitleRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 4,
-  },
-  viewAll: {
-    color: colors.accent,
-    fontSize: 13,
-    fontWeight: "500",
-  },
   historyLeg: {
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.border,

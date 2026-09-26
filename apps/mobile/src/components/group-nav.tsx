@@ -1,13 +1,14 @@
 import { colors } from "@/config";
 import { useGroupData } from "@tiki-acca/client";
+import { copy } from "@tiki-acca/shared";
 import { router, useLocalSearchParams, useSegments } from "expo-router";
-import { Pressable, ScrollView, StyleSheet, Text } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 const BASE_TABS = [
   { segment: "index", label: "Bet" },
   { segment: "leaderboard", label: "Leaderboard" },
-  { segment: "history", label: "History" },
   { segment: "chat", label: "Chat" },
+  { segment: "invite", label: copy.invite.tab },
 ] as const;
 
 export function GroupNav() {
@@ -29,12 +30,8 @@ export function GroupNav() {
   }
 
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      style={styles.nav}
-      contentContainerStyle={styles.navContent}
-    >
+    // Tabs share the row so every one fits without scrolling.
+    <View style={styles.nav}>
       {tabs.map((tab) => {
         const active = activeSegment === tab.segment;
         return (
@@ -43,7 +40,12 @@ export function GroupNav() {
             onPress={() => go(tab.segment)}
             style={[styles.tab, active && styles.tabActive]}
           >
-            <Text style={[styles.tabText, active && styles.tabTextActive]}>
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.75}
+              style={[styles.tabText, active && styles.tabTextActive]}
+            >
               {tab.segment === "chat" && (data?.group.unreadMessageCount ?? 0) > 0
                 ? `${tab.label} (${data!.group.unreadMessageCount})`
                 : tab.label}
@@ -51,21 +53,21 @@ export function GroupNav() {
           </Pressable>
         );
       })}
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   nav: {
+    flexDirection: "row",
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
     marginTop: 16,
   },
-  navContent: {
-    flexDirection: "row",
-  },
   tab: {
-    minWidth: 88,
+    flexGrow: 1,
+    flexShrink: 1,
+    paddingHorizontal: 4,
     paddingVertical: 12,
     alignItems: "center",
     borderBottomWidth: 2,

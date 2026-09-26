@@ -1,5 +1,6 @@
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import {
+  copy,
   formatFixtureLabel,
   formatLegPoints,
   formatOdds,
@@ -12,7 +13,10 @@ import type {
   HistoryRound,
   LegOutcome,
 } from "@tiki-acca/shared";
+import { useApiFetcher } from "@/api/use-api-fetcher";
+import { Button, ErrorText } from "@/components/ui";
 import { colors } from "@/config";
+import { useGroupHistory } from "@tiki-acca/client";
 import { outcomeColors, pointsStyle } from "./helpers";
 import { styles } from "./styles";
 
@@ -23,27 +27,29 @@ function outcomePointsStyle(outcome: string) {
   return { color: colors.muted };
 }
 
+/** The Bet tab's settled bets: latest page first, "Show more" loads older ones. */
 export function RoundHistory({
-  rounds,
-  onViewAll,
-  title = "Recent settled bets",
+  groupId,
+  recentRounds,
+  settledRoundCount,
 }: {
-  rounds: HistoryRound[];
-  onViewAll?: () => void;
-  title?: string;
+  groupId: string;
+  recentRounds: HistoryRound[];
+  settledRoundCount: number;
 }) {
+  const fetcher = useApiFetcher();
+  const { rounds, hasMore, loadingMore, error, loadMore } = useGroupHistory({
+    groupId,
+    fetcher,
+    recentRounds,
+    settledRoundCount,
+  });
+
   if (rounds.length === 0) return null;
 
   return (
     <View style={styles.stack}>
-      <View style={styles.historyTitleRow}>
-        <Text style={styles.sectionTitle}>{title}</Text>
-        {onViewAll ? (
-          <Pressable onPress={onViewAll} hitSlop={8}>
-            <Text style={styles.viewAll}>Full history</Text>
-          </Pressable>
-        ) : null}
-      </View>
+      <Text style={styles.sectionTitle}>{copy.history.title}</Text>
       {rounds.map((round) => {
         const outcomes = round.legs.map((l) => l.outcome as LegOutcome);
         const roundPoints = groupAccaRoundPoints(outcomes, round.combinedOdds ?? 1);
@@ -110,6 +116,15 @@ export function RoundHistory({
           </View>
         );
       })}
+      <ErrorText message={error} />
+      {hasMore ? (
+        <Button
+          label={copy.history.showMore}
+          variant="secondary"
+          loading={loadingMore}
+          onPress={() => void loadMore()}
+        />
+      ) : null}
     </View>
   );
 }

@@ -1,11 +1,14 @@
 /**
- * Regenerate apps/web/scripts/preview-notification-emails.html from live templates.
+ * Regenerate apps/web/scripts/preview-notification-emails.html from live templates
+ * (notification, account and moderation emails).
  *
  *   npm run email:preview --workspace=@tiki-acca/web
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { EmailDocument } from "../src/lib/notifications/email-layout";
+import { messageReportedEmail } from "../src/lib/admin/email-templates";
+import { resetPasswordEmail, verifyEmailEmail } from "../src/lib/auth-email-templates";
 import {
   pickReminderEmail,
   roundLockedEmail,
@@ -112,6 +115,27 @@ const settled = withLocalLogo(
   })
 );
 
+const verify = withLocalLogo(
+  verifyEmailEmail({
+    firstName: "Alex",
+    verifyUrl: "https://www.tikiacca.com/verify-email?token=sample",
+  })
+);
+
+const reset = withLocalLogo(
+  resetPasswordEmail({ resetUrl: "https://www.tikiacca.com/reset-password?token=sample" })
+);
+
+const reported = withLocalLogo(
+  messageReportedEmail({
+    messageId: "cm_sample",
+    authorName: "Jordan",
+    groupName: "Dog & Duck FC",
+    body: "Absolute shocker of a pick, mate",
+    reason: "Being rude",
+  })
+);
+
 function esc(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
@@ -146,12 +170,15 @@ const page = `<!DOCTYPE html>
 <body>
 <header>
   <h1>Notification email previews</h1>
-  <p>Generated from <code>lib/notifications/templates.ts</code>. Logo inlined for local preview. Regenerate: <code>npm run email:preview --workspace=@tiki-acca/web</code></p>
+  <p>Generated from <code>lib/notifications/templates.ts</code>, <code>lib/auth-email-templates.ts</code> and <code>lib/admin/email-templates.ts</code>. Logo inlined for local preview. Regenerate: <code>npm run email:preview --workspace=@tiki-acca/web</code></p>
 </header>
 ${section("Pick reminder", reminder)}
 ${section("Acca locked (everyone in)", lockedFull)}
 ${section("Acca locked (partial kickoff lock)", lockedPartial)}
 ${section("Round settled", settled)}
+${section("Confirm email", verify)}
+${section("Password reset", reset)}
+${section("Chat message reported (admins)", reported)}
 </body>
 </html>
 `;
