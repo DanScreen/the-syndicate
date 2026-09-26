@@ -26,6 +26,11 @@ export function isResultHeldForReview(match: MatchConfirmationFields): boolean {
   return match.resultSource === "conflict" || match.resultSource === "abstain";
 }
 
+/** Postponed, cancelled, suspended or awarded: legs on the match are void. */
+export function isVoidMatchStatus(status: string): boolean {
+  return TERMINAL_VOID_STATUSES.has(status);
+}
+
 /** Statuses that mean the match is done (or abandoned) for settlement purposes. */
 export function isTerminalMatchStatus(status: string): boolean {
   return status === "FINISHED" || TERMINAL_VOID_STATUSES.has(status);

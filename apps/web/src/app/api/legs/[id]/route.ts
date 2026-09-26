@@ -10,10 +10,14 @@ import { lockRoundWithAccaPricing } from "@/lib/odds/lock-round";
 import { findSelection } from "@/lib/odds/provider";
 import { bookmakerLinksFromQuotes } from "@/lib/odds/quotes";
 import { isCompetitionEnabled } from "@/lib/competitions/settings";
+import { claimAndLockRound } from "@/lib/rounds/claim-lock-round";
 import { firstKickoff } from "@/lib/rounds/first-kickoff";
+import { CALLED_OFF_FIXTURE_ERROR, isFixtureCalledOff } from "@/lib/results/called-off-fixtures";
 import { prisma } from "@tiki-acca/database";
 import {
   editLegSchema,
+  effectiveLegQuota,
+  openRoundReadyToLock,
   findConflictingFixtureLeg,
   findOutrightMixConflict,
   formatFixtureConflictError,
@@ -53,7 +57,15 @@ export async function PATCH(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Round is already settled" }, { status: 400 });
   }
 
+  // Void picks don't count towards the cutoff. A locked acca with no live
+  // picks left settles at 1.00 — there is no match left to swap in before.
   const cutoff = firstKickoff(round.legs);
+  if (!cutoff && round.status === "locked") {
+    return NextResponse.json(
+      { error: "Every match in this acca is off, so it can no longer be changed." },
+      { status: 403 }
+    );
+  }
   if (cutoff && new Date() >= cutoff) {
     return NextResponse.json(
       { error: "Editing is closed. The first match in this acca has kicked off." },
@@ -85,6 +97,15 @@ export async function PATCH(request: Request, { params }: Params) {
 
   if (new Date(fixture.kickoff) <= new Date()) {
     return NextResponse.json({ error: "That fixture has already kicked off" }, { status: 400 });
+  }
+
+  // A void pick's match is off: another market on it, or any other called-off
+  // match, would only go void again once the acca is priced with it.
+  if (
+    (leg.outcome === "void" && fixture.id === leg.fixtureId) ||
+    (await isFixtureCalledOff(competition.id, fixture))
+  ) {
+    return NextResponse.json({ error: CALLED_OFF_FIXTURE_ERROR }, { status: 409 });
   }
 
   const fixtureConflict = findConflictingFixtureLeg(
@@ -131,6 +152,7 @@ export async function PATCH(request: Request, { params }: Params) {
     bookmakerName: leg.bookmakerName,
     betslipUrl: leg.betslipUrl,
     bookmakerLinks: leg.bookmakerLinks ?? undefined,
+    outcome: leg.outcome,
   };
 
   const updatedLeg = await prisma.leg.update({
@@ -168,7 +190,10 @@ export async function PATCH(request: Request, { params }: Params) {
 
   if (repriced) {
     try {
-      const legs = await prisma.leg.findMany({ where: { roundId: round.id } });
+      // Void legs (postponed…) count at 1.00 — price without them.
+      const legs = await prisma.leg.findMany({
+        where: { roundId: round.id, outcome: { not: "void" } },
+      });
       await lockRoundWithAccaPricing(round.id, legs);
     } catch (err) {
       // Restore the previous pick so the acca stays priceable.
@@ -188,7 +213,33 @@ export async function PATCH(request: Request, { params }: Params) {
     postLegChangedMessage(prisma, updatedLeg, updatedLeg.user.name)
   );
 
-  return NextResponse.json({ leg: updatedLeg, repriced });
+  // Swapping out a void pick can complete an open round: a reopened round
+  // locks again as soon as no void legs remain.
+  let locked = false;
+  if (!repriced) {
+    const openRound = await prisma.round.findUnique({
+      where: { id: round.id },
+      include: { legs: true, group: { include: { members: true } } },
+    });
+    if (
+      openRound?.status === "open" &&
+      openRoundReadyToLock({
+        reopened: Boolean(openRound.reopenedAt),
+        memberUserIds: openRound.group.members.map((m) => m.userId),
+        legs: openRound.legs,
+        legsPerMember: effectiveLegQuota(openRound),
+      })
+    ) {
+      try {
+        locked = (await claimAndLockRound(round.id)).ok;
+      } catch (err) {
+        // The round stays open; kickoff lock or the next change retries.
+        console.error("[legs] lock after swap failed", round.id, err);
+      }
+    }
+  }
+
+  return NextResponse.json({ leg: updatedLeg, repriced, locked });
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
@@ -215,6 +266,13 @@ export async function DELETE(_request: Request, { params }: Params) {
   if (leg.round.status !== "open") {
     return NextResponse.json(
       { error: "This pick can no longer be removed because the acca is locked" },
+      { status: 403 }
+    );
+  }
+
+  if (leg.round.reopenedAt) {
+    return NextResponse.json(
+      { error: "This acca reopened only so a void pick can be swapped. Change it instead." },
       { status: 403 }
     );
   }

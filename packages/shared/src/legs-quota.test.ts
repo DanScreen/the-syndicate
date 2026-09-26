@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { SOLO_MAX_LEGS } from "./constants";
-import { allMembersFilledQuota, effectiveLegQuota } from "./legs-quota";
+import { allMembersFilledQuota, effectiveLegQuota, openRoundReadyToLock } from "./legs-quota";
 
 describe("effectiveLegQuota", () => {
   it("uses the group quota on a normal round", () => {
@@ -67,6 +67,51 @@ describe("solo quota via allMembersFilledQuota", () => {
         legsPerMember: effectiveLegQuota({ legsPerMember: 1 }),
       }),
       true
+    );
+  });
+});
+
+describe("openRoundReadyToLock", () => {
+  const members = ["u1", "u2"];
+  const full = [
+    { userId: "u1", outcome: "pending" },
+    { userId: "u2", outcome: "pending" },
+  ];
+
+  it("locks once every member has filled their quota", () => {
+    assert.equal(
+      openRoundReadyToLock({ reopened: false, memberUserIds: members, legs: full, legsPerMember: 1 }),
+      true
+    );
+    assert.equal(
+      openRoundReadyToLock({ reopened: false, memberUserIds: members, legs: full.slice(0, 1), legsPerMember: 1 }),
+      false
+    );
+  });
+
+  it("waits while a void pick can still be swapped", () => {
+    const withVoid = [full[0]!, { userId: "u2", outcome: "void" }];
+    assert.equal(
+      openRoundReadyToLock({ reopened: false, memberUserIds: members, legs: withVoid, legsPerMember: 1 }),
+      false
+    );
+    assert.equal(
+      openRoundReadyToLock({ reopened: true, memberUserIds: members, legs: withVoid, legsPerMember: 1 }),
+      false
+    );
+  });
+
+  it("re-locks a reopened round once no void picks remain, quota or not", () => {
+    assert.equal(
+      openRoundReadyToLock({ reopened: true, memberUserIds: members, legs: full.slice(0, 1), legsPerMember: 1 }),
+      true
+    );
+  });
+
+  it("never locks an empty round", () => {
+    assert.equal(
+      openRoundReadyToLock({ reopened: true, memberUserIds: members, legs: [], legsPerMember: 1 }),
+      false
     );
   });
 });

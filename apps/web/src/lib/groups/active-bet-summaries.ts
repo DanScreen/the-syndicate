@@ -1,4 +1,5 @@
 import {
+  effectiveAccaOdds,
   effectiveLegQuota,
   type GroupSummaryActiveBet,
   type RoundStatus,
@@ -15,6 +16,7 @@ type SummaryRound = {
     userId: string;
     kickoff: Date;
     outcome: string;
+    odds: number;
   }[];
 };
 
@@ -26,17 +28,22 @@ export function activeBetSummaries(
   return rounds
     .filter((round) => round.status === "open" || round.status === "locked")
     .map((round) => {
+      // Void legs (postponed…) never kick off.
+      const liveLegs = round.legs.filter((leg) => leg.outcome !== "void");
       const firstKickoff =
-        round.legs.length > 0
+        liveLegs.length > 0
           ? new Date(
-              Math.min(...round.legs.map((leg) => leg.kickoff.getTime()))
+              Math.min(...liveLegs.map((leg) => leg.kickoff.getTime()))
             ).toISOString()
           : null;
       return {
         id: round.id,
         betNumber: round.betNumber,
         status: round.status as RoundStatus,
-        combinedOdds: round.combinedOdds,
+        combinedOdds:
+          round.status === "locked"
+            ? effectiveAccaOdds(round.combinedOdds, round.legs)
+            : round.combinedOdds,
         legsPerMember: round.legsPerMember,
         unlimitedLegs: round.unlimitedLegs,
         submittedLegCount: round.legs.length,

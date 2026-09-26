@@ -1,4 +1,4 @@
-import type { HistoryLeg, HistoryRound } from "@tiki-acca/shared";
+import { effectiveAccaOdds, type HistoryLeg, type HistoryRound } from "@tiki-acca/shared";
 
 type LegRow = {
   id: string;
@@ -54,7 +54,8 @@ export function mapHistoryRound(round: RoundRow): HistoryRound {
   return {
     id: round.id,
     status: round.status,
-    combinedOdds: round.combinedOdds,
+    // What the acca paid at: void legs count at 1.00.
+    combinedOdds: effectiveAccaOdds(round.combinedOdds, round.legs),
     lockedAt: round.lockedAt?.toISOString() ?? null,
     settledAt: round.settledAt?.toISOString() ?? null,
     createdAt: round.createdAt.toISOString(),

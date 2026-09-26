@@ -1,5 +1,6 @@
 export const NOTIFICATION_TYPES = [
   "pick_reminder",
+  "pick_voided",
   "round_locked",
   "round_settled",
   "chat_message",
@@ -34,6 +35,8 @@ export function emailPrefKey(
 ): keyof NotificationPreferences | null {
   switch (type) {
     case "pick_reminder":
+    // A void pick needs swapping, like a missing one — same preference.
+    case "pick_voided":
       return "emailPickReminder";
     case "round_locked":
       return "emailRoundLocked";
@@ -49,6 +52,7 @@ export function pushPrefKey(
 ): keyof NotificationPreferences {
   switch (type) {
     case "pick_reminder":
+    case "pick_voided":
       return "pushPickReminder";
     case "round_locked":
       return "pushRoundLocked";

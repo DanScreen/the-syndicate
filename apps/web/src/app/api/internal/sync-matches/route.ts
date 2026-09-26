@@ -1,6 +1,7 @@
 import { requireCronSecret } from "@/lib/internal-auth";
 import { retryPendingRoundNotifications } from "@/lib/notifications/retry-pending-round-notifications";
 import { lockOpenRoundsAtKickoff } from "@/lib/rounds/lock-open-rounds-at-kickoff";
+import { voidPostponedLegs } from "@/lib/rounds/void-postponed-legs";
 import {
   autoSettleLockedRounds,
   resolvePendingLegsOnSettledRounds,
@@ -33,6 +34,9 @@ export async function POST(request: Request) {
   // After feed upserts: correct any leg outcomes that still disagree with the
   // Match score (provisional FT scores, late VAR / disallowed-goal corrections).
   const reconcile = await reconcileRecentMatchOutcomes();
+  // Before the kickoff lock: void postponed picks and reopen locked accas so
+  // the owner can swap them before the first remaining kickoff.
+  const voidedLegs = await voidPostponedLegs();
   const kickoffLock = await lockOpenRoundsAtKickoff();
   const autoSettle = await autoSettleLockedRounds();
   const deferredLegs = await resolvePendingLegsOnSettledRounds();
@@ -51,6 +55,10 @@ export async function POST(request: Request) {
         errors: apiFootball.errors,
       })
     );
+  }
+
+  if (voidedLegs.voided.length > 0 || voidedLegs.reopened.length > 0) {
+    console.info("sync-matches: void picks", JSON.stringify(voidedLegs));
   }
 
   if (kickoffLock.locked.length > 0) {
@@ -86,6 +94,7 @@ export async function POST(request: Request) {
     sync,
     apiFootball,
     reconcile,
+    voidedLegs,
     kickoffLock,
     autoSettle,
     deferredLegs,

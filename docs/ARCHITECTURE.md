@@ -82,6 +82,8 @@ Members edit their own leg via `PATCH /api/legs/[id]` while the round is `open` 
 → [CURRENT_STATE.md](./CURRENT_STATE.md#settlement)
 
 ### Scoring
+**Void legs:** a leg on a postponed/cancelled match is voided by `voidPostponedLegs()` on the sync cron and counts at 1.00; the acca price excludes it via `effectiveAccaOdds()` at read time (`combinedOdds` is never rewritten). A locked round whose other legs have not kicked off reopens (`Round.reopenedAt`) for a swap-only window and relocks when no void legs remain or at the next kickoff. Details in [CURRENT_STATE](./CURRENT_STATE.md#void-picks-postponed-or-cancelled-matches).
+
 **Unit-stake points:** win `odds−1`, loss `−1`, void `0`. **Points are the primary user-facing metric.** Profit equivalent: `points × stake` via `profitFromPoints()`. `Round.profitLossGbp` retained for admin/settlement.
 
 → `packages/shared/src/scoring.ts` · [specs/platform-admin.md](./specs/platform-admin.md)

@@ -223,7 +223,13 @@ export default function GroupRoundPage() {
         </section>
       )}
 
-      {isOpen && !isSolo && (
+      {view.voidBanner && (
+        <div className="rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-warning">
+          {view.voidBanner}
+        </div>
+      )}
+
+      {isOpen && !isSolo && !view.reopened && (
         <RoundProgress
           members={group.members}
           legs={activeRound.legs}
@@ -276,7 +282,7 @@ export default function GroupRoundPage() {
         )}
         {view.userLegs.length > 0 && editWindowOpen && !editingLegId && (
           <p className="mt-1 text-sm text-muted">
-            You can change {isOpen ? "or remove " : ""}your pick
+            You can change {view.canRemove ? "or remove " : ""}your pick
             {view.userLegs.length === 1 ? "" : "s"} until the first kickoff
             {firstKickoff ? ` (${formatKickoff(firstKickoff)})` : ""}.
             {isLocked && " Changing a pick reprices the whole acca at current odds."}
@@ -300,7 +306,7 @@ export default function GroupRoundPage() {
             }}
             currentUserId={session?.user?.id}
             editWindowOpen={editWindowOpen && !editingLegId}
-            canRemove={isOpen}
+            canRemove={view.canRemove}
             removingLegId={removingLegId}
             onChangeLeg={(legId) => setEditingLegId(legId)}
             onRemoveLeg={(leg) => void removeUserLeg(leg.id, leg.selectionLabel)}
@@ -318,7 +324,7 @@ export default function GroupRoundPage() {
           betslipLink={acca.betslipLink}
           betslipLinkQuality={acca.betslipLinkQuality}
           betslipHasAllLegLinks={acca.betslipHasAllLegLinks}
-          legCount={activeRound.legs.length}
+          legCount={acca.legCount}
           // Show the ranked best-odds-across-bookmakers list while open
           // (using current odds) and once locked (the odds captured at lock) — locked
           // is when members go place the bet, so the comparison is essential.

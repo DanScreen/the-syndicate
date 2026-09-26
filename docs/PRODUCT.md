@@ -45,6 +45,8 @@ While the bet is open: leg picker shows **best odds only** per selection; **Comp
 
 **Editing picks:** members can change their own leg — in open rounds and in locked rounds — until the **first kickoff** among the acca's legs. Editing a locked round reprices the whole acca at current odds. Once the first match starts, picks are final.
 
+**Void picks:** when a pick's match is postponed or cancelled the pick is **void** and counts at 1.00, so the acca carries on at lower odds without it (an acca where every pick is void returns the stake). The pick's owner gets an email and push. If the acca had already locked and none of its other matches have kicked off, the acca **reopens** just for that swap: the owner can pick a replacement until the first kickoff of the other matches, and the acca locks again as soon as they swap (or at that kickoff, without the void pick). Nobody can add or remove picks while it is reopened. Group Chat announces the void pick and the reopen.
+
 **Removing picks:** members can remove only their own leg while the round is still **open** and before the first kickoff. Removal requires confirmation and is announced in Group Chat. Locked and settled accas cannot lose legs.
 
 ### 5. Settle & stats

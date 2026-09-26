@@ -1,0 +1,1 @@
+ALTER TABLE "Round" ADD COLUMN "reopenedAt" TIMESTAMP(3);

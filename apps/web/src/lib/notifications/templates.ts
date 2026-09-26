@@ -280,3 +280,100 @@ export function roundSettledPush(params: {
     body: `${params.wonCount}W ${params.lostCount}L. See who delivered.`,
   };
 }
+
+/**
+ * `reopened`: the locked acca reopened for the swap. `open`: the acca hadn't
+ * locked yet. `closed`: the other matches have kicked off, too late to swap.
+ */
+export type PickVoidedSwap = "reopened" | "open" | "closed";
+
+export type PickVoidedParams = {
+  groupName: string;
+  /** "Leeds v Hull" */
+  fixture: string;
+  selectionLabel: string;
+  swap: PickVoidedSwap;
+  /** Swap deadline (first remaining kickoff); null when there is none. */
+  deadline: Date | null;
+  /** Acca odds without the void pick, when known. */
+  oddsWithout: number | null;
+  groupUrl: string;
+};
+
+function pickVoidedCopy(params: Omit<PickVoidedParams, "groupUrl">) {
+  const time =
+    params.swap !== "closed" && params.deadline
+      ? formatNotificationDeadline(params.deadline)
+      : null;
+  const odds = params.oddsWithout != null ? params.oddsWithout.toFixed(2) : null;
+  const canSwap = params.swap !== "closed";
+  const lead = `${params.fixture} has been postponed or cancelled, so your pick (${params.selectionLabel}) is void.`;
+  const opener =
+    params.swap === "reopened" ? "The acca has reopened so you can swap it." : "You can swap it for another pick.";
+  const next = !canSwap
+    ? "The other matches have already kicked off, so it can't be swapped."
+    : time
+      ? `${opener} Pick a replacement before ${time}, when the first remaining match kicks off and the acca locks.`
+      : opener;
+  const fallback = !canSwap
+    ? `The acca carries on without it${odds ? ` at ${odds}` : ""}, as it would at the bookmaker.`
+    : `If you don't, the acca goes ahead without it${odds ? ` at ${odds}` : ""}.`;
+  return { time, canSwap, lead, opener, next, fallback };
+}
+
+export function pickVoidedEmail(params: PickVoidedParams): EmailDocument {
+  const { time, canSwap, lead, opener, next, fallback } = pickVoidedCopy(params);
+
+  const bodyHtml = [
+    paragraph(escapeHtml(lead)),
+    paragraph(
+      canSwap && time
+        ? `${escapeHtml(opener)} Pick a replacement before <strong style="color:${EMAIL_COLORS.foreground};">${escapeHtml(time)}</strong>, when the first remaining match kicks off and the acca locks.`
+        : escapeHtml(next)
+    ),
+    mutedNote(escapeHtml(fallback)),
+  ].join("");
+
+  const title = canSwap ? "Your Pick Is Void. Swap It." : "Your Pick Is Void";
+  const preheader = time ? `Swap it before ${time}.` : canSwap ? "Swap it for another pick." : fallback;
+  const ctaLabel = canSwap ? "Swap your pick" : "See the acca";
+  const text = [
+    `${params.groupName}: ${title}`,
+    "",
+    lead,
+    next,
+    fallback,
+    "",
+    `${ctaLabel}: ${params.groupUrl}`,
+    plainTextFooter(),
+  ].join("\n");
+
+  return {
+    subject: `${params.groupName}: ${title}`,
+    preheader,
+    html: renderEmailLayout({
+      preheader,
+      eyebrow: params.groupName,
+      title,
+      bodyHtml,
+      ctaLabel,
+      ctaUrl: params.groupUrl,
+    }),
+    text,
+  };
+}
+
+export function pickVoidedPush(
+  params: Omit<PickVoidedParams, "groupUrl" | "selectionLabel">
+): { title: string; body: string } {
+  const { time, canSwap } = pickVoidedCopy({ ...params, selectionLabel: "" });
+  const odds = params.oddsWithout != null ? ` at ${params.oddsWithout.toFixed(2)}` : "";
+  return {
+    title: `${params.groupName}: Your Pick Is Void`,
+    body: !canSwap
+      ? `${params.fixture} is off. The acca carries on without it${odds}.`
+      : time
+        ? `${params.fixture} is off. Swap your pick before ${time}.`
+        : `${params.fixture} is off. Swap your pick for another one.`,
+  };
+}

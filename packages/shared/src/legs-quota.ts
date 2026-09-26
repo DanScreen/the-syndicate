@@ -47,6 +47,22 @@ export function membersMissingQuota(params: {
   );
 }
 
+/**
+ * An open round is ready to lock once no void legs are left to swap and:
+ * - it was reopened for a void leg (its members had already locked it), or
+ * - every member has filled their quota with live (non-void) legs.
+ */
+export function openRoundReadyToLock(params: {
+  reopened: boolean;
+  memberUserIds: ReadonlyArray<string>;
+  legs: ReadonlyArray<{ userId: string; outcome: string }>;
+  legsPerMember: number;
+}): boolean {
+  const { reopened, memberUserIds, legs, legsPerMember } = params;
+  if (legs.length === 0 || legs.some((l) => l.outcome === "void")) return false;
+  return reopened || allMembersFilledQuota({ memberUserIds, legs, legsPerMember });
+}
+
 export function nextLegIndexForUser(
   legs: ReadonlyArray<{ userId: string; legIndex?: number }>,
   userId: string

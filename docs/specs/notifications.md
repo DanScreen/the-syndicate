@@ -43,6 +43,7 @@
 | `pick_reminder` | Open round, member has no leg, deadline within window | High | ✅ | ✅ | Pending members only |
 | `round_locked` | Acca locked (full or partial) | High | ✅ | ✅ | All group members |
 | `round_settled` | Acca settled | Medium | ✅ | ✅ | All group members |
+| `pick_voided` | Member's pick voided (match postponed/cancelled); says if and until when they can swap it. Shipped Sep 2026, uses the `pick_reminder` preference | High | ✅ | ✅ | Leg owner |
 | `leg_result` | Member's leg resolved while acca still open | Low | Optional | ✅ | Leg owner (+ optional group) |
 | `acca_won` | All legs won (celebration) | Low | Optional | ✅ | All group members |
 | `welcome` | Sign-up complete | Low | ✅ | — | New user |

@@ -6,7 +6,11 @@ import { calculateGroupProfitLoss, pointsForMemberLeg } from "@/lib/settlement/p
 import { notifyRoundSettled } from "@/lib/notifications/round-notifications";
 import { openRound } from "@/lib/rounds/open-round";
 import { prisma } from "@tiki-acca/database";
-import { roundIsSettleable, type LegOutcome } from "@tiki-acca/shared";
+import {
+  effectiveAccaOdds,
+  roundIsSettleable,
+  type LegOutcome,
+} from "@tiki-acca/shared";
 
 /**
  * Thrown when a round can no longer be settled — typically because a
@@ -121,11 +125,12 @@ export async function applyRoundSettlement(
       });
     }
 
-    const profitLoss = calculateGroupProfitLoss(
-      outcomes,
-      round.combinedOdds ?? 1,
-      round.stakeGbp
+    // Void legs count at 1.00, as at the bookmaker.
+    const accaOdds = effectiveAccaOdds(
+      round.combinedOdds,
+      round.legs.map((l) => ({ odds: l.odds, outcome: mergeLegOutcome(l, outcomeMap) }))
     );
+    const profitLoss = calculateGroupProfitLoss(outcomes, accaOdds ?? 1, round.stakeGbp);
 
     await tx.round.update({
       where: { id: roundId },
@@ -134,7 +139,7 @@ export async function applyRoundSettlement(
 
     // Inside the settle transaction, gated on the locked → settled claim
     // above — a retried or overlapping settle can never double-post.
-    await postRoundSettledMessage(tx, roundId, outcomes, round.combinedOdds);
+    await postRoundSettledMessage(tx, roundId, outcomes, accaOdds);
 
     await openRound(round.groupId, tx);
 

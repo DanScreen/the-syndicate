@@ -7,9 +7,9 @@ import { bookmakerLinksFromQuotes } from "@/lib/odds/quotes";
 import { isCompetitionEnabled } from "@/lib/competitions/settings";
 import { claimAndLockRound } from "@/lib/rounds/claim-lock-round";
 import { isPastKickoffCutoff } from "@/lib/rounds/first-kickoff";
+import { CALLED_OFF_FIXTURE_ERROR, isFixtureCalledOff } from "@/lib/results/called-off-fixtures";
 import { prisma } from "@tiki-acca/database";
 import {
-  allMembersFilledQuota,
   effectiveLegQuota,
   findConflictingFixtureLeg,
   findOutrightMixConflict,
@@ -17,6 +17,7 @@ import {
   formatOutrightMixError,
   getCompetitionById,
   nextLegIndexForUser,
+  openRoundReadyToLock,
   submitLegSchema,
 } from "@tiki-acca/shared";
 import { NextResponse } from "next/server";
@@ -45,6 +46,13 @@ export async function POST(request: Request) {
 
   if (round.status !== "open") {
     return NextResponse.json({ error: "Round is not accepting legs" }, { status: 400 });
+  }
+
+  if (round.reopenedAt) {
+    return NextResponse.json(
+      { error: "This acca reopened only so a void pick can be swapped." },
+      { status: 409 }
+    );
   }
 
   if (round.legs.length > 0 && isPastKickoffCutoff(round.legs)) {
@@ -100,6 +108,10 @@ export async function POST(request: Request) {
   }
 
   const { fixture, market, selection } = selectionData;
+
+  if (await isFixtureCalledOff(parsed.data.competitionId, fixture)) {
+    return NextResponse.json({ error: CALLED_OFF_FIXTURE_ERROR }, { status: 409 });
+  }
 
   const fixtureConflict = findConflictingFixtureLeg(round.legs, fixture.id);
   if (fixtureConflict) {
@@ -160,7 +172,8 @@ export async function POST(request: Request) {
 
   const shouldLock =
     updatedRound &&
-    allMembersFilledQuota({
+    openRoundReadyToLock({
+      reopened: false,
       memberUserIds: updatedRound.group.members.map((m) => m.userId),
       legs: updatedRound.legs,
       legsPerMember: effectiveLegQuota(updatedRound),

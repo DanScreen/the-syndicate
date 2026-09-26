@@ -1,6 +1,7 @@
 import {
   formatRoundDateLabel,
   roundAccaDecided,
+  roundAccaOdds,
   roundAccaWon,
   roundGroupPoints,
   roundsForPerformanceStats,
@@ -29,7 +30,7 @@ export function computeGroupStats(
   const accaWins = decidedAccas.filter((r) => roundAccaWon(r)).length;
 
   const accaOdds = settled
-    .map((r) => r.combinedOdds)
+    .map((r) => roundAccaOdds(r))
     .filter((o): o is number => o !== null);
 
   let cumulativePoints = 0;

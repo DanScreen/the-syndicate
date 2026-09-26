@@ -2,6 +2,7 @@ import type { Leg, Round } from "@prisma/client";
 import {
   accaHasLostLeg,
   accaSucceeded,
+  effectiveAccaOdds,
   groupAccaRoundPoints,
   memberAccaLegPoints,
   marketFamilyKey,
@@ -37,8 +38,13 @@ export function roundAccaDecided(round: RoundWithLegs): boolean {
   return accaHasLostLeg(outcomes) || accaSucceeded(outcomes);
 }
 
+/** Odds the acca pays at — void legs count at 1.00. */
+export function roundAccaOdds(round: RoundWithLegs): number | null {
+  return effectiveAccaOdds(round.combinedOdds, round.legs);
+}
+
 export function roundGroupPoints(round: RoundWithLegs): number {
-  return groupAccaRoundPoints(roundOutcomes(round), round.combinedOdds ?? 1);
+  return groupAccaRoundPoints(roundOutcomes(round), roundAccaOdds(round) ?? 1);
 }
 
 /** Cumulative acca points earned by the group across performance rounds. */

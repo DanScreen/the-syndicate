@@ -37,7 +37,7 @@ model RoundMessage {
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   kind      String   // "user" | "system"
   body      String   // user text (max 500 chars) or system event copy
-  eventType String?  // system only: leg_submitted | leg_changed | leg_removed | round_locked | leg_result | leg_result_corrected | round_settled
+  eventType String?  // system only: leg_submitted | leg_changed | leg_removed | round_locked | leg_result | leg_result_corrected | round_settled | round_reopened
   legId     String?  // system pick events: the announced leg — lets the betslip row find its message
   leg       Leg?     @relation(fields: [legId], references: [id], onDelete: SetNull)
   createdAt DateTime @default(now())
@@ -62,7 +62,7 @@ model MessageReaction {
 
 **One reaction model for both surfaces:** the betslip pick row displays/toggles reactions on the pick's *latest* `leg_submitted`/`leg_changed` system message (found via `legId`). No separate `LegReaction` table.
 
-System messages are **written at event time** by the existing lifecycle code paths (leg submit/edit/remove routes, `claimAndLockRound`, `persistResolvableLegOutcomes`, `applyRoundSettlement`) — not derived on read — so the thread is an append-only record.
+System messages are **written at event time** by the existing lifecycle code paths (leg submit/edit/remove routes, `claimAndLockRound`, `persistResolvableLegOutcomes`, `applyRoundSettlement`, `voidPostponedLegs`) — not derived on read — so the thread is an append-only record.
 
 ## API routes
 
@@ -101,7 +101,7 @@ Through the existing dispatcher ([notifications.md](./notifications.md)) — **p
 ### Phase 1 — thread + system messages (core)
 - [x] `RoundMessage` + `MessageReaction` migration (incl. `legId`) — `20260717150000_group_chat_messages`
 - [x] Shared chat types/schemas — `packages/shared/src/chat.ts` (event types, emoji set, message/reaction Zod schemas, DTOs)
-- [x] System message writes from lifecycle code paths (pick locked in / changed / removed, round locked, leg results, settled) — `apps/web/src/lib/chat/system-messages.ts`; writes gated on the settlement/lock/leg atomic claims; exactly-once race tests in `apps/web/src/lib/chat/exactly-once.test.ts` (`npm test --workspace=@tiki-acca/web`)
+- [x] System message writes from lifecycle code paths (pick locked in / changed / removed, round locked, leg results, settled, and `round_reopened` when a postponed match voids a pick on a locked acca before its other legs kick off) — `apps/web/src/lib/chat/system-messages.ts`; writes gated on the settlement/lock/leg atomic claims; exactly-once race tests in `apps/web/src/lib/chat/exactly-once.test.ts` (`npm test --workspace=@tiki-acca/web`)
 - [x] Message APIs (`GET`/`POST` messages, `DELETE`) + rate limiting
 - [x] Round tab thread UI (web), History read-only view
 - [x] Mobile thread UI

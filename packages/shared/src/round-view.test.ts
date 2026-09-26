@@ -8,6 +8,7 @@ import {
   announcementsByLegId,
   changeLegTitle,
   deriveRoundView,
+  firstKickoffOf,
   legAddedCelebration,
   lockedRoundBanner,
 } from "./round-view";
@@ -196,6 +197,71 @@ describe("deriveRoundView", () => {
     const single = deriveRoundView({ data: group([withLegs]), selectedRoundId: null, userId: "u1" });
     assert.equal(single.canCreateRound, false);
     assert.equal(single.showEmptyBetHint, false);
+  });
+});
+
+describe("void picks", () => {
+  const LATER = "2026-09-26T16:00:00.000Z";
+
+  it("ignores void legs for the first kickoff", () => {
+    const first = firstKickoffOf([
+      { kickoff: KICKOFF, outcome: "void" },
+      { kickoff: LATER, outcome: "pending" },
+    ]);
+    assert.equal(first?.toISOString(), LATER);
+    assert.equal(firstKickoffOf([{ kickoff: KICKOFF, outcome: "void" }]), null);
+  });
+
+  it("lets the owner swap a void pick on a reopened bet, but not add or remove", () => {
+    const data = group([
+      round("r1", {
+        reopenedAt: KICKOFF,
+        legs: [
+          leg("a", "u1", { outcome: "void", homeTeam: "Leeds", awayTeam: "Hull" }),
+          leg("b", "u2", { kickoff: LATER }),
+        ],
+      }),
+    ]);
+    const view = deriveRoundView({ data, selectedRoundId: null, userId: "u1", now: BEFORE });
+    assert.equal(view.reopened, true);
+    assert.equal(view.canSubmitMore, false);
+    assert.equal(view.canRemove, false);
+    assert.equal(view.firstKickoff?.toISOString(), LATER);
+    assert.deepEqual(view.swappableVoidLegs.map((l) => l.id), ["a"]);
+    assert.match(view.voidBanner ?? "", /^Bet reopened: Leeds vs Hull was postponed or cancelled\. You can swap your pick until /);
+    assert.equal(changeLegTitle(view, "a"), "Swap your void pick");
+
+    const mate = deriveRoundView({ data, selectedRoundId: null, userId: "u2", now: BEFORE });
+    assert.match(mate.voidBanner ?? "", /u1 can swap their pick until /);
+  });
+
+  it("shows no swap once the remaining legs have kicked off", () => {
+    const data = group([
+      round("r1", { legs: [leg("a", "u1", { outcome: "void" }), leg("b", "u2", { kickoff: LATER })] }),
+    ]);
+    const view = deriveRoundView({ data, selectedRoundId: null, userId: "u1", now: Date.parse(LATER) + 1 });
+    assert.deepEqual(view.swappableVoidLegs, []);
+    assert.equal(view.voidBanner, null);
+  });
+
+  it("prices a locked bet without a leg that went void after lock", () => {
+    const data = group([
+      round("r1", {
+        status: "locked",
+        combinedOdds: 4,
+        bestBookmakerId: "bk",
+        betslipLink: "https://book/slip",
+        accaBookmakerRankings: [{ bookmakerId: "bk", bookmakerName: "Book", combinedOdds: 4 }],
+        legs: [leg("a", "u1", { outcome: "void" }), leg("b", "u2", { kickoff: LATER })],
+      }),
+    ]);
+    const view = deriveRoundView({ data, selectedRoundId: null, userId: "u1", now: BEFORE });
+    assert.equal(view.acca.combinedOdds, 2);
+    assert.deepEqual(view.acca.rankings, [], "stale per-bookmaker odds are dropped");
+    assert.equal(view.acca.bookmakerName, "Book");
+    assert.equal(view.acca.legCount, 1);
+    assert.equal(view.acca.betslipLink, "https://book/slip", "a void pick isn't a result");
+    assert.equal(view.showOpenLinks, true);
   });
 });
 

@@ -8,15 +8,29 @@ import {
 import {
   pickReminderEmail,
   pickReminderPush,
+  pickVoidedEmail,
+  pickVoidedPush,
+  type PickVoidedSwap,
   roundLockedEmail,
   roundLockedPush,
   roundSettledEmail,
   roundSettledPush,
 } from "@/lib/notifications/templates";
 import { prisma } from "@tiki-acca/database";
-import { formatLegPoints, membersMissingQuota } from "@tiki-acca/shared";
+import {
+  formatFixtureLabel,
+  formatLegPoints,
+  membersMissingQuota,
+} from "@tiki-acca/shared";
 
 const DEDUPE_ROUND_LOCKED = "round_locked";
+
+/** A reopened round notifies members again when it re-locks. */
+function roundLockedDedupe(reopenedAt: Date | null): string {
+  return reopenedAt
+    ? `${DEDUPE_ROUND_LOCKED}:${reopenedAt.getTime()}`
+    : DEDUPE_ROUND_LOCKED;
+}
 const DEDUPE_ROUND_SETTLED = "round_settled";
 export const DEDUPE_PICK_REMINDER_2H = "pick_reminder_2h";
 
@@ -63,6 +77,56 @@ export async function notifyPickReminder(params: {
   });
 }
 
+/**
+ * Tell a member their pick went void (postponed, cancelled…): swap it before
+ * `deadline`, or the acca continues without it. Once per leg.
+ */
+export async function notifyPickVoided(params: {
+  leg: {
+    id: string;
+    userId: string;
+    roundId: string;
+    fixtureId: string;
+    homeTeam: string;
+    awayTeam: string;
+    selectionLabel: string;
+  };
+  groupId: string;
+  groupName: string;
+  swap: PickVoidedSwap;
+  deadline: Date | null;
+  oddsWithout: number | null;
+}): Promise<DispatchResult> {
+  const fixture = formatFixtureLabel(params.leg, "v");
+  const groupUrl = groupDeepLink(params.groupId);
+  return dispatchNotification({
+    userId: params.leg.userId,
+    type: "pick_voided",
+    dedupeType: `pick_voided:${params.leg.id}`,
+    groupId: params.groupId,
+    roundId: params.leg.roundId,
+    email: pickVoidedEmail({
+      groupName: params.groupName,
+      fixture,
+      selectionLabel: params.leg.selectionLabel,
+      swap: params.swap,
+      deadline: params.deadline,
+      oddsWithout: params.oddsWithout,
+      groupUrl,
+    }),
+    push: {
+      ...pickVoidedPush({
+        groupName: params.groupName,
+        fixture,
+        swap: params.swap,
+        deadline: params.deadline,
+        oddsWithout: params.oddsWithout,
+      }),
+      data: pushData(params.groupId, params.leg.roundId),
+    },
+  });
+}
+
 export async function notifyRoundLocked(roundId: string): Promise<void> {
   const round = await prisma.round.findUnique({
     where: { id: roundId },
@@ -81,18 +145,21 @@ export async function notifyRoundLocked(roundId: string): Promise<void> {
   if (!round || round.status !== "locked") return;
   if (round.lockedNotificationSentAt) return;
 
+  const dedupeType = roundLockedDedupe(round.reopenedAt);
+  // Void picks (postponed…) aren't part of the acca.
+  const liveLegs = round.legs.filter((l) => l.outcome !== "void");
   const groupUrl = groupDeepLink(round.group.id);
   const odds = round.combinedOdds?.toFixed(2) ?? "—";
   const missingCount = membersMissingQuota({
     memberUserIds: round.group.members.map((m) => m.userId),
-    legs: round.legs,
+    legs: liveLegs,
     legsPerMember: round.legsPerMember,
   }).length;
 
   const emailContent = roundLockedEmail({
     groupName: round.group.name,
     combinedOdds: odds,
-    legs: [...round.legs]
+    legs: [...liveLegs]
       .sort((a, b) => {
         const byName = a.user.name.localeCompare(b.user.name);
         if (byName !== 0) return byName;
@@ -116,7 +183,7 @@ export async function notifyRoundLocked(roundId: string): Promise<void> {
     groupId: round.group.id,
     memberUserIds: round.group.members.map((m) => m.userId),
     type: "round_locked",
-    dedupeType: DEDUPE_ROUND_LOCKED,
+    dedupeType,
     roundId: round.id,
     buildForUser: () => ({
       email: emailContent,
@@ -127,7 +194,7 @@ export async function notifyRoundLocked(roundId: string): Promise<void> {
   const complete = await isRoundNotificationComplete({
     memberResults,
     type: "round_locked",
-    dedupeType: DEDUPE_ROUND_LOCKED,
+    dedupeType,
     roundId: round.id,
   });
 

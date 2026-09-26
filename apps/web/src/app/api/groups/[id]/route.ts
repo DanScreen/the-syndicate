@@ -23,9 +23,9 @@ import type {
 } from "@tiki-acca/shared";
 import {
   HISTORY_PAGE_SIZE,
-  allMembersFilledQuota,
   countLegsByUser,
   effectiveLegQuota,
+  openRoundReadyToLock,
   updateGroupSettingsSchema,
 } from "@tiki-acca/shared";
 import { NextResponse } from "next/server";
@@ -62,11 +62,14 @@ async function activeRoundForClient(round: ActiveRoundRecord) {
   let previewCombinedOdds: number | null = null;
   let previewBestBookmakerId: string | null = null;
 
-  if (round.legs.length > 0) {
+  // Void legs (postponed…) count at 1.00: price and link the acca without them.
+  const liveLegs = round.legs.filter((l) => l.outcome !== "void");
+
+  if (liveLegs.length > 0) {
     const { rankings: computedRankings, bookmakerLinksByLegId } =
-      await computeAccaRankingsForLegs(round.legs);
+      await computeAccaRankingsForLegs(liveLegs);
     const legsForLinks = mergeLegBookmakerLinks(
-      round.legs,
+      liveLegs,
       bookmakerLinksByLegId
     );
 
@@ -183,7 +186,8 @@ export async function GET(_request: Request, { params }: Params) {
     for (const round of activeRounds) {
       if (
         round.status !== "open" ||
-        !allMembersFilledQuota({
+        !openRoundReadyToLock({
+          reopened: Boolean(round.reopenedAt),
           memberUserIds: group.members.map((m) => m.userId),
           legs: round.legs,
           legsPerMember: effectiveLegQuota(round),
@@ -373,7 +377,7 @@ export async function PATCH(request: Request, { params }: Params) {
     const activeRounds = await tx.round.findMany({
       where: { groupId: id, status: { in: ["open", "locked"] } },
       include: {
-        legs: { select: { userId: true, kickoff: true } },
+        legs: { select: { userId: true, kickoff: true, outcome: true } },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -384,11 +388,12 @@ export async function PATCH(request: Request, { params }: Params) {
 
     // Solo rounds run on SOLO_MAX_LEGS, so the group quota does not apply to
     // them: they are not re-quota'd, not lock-checked, and not counted by the
-    // "can't lower" guard below.
+    // "can't lower" guard below. Reopened rounds only take void-pick swaps.
     const applicableOpenRounds = activeRounds.filter(
       (round) =>
         round.status === "open" &&
         !round.unlimitedLegs &&
+        !round.reopenedAt &&
         !isPastKickoffCutoff(round.legs)
     );
     if (parsed.data.legsPerMember !== undefined) {
@@ -450,8 +455,8 @@ export async function PATCH(request: Request, { params }: Params) {
   if (parsed.data.legsPerMember !== undefined) {
     for (const round of updateResult.applicableOpenRounds) {
       if (
-        round.legs.length > 0 &&
-        allMembersFilledQuota({
+        openRoundReadyToLock({
+          reopened: false,
           memberUserIds: updateResult.memberUserIds,
           legs: round.legs,
           legsPerMember: updateResult.group.legsPerMember,

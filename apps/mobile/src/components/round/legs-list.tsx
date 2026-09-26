@@ -59,10 +59,12 @@ export function LegsList({
   return (
     <View style={styles.stack}>
       {legs.map((leg) => {
-        const openUrl = showOpenLinks ? linkByLegId.get(leg.id) : undefined;
+        const isVoid = leg.outcome === "void";
+        const openUrl = showOpenLinks && !isVoid ? linkByLegId.get(leg.id) : undefined;
         const showOutcome = inProgress || leg.outcome !== "pending";
+        const outcomeStyled = (inProgress || isVoid) && leg.outcome !== "pending";
         const oc =
-          inProgress && leg.outcome !== "pending"
+          outcomeStyled
             ? outcomeColors(leg.outcome)
             : outcomeColors("pending");
         const nameLabel =
@@ -75,7 +77,7 @@ export function LegsList({
             key={leg.id}
             style={[
               styles.legCard,
-              inProgress && leg.outcome !== "pending"
+              outcomeStyled
                 ? { borderColor: oc.border, backgroundColor: oc.bg }
                 : null,
             ]}
@@ -87,7 +89,7 @@ export function LegsList({
                   <View
                     style={[
                       styles.outcomeBadge,
-                      inProgress && leg.outcome !== "pending"
+                      outcomeStyled
                         ? { borderColor: oc.border, backgroundColor: oc.bg }
                         : null,
                     ]}

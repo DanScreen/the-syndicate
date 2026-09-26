@@ -20,9 +20,11 @@ export async function sendPickReminders(
   const windowEnd = new Date(now.getTime() + TWO_HOURS_MS);
 
   const rounds = await prisma.round.findMany({
-    where: { status: "open", legs: { some: {} } },
+    // Reopened rounds only take swaps for void picks — their owners get a
+    // pick_voided notification instead.
+    where: { status: "open", reopenedAt: null, legs: { some: {} } },
     include: {
-      legs: { select: { userId: true, kickoff: true } },
+      legs: { select: { userId: true, kickoff: true, outcome: true } },
       group: {
         select: {
           id: true,

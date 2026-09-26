@@ -1,11 +1,18 @@
-/** Earliest kickoff across a round's legs — lock and edit cutoff. */
-export function firstKickoff(legs: { kickoff: Date }[]): Date | null {
-  if (legs.length === 0) return null;
-  return legs.reduce((min, l) => (l.kickoff < min ? l.kickoff : min), legs[0]!.kickoff);
+/**
+ * Earliest kickoff across a round's live legs — lock and edit cutoff. Void
+ * legs (postponed, cancelled…) never kick off, so they don't count.
+ */
+export function firstKickoff(legs: { kickoff: Date; outcome?: string }[]): Date | null {
+  let min: Date | null = null;
+  for (const leg of legs) {
+    if (leg.outcome === "void") continue;
+    if (!min || leg.kickoff < min) min = leg.kickoff;
+  }
+  return min;
 }
 
 export function isPastKickoffCutoff(
-  legs: { kickoff: Date }[],
+  legs: { kickoff: Date; outcome?: string }[],
   now: Date = new Date()
 ): boolean {
   const cutoff = firstKickoff(legs);
