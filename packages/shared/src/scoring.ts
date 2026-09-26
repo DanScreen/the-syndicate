@@ -49,6 +49,47 @@ export function groupAccaRoundPoints(
   return Number((combinedOdds - 1).toFixed(2));
 }
 
+type OddsLeg = { outcome: string; odds: number };
+
+function productOf(legs: ReadonlyArray<OddsLeg>): number {
+  return legs.reduce((acc, l) => acc * l.odds, 1);
+}
+
+/**
+ * True when the stored `combinedOdds` still includes a void leg: the pick went
+ * void after the acca was priced. A round that re-locked after a void pick is
+ * priced without it, so its stored odds (and bookmaker rankings) stand.
+ */
+export function lockedPriceIncludesVoidLegs(
+  combinedOdds: number | null,
+  legs: ReadonlyArray<OddsLeg>
+): boolean {
+  if (combinedOdds == null || !legs.some((l) => l.outcome === "void")) return false;
+  const live = legs.filter((l) => l.outcome !== "void");
+  return (
+    Math.abs(combinedOdds - productOf(legs)) < Math.abs(combinedOdds - productOf(live))
+  );
+}
+
+/**
+ * Combined odds the acca actually pays at: a void leg counts at 1.00, as it
+ * does at the bookmaker. The locked `combinedOdds` unless it still prices a
+ * void leg; then the product of the remaining legs' odds (rewritten to the
+ * locked bookmaker's prices at lock), or 1 if every leg is void.
+ */
+export function effectiveAccaOdds(
+  combinedOdds: number | null,
+  legs: ReadonlyArray<OddsLeg>
+): number | null {
+  if (!legs.some((l) => l.outcome === "void")) return combinedOdds;
+  const live = legs.filter((l) => l.outcome !== "void");
+  if (live.length === 0) return 1;
+  if (combinedOdds != null && !lockedPriceIncludesVoidLegs(combinedOdds, legs)) {
+    return combinedOdds;
+  }
+  return Number(productOf(live).toFixed(2));
+}
+
 /**
  * Member points for one leg in a settled acca round.
  * Always scores the pick on its own result (independent of group acca P/L):

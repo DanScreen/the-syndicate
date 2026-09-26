@@ -60,10 +60,12 @@ export function LegsList({
   return (
     <ul className="space-y-2">
       {legs.map((leg) => {
-        const openUrl = showOpenLinks ? linkByLegId.get(leg.id) : undefined;
+        const isVoid = leg.outcome === "void";
+        const openUrl = showOpenLinks && !isVoid ? linkByLegId.get(leg.id) : undefined;
         const isOwnLeg = currentUserId != null && leg.user.id === currentUserId;
         const canEditLeg = isOwnLeg && editWindowOpen;
         const showOutcome = inProgress || leg.outcome !== "pending";
+        const outcomeStyled = inProgress || isVoid;
         const nameLabel =
           showLegIndex && leg.legIndex != null
             ? `${leg.user.name} · leg ${leg.legIndex}`
@@ -73,7 +75,7 @@ export function LegsList({
           <li
             key={leg.id}
             className={`rounded-lg border px-4 py-3 text-sm ${
-              inProgress && leg.outcome !== "pending"
+              outcomeStyled && leg.outcome !== "pending"
                 ? legOutcomeClass(leg.outcome)
                 : "border-border bg-card"
             }`}
@@ -86,7 +88,7 @@ export function LegsList({
                     {showOutcome && (
                       <span
                         className={`rounded-full border px-2 py-0.5 text-xs font-medium ${
-                          inProgress ? legOutcomeClass(leg.outcome) : "border-border text-muted"
+                          outcomeStyled ? legOutcomeClass(leg.outcome) : "border-border text-muted"
                         }`}
                       >
                         {legOutcomeLabel(leg.outcome)}
@@ -130,10 +132,10 @@ export function LegsList({
                       onClick={() => onChangeLeg(leg.id)}
                       className="rounded border border-accent px-2 py-1 text-xs font-medium text-accent hover:bg-accent-muted/30"
                     >
-                      Change
+                      {isVoid ? "Swap" : "Change"}
                     </button>
                   )}
-                  {canEditLeg && canRemove && onRemoveLeg && (
+                  {canEditLeg && canRemove && !isVoid && onRemoveLeg && (
                     <button
                       type="button"
                       disabled={removingLegId === leg.id}

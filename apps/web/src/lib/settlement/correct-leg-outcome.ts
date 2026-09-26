@@ -4,7 +4,7 @@ import {
   pointsForMemberLeg,
 } from "@/lib/settlement/points";
 import { prisma } from "@tiki-acca/database";
-import type { LegOutcome } from "@tiki-acca/shared";
+import { effectiveAccaOdds, type LegOutcome } from "@tiki-acca/shared";
 
 type DecidedOutcome = Exclude<LegOutcome, "pending">;
 
@@ -129,9 +129,13 @@ export async function correctLegOutcome(
     }
 
     if (leg.round.status === "settled") {
+      const accaOdds = effectiveAccaOdds(
+        leg.round.combinedOdds,
+        leg.round.legs.map((l, i) => ({ odds: l.odds, outcome: previewOutcomes[i]! }))
+      );
       const profitLoss = calculateGroupProfitLoss(
         previewOutcomes,
-        leg.round.combinedOdds ?? 1,
+        accaOdds ?? 1,
         leg.round.stakeGbp
       );
       await tx.round.update({

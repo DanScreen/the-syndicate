@@ -3,7 +3,11 @@ import { activeLegsInRound, yourLegInRound } from "@/lib/groups/your-leg-summary
 import { openRound } from "@/lib/rounds/open-round";
 import { groupNetPoints, memberNetPointsAcrossRounds } from "@/lib/stats/helpers";
 import { prisma } from "@tiki-acca/database";
-import type { GroupSummary, RoundStatus } from "@tiki-acca/shared";
+import {
+  effectiveAccaOdds,
+  type GroupSummary,
+  type RoundStatus,
+} from "@tiki-acca/shared";
 
 /**
  * One card per group the member belongs to — the payload behind the web
@@ -55,7 +59,10 @@ export async function listGroupSummaries(userId: string): Promise<GroupSummary[]
             id: activeRoundRow.id,
             betNumber: activeRoundRow.betNumber,
             status: activeRoundRow.status as RoundStatus,
-            combinedOdds: activeRoundRow.combinedOdds,
+            combinedOdds:
+              activeRoundRow.status === "locked"
+                ? effectiveAccaOdds(activeRoundRow.combinedOdds, activeRoundRow.legs)
+                : activeRoundRow.combinedOdds,
             legsPerMember: activeRoundRow.legsPerMember,
           }
         : null;

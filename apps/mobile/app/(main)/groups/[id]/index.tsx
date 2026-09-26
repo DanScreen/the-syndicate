@@ -292,7 +292,13 @@ export default function GroupRoundScreen() {
         </Card>
       ) : null}
 
-      {isOpen && round && !isSolo && members.length > 0 ? (
+      {view.voidBanner ? (
+        <View style={styles.voidBanner}>
+          <Text style={styles.voidBannerText}>{view.voidBanner}</Text>
+        </View>
+      ) : null}
+
+      {isOpen && round && !isSolo && !view.reopened && members.length > 0 ? (
         <View style={styles.section}>
           <RoundProgress
             members={members}
@@ -365,7 +371,7 @@ export default function GroupRoundScreen() {
           betslipLink={acca.betslipLink}
           betslipLinkQuality={acca.betslipLinkQuality}
           betslipHasAllLegLinks={acca.betslipHasAllLegLinks}
-          legCount={round?.legs.length ?? 1}
+          legCount={acca.legCount || 1}
           // Show the ranked best-odds-across-bookmakers list while open
           // (using current odds) and once locked (odds captured at lock) — locked is
           // when members go place the bet, so the comparison is essential.
@@ -381,7 +387,7 @@ export default function GroupRoundScreen() {
         <Card>
           <Text style={styles.editTitle}>Your picks</Text>
           <Text style={styles.editMeta}>
-            You can change {isOpen ? "or remove " : ""}them until the first kickoff
+            You can change {view.canRemove ? "or remove " : ""}them until the first kickoff
             {firstKickoff ? ` — ${formatKickoff(firstKickoff)}` : ""}.
             {isLocked ? " Changing a pick reprices the whole acca at current odds." : ""}
           </Text>
@@ -394,11 +400,11 @@ export default function GroupRoundScreen() {
               </Text>
               <View style={styles.myLegActions}>
                 <Button
-                  label="Change"
+                  label={leg.outcome === "void" ? "Swap void pick" : "Change"}
                   onPress={() => setEditingLegId(leg.id)}
                   variant="secondary"
                 />
-                {isOpen ? (
+                {view.canRemove && leg.outcome !== "void" ? (
                   <Pressable
                     accessibilityRole="button"
                     disabled={removingLegId === leg.id}
@@ -556,6 +562,15 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   lockedBannerText: { color: colors.accent, fontSize: 14 },
+  voidBanner: {
+    borderWidth: 1,
+    borderColor: "rgba(251, 191, 36, 0.4)",
+    backgroundColor: "rgba(251, 191, 36, 0.1)",
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  voidBannerText: { color: colors.warning, fontSize: 14 },
   editTitle: { color: colors.text, fontWeight: "600", marginBottom: 4 },
   editMeta: { color: colors.muted, fontSize: 13, marginBottom: 12 },
   myLegRow: { gap: 8, marginBottom: 10 },

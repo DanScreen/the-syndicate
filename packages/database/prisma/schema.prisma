@@ -143,6 +143,11 @@ model Round {
   stakeGbp        Float    @default(10)
   profitLossGbp   Float?
   lockedAt        DateTime?
+  /// Set when a locked round reopens because a leg went void (postponed,
+  /// cancelled…) before the other legs kicked off. The owner can swap the pick
+  /// until the first remaining kickoff; the round re-locks then, or as soon
+  /// as no void legs remain.
+  reopenedAt      DateTime?
   settledAt       DateTime?
   lockedNotificationSentAt  DateTime?
   settledNotificationSentAt DateTime?

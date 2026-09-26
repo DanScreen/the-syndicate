@@ -30,7 +30,10 @@ export async function claimAndLockRound(roundId: string): Promise<ClaimLockResul
     include: { legs: true },
   });
 
-  if (!round || round.legs.length === 0) {
+  // Void legs (postponed, cancelled…) count at 1.00 — price the acca without them.
+  const liveLegs = round?.legs.filter((l) => l.outcome !== "void") ?? [];
+
+  if (!round || liveLegs.length === 0) {
     await prisma.round.updateMany({
       where: { id: roundId, status: "locked" },
       data: { status: "open" },
@@ -39,7 +42,7 @@ export async function claimAndLockRound(roundId: string): Promise<ClaimLockResul
   }
 
   try {
-    await lockRoundWithAccaPricing(roundId, round.legs);
+    await lockRoundWithAccaPricing(roundId, liveLegs);
   } catch (err) {
     await prisma.round.updateMany({
       where: { id: roundId, status: "locked" },

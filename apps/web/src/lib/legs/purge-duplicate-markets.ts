@@ -76,7 +76,9 @@ export async function purgeDuplicateMarketsInRound(
 
   let repriced = false;
   if (round.status === "locked") {
-    const remaining = await prisma.leg.findMany({ where: { roundId } });
+    const remaining = await prisma.leg.findMany({
+      where: { roundId, outcome: { not: "void" } },
+    });
     if (remaining.length > 0) {
       await lockRoundWithAccaPricing(roundId, remaining);
       repriced = true;

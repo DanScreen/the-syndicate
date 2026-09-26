@@ -40,6 +40,7 @@ Core loop and MVP polish are **shipped**:
 - **Concurrent group bets** — owner cap 1–5, guarded member creation, web/mobile active-bet switcher — [spec](./specs/concurrent-group-bets.md) (feature branch; owner testing pending)
 - **Account page** — greeting → `/account` (notifications + sign out); Notifications removed from app nav
 - **Group chat & reactions** — one longstanding web/mobile Chat tab per group, Bet-labelled lifecycle messages, pick-mirrored reactions, unread badges, batched push — [spec](./specs/group-chat.md)
+- **Void picks** (Sep 2026) — postponed/cancelled matches void the pick at 1.00 (acca repriced, P/L and points follow); owner notified by email + push; a locked acca reopens for a swap until the other legs' first kickoff — see [CURRENT_STATE](./CURRENT_STATE.md#void-picks-postponed-or-cancelled-matches)
 
 ---
 

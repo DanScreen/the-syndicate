@@ -132,7 +132,11 @@ export async function postLegRemovedMessage(
 export async function postRoundLockedMessage(db: Db, roundId: string): Promise<void> {
   const round = await db.round.findUnique({
     where: { id: roundId },
-    select: { combinedOdds: true, _count: { select: { legs: true } } },
+    select: {
+      combinedOdds: true,
+      // A void pick left in isn't part of the acca that was locked.
+      _count: { select: { legs: { where: { outcome: { not: "void" } } } } },
+    },
   });
   if (!round) return;
   const legCount = round._count.legs;
@@ -142,6 +146,25 @@ export async function postRoundLockedMessage(db: Db, roundId: string): Promise<v
     roundId,
     eventType: "round_locked",
     body: `Acca locked. ${legsPart}${oddsPart}. Good luck! 🔐`,
+  });
+}
+
+/**
+ * Posted by the winner of the `locked → open` reopen claim when a pick went
+ * void before the other legs kicked off.
+ */
+export async function postRoundReopenedMessage(
+  db: Db,
+  leg: AnnouncedLeg,
+  deadlineLabel: string,
+  userName?: string
+): Promise<void> {
+  const name = userName ?? (await displayName(db, leg.userId));
+  await createSystemMessage(db, {
+    roundId: leg.roundId,
+    eventType: "round_reopened",
+    legId: leg.id,
+    body: `Acca reopened 🔓 ${formatFixtureLabel(leg, "v")} is off, so ${name}'s ${leg.selectionLabel} is void. ${name} can swap it until ${deadlineLabel}, otherwise the acca goes ahead without it.`,
   });
 }
 

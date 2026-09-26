@@ -22,6 +22,10 @@ export type ReconcileMatchLegsResult = {
   roundsSettled: number;
 };
 
+function sameUtcDay(a: Date, b: Date): boolean {
+  return a.toISOString().slice(0, 10) === b.toISOString().slice(0, 10);
+}
+
 async function attachUnlinkedLegs(
   match: Match
 ): Promise<LegWithRound[]> {
@@ -104,6 +108,8 @@ export async function reconcileMatchLegOutcomes(
 
   for (const leg of uniqueLegs) {
     if (leg.round.status !== "locked" && leg.round.status !== "settled") continue;
+    // A void pick whose match was rescheduled to another day stays void.
+    if (leg.outcome === "void" && !sameUtcDay(leg.kickoff, match.kickoff)) continue;
 
     const base = dbMatchToResult(match);
     if (!base) continue;

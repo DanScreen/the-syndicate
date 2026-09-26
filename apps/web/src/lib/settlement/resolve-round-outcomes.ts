@@ -62,6 +62,13 @@ export async function resolveRoundOutcomes(
       continue;
     }
 
+    // Void is sticky: a postponed match that is later rescheduled doesn't
+    // bring the pick back (correct-leg-outcome is the admin override).
+    if (leg.outcome === "void") {
+      outcomeMap.set(leg.id, "void");
+      continue;
+    }
+
     const matchData = await getMatchResultForLegFromDb({
       id: leg.id,
       matchId: leg.matchId,

@@ -1,5 +1,5 @@
 import { prisma } from "@tiki-acca/database";
-import { isOutrightFixtureId } from "@tiki-acca/shared";
+import { effectiveAccaOdds, isOutrightFixtureId } from "@tiki-acca/shared";
 
 /** A pending leg is flagged for intervention this long after its scheduled kickoff.
  *  Match duration (~2h, longer with extra time) + RESULT_CONFIRMATION_MS after FT
@@ -87,7 +87,8 @@ export async function computeSettlementQueue(now = new Date()): Promise<Settleme
       groupName: round.group.name,
       lockedAt: round.lockedAt?.toISOString() ?? null,
       settledAt: round.settledAt?.toISOString() ?? null,
-      combinedOdds: round.combinedOdds,
+      // Void legs count at 1.00.
+      combinedOdds: effectiveAccaOdds(round.combinedOdds, round.legs),
       resolvedCount: legs.filter((l) => l.outcome !== "pending").length,
       overdueCount: legs.filter((l) => l.overdue).length,
       legs,

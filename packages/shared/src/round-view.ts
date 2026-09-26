@@ -7,6 +7,9 @@ import type {
 } from "./api-types";
 import type { RoundMessageDto } from "./chat";
 import { SOLO_MAX_LEGS } from "./constants";
+import { formatFixtureLabel } from "./fixtures";
+import { formatKickoff } from "./round-display";
+import { effectiveAccaOdds, lockedPriceIncludesVoidLegs } from "./scoring";
 
 /** Combined-odds card for the selected bet (`show` false when there is nothing to price). */
 export type AccaSummaryView = {
@@ -21,6 +24,8 @@ export type AccaSummaryView = {
   betslipHasAllLegLinks: boolean;
   /** Collapse the bookmaker comparison once the bet is underway. */
   compareDefaultOpen: boolean;
+  /** Legs in the acca — void picks drop out. */
+  legCount: number;
 };
 
 /**
@@ -34,17 +39,24 @@ export type RoundView = {
   round: ActiveRound | null;
   isOpen: boolean;
   isLocked: boolean;
+  /** A locked bet reopened because a pick went void — only swaps are allowed. */
+  reopened: boolean;
   isSolo: boolean;
   /** Per-member quota (SOLO_MAX_LEGS for solo bets). */
   legsPerMember: number;
   /** Your legs on the selected bet. */
   userLegs: GroupLeg[];
   canSubmitMore: boolean;
+  /** Removing a pick is allowed (open bets that were never locked). */
+  canRemove: boolean;
+  /** Picks voided (postponed, cancelled…) that their owner can still swap. */
+  swappableVoidLegs: GroupLeg[];
   /** 1-based slot for your next leg. */
   nextSlot: number;
   /** Heading for the add-leg form, or undefined for the default. */
   submitTitle: string | undefined;
   showLegIndex: boolean;
+  /** First kickoff among live (non-void) legs — the betting / swap deadline. */
   firstKickoff: Date | null;
   /** First fixture has kicked off — betting has closed. */
   accaStarted: boolean;
@@ -53,6 +65,8 @@ export type RoundView = {
   resolvedLegCount: number;
   /** Banner over a locked bet; null while open. */
   lockedBanner: string | null;
+  /** Banner explaining a void pick that can still be swapped; null otherwise. */
+  voidBanner: string | null;
   /** Per-leg "Open" links only before any result is in. */
   showOpenLinks: boolean;
   legLinks: BetslipLinks["legLinks"] | undefined;
@@ -71,9 +85,46 @@ export function selectActiveRounds(data: GroupDetailResponse): ActiveRound[] {
   return data.activeRound ? [data.activeRound] : [];
 }
 
-export function firstKickoffOf(legs: { kickoff: string }[]): Date | null {
-  if (legs.length === 0) return null;
-  return new Date(Math.min(...legs.map((l) => new Date(l.kickoff).getTime())));
+/** First kickoff among live legs. Void legs (postponed…) never kick off. */
+export function firstKickoffOf(
+  legs: ReadonlyArray<{ kickoff: string; outcome?: string }>
+): Date | null {
+  const live = legs.filter((l) => l.outcome !== "void");
+  if (live.length === 0) return null;
+  return new Date(Math.min(...live.map((l) => new Date(l.kickoff).getTime())));
+}
+
+/**
+ * Explains a void pick on an open bet: who can swap it, until when, and what
+ * happens if they don't.
+ */
+export function voidLegBanner({
+  voidLegs,
+  userId,
+  deadline,
+  reopened,
+}: {
+  voidLegs: ReadonlyArray<Pick<GroupLeg, "homeTeam" | "awayTeam" | "user">>;
+  userId: string | null | undefined;
+  deadline: Date | null;
+  reopened: boolean;
+}): string | null {
+  const leg = voidLegs[0];
+  if (!leg) return null;
+  const fixture =
+    voidLegs.length === 1 ? formatFixtureLabel(leg) : `${voidLegs.length} picks`;
+  const verb = voidLegs.length === 1 ? "was" : "were";
+  const lead = reopened
+    ? `Bet reopened: ${fixture} ${verb} postponed or cancelled.`
+    : `${fixture} ${verb} postponed or cancelled.`;
+  const who =
+    voidLegs.every((l) => l.user.id === userId)
+      ? "You can swap your pick"
+      : voidLegs.length === 1
+        ? `${leg.user.name} can swap their pick`
+        : "Their owners can swap them";
+  const until = deadline ? ` until ${formatKickoff(deadline)}` : "";
+  return `${lead} ${who}${until}, otherwise the acca goes ahead without it.`;
 }
 
 export function lockedRoundBanner(resolvedLegCount: number, legCount: number): string {
@@ -103,13 +154,15 @@ export function deriveRoundView({
   const legs = round?.legs ?? [];
   const isOpen = round?.status === "open";
   const isLocked = round?.status === "locked";
+  const reopened = isOpen && Boolean(round?.reopenedAt);
   const isSolo = Boolean(round?.unlimitedLegs);
   const legsPerMember = isSolo
     ? SOLO_MAX_LEGS
     : (round?.legsPerMember ?? data.group.legsPerMember ?? 1);
 
   const userLegs = userId ? legs.filter((l) => l.user.id === userId) : [];
-  const canSubmitMore = Boolean(userId) && isOpen && userLegs.length < legsPerMember;
+  const canSubmitMore =
+    Boolean(userId) && isOpen && !reopened && userLegs.length < legsPerMember;
   const nextSlot = userLegs.length + 1;
   const submitTitle = isSolo
     ? `Add leg ${nextSlot}`
@@ -121,16 +174,32 @@ export function deriveRoundView({
   const accaStarted = Boolean(firstKickoff && now >= firstKickoff.getTime());
   const editWindowOpen =
     (isOpen || isLocked) && (!firstKickoff || now < firstKickoff.getTime());
+  const swappableVoidLegs =
+    isOpen && editWindowOpen ? legs.filter((l) => l.outcome === "void") : [];
   const resolvedLegCount = legs.filter((l) => l.outcome !== "pending").length;
+  // Links stay up until a match is decided — a void pick isn't a result, and a
+  // re-locked acca still needs placing.
+  const noResultYet = !legs.some((l) => l.outcome === "won" || l.outcome === "lost");
   const betslipLinks = round?.betslipLinks ?? data.betslipLinks;
   const betslipLink = round?.betslipLink ?? data.betslipLink;
 
-  const rankings = round?.accaBookmakerRankings ?? [];
-  const combinedOdds = round?.combinedOdds ?? rankings[0]?.combinedOdds ?? null;
-  const bestBookmakerId = round?.bestBookmakerId ?? rankings[0]?.bookmakerId ?? null;
+  const storedRankings = round?.accaBookmakerRankings ?? [];
+  // Rankings captured before a pick went void still price it; each
+  // bookmaker's quote for it isn't kept, so drop the comparison rather than
+  // show wrong odds.
+  const rankings =
+    isLocked && lockedPriceIncludesVoidLegs(round?.combinedOdds ?? null, legs)
+      ? []
+      : storedRankings;
+  // A void leg counts at 1.00 once the acca is locked.
+  const lockedOdds = isLocked
+    ? effectiveAccaOdds(round?.combinedOdds ?? null, legs)
+    : (round?.combinedOdds ?? null);
+  const combinedOdds = lockedOdds ?? rankings[0]?.combinedOdds ?? null;
+  const bestBookmakerId = round?.bestBookmakerId ?? storedRankings[0]?.bookmakerId ?? null;
   const bookmakerName =
-    rankings.find((r) => r.bookmakerId === bestBookmakerId)?.bookmakerName ??
-    rankings.find((r) => r.bookmakerId === round?.bestBookmakerId)?.bookmakerName ??
+    storedRankings.find((r) => r.bookmakerId === bestBookmakerId)?.bookmakerName ??
+    storedRankings.find((r) => r.bookmakerId === round?.bestBookmakerId)?.bookmakerName ??
     legs[0]?.bookmakerName ??
     null;
 
@@ -146,10 +215,13 @@ export function deriveRoundView({
     round,
     isOpen,
     isLocked,
+    reopened,
     isSolo,
     legsPerMember,
     userLegs,
     canSubmitMore,
+    canRemove: isOpen && !reopened,
+    swappableVoidLegs,
     nextSlot,
     submitTitle,
     showLegIndex: isSolo || legsPerMember > 1,
@@ -158,7 +230,13 @@ export function deriveRoundView({
     editWindowOpen,
     resolvedLegCount,
     lockedBanner: isLocked ? lockedRoundBanner(resolvedLegCount, legs.length) : null,
-    showOpenLinks: isLocked && resolvedLegCount === 0,
+    voidBanner: voidLegBanner({
+      voidLegs: swappableVoidLegs,
+      userId,
+      deadline: firstKickoff,
+      reopened,
+    }),
+    showOpenLinks: isLocked && noResultYet,
     legLinks: betslipLinks?.legLinks,
     acca: {
       show:
@@ -169,10 +247,11 @@ export function deriveRoundView({
       bestBookmakerId,
       bookmakerName,
       rankings,
-      betslipLink: isOpen || (isLocked && resolvedLegCount === 0) ? betslipLink : null,
+      betslipLink: isOpen || (isLocked && noResultYet) ? betslipLink : null,
       betslipLinkQuality: betslipLinks?.primaryLinkQuality ?? null,
       betslipHasAllLegLinks: betslipLinks?.primaryHasAllLegLinks ?? false,
       compareDefaultOpen: !accaStarted,
+      legCount: legs.filter((l) => l.outcome !== "void").length,
     },
     activeBetLimit,
     emptyOpenBet,
@@ -184,6 +263,7 @@ export function deriveRoundView({
 
 /** Heading for the change-leg form. */
 export function changeLegTitle(view: RoundView, legId: string): string | undefined {
+  if (view.swappableVoidLegs.some((l) => l.id === legId)) return "Swap your void pick";
   if (view.legsPerMember <= 1) return undefined;
   return `Change leg ${view.userLegs.find((l) => l.id === legId)?.legIndex ?? ""}`;
 }

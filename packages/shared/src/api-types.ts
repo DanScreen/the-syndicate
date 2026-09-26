@@ -189,6 +189,8 @@ export type ActiveRound = {
   betslipLinks: BetslipLinks | null;
   createdAt: string;
   lockedAt?: string | null;
+  /** Set while a locked bet is reopened so a void (postponed…) pick can be swapped. */
+  reopenedAt?: string | null;
 };
 
 export type GroupDetailResponse = {
