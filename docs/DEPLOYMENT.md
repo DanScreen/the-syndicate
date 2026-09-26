@@ -567,6 +567,7 @@ One-off fixes (solo test rounds, re-settle after a bug) use `apps/web/scripts/da
 |------|----------|
 | List your solo test accas | `npm run db:maintenance -- preview-solo-rounds --email you@example.com` |
 | Delete solo test accas + reverse points | `npm run db:maintenance -- remove-solo-rounds --email you@example.com --execute` |
+| Move a settled bet to another group (e.g. a solo acca placed in a shared group) | `npm run db:maintenance -- move-round --round-id <id> --to-group <inviteCode> --execute` — see below |
 | Find a round by fixture | `npm run db:maintenance -- find-rounds Norway England` |
 | Preview outcome fix (e.g. draw mis-resolved) | Deploy orientation fix first, then `npm run db:maintenance -- preview-resettle --round-id <id>` |
 | Re-settle a settled round | `npm run db:maintenance -- resettle-round --round-id <id> --execute` |
@@ -615,6 +616,8 @@ Dry run by default; append `--apply` to commit. Bookmaker is inherited from the 
 After applying, verify independently: `Round.combinedOdds`, the leg's `matchId` (a `null` means no auto-settlement — settle by hand in `/admin/settlement`), and that `User.name` and `User.lastName` agree.
 
 **Solo round** = every leg in the round belongs to that email (typical single-player test accas).
+
+**Move round** takes the round id from `preview-solo-rounds` (it prints group and bet number) and the destination group's invite code or id. It only moves **settled** rounds, and refuses unless every leg owner is already a member of the destination. In one transaction it moves each leg's `pointsAwarded` and won/lost count from the source `GroupMember` row to the destination one (`User` totals are unchanged). It places the bet chronologically in the destination's numbering, shifting later bets up, and closes the gap in the source unless `--keep-source-numbers` is passed. It also moves the bet's system chat messages and `NotificationLog.groupId`, deletes reactions on those messages from people outside the destination group, and sets `unlimitedLegs` to match the destination's size.
 
 **Re-settle** reverses the old settlement, re-resolves legs from synced `Match` rows (with correct home/away alignment), then runs the normal settlement path again. Deploy the orientation fix before re-settling Norway vs England.
 
