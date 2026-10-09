@@ -354,7 +354,7 @@ export function SubmitLegForm({
             </button>
           </div>
           <p className="text-xs font-medium uppercase tracking-wide text-muted">4. Pick your selection</p>
-          <div className="grid gap-2 sm:grid-cols-3">
+          <div className="grid gap-2">
             {market.selections.map((s) => {
               const top = sortQuotesByBestOdds(s.odds)[0];
               return (
@@ -363,17 +363,21 @@ export function SubmitLegForm({
                   type="button"
                   aria-pressed={selectionId === s.id}
                   onClick={() => setSelectionId(s.id)}
-                  className={`rounded-lg border px-3 py-3 text-sm ${
+                  className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-3 text-left text-sm ${
                     selectionId === s.id
                       ? "border-accent bg-accent-muted/30"
                       : "border-border hover:border-accent/40"
                   }`}
                 >
-                  <p className="flex items-center justify-center gap-1.5 font-medium">
-                    {selectionId === s.id && <CheckIcon className="text-accent" />}
-                    {s.label}
-                  </p>
-                  {top && <p className="mt-1 text-accent">Best {formatOdds(top.odds)}</p>}
+                  <span className="flex min-w-0 items-center gap-1.5 font-medium">
+                    {selectionId === s.id && <CheckIcon className="shrink-0 text-accent" />}
+                    <span className="truncate">{s.label}</span>
+                  </span>
+                  {top ? (
+                    <span className="shrink-0 text-base font-semibold tabular-nums text-accent sm:text-lg">
+                      Best {formatOdds(top.odds)}
+                    </span>
+                  ) : null}
                 </button>
               );
             })}
