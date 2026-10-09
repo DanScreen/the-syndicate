@@ -374,7 +374,7 @@ export function SubmitLegForm({
                     <span className="truncate">{s.label}</span>
                   </span>
                   {top ? (
-                    <span className="shrink-0 text-base font-semibold tabular-nums text-accent sm:text-lg">
+                    <span className="shrink-0 text-lg font-bold tabular-nums text-accent">
                       Best {formatOdds(top.odds)}
                     </span>
                   ) : null}
