@@ -116,6 +116,7 @@ export function EmptyState({
 export function OptionRow({
   label,
   subtitle,
+  trailing,
   selected,
   onPress,
   dashed,
@@ -123,6 +124,8 @@ export function OptionRow({
 }: {
   label: string;
   subtitle?: string;
+  /** Prominent value on the right (e.g. best odds). */
+  trailing?: string;
   selected: boolean;
   onPress: () => void;
   dashed?: boolean;
@@ -134,6 +137,7 @@ export function OptionRow({
       disabled={disabled}
       accessibilityRole="button"
       accessibilityState={{ selected, disabled: Boolean(disabled) }}
+      accessibilityLabel={trailing ? `${label}, ${trailing}` : label}
       style={({ pressed }) => [
         styles.option,
         dashed && styles.optionDashed,
@@ -142,16 +146,31 @@ export function OptionRow({
         pressed && !disabled && styles.pressed,
       ]}
     >
-      <Text
-        style={[
-          styles.optionText,
-          selected && styles.optionTextSelected,
-          disabled && styles.optionTextDisabled,
-        ]}
-      >
-        {label}
-      </Text>
-      {subtitle ? <Text style={styles.optionSubtitle}>{subtitle}</Text> : null}
+      <View style={styles.optionContent}>
+        <View style={styles.optionCopy}>
+          <Text
+            style={[
+              styles.optionText,
+              selected && styles.optionTextSelected,
+              disabled && styles.optionTextDisabled,
+            ]}
+          >
+            {label}
+          </Text>
+          {subtitle ? <Text style={styles.optionSubtitle}>{subtitle}</Text> : null}
+        </View>
+        {trailing ? (
+          <Text
+            style={[
+              styles.optionTrailing,
+              selected && styles.optionTrailingSelected,
+              disabled && styles.optionTextDisabled,
+            ]}
+          >
+            {trailing}
+          </Text>
+        ) : null}
+      </View>
     </Pressable>
   );
 }
@@ -243,6 +262,16 @@ const styles = StyleSheet.create({
     borderColor: colors.accent,
     backgroundColor: colors.accentMuted,
   },
+  optionContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  optionCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
   optionText: {
     color: colors.text,
     fontSize: 15,
@@ -261,6 +290,16 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 12,
     marginTop: 4,
+  },
+  optionTrailing: {
+    color: colors.accent,
+    fontSize: 18,
+    fontWeight: "700",
+    fontVariant: ["tabular-nums"],
+    flexShrink: 0,
+  },
+  optionTrailingSelected: {
+    color: colors.accent,
   },
   emptyState: {
     borderWidth: 1,

@@ -303,7 +303,7 @@ export function SubmitLegForm({
               <OptionRow
                 key={s.id}
                 label={s.label}
-                subtitle={top ? `Best ${formatOdds(top.odds)}` : undefined}
+                trailing={top ? `Best ${formatOdds(top.odds)}` : undefined}
                 selected={selectionId === s.id}
                 onPress={() => setSelectionId(s.id)}
               />
