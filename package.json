@@ -34,13 +34,17 @@
   },
   "overrides": {
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "postcss": "^8.5.31",
+    "@prisma/config": {
+      "deepmerge-ts": "8.0.2"
+    }
   },
   "dependencies": {
     "react": "19.1.0",
     "react-dom": "19.1.0"
   },
   "devDependencies": {
-    "sharp": "0.34.5"
+    "sharp": "0.35.5"
   }
 }
