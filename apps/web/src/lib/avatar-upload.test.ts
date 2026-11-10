@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import sharp from "sharp";
-import { AVATAR_SIZE, normaliseAvatar } from "./avatar-upload";
+import { AVATAR_SIZE, greyscaleAvatar, normaliseAvatar } from "./avatar-upload";
 
 describe("normaliseAvatar", () => {
   it("crops any image to a small square WebP", async () => {
@@ -38,5 +38,26 @@ describe("normaliseAvatar", () => {
 
   it("rejects files that are not images", async () => {
     assert.equal(await normaliseAvatar(Buffer.from("definitely not a picture")), null);
+  });
+});
+
+describe("greyscaleAvatar", () => {
+  it("returns a same-size WebP with no colour", async () => {
+    const colour = await normaliseAvatar(
+      await sharp({
+        create: { width: 300, height: 300, channels: 3, background: "#f59e0b" },
+      })
+        .png()
+        .toBuffer()
+    );
+    assert.ok(colour);
+    const out = await greyscaleAvatar(colour);
+    const meta = await sharp(out).metadata();
+    assert.equal(meta.format, "webp");
+    assert.equal(meta.width, AVATAR_SIZE);
+    const { data } = await sharp(out).raw().toBuffer({ resolveWithObject: true });
+    for (let i = 0; i < data.length; i += 3) {
+      assert.ok(Math.abs(data[i] - data[i + 1]) <= 2 && Math.abs(data[i + 1] - data[i + 2]) <= 2);
+    }
   });
 });

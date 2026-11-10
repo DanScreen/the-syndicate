@@ -14,8 +14,8 @@ const SIZES = {
 /**
  * Profile picture when `imageUrl` is set, otherwise initials on the member's
  * colour (same palette and hash as the mobile app). If the picture fails to
- * load, falls back to initials. "pending" draws a dashed ring with initials and
- * never shows a photo.
+ * load, falls back to initials. "pending" (not picked yet) draws a dashed ring
+ * around a faded greyscale photo, or around initials when there's no photo.
  * Decorative by default: pass `label` only when no name is written alongside.
  */
 export function Avatar({
@@ -40,7 +40,27 @@ export function Avatar({
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
   const pending = variant === "pending";
 
-  if (!pending && imageUrl && imageUrl !== failedUrl) {
+  const hasImage = !!imageUrl && imageUrl !== failedUrl;
+
+  if (pending && hasImage) {
+    return (
+      <span
+        className={`grid shrink-0 place-items-center rounded-full border-2 border-dashed border-muted/70 p-0.5 ${SIZES[size]} ${className}`}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={imageUrl}
+          alt={label ?? ""}
+          loading="lazy"
+          decoding="async"
+          onError={() => setFailedUrl(imageUrl)}
+          className="h-full w-full rounded-full object-cover opacity-45 grayscale"
+        />
+      </span>
+    );
+  }
+
+  if (hasImage) {
     return (
       // Pictures are already 256px WebP with immutable caching; next/image adds nothing here.
       // eslint-disable-next-line @next/next/no-img-element

@@ -52,6 +52,15 @@ export async function normaliseAvatar(input: Buffer): Promise<Buffer | null> {
   }
 }
 
+/**
+ * Greyscale copy of a stored picture, for members who haven't picked yet in
+ * the app. React Native can't greyscale an image on iOS, so the server does it;
+ * the web uses a CSS filter on the normal picture instead.
+ */
+export async function greyscaleAvatar(stored: Buffer): Promise<Buffer> {
+  return sharp(stored).greyscale().webp({ quality: 82 }).toBuffer();
+}
+
 /** Replace the user's picture. The new key makes a new URL, so caches never serve the old one. */
 export async function saveAvatar(userId: string, input: Buffer): Promise<AvatarResult> {
   if (input.length === 0) {
