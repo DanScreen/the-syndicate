@@ -1,7 +1,8 @@
 "use client";
 
-import { formatFixtureLabel, formatOdds } from "@tiki-acca/shared";
+import { formatFixtureLabel, formatLegPick, formatOdds } from "@tiki-acca/shared";
 import type { ReactionEmoji, RoundMessageDto } from "@tiki-acca/shared";
+import { Avatar } from "@/components/avatar";
 import { ReactionBar } from "@/components/group/chat";
 import { legOutcomeClass } from "./round-helpers";
 import { legOutcomeLabel } from "@tiki-acca/shared";
@@ -71,85 +72,93 @@ export function LegsList({
             ? `${leg.user.name} · leg ${leg.legIndex}`
             : leg.user.name;
 
+        const borderEdge =
+          leg.outcome === "won"
+            ? "border-l-success"
+            : leg.outcome === "lost"
+              ? "border-l-danger"
+              : "border-l-border";
+
         return (
           <li
             key={leg.id}
-            className={`rounded-lg border px-4 py-3 text-sm ${
+            className={`rounded-lg border border-l-[3px] px-4 py-3 text-sm ${borderEdge} ${
               outcomeStyled && leg.outcome !== "pending"
                 ? legOutcomeClass(leg.outcome)
                 : "border-border bg-card"
             }`}
           >
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <Avatar name={leg.user.name} userId={leg.user.id} size="md" />
               <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-medium">{nameLabel}</span>
-                  <div className="flex shrink-0 items-center gap-2">
-                    {showOutcome && (
-                      <span
-                        className={`rounded-full border px-2 py-0.5 text-xs font-medium ${
-                          outcomeStyled ? legOutcomeClass(leg.outcome) : "border-border text-muted"
-                        }`}
-                      >
-                        {legOutcomeLabel(leg.outcome)}
-                      </span>
-                    )}
-                    <span className="text-accent">{formatOdds(leg.odds)}</span>
-                  </div>
-                </div>
-                <p className="text-muted">
-                  {formatFixtureLabel(leg)} · {leg.marketLabel}:{" "}
-                  {leg.selectionLabel}
-                </p>
+                <p className="text-base font-semibold">{formatLegPick(leg)}</p>
+                <p className="text-sm text-muted">{formatFixtureLabel(leg)}</p>
                 <p className="text-xs text-muted">
-                  {leg.competition}
+                  {nameLabel}
+                  {leg.competition ? ` · ${leg.competition}` : ""}
                   {inProgress && (
                     <span> · Locked at {leg.bookmakerName}</span>
                   )}
                 </p>
-                {announcementByLegId?.get(leg.id) ? (
-                  <ReactionBar
-                    message={announcementByLegId.get(leg.id)!}
-                    onReact={react}
-                  />
-                ) : null}
               </div>
-              {(openUrl || canEditLeg) && (
-                <div className="flex shrink-0 items-center gap-2">
-                  {openUrl && (
-                    <a
-                      href={openUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="rounded border border-accent/50 px-2 py-1 text-xs font-medium text-accent hover:bg-accent-muted/30"
-                    >
-                      Open
-                    </a>
-                  )}
-                  {canEditLeg && onChangeLeg && (
-                    <button
-                      type="button"
-                      onClick={() => onChangeLeg(leg.id)}
-                      className="rounded border border-accent px-2 py-1 text-xs font-medium text-accent hover:bg-accent-muted/30"
-                    >
-                      {isVoid ? "Swap" : "Change"}
-                    </button>
-                  )}
-                  {canEditLeg && canRemove && !isVoid && onRemoveLeg && (
-                    <button
-                      type="button"
-                      disabled={removingLegId === leg.id}
-                      onClick={() =>
-                        onRemoveLeg({ id: leg.id, selectionLabel: leg.selectionLabel })
-                      }
-                      className="rounded border border-danger/60 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
-                    >
-                      {removingLegId === leg.id ? "Removing…" : "Remove"}
-                    </button>
-                  )}
-                </div>
-              )}
+              <div className="flex shrink-0 flex-col items-end gap-1">
+                <span className="rounded-full bg-accent-muted px-2.5 py-0.5 text-sm font-semibold tabular-nums text-accent">
+                  {formatOdds(leg.odds)}
+                </span>
+                {showOutcome && (
+                  <span
+                    className={`rounded-full border px-2 py-0.5 text-xs font-medium ${
+                      outcomeStyled ? legOutcomeClass(leg.outcome) : "border-border text-muted"
+                    }`}
+                  >
+                    {legOutcomeLabel(leg.outcome)}
+                  </span>
+                )}
+              </div>
             </div>
+            {announcementByLegId?.get(leg.id) ? (
+              <div className="mt-2">
+                <ReactionBar
+                  message={announcementByLegId.get(leg.id)!}
+                  onReact={react}
+                />
+              </div>
+            ) : null}
+            {(openUrl || canEditLeg) && (
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                {openUrl && (
+                  <a
+                    href={openUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded border border-accent/50 px-2 py-1 text-xs font-medium text-accent hover:bg-accent-muted/30"
+                  >
+                    Open
+                  </a>
+                )}
+                {canEditLeg && onChangeLeg && (
+                  <button
+                    type="button"
+                    onClick={() => onChangeLeg(leg.id)}
+                    className="rounded border border-accent px-2 py-1 text-xs font-medium text-accent hover:bg-accent-muted/30"
+                  >
+                    {isVoid ? "Swap" : "Change"}
+                  </button>
+                )}
+                {canEditLeg && canRemove && !isVoid && onRemoveLeg && (
+                  <button
+                    type="button"
+                    disabled={removingLegId === leg.id}
+                    onClick={() =>
+                      onRemoveLeg({ id: leg.id, selectionLabel: leg.selectionLabel })
+                    }
+                    className="rounded border border-danger/60 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
+                  >
+                    {removingLegId === leg.id ? "Removing…" : "Remove"}
+                  </button>
+                )}
+              </div>
+            )}
           </li>
         );
       })}

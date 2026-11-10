@@ -1,7 +1,7 @@
 "use client";
 
-import { CheckIcon } from "./round-helpers";
-import { formatKickoff } from "@tiki-acca/shared";
+import { Avatar } from "@/components/avatar";
+import { formatKickoff, formatWaitingOnNames, getFirstName } from "@tiki-acca/shared";
 import type { GroupLeg as Leg, GroupMember as Member } from "@tiki-acca/shared";
 
 export function RoundProgress({
@@ -60,35 +60,50 @@ export function RoundProgress({
           ) : null}
         </div>
       )}
-      <ul className="space-y-2">
+      <ul className="flex flex-wrap gap-x-4 gap-y-3">
         {members.map((member) => {
           const count = counts.get(member.id) ?? 0;
           const complete = count >= legsPerMember;
+          const ownerLabel = member.role === "owner" ? " (owner)" : "";
           return (
             <li
               key={member.id}
-              className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2 text-sm"
+              className="flex w-16 flex-col items-center gap-1 text-center"
             >
-              <span>
-                {member.name}
-                {member.role === "owner" && (
-                  <span className="ml-2 text-xs text-muted">owner</span>
-                )}
+              <span className="sr-only">
+                {`${member.name}${ownerLabel}, ${complete ? "submitted" : "pending"}`}
               </span>
+              <Avatar
+                name={member.name}
+                userId={member.id}
+                size="lg"
+                variant={complete ? "filled" : "pending"}
+              />
               <span
-                className={`flex items-center gap-1 ${complete ? "text-accent" : "text-muted"}`}
+                aria-hidden="true"
+                className={`w-full truncate text-xs font-semibold ${complete ? "text-foreground" : "text-muted"}`}
               >
-                {complete && <CheckIcon />}
-                {legsPerMember === 1
-                  ? complete
-                    ? "Submitted"
-                    : "Pending"
-                  : `${count}/${legsPerMember}`}
+                {getFirstName(member.name)}
               </span>
+              {member.role === "owner" && (
+                <span aria-hidden="true" className="text-[10px] text-muted">
+                  owner
+                </span>
+              )}
+              {legsPerMember > 1 && (
+                <span aria-hidden="true" className="text-[11px] tabular-nums text-muted">
+                  {`${count}/${legsPerMember}`}
+                </span>
+              )}
             </li>
           );
         })}
       </ul>
+      {status === "open" && pending.length > 0 && (
+        <p className="text-sm text-muted">
+          {formatWaitingOnNames(pending.map((m) => m.name))}
+        </p>
+      )}
     </div>
   );
 }

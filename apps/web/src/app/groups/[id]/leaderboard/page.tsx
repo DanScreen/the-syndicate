@@ -3,9 +3,11 @@
 import { GroupStats } from "@/components/group/stats";
 import { Leaderboard } from "@/components/group/leaderboard";
 import { useGroupData } from "@tiki-acca/client";
+import { useSession } from "next-auth/react";
 
 export default function GroupLeaderboardPage() {
   const { data } = useGroupData();
+  const { data: session } = useSession();
   if (!data) return null;
 
   return (
@@ -16,7 +18,7 @@ export default function GroupLeaderboardPage() {
           Who&apos;s ahead in this group — points from settled and in-progress legs.
         </p>
         <div className="mt-4">
-          <Leaderboard entries={data.leaderboard} />
+          <Leaderboard entries={data.leaderboard} currentUserId={session?.user?.id} />
         </div>
       </section>
 

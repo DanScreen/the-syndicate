@@ -18,7 +18,7 @@ test("a solo member builds a multi-leg acca, drops a leg and locks it", async ({
   await submitLeg(page, englandChile, "England");
   await submitLeg(page, italyPeru, "Italy");
 
-  const picks = page.getByRole("listitem").filter({ hasText: "Match Winner:" });
+  const picks = page.getByRole("listitem").filter({ has: page.getByText(/ to win$/) });
   await expect(picks).toHaveCount(3);
   // A solo acca stays open after each pick until the member locks it.
   await expect(page.getByText(/Bet Open/)).toBeVisible();

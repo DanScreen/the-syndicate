@@ -8,6 +8,7 @@ import {
   formatRoundStatusBadge,
   legOutcomeShortLabel,
   yourLegStatusMessage,
+  formatLegPick,
 } from "@tiki-acca/shared";
 import type {
   GroupSummary,
@@ -175,7 +176,7 @@ function LegRow({ leg }: { leg: GroupSummaryActiveLeg }) {
       <Avatar name={leg.userName} userId={leg.userId} size={24} />
       <View style={styles.legMain}>
         <Text style={styles.legSelection} numberOfLines={1}>
-          {leg.selectionLabel}
+          {formatLegPick(leg)}
         </Text>
         <Text style={styles.legFixture} numberOfLines={1}>
           {leg.homeTeam} vs {leg.awayTeam}

@@ -2,6 +2,7 @@ import {
   activeBetProgressLabel,
   activeBetStatusLabel,
   formatOdds,
+  formatLegPick,
 } from "@tiki-acca/shared";
 import {
   legOutcomeShortLabel,
@@ -120,7 +121,7 @@ export function ActiveBetslipSummary({
               <div className="min-w-0 flex-1">
                 <p className="flex min-w-0 items-baseline gap-2">
                   <span className="truncate font-semibold text-foreground">
-                    {leg.selectionLabel}
+                    {formatLegPick(leg)}
                   </span>
                   {isYours ? (
                     <span className="shrink-0 text-xs font-medium text-accent">You</span>

@@ -5,6 +5,7 @@ import {
   activeBetProgressLabel,
   activeBetStatusLabel,
   yourLegStatusMessage,
+  formatLegPick,
 } from "./group-summary-display";
 
 function bet(
@@ -137,5 +138,29 @@ describe("solo acca group-card labels", () => {
       }),
       ""
     );
+  });
+});
+
+describe("formatLegPick", () => {
+  const pick = (marketLabel: string, selectionLabel: string) =>
+    formatLegPick({ marketLabel, selectionLabel });
+
+  it("reads match result picks as a team to win", () => {
+    assert.equal(pick("Match Winner", "Man City"), "Man City to win");
+    assert.equal(pick("Match winner", "Draw"), "Draw");
+    assert.equal(pick("Match Result", "Arsenal"), "Arsenal to win");
+  });
+
+  it("names goal lines and both-teams-to-score", () => {
+    assert.equal(pick("Over/Under 2.5 Goals", "Over 2.5"), "Over 2.5 goals");
+    assert.equal(pick("Over/Under 1.5 Goals", "Under 1.5"), "Under 1.5 goals");
+    assert.equal(pick("Both Teams to Score", "Yes"), "Both teams to score");
+    assert.equal(pick("Both Teams to Score", "No"), "Both teams not to score");
+  });
+
+  it("keeps double chance and prefixes anything else with its market", () => {
+    assert.equal(pick("Double Chance", "Man Utd or Draw"), "Man Utd or Draw");
+    assert.equal(pick("Asian Handicap", "Mexico -0.5"), "Asian Handicap: Mexico -0.5");
+    assert.equal(pick("", "Mexico"), "Mexico");
   });
 });

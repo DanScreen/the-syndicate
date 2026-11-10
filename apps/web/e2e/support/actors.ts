@@ -94,9 +94,10 @@ export async function submitLeg(page: Page, fixture: E2EFixture, selection: stri
   // The picker resets when the saved leg lands; picking again before then
   // gets wiped mid-way.
   await expect(
-    page.getByRole("listitem").filter({
-      hasText: `${fixture.homeTeam} vs ${fixture.awayTeam} · Match Winner: ${selection}`,
-    })
+    page
+      .getByRole("listitem")
+      .filter({ hasText: `${fixture.homeTeam} vs ${fixture.awayTeam}` })
+      .filter({ has: page.getByText(`${selection} to win`, { exact: true }) })
   ).toBeVisible();
 }
 
