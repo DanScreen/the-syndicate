@@ -31,7 +31,7 @@ function mapHistoryLeg(leg: LegRow): HistoryLeg {
   return {
     id: leg.id,
     fixtureId: leg.fixtureId,
-    user: leg.user,
+    user: { id: leg.user.id, name: leg.user.name },
     homeTeam: leg.homeTeam,
     awayTeam: leg.awayTeam,
     competition: leg.competition,

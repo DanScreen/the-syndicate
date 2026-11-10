@@ -25,7 +25,7 @@ export async function listGroupSummaries(userId: string): Promise<GroupSummary[]
           rounds: {
             include: {
               legs: {
-                include: { user: { select: { id: true, name: true } } },
+                include: { user: { select: { id: true, name: true, avatarKey: true } } },
               },
             },
             orderBy: { createdAt: "desc" },

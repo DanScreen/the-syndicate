@@ -1,6 +1,7 @@
-import type {
-  GroupSummaryActiveLeg,
-  GroupSummaryYourLeg,
+import {
+  avatarPath,
+  type GroupSummaryActiveLeg,
+  type GroupSummaryYourLeg,
 } from "@tiki-acca/shared";
 
 type LegRow = {
@@ -12,7 +13,7 @@ type LegRow = {
   odds: number;
   outcome: string;
   kickoff?: Date;
-  user?: { id: string; name: string } | null;
+  user?: { id: string; name: string; avatarKey?: string | null } | null;
 };
 
 export function yourLegInRound(
@@ -49,6 +50,7 @@ export function activeLegsInRound(
     .map((leg) => ({
       userId: leg.userId,
       userName: leg.user?.name ?? "Member",
+      userAvatarUrl: avatarPath(leg.user?.avatarKey),
       selectionLabel: leg.selectionLabel,
       marketLabel: leg.marketLabel,
       homeTeam: leg.homeTeam,

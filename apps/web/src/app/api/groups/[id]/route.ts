@@ -23,6 +23,7 @@ import type {
 } from "@tiki-acca/shared";
 import {
   HISTORY_PAGE_SIZE,
+  avatarPath,
   countLegsByUser,
   effectiveLegQuota,
   openRoundReadyToLock,
@@ -34,7 +35,7 @@ type Params = { params: Promise<{ id: string }> };
 
 const recentRoundInclude = {
   legs: {
-    include: { user: { select: { id: true, name: true } } },
+    include: { user: { select: { id: true, name: true, avatarKey: true } } },
   },
 } as const;
 
@@ -97,12 +98,18 @@ async function activeRoundForClient(round: ActiveRoundRecord) {
     }
   }
 
-  const legs = [...round.legs].sort((a, b) => {
-    if (a.userId !== b.userId) {
-      return a.user.name.localeCompare(b.user.name);
-    }
-    return a.legIndex - b.legIndex;
-  });
+  const legs = [...round.legs]
+    .sort((a, b) => {
+      if (a.userId !== b.userId) {
+        return a.user.name.localeCompare(b.user.name);
+      }
+      return a.legIndex - b.legIndex;
+    })
+    .map(({ user, ...leg }) => ({
+      ...leg,
+      // Never send the raw avatarKey; the client gets the picture URL only.
+      user: { id: user.id, name: user.name, avatarUrl: avatarPath(user.avatarKey) },
+    }));
 
   return {
     ...round,
@@ -146,7 +153,14 @@ export async function GET(_request: Request, { params }: Params) {
       members: {
         include: {
           user: {
-            select: { id: true, name: true, totalPoints: true, legsWon: true, legsLost: true },
+            select: {
+              id: true,
+              name: true,
+              avatarKey: true,
+              totalPoints: true,
+              legsWon: true,
+              legsLost: true,
+            },
           },
         },
         orderBy: { points: "desc" },
@@ -268,7 +282,7 @@ export async function GET(_request: Request, { params }: Params) {
             { id: "desc" },
           ],
           include: {
-            user: { select: { id: true, name: true } },
+            user: { select: { id: true, name: true, avatarKey: true } },
             round: { select: { betNumber: true } },
             reactions: {
               include: { user: { select: { name: true } } },
@@ -284,6 +298,7 @@ export async function GET(_request: Request, { params }: Params) {
     .map((m) => ({
       userId: m.user.id,
       name: m.user.name,
+      avatarUrl: avatarPath(m.user.avatarKey),
       points: memberNetPointsAcrossRounds(settledForLeaderboard, m.user.id),
       legsWon: m.legsWon,
       legsLost: m.legsLost,
@@ -321,6 +336,7 @@ export async function GET(_request: Request, { params }: Params) {
         members: group.members.map((m) => ({
           id: m.user.id,
           name: m.user.name,
+          avatarUrl: avatarPath(m.user.avatarKey),
           role: m.role,
         })),
       },

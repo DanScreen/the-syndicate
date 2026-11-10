@@ -1,8 +1,9 @@
-import type {
-  ReactionEmoji,
-  RoundMessageDto,
-  SystemMessageEventType,
-  MessageKind,
+import {
+  avatarPath,
+  type ReactionEmoji,
+  type RoundMessageDto,
+  type SystemMessageEventType,
+  type MessageKind,
 } from "@tiki-acca/shared";
 
 /** Shape of a RoundMessage row with its author selected (name only). */
@@ -16,7 +17,7 @@ export type RoundMessageWithUser = {
   eventType: string | null;
   legId: string | null;
   createdAt: Date;
-  user: { id: string; name: string } | null;
+  user: { id: string; name: string; avatarKey?: string | null } | null;
   reactions?: {
     emoji: string;
     userId: string;
@@ -57,7 +58,13 @@ export function serializeMessage(
     body: message.body,
     eventType: (message.eventType as SystemMessageEventType | null) ?? null,
     legId: message.legId,
-    user: message.user,
+    user: message.user
+      ? {
+          id: message.user.id,
+          name: message.user.name,
+          avatarUrl: avatarPath(message.user.avatarKey),
+        }
+      : null,
     createdAt: message.createdAt.toISOString(),
     reactions: [...reactionMap.values()],
   };

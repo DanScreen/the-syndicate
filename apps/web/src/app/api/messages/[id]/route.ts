@@ -43,7 +43,7 @@ export async function DELETE(_request: Request, { params }: Params) {
     where: { id },
     data: { body: DELETED_MESSAGE_BODY },
     include: {
-      user: { select: { id: true, name: true } },
+      user: { select: { id: true, name: true, avatarKey: true } },
       round: { select: { betNumber: true } },
       reactions: {
         include: { user: { select: { name: true } } },
