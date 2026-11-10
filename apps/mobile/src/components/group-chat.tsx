@@ -258,7 +258,12 @@ function Message({
       accessibilityHint="Long press for message options"
     >
       {own ? null : !grouped && message.user ? (
-        <Avatar name={message.user.name} userId={message.user.id} size={AVATAR_SIZE} />
+        <Avatar
+          name={message.user.name}
+          userId={message.user.id}
+          imageUrl={message.user.avatarUrl ?? null}
+          size={AVATAR_SIZE}
+        />
       ) : (
         <View style={styles.avatarSpacer} />
       )}

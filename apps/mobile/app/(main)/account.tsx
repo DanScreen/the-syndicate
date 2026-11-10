@@ -1,14 +1,17 @@
 import { ApiError, api } from "@/api/client";
 import { useApiFetcher } from "@/api/use-api-fetcher";
 import { useAuth } from "@/auth/AuthProvider";
+import { Avatar } from "@/components/avatar";
 import { useBlockedMembers } from "@tiki-acca/client";
 import { Button, Card, ErrorText, Field, Title } from "@/components/ui";
 import { colors, WEB_URL } from "@/config";
 import { copy } from "@tiki-acca/shared";
 import {
   NOTIFICATION_PREFERENCE_SECTIONS,
+  type AvatarResponse,
   type NotificationPreferences,
 } from "@tiki-acca/shared";
+import type { ImagePickerResult } from "expo-image-picker";
 import {
   isPushEnabled,
   registerForPushNotifications,
@@ -61,6 +64,10 @@ export default function AccountScreen() {
   const [deletePassword, setDeletePassword] = useState("");
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+  // Kept here rather than in AuthProvider: the persisted auth user has no avatar.
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarBusy, setAvatarBusy] = useState(false);
+  const [avatarError, setAvatarError] = useState("");
 
   const load = useCallback(async () => {
     if (!token) return;
@@ -84,10 +91,104 @@ export default function AccountScreen() {
   }, [load]);
 
   useEffect(() => {
+    if (!token) return;
+    api<{ user: { avatarUrl?: string | null } | null }>("/api/user", { token })
+      .then((data) => setAvatarUrl(data.user?.avatarUrl ?? null))
+      .catch(() => {
+        // Without the picture the initials still show; no error needed.
+      });
+  }, [token]);
+
+  useEffect(() => {
     isPushEnabled()
       .then(setPushEnabled)
       .catch(() => setPushEnabled(false));
   }, []);
+
+  async function choosePhoto() {
+    if (!token || avatarBusy) return;
+    setAvatarError("");
+    // Loaded on demand: the picker is a native module, and an over-the-air
+    // update can reach an older build that doesn't contain it. Importing it at
+    // the top would crash this whole screen there; this way only the button
+    // explains what to do.
+    let ImagePicker: typeof import("expo-image-picker");
+    try {
+      ImagePicker = await import("expo-image-picker");
+    } catch {
+      setAvatarError("Update Tiki Acca from the App Store to choose a photo.");
+      return;
+    }
+    let picked: ImagePickerResult;
+    try {
+      // Library-only picker: no permission prompt needed on iOS 14+ / Android 13+.
+      picked = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+        base64: true,
+      });
+    } catch {
+      setAvatarError("Couldn't open your photo library.");
+      return;
+    }
+    if (picked.canceled) return;
+    const base64 = picked.assets[0]?.base64;
+    if (!base64) {
+      setAvatarError("Couldn't read that photo. Try another.");
+      return;
+    }
+    setAvatarBusy(true);
+    try {
+      const data = await api<AvatarResponse>("/api/user/avatar", {
+        method: "PUT",
+        token,
+        body: JSON.stringify({ image: base64 }),
+      });
+      setAvatarUrl(data.avatarUrl);
+    } catch (e) {
+      setAvatarError(
+        e instanceof ApiError ? e.message : "Couldn't upload your picture."
+      );
+    } finally {
+      setAvatarBusy(false);
+    }
+  }
+
+  function confirmRemovePhoto() {
+    Alert.alert(
+      "Remove profile picture?",
+      "Your initials will be shown instead.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: () => void removePhoto(),
+        },
+      ]
+    );
+  }
+
+  async function removePhoto() {
+    if (!token || avatarBusy) return;
+    setAvatarError("");
+    setAvatarBusy(true);
+    try {
+      const data = await api<AvatarResponse>("/api/user/avatar", {
+        method: "DELETE",
+        token,
+      });
+      setAvatarUrl(data.avatarUrl);
+    } catch (e) {
+      setAvatarError(
+        e instanceof ApiError ? e.message : "Couldn't remove your picture."
+      );
+    } finally {
+      setAvatarBusy(false);
+    }
+  }
 
   function confirmDelete() {
     if (!deletePassword.trim()) {
@@ -169,6 +270,38 @@ export default function AccountScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Title>Account</Title>
+      <Card>
+        <Text style={styles.cardTitle}>Profile picture</Text>
+        <View style={styles.avatarRow}>
+          <Avatar
+            name={user?.name ?? user?.firstName ?? "Member"}
+            userId={user?.id ?? ""}
+            size={80}
+            imageUrl={avatarUrl}
+          />
+          <View style={styles.avatarActions}>
+            <Button
+              label="Choose photo"
+              loading={avatarBusy}
+              onPress={() => void choosePhoto()}
+            />
+            {avatarBusy ? <Text style={styles.hint}>Uploading…</Text> : null}
+            {avatarUrl ? (
+              <Button
+                label="Remove photo"
+                variant="secondary"
+                onPress={confirmRemovePhoto}
+              />
+            ) : null}
+          </View>
+        </View>
+        <Text style={styles.hint}>
+          Your photo is shown to members of your groups. Without one, your
+          initials are used.
+        </Text>
+        <ErrorText message={avatarError} />
+      </Card>
+
       <Card>
         <Text style={styles.cardTitle}>Profile</Text>
         <Text style={styles.profileName}>
@@ -362,6 +495,15 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
     marginBottom: 8,
+  },
+  avatarRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+  },
+  avatarActions: {
+    flex: 1,
+    gap: 8,
   },
   profileName: {
     color: colors.text,

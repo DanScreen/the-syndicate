@@ -94,7 +94,12 @@ export function LegsList({
             ]}
           >
             <View style={localStyles.legRow}>
-              <Avatar name={leg.user.name} userId={leg.user.id} size={36} />
+              <Avatar
+                name={leg.user.name}
+                userId={leg.user.id}
+                imageUrl={leg.user.avatarUrl ?? null}
+                size={36}
+              />
               <View style={localStyles.legMain}>
                 <Text style={localStyles.legSelection}>{formatLegPick(leg)}</Text>
                 <Text style={localStyles.legFixture}>{formatFixtureLabel(leg)}</Text>

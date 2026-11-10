@@ -173,7 +173,12 @@ function LegRow({ leg }: { leg: GroupSummaryActiveLeg }) {
   const isVoid = leg.outcome === "void";
   return (
     <View style={styles.legRow}>
-      <Avatar name={leg.userName} userId={leg.userId} size={24} />
+      <Avatar
+        name={leg.userName}
+        userId={leg.userId}
+        imageUrl={leg.userAvatarUrl ?? null}
+        size={24}
+      />
       <View style={styles.legMain}>
         <Text style={styles.legSelection} numberOfLines={1}>
           {formatLegPick(leg)}

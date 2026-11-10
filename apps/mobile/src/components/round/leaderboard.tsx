@@ -12,6 +12,8 @@ import { pointsStyle } from "./helpers";
 type LeaderboardEntry = {
   userId: string;
   name: string;
+  /** Site-relative profile picture, or null/undefined for initials. */
+  avatarUrl?: string | null;
   points: number;
   legsWon: number;
   legsLost: number;
@@ -73,6 +75,7 @@ export function Leaderboard({
             <Avatar
               name={entry.name}
               userId={entry.userId}
+              imageUrl={entry.avatarUrl ?? null}
               size={isLeader ? 44 : isTopThree ? 40 : 36}
             />
             <View style={styles.body}>
