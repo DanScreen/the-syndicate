@@ -1,12 +1,12 @@
 import {
   activeBetProgressLabel,
   activeBetStatusLabel,
+  deriveHomeCardState,
   formatKickoff,
   formatLegPoints,
   formatOdds,
   formatRoundStatusBadge,
   legOutcomeShortLabel,
-  pointsTone,
   yourLegStatusMessage,
 } from "@tiki-acca/shared";
 import type {
@@ -15,43 +15,10 @@ import type {
   GroupSummaryActiveLeg,
 } from "@tiki-acca/shared";
 import { Avatar } from "@/components/avatar";
+import { pointsStyle } from "@/components/round/helpers";
 import { Button } from "@/components/ui";
 import { colors } from "@/config";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-
-type CardState =
-  /** Open round and the member still owes legs. */
-  | "needs-pick"
-  /** Open round and the member is done (or a solo acca with no quota). */
-  | "waiting"
-  /** Round is locked (in play or awaiting kickoff). */
-  | "betslip"
-  /** Anything else: the card falls back to the plain summary. */
-  | "fallback";
-
-/**
- * Derives the card state from the group's primary round (`activeRound`) and its
- * matching compact bet summary in `activeBets` (same id). When the bet summary is
- * missing, only the round-level fields are used.
- */
-function deriveCardState(group: GroupSummary): {
-  state: CardState;
-  bet: GroupSummaryActiveBet | null;
-} {
-  const round = group.activeRound;
-  const bet = round ? (group.activeBets ?? []).find((b) => b.id === round.id) ?? null : null;
-  if (!round) return { state: "fallback", bet };
-
-  if (round.status === "open") {
-    if (bet?.unlimitedLegs) return { state: "waiting", bet };
-    const legsPerMember = bet?.legsPerMember ?? round.legsPerMember;
-    const yourLegCount = bet?.yourLegCount ?? group.yourLegCount;
-    return { state: yourLegCount < legsPerMember ? "needs-pick" : "waiting", bet };
-  }
-
-  if (round.status === "locked") return { state: "betslip", bet };
-  return { state: "fallback", bet };
-}
 
 export function HomeGroupCard({
   group,
@@ -62,13 +29,16 @@ export function HomeGroupCard({
 }) {
   const legs = group.activeLegs ?? [];
   const multi = group.activeBetCount > 1;
-  const { state, bet } = deriveCardState(group);
+  const { state, bet } = deriveHomeCardState(group);
   const round = group.activeRound;
   const waitingText = yourLegStatusMessage(group.status, group.yourLeg, {
     yourLegCount: group.yourLegCount,
     legsPerMember: round?.legsPerMember ?? group.legsPerMember ?? 1,
+    unlimitedLegs: bet?.unlimitedLegs ?? false,
   });
   const needsPick = state === "needs-pick";
+  const hasProgressLine = bet != null && (state === "waiting" || state === "betslip");
+  const hasBetslip = legs.length > 0;
 
   return (
     <Pressable
@@ -122,13 +92,14 @@ export function HomeGroupCard({
                   {bet.resolvedLegCount} of {bet.submittedLegCount} legs settled
                 </Text>
               ) : null}
-              {legs.length > 0 ? (
+              {hasBetslip ? (
                 <Betslip
                   legs={legs}
                   odds={bet?.combinedOdds ?? round?.combinedOdds ?? null}
                   prominentOdds={state === "betslip"}
                 />
-              ) : state === "fallback" && waitingText ? (
+              ) : null}
+              {!hasProgressLine && !hasBetslip && waitingText ? (
                 <Text style={styles.waiting}>{waitingText}</Text>
               ) : null}
               {needsPick ? <PickPrompt bet={bet} onPick={onOpen} /> : null}
@@ -192,6 +163,7 @@ function LegRow({ leg }: { leg: GroupSummaryActiveLeg }) {
   const result = legOutcomeShortLabel(leg.outcome);
   const marker =
     leg.outcome === "won" ? "✓" : leg.outcome === "lost" ? "✕" : null;
+  const isVoid = leg.outcome === "void";
   return (
     <View style={styles.legRow}>
       <Avatar name={leg.userName} userId={leg.userId} size={24} />
@@ -211,18 +183,15 @@ function LegRow({ leg }: { leg: GroupSummaryActiveLeg }) {
         >
           {marker}
         </Text>
+      ) : isVoid ? (
+        <Text accessibilityLabel={result} style={styles.legVoid}>
+          {result}
+        </Text>
       ) : (
         <View style={styles.legMarkerSpacer} />
       )}
     </View>
   );
-}
-
-function pointsStyle(value: number) {
-  const tone = pointsTone(value);
-  if (tone === "positive") return { color: colors.success };
-  if (tone === "negative") return { color: colors.danger };
-  return { color: colors.muted };
 }
 
 function ActiveBetsOverview({ bets }: { bets: GroupSummaryActiveBet[] }) {
@@ -422,6 +391,13 @@ const styles = StyleSheet.create({
   },
   legMarkerSpacer: {
     width: 16,
+  },
+  legVoid: {
+    color: colors.muted,
+    fontSize: 11,
+    fontWeight: "600",
+    minWidth: 16,
+    textAlign: "right",
   },
   outcomeWon: {
     color: colors.success,

@@ -647,9 +647,9 @@ Presentation only: no API, schema or env changes.
 | Avatars | Initials on a per-member colour (hashed from the user id); dashed "pending" variant | `apps/mobile/src/components/avatar.tsx`, helpers in `packages/shared/src/member-display.ts` |
 | Leg rows | Avatar, selection in bold, fixture and market beneath, odds pill, result-coloured left edge | `src/components/round/legs-list.tsx` |
 | Round progress | One avatar per member (filled once their legs are in) and a "Waiting on Tom and Priya" line | `src/components/round/round-progress.tsx` |
-| Home cards | Card state follows the acca: needs your pick (accent border, lock time, **Pick your leg**), waiting on others, locked betslip with combined odds. Create / Join sit beside the title once you have a group; skeleton cards while loading | `app/(main)/home.tsx`, `src/components/home-group-card.tsx` |
+| Home cards | Card state follows the acca: needs your pick (accent border, lock time, **Pick your leg**), waiting on others, locked betslip with combined odds. Create / Join sit beside the title once you have a group; skeleton cards while loading | `app/(main)/home.tsx`, `src/components/home-group-card.tsx`, state logic in `packages/shared/src/home-card-state.ts` |
 | Leaderboard | Tied ranks, avatars, hit rate, **Banker** / **Acca killer** tags (needs two members with 3+ settled legs), your own row highlighted | `src/components/round/leaderboard.tsx`, `packages/shared/src/leaderboard-display.ts` |
-| Group header | Back chevron, group name, status pill, **Invite** and owner **⋯** settings buttons; tabs are Bet / Leaderboard / Chat with an unread badge on Chat | `app/(main)/groups/[id]/_layout.tsx`, `src/components/group-nav.tsx` |
+| Group header | Back chevron, group name with "N members · status" beneath, **Invite** and owner **⋯** settings buttons; tabs are Bet / Leaderboard / Chat with an unread badge on Chat | `app/(main)/groups/[id]/_layout.tsx`, `src/components/group-nav.tsx` |
 | Chat | Full-bleed thread; own messages right, others left with avatar, consecutive messages grouped, system messages as centred pills | `src/components/group-chat.tsx` |
 
 Not yet run on a device: layout was checked by typecheck, lint and code review only. The chat screen has no `KeyboardAvoidingView`.

@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { formatWinRate, getLeaderboardTags } from "./leaderboard-display";
+import {
+  computeCompetitionRanks,
+  formatWinRate,
+  getLeaderboardTags,
+} from "./leaderboard-display";
 
 test("formats hit rate as a whole percent", () => {
   assert.equal(formatWinRate(5, 1), "83% hit rate");
@@ -90,4 +94,16 @@ test("two eligible members with different rates get one tag each, never both", (
   const tags = getLeaderboardTags([member("a", 3, 0), member("b", 0, 3)]);
   assert.deepEqual(tags, { a: "Banker", b: "Acca killer" });
   assert.equal(Object.values(tags).length, 2);
+});
+
+test("competition ranks share a rank on ties and skip the next", () => {
+  assert.deepEqual(computeCompetitionRanks([5, 3, 3, 1]), [1, 2, 2, 4]);
+  assert.deepEqual(computeCompetitionRanks([4, 4, 4]), [1, 1, 1]);
+  assert.deepEqual(computeCompetitionRanks([9, 6, 2]), [1, 2, 3]);
+  assert.deepEqual(computeCompetitionRanks([]), []);
+});
+
+test("competition ranks treat points within 1e-9 as equal", () => {
+  assert.deepEqual(computeCompetitionRanks([2.4, 2.4 + 1e-12, 1]), [1, 1, 3]);
+  assert.deepEqual(computeCompetitionRanks([2.4, 2.4001]), [1, 2]);
 });

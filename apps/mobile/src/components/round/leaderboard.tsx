@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 import {
+  computeCompetitionRanks,
   formatLegPoints,
   formatWinRate,
   getLeaderboardTags,
@@ -17,19 +18,6 @@ type LeaderboardEntry = {
   role?: string;
 };
 
-/** Competition ranking: equal points share a rank, the next rank skips (1, 2, 2, 4). */
-function computeRanks(entries: LeaderboardEntry[]): number[] {
-  const ranks: number[] = [];
-  entries.forEach((entry, i) => {
-    if (i > 0 && entry.points === entries[i - 1].points) {
-      ranks.push(ranks[i - 1]);
-    } else {
-      ranks.push(i + 1);
-    }
-  });
-  return ranks;
-}
-
 export function Leaderboard({
   entries,
   currentUserId,
@@ -37,28 +25,36 @@ export function Leaderboard({
   entries: LeaderboardEntry[];
   currentUserId?: string;
 }) {
-  const ranks = computeRanks(entries);
+  const ranks = computeCompetitionRanks(entries.map((entry) => entry.points));
   const tags = getLeaderboardTags(entries);
+  // Leader styling only when a single row holds first place; a tie for first gets none.
+  const firstPlaceCount = ranks.filter((rank) => rank === 1).length;
 
   return (
     <View style={styles.stack}>
       {entries.map((entry, i) => {
         const rank = ranks[i];
-        const isLeader = rank === 1;
+        const isLeader = rank === 1 && firstPlaceCount === 1;
         const isTopThree = rank <= 3;
         const isMe = currentUserId !== undefined && entry.userId === currentUserId;
         const hitRate = formatWinRate(entry.legsWon, entry.legsLost);
         const tag = tags[entry.userId];
         const points = formatLegPoints(entry.points);
 
-        const meta = [`${entry.legsWon}W · ${entry.legsLost}L`];
+        const record = `${entry.legsWon}W · ${entry.legsLost}L`;
+        const meta = [record];
         if (hitRate) meta.push(hitRate);
+
+        const a11yParts = [`Rank ${rank}`, entry.name];
+        if (entry.role === "owner") a11yParts.push("owner");
+        if (tag) a11yParts.push(tag);
+        a11yParts.push(`${entry.legsWon} won ${entry.legsLost} lost`, `${points} points`);
 
         return (
           <View
             key={entry.userId}
             accessible
-            accessibilityLabel={`Rank ${rank}, ${entry.name}, ${points} points`}
+            accessibilityLabel={a11yParts.join(", ")}
             style={[
               styles.row,
               isLeader && styles.rowLeader,

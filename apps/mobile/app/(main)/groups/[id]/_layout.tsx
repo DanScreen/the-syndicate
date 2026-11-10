@@ -78,15 +78,15 @@ function GroupLayoutInner() {
           <Text style={styles.title} numberOfLines={1}>
             {data.group.name}
           </Text>
-          <Text style={styles.subtitle}>{data.group.memberCount} members</Text>
+          <Text style={styles.subtitle}>
+            {data.group.memberCount} members ·{" "}
+            <Text style={styles.status}>
+              {formatRoundStatusBadge(data.activeRound?.status ?? data.group.status)}
+            </Text>
+          </Text>
         </View>
 
         <View style={styles.actions}>
-          <View style={styles.statusPill}>
-            <Text style={styles.statusText}>
-              {formatRoundStatusBadge(data.activeRound?.status ?? data.group.status)}
-            </Text>
-          </View>
           <Pressable
             onPress={() => goToRoute("invite")}
             style={[styles.pill, inviteActive && styles.pillActive]}
@@ -195,17 +195,8 @@ const styles = StyleSheet.create({
     gap: 6,
     flexShrink: 0,
   },
-  statusPill: {
-    borderWidth: 1,
-    borderColor: colors.accent,
-    borderRadius: 999,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  statusText: {
+  status: {
     color: colors.accent,
-    fontSize: 11,
-    fontWeight: "700",
   },
   pill: {
     borderWidth: 1,

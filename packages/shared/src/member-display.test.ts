@@ -4,6 +4,7 @@ import {
   AVATAR_COLORS,
   formatWaitingOnNames,
   getAvatarColor,
+  getFirstName,
   getInitials,
 } from "./member-display";
 
@@ -22,6 +23,19 @@ describe("getInitials", () => {
     assert.equal(getInitials("  Tom   Smith  "), "TS");
     assert.equal(getInitials(""), "?");
     assert.equal(getInitials("   "), "?");
+  });
+
+  it("keeps an emoji as a whole character", () => {
+    assert.equal(getInitials("😎 Tom"), "😎T");
+    assert.equal(getInitials("😎"), "😎");
+  });
+});
+
+describe("getFirstName", () => {
+  it("returns the first word, trimmed", () => {
+    assert.equal(getFirstName("  Tom Smith "), "Tom");
+    assert.equal(getFirstName("Priya"), "Priya");
+    assert.equal(getFirstName("   "), "");
   });
 });
 

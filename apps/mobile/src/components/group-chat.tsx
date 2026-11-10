@@ -38,10 +38,15 @@ function formatTime(iso: string) {
   });
 }
 
-/** True when `current` continues a run of user messages from the same author. */
+/** A gap longer than this starts a new author block, so the avatar and name show again. */
+const AUTHOR_RUN_GAP_MS = 5 * 60 * 1000;
+
+/** True when `current` continues a run of user messages from the same author, close in time. */
 function continuesAuthorRun(previous: RoundMessageDto | undefined, current: RoundMessageDto) {
   if (!previous || previous.kind !== "user" || current.kind !== "user") return false;
-  return previous.user != null && current.user != null && previous.user.id === current.user.id;
+  if (previous.user == null || current.user == null || previous.user.id !== current.user.id) return false;
+  const gap = new Date(current.createdAt).getTime() - new Date(previous.createdAt).getTime();
+  return gap <= AUTHOR_RUN_GAP_MS;
 }
 
 export function GroupThread({
@@ -436,7 +441,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.card,
-    borderRadius: 999,
+    borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 4,
   },

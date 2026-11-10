@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 import type { GroupLeg, GroupMember } from "@tiki-acca/shared";
-import { formatKickoff, formatWaitingOnNames } from "@tiki-acca/shared";
+import { formatKickoff, formatWaitingOnNames, getFirstName } from "@tiki-acca/shared";
 import { colors } from "@/config";
 import { Avatar } from "@/components/avatar";
 import { styles } from "./styles";
@@ -62,7 +62,7 @@ export function RoundProgress({
         {members.map((member) => {
           const count = counts.get(member.id) ?? 0;
           const complete = count >= legsPerMember;
-          const firstName = member.name.trim().split(/\s+/)[0] ?? member.name;
+          const firstName = getFirstName(member.name);
           const ownerLabel = member.role === "owner" ? " (owner)" : "";
           return (
             <View

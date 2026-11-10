@@ -10,6 +10,25 @@ export interface LeaderboardTagInput {
 /** Settled legs a member needs before they can earn a leaderboard tag. */
 export const LEADERBOARD_TAG_MIN_SETTLED = 3;
 
+/** Points closer than this are treated as equal when ranking. */
+const POINTS_EPSILON = 1e-9;
+
+/**
+ * Competition ranking for a list already sorted by points, descending.
+ * Equal points share a rank and the next rank skips (1, 2, 2, 4).
+ */
+export function computeCompetitionRanks(points: number[]): number[] {
+  const ranks: number[] = [];
+  points.forEach((value, i) => {
+    if (i > 0 && Math.abs(value - points[i - 1]) < POINTS_EPSILON) {
+      ranks.push(ranks[i - 1]);
+    } else {
+      ranks.push(i + 1);
+    }
+  });
+  return ranks;
+}
+
 /** Whole-percent hit rate ("83% hit rate"), or null when nothing has settled yet. */
 export function formatWinRate(legsWon: number, legsLost: number): string | null {
   const settled = legsWon + legsLost;

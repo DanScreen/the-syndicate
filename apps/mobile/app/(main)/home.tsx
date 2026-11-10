@@ -1,12 +1,12 @@
 import {
   copy,
   formatLegPoints,
-  pointsTone,
 } from "@tiki-acca/shared";
 import type { GroupsListResponse, GroupSummary } from "@tiki-acca/shared";
 import { api } from "@/api/client";
 import { useAuth } from "@/auth/AuthProvider";
 import { HomeGroupCard } from "@/components/home-group-card";
+import { pointsStyle } from "@/components/round/helpers";
 import { Button, Card, Screen, Title } from "@/components/ui";
 import { colors } from "@/config";
 import { router, useFocusEffect } from "expo-router";
@@ -68,7 +68,7 @@ export default function GroupsScreen() {
   if (loading && !hasLoadedRef.current) {
     return (
       <Screen>
-        <View accessibilityLabel="Loading your groups" style={styles.skeletonList}>
+        <View accessible accessibilityLabel="Loading your groups" style={styles.skeletonList}>
           <SkeletonCard />
           <SkeletonCard />
         </View>
@@ -171,13 +171,6 @@ function SkeletonCard() {
       <View style={[styles.skeletonBar, { width: "65%", height: 10, marginTop: 8 }]} />
     </View>
   );
-}
-
-function pointsStyle(value: number) {
-  const tone = pointsTone(value);
-  if (tone === "positive") return { color: colors.success };
-  if (tone === "negative") return { color: colors.danger };
-  return { color: colors.muted };
 }
 
 const styles = StyleSheet.create({
