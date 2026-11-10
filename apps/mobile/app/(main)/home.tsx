@@ -1,28 +1,17 @@
 import {
-  activeBetProgressLabel,
-  activeBetStatusLabel,
   copy,
-  formatActiveLegSummary,
   formatLegPoints,
-  formatOdds,
-  formatRoundStatusBadge,
-  legOutcomeShortLabel,
   pointsTone,
-  yourLegStatusMessage,
 } from "@tiki-acca/shared";
-import type {
-  GroupsListResponse,
-  GroupSummary,
-  GroupSummaryActiveBet,
-} from "@tiki-acca/shared";
+import type { GroupsListResponse, GroupSummary } from "@tiki-acca/shared";
 import { api } from "@/api/client";
 import { useAuth } from "@/auth/AuthProvider";
+import { HomeGroupCard } from "@/components/home-group-card";
 import { Button, Card, Screen, Title } from "@/components/ui";
 import { colors } from "@/config";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -79,13 +68,15 @@ export default function GroupsScreen() {
   if (loading && !hasLoadedRef.current) {
     return (
       <Screen>
-        <View style={styles.loadingHold}>
-          <ActivityIndicator color={colors.accent} size="large" />
-          <Text style={styles.loadingText}>Loading your groups…</Text>
+        <View accessibilityLabel="Loading your groups" style={styles.skeletonList}>
+          <SkeletonCard />
+          <SkeletonCard />
         </View>
       </Screen>
     );
   }
+
+  const hasGroups = groups.length > 0;
 
   return (
     <Screen>
@@ -98,8 +89,32 @@ export default function GroupsScreen() {
         {user?.firstName ? (
           <Text style={styles.greeting}>Hi, {user.firstName}</Text>
         ) : null}
-        <Title>Your Groups</Title>
-        {groups.length > 0 ? (
+        {hasGroups ? (
+          <View style={styles.titleRow}>
+            <Title>Your Groups</Title>
+            <View style={styles.pillRow}>
+              <Pressable
+                onPress={() => router.push("/(main)/create-group")}
+                accessibilityRole="button"
+                accessibilityLabel="Create group"
+                style={({ pressed }) => [styles.pill, styles.pillPrimary, pressed && styles.pressed]}
+              >
+                <Text style={styles.pillPrimaryText}>+ Create</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => router.push("/(main)/join-group")}
+                accessibilityRole="button"
+                accessibilityLabel="Join group"
+                style={({ pressed }) => [styles.pill, styles.pillSecondary, pressed && styles.pressed]}
+              >
+                <Text style={styles.pillSecondaryText}>Join</Text>
+              </Pressable>
+            </View>
+          </View>
+        ) : (
+          <Title>Your Groups</Title>
+        )}
+        {hasGroups ? (
           <Text style={styles.summary}>
             {groups.length} group{groups.length === 1 ? "" : "s"} ·{" "}
             <Text style={pointsStyle(totalPoints)}>{formatLegPoints(totalPoints)}</Text> pts
@@ -114,136 +129,47 @@ export default function GroupsScreen() {
           </Text>
         ) : null}
         {groups.length === 0 ? (
-          <Card>
-            <Text style={styles.welcomeTitle}>{copy.dashboard.welcomeTitle}</Text>
-            <Text style={styles.meta}>{copy.dashboard.welcomeIntro}</Text>
-            {copy.dashboard.welcomeSteps.map((step, index) => (
-              <Text key={step} style={styles.welcomeStep}>
-                {index + 1}. {step}
-              </Text>
-            ))}
-          </Card>
+          <>
+            <Card>
+              <Text style={styles.welcomeTitle}>{copy.dashboard.welcomeTitle}</Text>
+              <Text style={styles.meta}>{copy.dashboard.welcomeIntro}</Text>
+              {copy.dashboard.welcomeSteps.map((step, index) => (
+                <Text key={step} style={styles.welcomeStep}>
+                  {index + 1}. {step}
+                </Text>
+              ))}
+            </Card>
+            <View style={styles.actions}>
+              <Button label="Create group" onPress={() => router.push("/(main)/create-group")} />
+              <Button
+                label="Join group"
+                variant="secondary"
+                onPress={() => router.push("/(main)/join-group")}
+              />
+            </View>
+          </>
         ) : (
-          groups.map((g) => {
-            const legs = g.activeLegs ?? [];
-            const waiting = yourLegStatusMessage(g.status, g.yourLeg, {
-              yourLegCount: g.yourLegCount,
-              legsPerMember:
-                g.activeRound?.legsPerMember ?? g.legsPerMember ?? 1,
-            });
-            return (
-              <Pressable
-                key={g.id}
-                onPress={() => router.push(`/(main)/groups/${g.id}`)}
-                accessibilityRole="button"
-                style={({ pressed }) => [{ marginBottom: 12 }, pressed && { opacity: 0.8 }]}
-              >
-                <Card>
-                  <View style={styles.row}>
-                    <Text style={styles.groupName}>{g.name}</Text>
-                    <View style={styles.badgeRow}>
-                      {g.unreadMessageCount > 0 ? (
-                        <Text style={styles.unreadBadge}>
-                          {g.unreadMessageCount} new
-                        </Text>
-                      ) : null}
-                      <Text style={styles.badge}>
-                        {g.activeBetCount > 1
-                          ? `${g.activeBetCount} Active`
-                          : formatRoundStatusBadge(g.status)}
-                      </Text>
-                    </View>
-                  </View>
-                  <Text style={styles.meta}>
-                    {g.memberCount} members · Owner: {g.ownerName}
-                    {g.activeBetCount > 1
-                      ? ` · ${g.activeBetCount} active bets`
-                      : ""}
-                  </Text>
-                  <View style={styles.pointsRow}>
-                    <Text style={styles.points}>
-                      <Text style={styles.pointsLabel}>Group points: </Text>
-                      <Text style={pointsStyle(g.groupPoints)}>
-                        {formatLegPoints(g.groupPoints)}
-                      </Text>
-                    </Text>
-                    <Text style={styles.points}>
-                      <Text style={styles.pointsLabel}>Your points: </Text>
-                      <Text style={pointsStyle(g.points)}>
-                        {formatLegPoints(g.points)}
-                      </Text>
-                    </Text>
-                  </View>
-                  {g.activeBetCount > 1 ? (
-                    <ActiveBetsOverview bets={g.activeBets ?? []} />
-                  ) : legs.length > 0 ? (
-                    <View style={styles.betslip}>
-                      <View style={styles.betslipHeader}>
-                        <Text style={styles.betslipTitle}>
-                          Current betslip · {legs.length} leg{legs.length === 1 ? "" : "s"}
-                        </Text>
-                        {g.activeRound?.combinedOdds != null ? (
-                          <Text style={styles.meta}>Acca @ {formatOdds(g.activeRound.combinedOdds)}</Text>
-                        ) : null}
-                      </View>
-                      {legs.map((leg) => {
-                        const outcome = legOutcomeShortLabel(leg.outcome);
-                        const yours = user?.id === leg.userId;
-                        return (
-                          <View
-                            key={`${leg.userId}-${leg.selectionLabel}-${leg.odds}`}
-                            style={styles.betslipLeg}
-                          >
-                            <Text style={styles.betslipUser}>
-                              {yours ? "You" : leg.userName}
-                              {outcome ? (
-                                <Text
-                                  style={
-                                    leg.outcome === "won"
-                                      ? styles.outcomeWon
-                                      : leg.outcome === "lost"
-                                        ? styles.outcomeLost
-                                        : styles.meta
-                                  }
-                                >
-                                  {` · ${outcome}`}
-                                </Text>
-                              ) : null}
-                            </Text>
-                            <Text style={styles.betslipDetail}>
-                              {formatActiveLegSummary(leg)}
-                            </Text>
-                          </View>
-                        );
-                      })}
-                      {waiting ? <Text style={styles.waitingOpen}>{waiting}</Text> : null}
-                    </View>
-                  ) : waiting ? (
-                    <Text
-                      style={[
-                        styles.waiting,
-                        g.status === "open" ? styles.waitingOpen : styles.waitingMuted,
-                      ]}
-                    >
-                      {waiting}
-                    </Text>
-                  ) : null}
-                </Card>
-              </Pressable>
-            );
-          })
+          groups.map((g) => (
+            <HomeGroupCard
+              key={g.id}
+              group={g}
+              onOpen={() => router.push(`/(main)/groups/${g.id}`)}
+            />
+          ))
         )}
-
-        <View style={styles.actions}>
-          <Button label="Create group" onPress={() => router.push("/(main)/create-group")} />
-          <Button
-            label="Join group"
-            variant="secondary"
-            onPress={() => router.push("/(main)/join-group")}
-          />
-        </View>
       </ScrollView>
     </Screen>
+  );
+}
+
+function SkeletonCard() {
+  return (
+    <View style={styles.skeletonCard}>
+      <View style={[styles.skeletonBar, { width: "55%", height: 16 }]} />
+      <View style={[styles.skeletonBar, { width: "35%", height: 10, marginTop: 10 }]} />
+      <View style={[styles.skeletonBar, { width: "80%", height: 10, marginTop: 14 }]} />
+      <View style={[styles.skeletonBar, { width: "65%", height: 10, marginTop: 8 }]} />
+    </View>
   );
 }
 
@@ -254,56 +180,25 @@ function pointsStyle(value: number) {
   return { color: colors.muted };
 }
 
-function ActiveBetsOverview({ bets }: { bets: GroupSummaryActiveBet[] }) {
-  const visible = bets.slice(0, 3);
-  const hiddenCount = bets.length - visible.length;
-
-  return (
-    <View style={styles.activeBets}>
-      <Text style={styles.betslipTitle}>Active bets · {bets.length}</Text>
-      {visible.map((bet) => {
-        const needsPick =
-          bet.status === "open" && bet.yourLegCount < bet.legsPerMember;
-        return (
-          <View key={bet.id} style={styles.activeBetRow}>
-            <View style={styles.activeBetMain}>
-              <Text style={styles.activeBetTitle}>
-                Bet #{bet.betNumber ?? "?"}
-                <Text style={styles.activeBetStatus}>
-                  {" · "}
-                  {activeBetStatusLabel(bet)}
-                </Text>
-              </Text>
-              <Text style={needsPick ? styles.activeBetAction : styles.activeBetProgress}>
-                {activeBetProgressLabel(bet)}
-              </Text>
-            </View>
-            {bet.combinedOdds != null ? (
-              <Text style={styles.activeBetOdds}>@ {formatOdds(bet.combinedOdds)}</Text>
-            ) : null}
-          </View>
-        );
-      })}
-      {hiddenCount > 0 ? (
-        <Text style={styles.moreBets}>+{hiddenCount} more</Text>
-      ) : null}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   scroll: {
     paddingBottom: 32,
   },
-  loadingHold: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+  skeletonList: {
     gap: 12,
   },
-  loadingText: {
-    color: colors.muted,
-    fontSize: 14,
+  skeletonCard: {
+    height: 140,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: 16,
+  },
+  skeletonBar: {
+    backgroundColor: colors.border,
+    borderRadius: 4,
+    opacity: 0.6,
   },
   summary: {
     color: colors.muted,
@@ -331,171 +226,50 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: 4,
   },
-  actions: {
-    gap: 8,
-    marginTop: 20,
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  groupName: {
-    color: colors.text,
-    fontSize: 17,
-    fontWeight: "600",
-  },
-  badgeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  unreadBadge: {
-    color: colors.onAccent,
-    backgroundColor: colors.accent,
-    borderRadius: 999,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    fontSize: 11,
-    fontWeight: "600",
-  },
-  badge: {
-    color: colors.accent,
-    fontSize: 12,
-    backgroundColor: colors.accentMuted,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 999,
-    overflow: "hidden",
-  },
   meta: {
     color: colors.muted,
     fontSize: 14,
     marginTop: 2,
   },
-  pointsRow: {
-    flexDirection: "row",
-    gap: 24,
-    marginTop: 8,
+  actions: {
+    gap: 8,
+    marginTop: 20,
   },
-  points: {
+  titleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 8,
+  },
+  pillRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  pill: {
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: colors.accent,
+  },
+  pillPrimary: {
+    backgroundColor: colors.accent,
+  },
+  pillSecondary: {
+    backgroundColor: "transparent",
+  },
+  pillPrimaryText: {
+    color: colors.onAccent,
     fontSize: 14,
     fontWeight: "600",
   },
-  pointsLabel: {
+  pillSecondaryText: {
     color: colors.accent,
-  },
-  betslip: {
-    marginTop: 10,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.bg,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    gap: 8,
-  },
-  activeBets: {
-    marginTop: 10,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.bg,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  activeBetRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 10,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  activeBetMain: {
-    flex: 1,
-    minWidth: 0,
-  },
-  activeBetTitle: {
-    color: colors.text,
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "600",
   },
-  activeBetStatus: {
-    color: colors.muted,
-    fontSize: 12,
-    fontWeight: "400",
-  },
-  activeBetProgress: {
-    color: colors.muted,
-    fontSize: 12,
-    marginTop: 2,
-  },
-  activeBetAction: {
-    color: colors.warning,
-    fontSize: 12,
-    fontWeight: "600",
-    marginTop: 2,
-  },
-  activeBetOdds: {
-    color: colors.text,
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  moreBets: {
-    color: colors.accent,
-    fontSize: 12,
-    fontWeight: "600",
-    paddingTop: 8,
-  },
-  betslipHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 8,
-  },
-  betslipTitle: {
-    color: colors.accent,
-    fontSize: 11,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.4,
-  },
-  betslipLeg: {
-    gap: 2,
-  },
-  betslipUser: {
-    color: colors.text,
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  betslipDetail: {
-    color: colors.muted,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  outcomeWon: {
-    color: colors.success,
-    fontWeight: "600",
-  },
-  outcomeLost: {
-    color: colors.danger,
-    fontWeight: "600",
-  },
-  waiting: {
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 10,
-  },
-  waitingOpen: {
-    color: colors.warning,
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 4,
-  },
-  waitingMuted: {
-    color: colors.muted,
+  pressed: {
+    opacity: 0.75,
   },
 });
