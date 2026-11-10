@@ -18,7 +18,7 @@
 ## Core flows
 
 ### 1. Onboarding
-Sign up (first + last name) → **confirm email** (tap the link we send; wrong address can be fixed on the same screen) → **Groups** home (`/dashboard`) listing groups. Nobody can use groups until their email is confirmed — including accounts created before verification existed. Cross-group stats on **Performance** (`/performance`). Header greets with first name only — tap **Hi, {name}** for **Account** (`/account`: notifications + sign out).
+Sign up (first + last name) → **confirm email** (tap the link we send; wrong address can be fixed on the same screen) → **Groups** home (`/dashboard`) listing groups. Nobody can use groups until their email is confirmed — including accounts created before verification existed. Cross-group stats on **Performance** (`/performance`). Header greets with first name only — tap **Hi, {name}** for **Account** (`/account`: profile picture, notifications + sign out). Every member has an avatar: their initials on a colour by default, or a photo they upload from Account on the website or the app (shown to members of their groups; **Remove photo** goes back to initials).
 
 ### 2. Create / join group
 Owner creates group (name only) → invite code + link, shown on the group's **Invite** tab (any member can share it). Anyone with the link opens `/groups/join?code=`. If signed out, the page prompts **Sign in** or **Sign up** (invite preserved via `callbackUrl`); after auth (and email confirmation for new accounts) they return and join.

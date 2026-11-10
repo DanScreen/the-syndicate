@@ -26,8 +26,13 @@ model User {
   totalPoints  Float         @default(0)
   legsWon      Int           @default(0)
   legsLost     Int           @default(0)
+  /// Random, unguessable id of the current profile picture, used as its URL
+  /// (`/api/avatars/<key>`). Null = no picture; the UI shows initials instead.
+  /// A new key on every upload, so the URL can be cached forever.
+  avatarKey    String?       @unique
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+  avatar       UserAvatar?
   ownedGroups  Group[]       @relation("GroupOwner")
   memberships  GroupMember[]
   legs         Leg[]
@@ -43,6 +48,17 @@ model User {
   messageReports   MessageReport[] @relation("MessageReports")
   blocksMade       UserBlock[]     @relation("BlocksMade")
   blocksReceived   UserBlock[]     @relation("BlocksReceived")
+}
+
+/// A user's profile picture: a 256×256 WebP, re-encoded on upload (which also
+/// strips EXIF/GPS metadata). Kept off the User row so the bytes never load with
+/// ordinary user queries. Served by `/api/avatars/[key]`; see
+/// `apps/web/src/lib/avatar-upload.ts`.
+model UserAvatar {
+  userId    String   @id
+  image     Bytes
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 /// Single-use, expiring token for the forgot-password flow. Only a SHA-256

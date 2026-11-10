@@ -55,6 +55,8 @@ export async function anonymiseAccount(tx: Prisma.TransactionClient, userId: str
   await tx.notificationPreference.deleteMany({ where: { userId } });
   await tx.emailVerificationToken.deleteMany({ where: { userId } });
   await tx.passwordResetToken.deleteMany({ where: { userId } });
+  // The photo is personal data; the tombstone falls back to initials.
+  await tx.userAvatar.deleteMany({ where: { userId } });
 
   await tx.user.update({
     where: { id: userId },
@@ -67,6 +69,7 @@ export async function anonymiseAccount(tx: Prisma.TransactionClient, userId: str
       passwordHash: `deleted:${randomBytes(32).toString("hex")}`,
       dateOfBirth: null,
       role: "user",
+      avatarKey: null,
     },
   });
 }

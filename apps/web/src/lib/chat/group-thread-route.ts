@@ -14,7 +14,7 @@ const POST_LIMIT = 10;
 const POST_WINDOW_MS = 60 * 1000;
 
 const messageInclude = {
-  user: { select: { id: true, name: true } },
+  user: { select: { id: true, name: true, avatarKey: true } },
   round: { select: { betNumber: true } },
   reactions: {
     include: { user: { select: { name: true } } },

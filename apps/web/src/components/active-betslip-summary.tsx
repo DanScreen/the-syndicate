@@ -118,7 +118,7 @@ export function ActiveBetslipSummary({
               className="flex items-center gap-2 text-sm"
             >
               <span title={leg.userName} className="shrink-0">
-                <Avatar name={leg.userName} userId={leg.userId} size="xs" label={leg.userName} />
+                <Avatar name={leg.userName} userId={leg.userId} size="xs" label={leg.userName} imageUrl={leg.userAvatarUrl ?? null} />
               </span>
               <div className="min-w-0 flex-1">
                 <p className="flex min-w-0 items-baseline gap-2">

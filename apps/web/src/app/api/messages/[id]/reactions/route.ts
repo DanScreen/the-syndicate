@@ -55,7 +55,7 @@ export async function POST(request: Request, { params }: Params) {
   const updated = await prisma.roundMessage.findUniqueOrThrow({
     where: { id },
     include: {
-      user: { select: { id: true, name: true } },
+      user: { select: { id: true, name: true, avatarKey: true } },
       round: { select: { betNumber: true } },
       reactions: {
         include: { user: { select: { name: true } } },

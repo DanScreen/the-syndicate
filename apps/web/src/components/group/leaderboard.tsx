@@ -19,6 +19,7 @@ export function Leaderboard({
     legsWon: number;
     legsLost: number;
     role?: string;
+    avatarUrl?: string | null;
   }[];
   /** Highlights the signed-in member's row. */
   currentUserId?: string;
@@ -57,6 +58,7 @@ export function Leaderboard({
               name={entry.name}
               userId={entry.userId}
               size={isLeader ? "lg" : "md"}
+              imageUrl={entry.avatarUrl ?? null}
             />
             <div className="min-w-0 flex-1">
               <div className="flex min-w-0 items-center gap-2">

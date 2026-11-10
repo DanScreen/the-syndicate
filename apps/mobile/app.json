@@ -3,7 +3,7 @@
     "name": "Tiki Acca",
     "owner": "the-syndicate",
     "slug": "tiki-acca",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "tikiacca",
@@ -67,6 +67,14 @@
       "expo-asset",
       "expo-font",
       "expo-updates",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Tiki Acca uses your photo library so you can choose a profile picture.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ],
       [
         "expo-notifications",
         {

@@ -42,3 +42,15 @@ export function formatWaitingOnNames(names: string[]): string {
   if (first.length === 3) return `Waiting on ${first[0]}, ${first[1]} and ${first[2]}`;
   return `Waiting on ${first[0]}, ${first[1]} and ${first.length - 2} others`;
 }
+
+/**
+ * Site-relative URL of an uploaded profile picture, or null when there is
+ * none (the UI then shows initials). Web uses it as-is; the app prefixes its
+ * API base URL.
+ */
+export function avatarPath(avatarKey: string | null | undefined): string | null {
+  return avatarKey ? `/api/avatars/${avatarKey}` : null;
+}
+
+/** Largest profile picture upload accepted, before the server resizes it. */
+export const MAX_AVATAR_UPLOAD_BYTES = 8 * 1024 * 1024;

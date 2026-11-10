@@ -79,6 +79,7 @@ export function RoundProgress({
                 name={member.name}
                 userId={member.id}
                 size="lg"
+                imageUrl={member.avatarUrl ?? null}
                 variant={complete ? "filled" : "pending"}
               />
               <span

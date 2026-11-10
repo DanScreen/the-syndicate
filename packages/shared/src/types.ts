@@ -43,6 +43,8 @@ export type GroupSettings = {
 export type LeaderboardEntry = {
   userId: string;
   name: string;
+  /** Site-relative profile picture URL (`avatarPath`), or null for initials. */
+  avatarUrl?: string | null;
   points: number;
   legsWon: number;
   legsLost: number;

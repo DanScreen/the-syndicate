@@ -89,7 +89,7 @@ export function LegsList({
             }`}
           >
             <div className="flex items-center gap-3">
-              <Avatar name={leg.user.name} userId={leg.user.id} size="md" />
+              <Avatar name={leg.user.name} userId={leg.user.id} size="md" imageUrl={leg.user.avatarUrl ?? null} />
               <div className="min-w-0 flex-1">
                 <p className="text-base font-semibold">{formatLegPick(leg)}</p>
                 <p className="text-sm text-muted">{formatFixtureLabel(leg)}</p>
