@@ -10,9 +10,11 @@ import { GroupDataProvider, useGroupData } from "@tiki-acca/client";
 import {
   router,
   Slot,
+  useFocusEffect,
   useLocalSearchParams,
   useSegments,
 } from "expo-router";
+import { useCallback, useRef } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -22,7 +24,16 @@ function goBackToGroups() {
 
 function GroupLayoutInner() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { data, loading, error } = useGroupData();
+  const { data, loading, error, reload } = useGroupData();
+  // The provider loads on mount; coming back to the group (e.g. from Account
+  // after a new profile picture) reloads, so changes show without reopening it.
+  const focusedBefore = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (focusedBefore.current) void reload();
+      focusedBefore.current = true;
+    }, [reload])
+  );
   const insets = useSafeAreaInsets();
   const segments = useSegments() as string[];
   // The brand header is hidden inside groups, so this layout owns the top inset.

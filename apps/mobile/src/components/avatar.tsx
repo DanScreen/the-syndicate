@@ -20,7 +20,11 @@ export function Avatar({
   const pending = variant === "pending";
   // Remember which URL failed, so a new upload (new URL) gets a fresh attempt.
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
-  const showImage = !pending && !!imageUrl && failedUrl !== imageUrl;
+  const showImage = !!imageUrl && failedUrl !== imageUrl;
+  // Not picked yet: a faded greyscale copy inside the dashed ring. React Native
+  // can't greyscale on iOS, so the server serves one (`?mono=1`).
+  const imageUri = pending ? `${API_URL}${imageUrl}?mono=1` : `${API_URL}${imageUrl}`;
+  const inner = pending ? size - 6 : size;
   return (
     <View
       accessibilityLabel={name}
@@ -37,8 +41,13 @@ export function Avatar({
     >
       {showImage ? (
         <Image
-          source={{ uri: `${API_URL}${imageUrl}` }}
-          style={{ width: size, height: size, borderRadius: size / 2 }}
+          source={{ uri: imageUri }}
+          style={{
+            width: inner,
+            height: inner,
+            borderRadius: inner / 2,
+            opacity: pending ? 0.45 : 1,
+          }}
           onError={() => setFailedUrl(imageUrl ?? null)}
           accessibilityIgnoresInvertColors
         />
