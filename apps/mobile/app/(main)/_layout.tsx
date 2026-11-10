@@ -7,7 +7,7 @@ import {
   addNotificationResponseListener,
   registerForPushNotifications,
 } from "@/notifications/register";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 
@@ -18,6 +18,9 @@ export const unstable_settings = {
 export default function MainLayout() {
   const { user, loading, token } = useAuth();
   const router = useRouter();
+  const segments = useSegments() as string[];
+  // Group screens draw their own compact header (see groups/[id]/_layout.tsx).
+  const inGroup = segments.includes("groups");
 
   useEffect(() => {
     if (!token) return;
@@ -50,7 +53,7 @@ export default function MainLayout() {
 
   return (
     <View style={styles.root}>
-      <AppHeader />
+      {inGroup ? null : <AppHeader />}
       <Stack
         screenOptions={{
           headerShown: false,

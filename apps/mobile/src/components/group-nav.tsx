@@ -1,14 +1,13 @@
 import { colors } from "@/config";
 import { useGroupData } from "@tiki-acca/client";
-import { copy } from "@tiki-acca/shared";
 import { router, useLocalSearchParams, useSegments } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-const BASE_TABS = [
+// Invite and settings live in the group header; this bar is only the three group views.
+const TABS = [
   { segment: "index", label: "Bet" },
   { segment: "leaderboard", label: "Leaderboard" },
   { segment: "chat", label: "Chat" },
-  { segment: "invite", label: copy.invite.tab },
 ] as const;
 
 export function GroupNav() {
@@ -16,9 +15,7 @@ export function GroupNav() {
   const segments = useSegments() as string[];
   const activeSegment = segments[3] ?? "index";
   const { data } = useGroupData();
-  const tabs = data?.isOwner
-    ? [...BASE_TABS, { segment: "settings", label: "Settings" }]
-    : [...BASE_TABS];
+  const unread = data?.group.unreadMessageCount ?? 0;
 
   function go(segment: string) {
     const base = `/(main)/groups/${id}` as const;
@@ -32,24 +29,31 @@ export function GroupNav() {
   return (
     // Tabs share the row so every one fits without scrolling.
     <View style={styles.nav}>
-      {tabs.map((tab) => {
+      {TABS.map((tab) => {
         const active = activeSegment === tab.segment;
+        const showUnread = tab.segment === "chat" && unread > 0;
         return (
           <Pressable
             key={tab.segment}
             onPress={() => go(tab.segment)}
             style={[styles.tab, active && styles.tabActive]}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: active }}
+            accessibilityLabel={
+              showUnread ? `${tab.label}, ${unread} unread` : tab.label
+            }
           >
-            <Text
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.75}
-              style={[styles.tabText, active && styles.tabTextActive]}
-            >
-              {tab.segment === "chat" && (data?.group.unreadMessageCount ?? 0) > 0
-                ? `${tab.label} (${data!.group.unreadMessageCount})`
-                : tab.label}
-            </Text>
+            <View style={styles.labelRow}>
+              <Text
+                numberOfLines={1}
+                style={[styles.tabText, active && styles.tabTextActive]}
+              >
+                {tab.label}
+              </Text>
+              {showUnread ? (
+                <Text style={styles.unreadBadge}>{unread > 9 ? "9+" : unread}</Text>
+              ) : null}
+            </View>
           </Pressable>
         );
       })}
@@ -62,7 +66,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
-    marginTop: 16,
+    marginTop: 8,
   },
   tab: {
     flexGrow: 1,
@@ -76,13 +80,28 @@ const styles = StyleSheet.create({
   tabActive: {
     borderBottomColor: colors.accent,
   },
+  labelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
   tabText: {
     color: colors.muted,
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: "500",
   },
   tabTextActive: {
     color: colors.accent,
     fontWeight: "600",
+  },
+  unreadBadge: {
+    color: colors.onAccent,
+    backgroundColor: colors.accent,
+    borderRadius: 999,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    fontSize: 11,
+    fontWeight: "600",
+    overflow: "hidden",
   },
 });

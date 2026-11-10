@@ -1,40 +1,185 @@
-import { Text, View } from "react-native";
-import { formatLegPoints } from "@tiki-acca/shared";
+import { StyleSheet, Text, View } from "react-native";
+import {
+  formatLegPoints,
+  formatWinRate,
+  getLeaderboardTags,
+} from "@tiki-acca/shared";
+import { Avatar } from "@/components/avatar";
+import { colors } from "@/config";
 import { pointsStyle } from "./helpers";
-import { styles } from "./styles";
+
+type LeaderboardEntry = {
+  userId: string;
+  name: string;
+  points: number;
+  legsWon: number;
+  legsLost: number;
+  role?: string;
+};
+
+/** Competition ranking: equal points share a rank, the next rank skips (1, 2, 2, 4). */
+function computeRanks(entries: LeaderboardEntry[]): number[] {
+  const ranks: number[] = [];
+  entries.forEach((entry, i) => {
+    if (i > 0 && entry.points === entries[i - 1].points) {
+      ranks.push(ranks[i - 1]);
+    } else {
+      ranks.push(i + 1);
+    }
+  });
+  return ranks;
+}
 
 export function Leaderboard({
   entries,
+  currentUserId,
 }: {
-  entries: {
-    userId: string;
-    name: string;
-    points: number;
-    legsWon: number;
-    legsLost: number;
-    role?: string;
-  }[];
+  entries: LeaderboardEntry[];
+  currentUserId?: string;
 }) {
+  const ranks = computeRanks(entries);
+  const tags = getLeaderboardTags(entries);
+
   return (
     <View style={styles.stack}>
-      {entries.map((entry, i) => (
-        <View key={entry.userId} style={styles.leaderboardRow}>
-          <View>
-            <Text style={styles.legUser}>
-              #{i + 1} {entry.name}
-              {entry.role === "owner" ? (
-                <Text style={styles.meta}> (owner)</Text>
-              ) : null}
+      {entries.map((entry, i) => {
+        const rank = ranks[i];
+        const isLeader = rank === 1;
+        const isTopThree = rank <= 3;
+        const isMe = currentUserId !== undefined && entry.userId === currentUserId;
+        const hitRate = formatWinRate(entry.legsWon, entry.legsLost);
+        const tag = tags[entry.userId];
+        const points = formatLegPoints(entry.points);
+
+        const meta = [`${entry.legsWon}W · ${entry.legsLost}L`];
+        if (hitRate) meta.push(hitRate);
+
+        return (
+          <View
+            key={entry.userId}
+            accessible
+            accessibilityLabel={`Rank ${rank}, ${entry.name}, ${points} points`}
+            style={[
+              styles.row,
+              isLeader && styles.rowLeader,
+              isMe && styles.rowMe,
+            ]}
+          >
+            <Text
+              style={[
+                styles.rank,
+                isLeader && styles.rankLeader,
+              ]}
+            >
+              {rank}
             </Text>
-            <Text style={styles.meta}>
-              {entry.legsWon}W / {entry.legsLost}L
+            <Avatar
+              name={entry.name}
+              userId={entry.userId}
+              size={isLeader ? 44 : isTopThree ? 40 : 36}
+            />
+            <View style={styles.body}>
+              <View style={styles.nameRow}>
+                <Text
+                  style={[styles.name, isLeader && styles.nameLeader, isTopThree && !isLeader && styles.nameTop]}
+                  numberOfLines={1}
+                >
+                  {entry.name}
+                  {entry.role === "owner" ? (
+                    <Text style={styles.muted}> (owner)</Text>
+                  ) : null}
+                </Text>
+                {tag ? (
+                  <View style={styles.pill}>
+                    <Text style={styles.pillText}>{tag}</Text>
+                  </View>
+                ) : null}
+              </View>
+              <Text style={styles.muted} numberOfLines={1}>
+                {meta.join(" · ")}
+              </Text>
+            </View>
+            <Text style={[styles.points, pointsStyle(entry.points)]}>
+              {points} pts
             </Text>
           </View>
-          <Text style={[styles.odds, pointsStyle(entry.points)]}>
-            {formatLegPoints(entry.points)} pts
-          </Text>
-        </View>
-      ))}
+        );
+      })}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  stack: {
+    gap: 8,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    borderRadius: 10,
+    padding: 12,
+  },
+  rowLeader: {
+    borderColor: colors.warning,
+  },
+  rowMe: {
+    backgroundColor: colors.accentMuted,
+  },
+  rank: {
+    width: 24,
+    textAlign: "center",
+    color: colors.muted,
+    fontWeight: "700",
+    fontSize: 16,
+    fontVariant: ["tabular-nums"],
+  },
+  rankLeader: {
+    color: colors.warning,
+  },
+  body: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
+  },
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  name: {
+    flexShrink: 1,
+    color: colors.text,
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  nameTop: {
+    fontSize: 15,
+  },
+  nameLeader: {
+    fontSize: 16,
+  },
+  muted: {
+    color: colors.muted,
+    fontSize: 14,
+  },
+  pill: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 999,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+  },
+  pillText: {
+    color: colors.muted,
+    fontSize: 11,
+  },
+  points: {
+    fontWeight: "600",
+    fontSize: 14,
+    fontVariant: ["tabular-nums"],
+  },
+});
