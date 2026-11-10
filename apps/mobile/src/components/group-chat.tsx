@@ -1,4 +1,5 @@
 import { useApiFetcher } from "@/api/use-api-fetcher";
+import { Avatar } from "@/components/avatar";
 import { colors } from "@/config";
 import {
   DELETED_MESSAGE_BODY,
@@ -24,6 +25,8 @@ import {
   View,
 } from "react-native";
 
+const AVATAR_SIZE = 28;
+
 function isAppActive() {
   return AppState.currentState === "active";
 }
@@ -33,6 +36,12 @@ function formatTime(iso: string) {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+/** True when `current` continues a run of user messages from the same author. */
+function continuesAuthorRun(previous: RoundMessageDto | undefined, current: RoundMessageDto) {
+  if (!previous || previous.kind !== "user" || current.kind !== "user") return false;
+  return previous.user != null && current.user != null && previous.user.id === current.user.id;
 }
 
 export function GroupThread({
@@ -122,7 +131,7 @@ export function GroupThread({
   }
 
   return (
-    <View style={styles.card}>
+    <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Group Chat</Text>
         <Text style={styles.hint}>Picks, accas, and trash talk</Text>
@@ -131,6 +140,7 @@ export function GroupThread({
         ref={scrollRef}
         nestedScrollEnabled
         style={styles.messages}
+        contentContainerStyle={styles.messagesContent}
         onContentSizeChange={() => {
           if (skipNextAutoScroll.current) {
             skipNextAutoScroll.current = false;
@@ -154,10 +164,12 @@ export function GroupThread({
         ) : messages.length === 0 ? (
           <Text style={styles.empty}>No messages yet. Start the chat.</Text>
         ) : (
-          messages.map((message) => (
+          messages.map((message, index) => (
             <Message
               key={message.id}
               message={message}
+              currentUserId={currentUserId}
+              grouped={continuesAuthorRun(messages[index - 1], message)}
               readOnly={readOnly}
               canDelete={
                 !readOnly &&
@@ -203,6 +215,8 @@ export function GroupThread({
 
 function Message({
   message,
+  currentUserId,
+  grouped,
   readOnly,
   canDelete,
   onDelete,
@@ -210,6 +224,9 @@ function Message({
   onModerate,
 }: {
   message: RoundMessageDto;
+  currentUserId?: string;
+  /** Same author as the previous message: hide avatar and name, tighten the gap. */
+  grouped: boolean;
   readOnly: boolean;
   canDelete: boolean;
   onDelete: (messageId: string) => void;
@@ -218,43 +235,63 @@ function Message({
 }) {
   if (message.kind === "system") {
     return (
-      <View style={styles.systemMessage}>
-        {message.betNumber != null ? (
-          <Text style={styles.betContext}>Bet #{message.betNumber}</Text>
-        ) : null}
-        <Text style={styles.systemText}>
-          {message.body} · {formatTime(message.createdAt)}
-        </Text>
+      <View style={styles.systemRow}>
+        <View style={styles.systemPill}>
+          {message.betNumber != null ? (
+            <Text style={styles.betContext}>Bet #{message.betNumber}</Text>
+          ) : null}
+          <Text style={styles.systemText}>
+            {message.body} · {formatTime(message.createdAt)}
+          </Text>
+        </View>
         <ReactionBar message={message} readOnly={readOnly} onReact={onReact} />
       </View>
     );
   }
+
+  const own = message.user != null && message.user.id === currentUserId;
+
   return (
     <Pressable
       onLongPress={() => onModerate(message)}
       delayLongPress={350}
-      style={styles.message}
+      style={[
+        styles.row,
+        own && styles.rowOwn,
+        grouped ? styles.rowGrouped : styles.rowFirst,
+      ]}
       accessibilityHint="Long press for message options"
     >
-      <View style={styles.messageHeader}>
-        <Text style={styles.author}>{message.user?.name ?? "Someone"}</Text>
-        <Text style={styles.time}>{formatTime(message.createdAt)}</Text>
-        {canDelete ? (
-          <Pressable onPress={() => onDelete(message.id)}>
-            <Text style={styles.delete}>Delete</Text>
-          </Pressable>
+      {own ? null : !grouped && message.user ? (
+        <Avatar name={message.user.name} userId={message.user.id} size={AVATAR_SIZE} />
+      ) : (
+        <View style={styles.avatarSpacer} />
+      )}
+      <View style={[styles.column, own && styles.columnOwn]}>
+        {!own && !grouped ? (
+          <Text style={styles.author}>{message.user?.name ?? "Someone"}</Text>
         ) : null}
+        <View style={[styles.bubble, own ? styles.bubbleOwn : styles.bubbleOther]}>
+          <Text
+            style={
+              message.body === DELETED_MESSAGE_BODY
+                ? styles.deleted
+                : styles.body
+            }
+          >
+            {message.body}
+          </Text>
+          <View style={[styles.meta, own && styles.metaOwn]}>
+            <Text style={styles.time}>{formatTime(message.createdAt)}</Text>
+            {canDelete ? (
+              <Pressable onPress={() => onDelete(message.id)}>
+                <Text style={styles.delete}>Delete</Text>
+              </Pressable>
+            ) : null}
+          </View>
+        </View>
+        <ReactionBar message={message} readOnly={readOnly} onReact={onReact} />
       </View>
-      <Text
-        style={
-          message.body === DELETED_MESSAGE_BODY
-            ? styles.deleted
-            : styles.body
-        }
-      >
-        {message.body}
-      </Text>
-      <ReactionBar message={message} readOnly={readOnly} onReact={onReact} />
     </Pressable>
   );
 }
@@ -370,18 +407,20 @@ export function ReactionBar({
 }
 
 const styles = StyleSheet.create({
-  card: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    backgroundColor: colors.card,
-    overflow: "hidden",
+  container: {
     flex: 1,
+    backgroundColor: colors.bg,
   },
-  header: { padding: 14, borderBottomWidth: 1, borderBottomColor: colors.border },
+  header: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
   title: { color: colors.text, fontSize: 18, fontWeight: "600" },
   hint: { color: colors.muted, fontSize: 12, marginTop: 2 },
-  messages: { flex: 1, minHeight: 240, padding: 12 },
+  messages: { flex: 1 },
+  messagesContent: { paddingHorizontal: 12, paddingVertical: 8 },
   empty: { color: colors.muted, textAlign: "center", paddingVertical: 24 },
   loadEarlier: {
     color: colors.accent,
@@ -390,8 +429,17 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingBottom: 8,
   },
-  message: { paddingVertical: 6 },
-  systemMessage: { alignItems: "center", paddingVertical: 6 },
+  systemRow: { alignItems: "center", marginVertical: 8, gap: 4 },
+  systemPill: {
+    alignItems: "center",
+    maxWidth: "85%",
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
   betContext: {
     color: colors.accent,
     fontSize: 11,
@@ -399,12 +447,34 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   systemText: { color: colors.muted, fontSize: 12, fontStyle: "italic", textAlign: "center" },
-  messageHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
-  author: { color: colors.text, fontSize: 14, fontWeight: "600" },
+  row: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
+  rowOwn: { justifyContent: "flex-end" },
+  rowFirst: { marginTop: 8 },
+  rowGrouped: { marginTop: 2 },
+  avatarSpacer: { width: AVATAR_SIZE },
+  column: { maxWidth: "80%", flexShrink: 1, alignItems: "flex-start" },
+  columnOwn: { alignItems: "flex-end" },
+  author: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: "600",
+    marginBottom: 2,
+    marginLeft: 4,
+  },
+  bubble: {
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  bubbleOther: { backgroundColor: colors.card, borderColor: colors.border },
+  bubbleOwn: { backgroundColor: colors.accentMuted, borderColor: colors.accent },
+  meta: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 2 },
+  metaOwn: { justifyContent: "flex-end" },
   time: { color: colors.muted, fontSize: 11 },
-  delete: { color: colors.danger, fontSize: 11, marginLeft: "auto" },
-  body: { color: colors.text, fontSize: 14, marginTop: 2 },
-  deleted: { color: colors.muted, fontSize: 14, fontStyle: "italic", marginTop: 2 },
+  delete: { color: colors.danger, fontSize: 11 },
+  body: { color: colors.text, fontSize: 14 },
+  deleted: { color: colors.muted, fontSize: 14, fontStyle: "italic" },
   reactions: { flexDirection: "row", flexWrap: "wrap", gap: 4, marginTop: 5 },
   reaction: {
     borderWidth: 1,
@@ -478,7 +548,8 @@ const styles = StyleSheet.create({
   composer: {
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    padding: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     flexDirection: "row",
     alignItems: "flex-end",
     gap: 8,
@@ -489,12 +560,19 @@ const styles = StyleSheet.create({
     maxHeight: 100,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 8,
+    borderRadius: 20,
+    backgroundColor: colors.card,
     color: colors.text,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
   },
-  send: { backgroundColor: colors.accent, borderRadius: 8, paddingHorizontal: 14, paddingVertical: 11 },
+  send: {
+    backgroundColor: colors.accent,
+    borderRadius: 20,
+    minHeight: 40,
+    justifyContent: "center",
+    paddingHorizontal: 16,
+  },
   sendText: { color: colors.onAccent, fontSize: 13, fontWeight: "600" },
   disabled: { opacity: 0.5 },
   pressed: { opacity: 0.8 },
