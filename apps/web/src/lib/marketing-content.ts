@@ -11,21 +11,23 @@ export const hero = {
   compliance: "18+ · Not a bookmaker · Tiki Acca never takes bets or holds money",
 };
 
+/** Name of the example group in the homepage demos. */
+export const exampleGroupName = "Saturday Squad";
+
 /**
- * Example group used by the homepage demos. All odds are illustrative
- * ("Example") and are never shown as live prices.
+ * Example group used by the homepage demos: Dan, Matty and Tom, the friends who
+ * pioneered the game, with the picks from the original homepage mock. Keep these
+ * names. All odds are illustrative ("Example") and never shown as live prices.
  */
 export const exampleMates = [
-  { name: "Danny", color: "#a78bfa", selection: "Man City to win", fixture: "Man City vs Brentford", odds: 1.4 },
-  { name: "Sarah", color: "#f472b6", selection: "Both teams to score", fixture: "Newcastle vs Villa", odds: 1.65 },
-  { name: "Matty", color: "#fb923c", selection: "Over 2.5 goals", fixture: "Spurs vs Brighton", odds: 1.55 },
-  { name: "Priya", color: "#2dd4bf", selection: "Arsenal to win", fixture: "Arsenal vs Fulham", odds: 1.72 },
-  { name: "Tom", color: "#818cf8", selection: "Liverpool to win", fixture: "Liverpool vs Palace", odds: 1.45 },
+  { name: "Dan", color: "#a78bfa", selection: "Arsenal to win", fixture: "Arsenal vs Fulham", odds: 1.85 },
+  { name: "Matty", color: "#fb923c", selection: "Over 2.5 goals", fixture: "Spurs vs Brighton", odds: 1.72 },
+  { name: "Tom", color: "#818cf8", selection: "BTTS: Yes", fixture: "Newcastle vs Villa", odds: 1.65 },
 ] as const;
 
 /** Selections the visitor can tap in the "Pick your leg" demo. */
 export const pickOptions = [
-  { id: "arsenal", label: "Arsenal to win", odds: 1.72 },
+  { id: "liverpool", label: "Liverpool to win", odds: 1.45 },
   { id: "over", label: "Over 2.5 goals in Chelsea vs West Ham", odds: 1.6 },
   { id: "btts", label: "Both teams to score in Everton vs Wolves", odds: 1.8 },
 ] as const;

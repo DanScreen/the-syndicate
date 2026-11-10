@@ -1,24 +1,26 @@
-import { scrollStory } from "@/lib/marketing-content";
+import { exampleMates, productOdds, scrollStory } from "@/lib/marketing-content";
 import { MateAvatar } from "./mate-avatar";
 
-const mates = [
-  { name: "Danny", color: "#a78bfa", filled: true },
-  { name: "Sarah", color: "#f472b6", filled: true },
-  { name: "Matty", color: "#fb923c", filled: true },
-  { name: "Priya", color: "#2dd4bf", filled: false },
-  { name: "Tom", color: "#818cf8", filled: false },
-] as const;
+function mate(name: string) {
+  const found = exampleMates.find((m) => m.name === name);
+  if (!found) throw new Error(`Unknown example mate: ${name}`);
+  return found;
+}
 
+/** Dan and Matty are in; the slip is waiting on Tom. */
+const mates = exampleMates.map((m) => ({ name: m.name, color: m.color, filled: m.name !== "Tom" }));
+
+const bestOdds = Number(productOdds(exampleMates.map((m) => m.odds)));
 const bookmakers = [
-  { name: "Bookmaker A", odds: "8.93", best: true },
-  { name: "Bookmaker B", odds: "8.60", best: false },
-  { name: "Bookmaker C", odds: "8.41", best: false },
+  { name: "Bookmaker A", odds: bestOdds.toFixed(2), best: true },
+  { name: "Bookmaker B", odds: (bestOdds * 0.96).toFixed(2), best: false },
+  { name: "Bookmaker C", odds: (bestOdds * 0.94).toFixed(2), best: false },
 ] as const;
 
 const leaderboard = [
-  { name: "Sarah", color: "#f472b6", points: 42, form: [true, true, true, false, true], tag: "Banker" },
-  { name: "Danny", color: "#a78bfa", points: 31, form: [true, false, true, true, false], tag: null },
-  { name: "Tom", color: "#818cf8", points: 12, form: [false, false, true, false, false], tag: "Acca killer" },
+  { name: "Matty", color: mate("Matty").color, points: 42, form: [true, true, true, false, true], tag: "Banker" },
+  { name: "Dan", color: mate("Dan").color, points: 31, form: [true, false, true, true, false], tag: null },
+  { name: "Tom", color: mate("Tom").color, points: 12, form: [false, false, true, false, false], tag: "Acca killer" },
 ] as const;
 
 function PicksMock() {
@@ -37,7 +39,7 @@ function PicksMock() {
           ),
         )}
       </div>
-      <p className="mt-6 text-center text-sm text-muted">Waiting on Priya and Tom</p>
+      <p className="mt-6 text-center text-sm text-muted">Waiting on Tom</p>
     </div>
   );
 }

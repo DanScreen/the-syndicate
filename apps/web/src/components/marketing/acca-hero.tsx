@@ -1,23 +1,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { exampleMates, productOdds } from "@/lib/marketing-content";
+import { exampleGroupName, exampleMates, productOdds } from "@/lib/marketing-content";
 import { MateAvatar } from "./mate-avatar";
 
 const STEP_MS = 1400;
-/** Final frame: all legs in, the acca is locked, four landed and Tom let it down. */
-const FINAL_STEP = 13;
-/** Steps 0-15 loop; 13-15 is the hold on the final frame. */
-const CYCLE_LENGTH = 16;
+const LEG_COUNT = exampleMates.length;
+/** Step on which the acca locks, once every leg has dropped in (steps 1..LEG_COUNT). */
+const LOCK_STEP = LEG_COUNT + 1;
+/** Step on which the result banner and the first chat bubble appear, after every leg settles. */
+const BANNER_STEP = LOCK_STEP + LEG_COUNT + 1;
+/** Final frame: all legs in, the acca is locked and settled, and Tom let it down. */
+const FINAL_STEP = BANNER_STEP + 1;
+/** The loop holds on the final frame for three steps. */
+const CYCLE_LENGTH = FINAL_STEP + 3;
 /** Index of the one leg that loses (Tom). */
-const LOSING_INDEX = 4;
-/** Ring positions (percent of the wrapper), clockwise from the top, matching exampleMates order. */
+const LOSING_INDEX = exampleMates.findIndex((mate) => mate.name === "Tom");
+const LOSER_NAME = exampleMates[LOSING_INDEX].name;
+/** Ring positions (percent of the wrapper), clockwise from the top, matching exampleMates order: a triangle, like the rondo logo. */
 const RING_POSITIONS = [
   { left: "50%", top: "1%" },
-  { left: "94%", top: "34%" },
-  { left: "84%", top: "88%" },
-  { left: "16%", top: "88%" },
-  { left: "6%", top: "34%" },
+  { left: "90%", top: "82%" },
+  { left: "10%", top: "82%" },
 ] as const;
 
 type LegResult = "won" | "lost" | null;
@@ -43,11 +47,11 @@ export function AccaHero() {
   }, []);
 
   const legsIn = step >= 1 ? Math.min(step, exampleMates.length) : 0;
-  const locked = step >= 6;
-  const settled = step >= 7 ? Math.min(step - 6, exampleMates.length) : 0;
-  const showBanner = step >= 12;
-  const showSarahBubble = step >= 12;
-  const showTomBubble = step >= 13;
+  const locked = step >= LOCK_STEP;
+  const settled = step > LOCK_STEP ? Math.min(step - LOCK_STEP, LEG_COUNT) : 0;
+  const showBanner = step >= BANNER_STEP;
+  const showMattyBubble = step >= BANNER_STEP;
+  const showTomBubble = step >= FINAL_STEP;
   const dropping = step >= 1 && step <= exampleMates.length ? step - 1 : -1;
   const combined =
     legsIn > 0 ? productOdds(exampleMates.slice(0, legsIn).map((mate) => mate.odds)) : "—";
@@ -58,7 +62,7 @@ export function AccaHero() {
   }
 
   return (
-    <div className="relative mx-auto w-full max-w-[18.5rem] md:max-w-none">
+    <div className="relative mx-auto w-full max-w-[18.5rem] md:max-w-none md:py-14">
       <div aria-hidden="true">
         {/* Decorative rondo ring (md+) */}
         <svg
@@ -101,14 +105,14 @@ export function AccaHero() {
         ))}
 
         {/* Phone frame: fixed height so nothing shifts while the demo runs */}
-        <div className="relative z-10 mx-auto flex h-[38rem] w-full max-w-[18.5rem] flex-col rounded-[2.5rem] border border-border bg-card p-2 shadow-2xl shadow-black/50 md:my-14 md:max-w-[20rem]">
+        <div className="relative z-10 mx-auto flex h-[33rem] w-full max-w-[18.5rem] flex-col rounded-[2.5rem] border border-border bg-card p-2 shadow-2xl shadow-black/50 md:max-w-[20rem]">
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[2rem] bg-background">
             <div className="flex h-7 shrink-0 items-center justify-center">
               <span className="h-4 w-24 rounded-full bg-black/80" />
             </div>
 
             <div className="flex h-12 shrink-0 items-center justify-between gap-2 px-4">
-              <p className="truncate font-display text-base font-semibold">Thursday Club</p>
+              <p className="truncate font-display text-base font-semibold">{exampleGroupName}</p>
               <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted">
                 Example group
               </span>
@@ -180,7 +184,7 @@ export function AccaHero() {
             <div className="flex h-10 shrink-0 items-center justify-center px-4">
               {showBanner ? (
                 <p key="result" className="marketing-leg-in rounded-full bg-card px-3 py-1 text-center text-xs font-semibold">
-                  4 of 5 landed. Tom let the acca down.
+                  {LEG_COUNT - 1} of {LEG_COUNT} landed. {LOSER_NAME} let the acca down.
                 </p>
               ) : locked ? (
                 <p key="locked" className="marketing-leg-in rounded-full bg-accent-muted/50 px-3 py-1 text-xs font-semibold text-accent">
@@ -190,16 +194,16 @@ export function AccaHero() {
             </div>
 
             <div className="flex h-24 shrink-0 flex-col justify-end gap-1.5 px-4 pb-3">
-              {showSarahBubble && (
+              {showMattyBubble && (
                 <p className="marketing-leg-in self-start rounded-2xl rounded-tl-sm bg-card px-3 py-1.5 text-xs">
-                  <span className="font-semibold text-muted">Sarah: </span>
+                  <span className="font-semibold text-muted">Matty: </span>
                   TOM. Every. Single. Week.
                 </p>
               )}
               {showTomBubble && (
                 <p className="marketing-leg-in self-end rounded-2xl rounded-tr-sm bg-accent-muted/60 px-3 py-1.5 text-xs">
                   <span className="font-semibold text-muted">Tom: </span>
-                  Palace parked the bus, not my fault 😭
+                  Villa parked the bus, not my fault 😭
                 </p>
               )}
             </div>
@@ -208,8 +212,8 @@ export function AccaHero() {
       </div>
 
       <p className="sr-only">
-        Example animation: five mates each add one leg to a group acca, the combined odds build to
-        {productOdds(exampleMates.map((mate) => mate.odds))} and lock at the best price, then four legs land and Tom&apos;s loses.
+        Example animation: Dan, Matty and Tom each add one leg to a group acca, the combined odds build to
+        {productOdds(exampleMates.map((mate) => mate.odds))} and lock at the best price, then two legs land and Tom&apos;s loses.
       </p>
     </div>
   );

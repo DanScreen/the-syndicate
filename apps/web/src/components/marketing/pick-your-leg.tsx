@@ -5,11 +5,8 @@ import { useState } from "react";
 import { exampleMates, pickOptions, productOdds, signUpHref } from "@/lib/marketing-content";
 import { MateAvatar } from "./mate-avatar";
 
-/**
- * Mates whose legs are already in the example slip. Priya is left out because
- * her Arsenal leg is the same fixture as one of the options.
- */
-const slipMates = exampleMates.filter((mate) => mate.name !== "Priya");
+/** Mates whose legs are already in the example slip; the visitor's pick joins them. */
+const slipMates = exampleMates;
 
 export function PickYourLeg({ signedIn = false }: { signedIn?: boolean }) {
   const [pickedId, setPickedId] = useState<string | null>(null);

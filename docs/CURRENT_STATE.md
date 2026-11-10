@@ -656,7 +656,7 @@ Not yet run on a device: layout was checked by typecheck, lint and code review o
 
 **Web homepage** (`apps/web/src/app/page.tsx`, content in `lib/marketing-content.ts`, components in `components/marketing/`)
 
-Hero with an animated example acca in a phone frame (`acca-hero.tsx`; static under `prefers-reduced-motion`), a three-step scroll story (`scroll-story.tsx`), a playable "Pick your leg" demo (`pick-your-leg.tsx`), an example group chat strip (`banter-strip.tsx`), FAQ accordions, closing CTA and a sticky sign-up bar on phones (`sticky-mobile-cta.tsx`). All demo names, odds and bookmakers are examples and labelled as such. No store badges: there is no public store listing URL yet.
+Hero with an animated example acca in a phone frame (`acca-hero.tsx`; static under `prefers-reduced-motion`), a three-step scroll story (`scroll-story.tsx`), a playable "Pick your leg" demo (`pick-your-leg.tsx`), an example group chat strip (`banter-strip.tsx`), FAQ accordions, closing CTA and a sticky sign-up bar on phones (`sticky-mobile-cta.tsx`). All demo odds and bookmakers are examples and labelled as such. The demo group is **Saturday Squad** with **Dan, Matty and Tom**, carried over from the original homepage: they are the friends who pioneered the game, so keep these names (`exampleMates` in `lib/marketing-content.ts`). No store badges: there is no public store listing URL yet.
 
 ## Known limitations
 
