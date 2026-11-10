@@ -38,6 +38,8 @@ export function HomeGroupCard({
     roundLegCount: legs.length,
   });
   const needsPick = state === "needs-pick";
+  // Nobody has picked yet: keep the card calm (no accent border, no "needed" line).
+  const quietPick = needsPick && legs.length === 0;
   const hasProgressLine = bet != null && (state === "waiting" || state === "betslip");
   const hasBetslip = legs.length > 0;
 
@@ -47,7 +49,7 @@ export function HomeGroupCard({
       accessibilityRole="button"
       style={({ pressed }) => [styles.wrapper, pressed && styles.pressed]}
     >
-        <View style={[styles.card, needsPick && styles.cardNeedsPick]}>
+        <View style={[styles.card, needsPick && !quietPick && styles.cardNeedsPick]}>
           <View style={styles.row}>
             <Text style={styles.groupName}>{group.name}</Text>
             <View style={styles.badgeRow}>
@@ -77,7 +79,7 @@ export function HomeGroupCard({
           {multi ? (
             <>
               <ActiveBetsOverview bets={group.activeBets ?? []} />
-              {needsPick ? <PickPrompt bet={bet} onPick={onOpen} /> : null}
+              {needsPick ? <PickPrompt bet={bet} onPick={onOpen} quiet={quietPick} /> : null}
             </>
           ) : (
             <>
@@ -103,7 +105,7 @@ export function HomeGroupCard({
               {!hasProgressLine && !hasBetslip && waitingText ? (
                 <Text style={styles.waiting}>{waitingText}</Text>
               ) : null}
-              {needsPick ? <PickPrompt bet={bet} onPick={onOpen} /> : null}
+              {needsPick ? <PickPrompt bet={bet} onPick={onOpen} quiet={quietPick} /> : null}
             </>
           )}
         </View>
@@ -114,14 +116,17 @@ export function HomeGroupCard({
 function PickPrompt({
   bet,
   onPick,
+  quiet = false,
 }: {
   bet: GroupSummaryActiveBet | null;
   onPick: () => void;
+  /** No legs in yet: just the button and lock time, no "needed" line. */
+  quiet?: boolean;
 }) {
   const lock = bet?.firstKickoff ? formatKickoff(bet.firstKickoff) : null;
   return (
     <View style={styles.pickPrompt}>
-      <Text style={styles.pickTitle}>Your pick is needed</Text>
+      {quiet ? null : <Text style={styles.pickTitle}>Your pick is needed</Text>}
       {lock ? <Text style={styles.meta}>Locks {lock}</Text> : null}
       <Button label="Pick your leg" onPress={onPick} />
     </View>
