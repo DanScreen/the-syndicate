@@ -99,7 +99,7 @@ Android notification colour) — it can't import `BRAND_COLORS`.
 
 | Route | Purpose |
 |-------|---------|
-| `/` | Homepage — hero, value props, how it works, FAQ, CTA |
+| `/` | Homepage — hero with animated example acca, three-step story, playable pick demo, example group chat, FAQ, CTA |
 | `/about` | Product story, what we are/aren’t, responsible gambling |
 | `/blog`, `/blog/[slug]` | File-based MDX blog (static; `draft: true` hidden in prod) |
 
