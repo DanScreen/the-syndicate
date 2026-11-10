@@ -552,6 +552,7 @@ Core models: `User`, `Group`, `GroupMember`, `Round`, `Leg`, `Match`, `MatchObse
 
 - `RoundMessage` — group-scoped permanent chat: required `groupId`, nullable `roundId` for lifecycle-event Bet context, user banter (`kind: "user"`) + append-only system messages (`kind: "system"`, `eventType`: `leg_submitted | leg_changed | leg_removed | round_locked | leg_result | round_settled | round_reopened`; `legId` set on active pick announcements so the betslip row can mirror reactions). User posts run through shared `containsProfanity` (same list as names/groups). Existing messages were backfilled by `20260718200000_group_scoped_chat`; its trigger derives `groupId` for old-revision writes during a rolling deploy, with `20260718201000_group_chat_rolling_compat` ensuring the trigger on existing development databases. Legs submitted before group chat shipped may lack announcements; backfill with `npm run db:maintenance -- backfill-leg-announcements --execute` (preview first).
 - `MessageReaction` — emoji reactions on messages, unique per `(messageId, userId, emoji)`. The bar shows **only used emoji chips**; a muted **React** / **+** opens a viewport-level picker (quick picks 🔥😂💀👀🫡🍀, then more). The API validates any single Unicode emoji. Pick rows mirror the latest `leg_submitted` / `leg_changed` message for their `legId`.
+- `User.avatarKey` + `UserAvatar` — profile pictures. API payloads send `avatarUrl` (`avatarPath(key)` in `packages/shared/src/member-display.ts`, site-relative; the app prefixes `EXPO_PUBLIC_API_URL`) on leg users, members, leaderboard entries, chat message users and dashboard legs (`userAvatarUrl`); null means show initials. Anonymised accounts lose the picture.
 - `GroupMember.lastReadMessageAt` — group-wide unread cursor; dashboard cards and dedicated Chat tabs show unread counts.
 - `NotificationPreference.pushChat` — chat push opt-in (default on). User messages notify other members at most once per ten-minute group bucket; active 20-second thread polling suppresses foreground pushes.
 
@@ -589,6 +590,9 @@ Recent migrations include `20260923120000_email_verification`, `20260718190000_c
 
 | Route | Auth | Purpose |
 |-------|------|---------|
+| `PUT /api/user/avatar` | Session | Set profile picture: multipart `avatar` file (web) or JSON `{ image: base64 }` (app), max 8 MB. Server square-crops to 256px WebP with `sharp` (strips EXIF/GPS), stores it in `UserAvatar`, sets a new random `User.avatarKey`. Returns `{ avatarUrl }`. `lib/avatar-upload.ts` |
+| `DELETE /api/user/avatar` | Session | Remove the picture; back to initials |
+| `GET /api/avatars/[key]` | Public (unguessable key) | Serves the WebP with `Cache-Control: immutable`; a new upload gets a new key, so old URLs 404 |
 | `GET /api/competitions` | Session | Enabled competitions for leg picker |
 | `GET /api/fixtures` | Session | List fixtures (`?competition=` required); postponed/cancelled matches hidden |
 | `GET /api/fixtures/[id]/markets` | Session | Extended markets (`?competition=` required) |

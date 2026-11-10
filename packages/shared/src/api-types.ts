@@ -40,6 +40,8 @@ export type GroupSummaryYourLeg = {
 export type GroupSummaryActiveLeg = {
   userId: string;
   userName: string;
+  /** Site-relative profile picture URL, or null for initials. */
+  userAvatarUrl?: string | null;
   selectionLabel: string;
   marketLabel: string;
   homeTeam: string;
@@ -103,12 +105,15 @@ export type GroupsListResponse = {
 export type GroupMember = {
   id: string;
   name: string;
+  /** Site-relative profile picture URL, or null for initials. */
+  avatarUrl?: string | null;
   role: string;
 };
 
 export type GroupLeg = {
   id: string;
-  user: { id: string; name: string };
+  /** `avatarUrl` is the site-relative profile picture, or null for initials. */
+  user: { id: string; name: string; avatarUrl?: string | null };
   legIndex?: number;
   fixtureId: string;
   homeTeam: string;
@@ -344,6 +349,9 @@ export type UserStatsChartPoint = {
   accaWon: boolean;
   roundPlGbp: number;
 };
+
+/** `PUT` / `DELETE /api/user/avatar`. */
+export type AvatarResponse = { avatarUrl: string | null };
 
 export type UserStatsResponse = {
   summary: UserStatsSummary;

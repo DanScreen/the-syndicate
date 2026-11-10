@@ -111,7 +111,8 @@ export type RoundMessageDto = {
   /** Set on leg announcement system messages (leg_submitted / leg_changed). */
   legId: string | null;
   /** Null for system messages. */
-  user: { id: string; name: string } | null;
+  /** `avatarUrl` is the site-relative profile picture, or null for initials. */
+  user: { id: string; name: string; avatarUrl?: string | null } | null;
   createdAt: string;
   reactions: MessageReactionSummary[];
 };

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   AVATAR_COLORS,
+  avatarPath,
   formatWaitingOnNames,
   getAvatarColor,
   getFirstName,
@@ -83,5 +84,14 @@ describe("formatWaitingOnNames", () => {
       formatWaitingOnNames(["Tom Smith", "Priya Patel", "Sam Lee", "Ana Diaz"]),
       "Waiting on Tom, Priya and 2 others"
     );
+  });
+});
+
+describe("avatarPath", () => {
+  it("builds the picture URL from a key and is null without one", () => {
+    assert.equal(avatarPath("abc123"), "/api/avatars/abc123");
+    assert.equal(avatarPath(null), null);
+    assert.equal(avatarPath(undefined), null);
+    assert.equal(avatarPath(""), null);
   });
 });

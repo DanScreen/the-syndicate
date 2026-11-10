@@ -1,6 +1,7 @@
 import { anonymiseAccount } from "@/lib/account-removal";
 import { requireSession } from "@/lib/api-auth";
 import { prisma } from "@tiki-acca/database";
+import { avatarPath } from "@tiki-acca/shared";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -17,6 +18,7 @@ export async function GET() {
       lastName: true,
       name: true,
       email: true,
+      avatarKey: true,
       totalPoints: true,
       legsWon: true,
       legsLost: true,
@@ -28,7 +30,9 @@ export async function GET() {
     },
   });
 
-  return NextResponse.json({ user });
+  if (!user) return NextResponse.json({ user: null });
+  const { avatarKey, ...rest } = user;
+  return NextResponse.json({ user: { ...rest, avatarUrl: avatarPath(avatarKey) } });
 }
 
 const deleteAccountSchema = z.object({ password: z.string().min(1) });

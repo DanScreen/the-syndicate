@@ -43,7 +43,8 @@ flowchart TB
 
 | Entity | Purpose |
 |--------|---------|
-| **User** | Account; `firstName` / `lastName` / `name` (full display); `role` (`user` \| `admin`); `emailVerifiedAt` (null = unconfirmed, gated); aggregate `totalPoints` |
+| **User** | Account; `firstName` / `lastName` / `name` (full display); `role` (`user` \| `admin`); `emailVerifiedAt` (null = unconfirmed, gated); aggregate `totalPoints`; `avatarKey` (null = initials) |
+| **UserAvatar** | Profile picture bytes (256px WebP), one row per user, kept off `User` so ordinary queries never load it. Stored in Postgres rather than a bucket: small, no new infrastructure, covered by backups and account deletion |
 | **EmailVerificationToken** | One-time confirm-email link; SHA-256 token hash, the address it was sent to, 24h expiry, used-at |
 | **MobileSession** | Revocable native-device login; SHA-256 token hash, user, created/last-used/revoked timestamps |
 | **Group** | Name, invite code, owner, status, `legsPerMember` (1–3), `maxActiveBets` (1–5; default 1) |
