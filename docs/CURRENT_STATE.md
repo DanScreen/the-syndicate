@@ -590,9 +590,9 @@ Recent migrations include `20260923120000_email_verification`, `20260718190000_c
 
 | Route | Auth | Purpose |
 |-------|------|---------|
-| `PUT /api/user/avatar` | Session | Set profile picture: multipart `avatar` file (web) or JSON `{ image: base64 }` (app), max 8 MB. Server square-crops to 256px WebP with `sharp` (strips EXIF/GPS), stores it in `UserAvatar`, sets a new random `User.avatarKey`. Returns `{ avatarUrl }`. `lib/avatar-upload.ts` |
+| `PUT /api/user/avatar` | Session | Set profile picture: multipart `avatar` file (web) or JSON `{ image: base64 }` (app), max 8 MB (body counted as it streams, 413 past the cap; 10 uploads per 10 min per user, 429). Only JPEG, PNG, WebP, GIF, HEIF and AVIF are accepted. Server square-crops to 256px WebP with `sharp` (strips EXIF/GPS), stores it in `UserAvatar`, sets a new random `User.avatarKey`. Returns `{ avatarUrl }`. `lib/avatar-upload.ts` |
 | `DELETE /api/user/avatar` | Session | Remove the picture; back to initials |
-| `GET /api/avatars/[key]` | Public (unguessable key) | Serves the WebP with `Cache-Control: immutable`; a new upload gets a new key, so old URLs 404 |
+| `GET /api/avatars/[key]` | Public (unguessable key) | Serves the WebP with `Cache-Control: immutable`; a new upload gets a new key, so old URLs 404 at the origin (browsers that already loaded one may keep it cached; don't put a shared CDN cache in front of `/api/avatars`) |
 | `GET /api/competitions` | Session | Enabled competitions for leg picker |
 | `GET /api/fixtures` | Session | List fixtures (`?competition=` required); postponed/cancelled matches hidden |
 | `GET /api/fixtures/[id]/markets` | Session | Extended markets (`?competition=` required) |

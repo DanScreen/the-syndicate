@@ -31,6 +31,11 @@ describe("normaliseAvatar", () => {
     assert.equal((await sharp(out).metadata()).exif, undefined);
   });
 
+  it("refuses formats other than ordinary photos, such as SVG", async () => {
+    const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10"/></svg>');
+    assert.equal(await normaliseAvatar(svg), null);
+  });
+
   it("rejects files that are not images", async () => {
     assert.equal(await normaliseAvatar(Buffer.from("definitely not a picture")), null);
   });

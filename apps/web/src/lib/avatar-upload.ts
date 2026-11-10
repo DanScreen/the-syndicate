@@ -26,9 +26,17 @@ export type AvatarResult =
   | { ok: true; avatarKey: string }
   | { ok: false; error: string; status: 400 | 413 };
 
+/**
+ * Photo formats accepted. Anything else libvips could decode (SVG, PDF, TIFF…)
+ * is refused, to keep the decoder surface to ordinary photos.
+ */
+const ACCEPTED_FORMATS = new Set(["jpeg", "png", "webp", "gif", "heif", "avif"]);
+
 /** Decode, square-crop, resize and re-encode an upload. Null if it isn't an image. */
 export async function normaliseAvatar(input: Buffer): Promise<Buffer | null> {
   try {
+    const { format } = await sharp(input).metadata();
+    if (!format || !ACCEPTED_FORMATS.has(format)) return null;
     return await sharp(input, {
       // Refuse decompression bombs: 50 megapixels is above any phone camera.
       limitInputPixels: 50_000_000,
