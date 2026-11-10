@@ -1,8 +1,11 @@
 import { DeleteAccount } from "@/components/delete-account";
 import { AppHeader } from "@/components/layout/header";
+import { ProfilePictureForm } from "@/components/profile-picture-form";
 import { NotificationSettings } from "@/components/notification-settings";
 import { SignOutButton } from "@/components/sign-out-button";
 import { auth } from "@/lib/auth";
+import { prisma } from "@tiki-acca/database";
+import { avatarPath } from "@tiki-acca/shared";
 import { greetingFirstName } from "@/lib/user-display";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
@@ -18,6 +21,10 @@ export default async function AccountPage() {
 
   const firstName = greetingFirstName(session.user);
   const fullName = session.user.name?.trim() || firstName;
+  const avatar = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { avatarKey: true },
+  });
 
   return (
     <div className="min-h-screen">
@@ -27,6 +34,12 @@ export default async function AccountPage() {
         <p className="mt-2 text-sm text-muted">
           Your profile and preferences.
         </p>
+
+        <ProfilePictureForm
+          name={fullName}
+          userId={session.user.id}
+          initialAvatarUrl={avatarPath(avatar?.avatarKey)}
+        />
 
         <section className="mt-8 rounded-xl border border-border bg-card p-5">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">

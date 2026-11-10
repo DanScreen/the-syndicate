@@ -276,7 +276,7 @@ function ChatMessage({
       }`}
     >
       {own ? null : !grouped && message.user ? (
-        <Avatar name={message.user.name} userId={message.user.id} size="sm" />
+        <Avatar name={message.user.name} userId={message.user.id} size="sm" imageUrl={message.user.avatarUrl ?? null} />
       ) : (
         <span aria-hidden="true" className="w-8 shrink-0" />
       )}
