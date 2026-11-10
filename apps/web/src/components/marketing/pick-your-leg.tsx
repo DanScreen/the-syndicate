@@ -11,7 +11,7 @@ import { MateAvatar } from "./mate-avatar";
  */
 const slipMates = exampleMates.filter((mate) => mate.name !== "Priya");
 
-export function PickYourLeg() {
+export function PickYourLeg({ signedIn = false }: { signedIn?: boolean }) {
   const [pickedId, setPickedId] = useState<string | null>(null);
   const picked = pickOptions.find((option) => option.id === pickedId) ?? null;
   const combined = productOdds([
@@ -26,7 +26,7 @@ export function PickYourLeg() {
           Go on then. Pick your leg.
         </h2>
         <p className="mt-4 max-w-md text-muted">
-          Tap one of these to see how it slots into a slip. No account needed.
+          Tap one of these to see how it slots into a slip. Example odds, no account needed.
         </p>
         <div role="group" aria-label="Example selections" className="mt-8 grid gap-3">
           {pickOptions.map((option) => {
@@ -51,10 +51,10 @@ export function PickYourLeg() {
         {picked && (
           <div className="marketing-leg-in mt-8">
             <Link
-              href={signUpHref}
+              href={signedIn ? "/dashboard" : signUpHref}
               className="inline-block rounded-xl bg-accent px-6 py-3 font-medium text-on-accent transition-colors hover:bg-accent-bright"
             >
-              Now do it with your actual mates
+              {signedIn ? "Go to your groups" : "Now do it with your actual mates"}
             </Link>
           </div>
         )}
@@ -83,7 +83,7 @@ export function PickYourLeg() {
             ))}
             {picked ? (
               <li className="marketing-leg-in flex items-center gap-3 rounded-xl border border-accent/60 bg-accent-muted/30 px-3 py-2.5">
-                <MateAvatar name="You" color="#38bdf8" size="sm" />
+                <MateAvatar name="You" color="var(--accent)" size="sm" />
                 <p className="min-w-0 flex-1 text-sm font-semibold">You — {picked.label}</p>
                 <span className="shrink-0 text-xs font-semibold tabular-nums text-accent">
                   {picked.odds.toFixed(2)}

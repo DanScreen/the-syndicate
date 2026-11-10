@@ -26,8 +26,8 @@ export const exampleMates = [
 /** Selections the visitor can tap in the "Pick your leg" demo. */
 export const pickOptions = [
   { id: "arsenal", label: "Arsenal to win", odds: 1.72 },
-  { id: "over", label: "Over 2.5 goals in Spurs vs Brighton", odds: 1.55 },
-  { id: "btts", label: "Both teams to score in Newcastle vs Villa", odds: 1.65 },
+  { id: "over", label: "Over 2.5 goals in Chelsea vs West Ham", odds: 1.6 },
+  { id: "btts", label: "Both teams to score in Everton vs Wolves", odds: 1.8 },
 ] as const;
 
 export const scrollStory = [

@@ -23,7 +23,8 @@ const RING_POSITIONS = [
 type LegResult = "won" | "lost" | null;
 
 export function AccaHero() {
-  const [step, setStep] = useState(0);
+  // Server render and reduced-motion users get the finished slip; the loop starts after mount.
+  const [step, setStep] = useState(FINAL_STEP);
 
   useEffect(() => {
     let reducedMotion = false;
@@ -32,11 +33,10 @@ export function AccaHero() {
     } catch {
       reducedMotion = false;
     }
-    if (reducedMotion) {
-      setStep(FINAL_STEP);
-      return;
-    }
+    if (reducedMotion) return;
+    setStep(0);
     const id = window.setInterval(() => {
+      if (document.hidden) return;
       setStep((current) => (current + 1) % CYCLE_LENGTH);
     }, STEP_MS);
     return () => window.clearInterval(id);
@@ -179,11 +179,11 @@ export function AccaHero() {
 
             <div className="flex h-10 shrink-0 items-center justify-center px-4">
               {showBanner ? (
-                <p className="marketing-leg-in rounded-full bg-card px-3 py-1 text-center text-xs font-semibold">
+                <p key="result" className="marketing-leg-in rounded-full bg-card px-3 py-1 text-center text-xs font-semibold">
                   4 of 5 landed. Tom let the acca down.
                 </p>
               ) : locked ? (
-                <p className="marketing-leg-in rounded-full bg-accent-muted/50 px-3 py-1 text-xs font-semibold text-accent">
+                <p key="locked" className="marketing-leg-in rounded-full bg-accent-muted/50 px-3 py-1 text-xs font-semibold text-accent">
                   Locked · best odds found
                 </p>
               ) : null}
@@ -209,7 +209,7 @@ export function AccaHero() {
 
       <p className="sr-only">
         Example animation: five mates each add one leg to a group acca, the combined odds build to
-        8.93 and lock at the best price, then four legs land and Tom&apos;s loses.
+        {productOdds(exampleMates.map((mate) => mate.odds))} and lock at the best price, then four legs land and Tom&apos;s loses.
       </p>
     </div>
   );

@@ -47,7 +47,7 @@ export default async function HomePage() {
       {/* Playable demo */}
       <section className="border-y border-border bg-card/30">
         <div className="mx-auto max-w-6xl px-4 py-20">
-          <PickYourLeg />
+          <PickYourLeg signedIn={signedIn} />
         </div>
       </section>
 
@@ -102,7 +102,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <StickyMobileCta />
+      {signedIn ? null : <StickyMobileCta />}
     </MarketingShell>
   );
 }
