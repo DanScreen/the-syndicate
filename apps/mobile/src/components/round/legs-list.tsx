@@ -1,6 +1,7 @@
 import {
   Linking,
   Pressable,
+  StyleSheet,
   Text,
   View,
 } from "react-native";
@@ -17,6 +18,8 @@ import type {
 } from "@tiki-acca/shared";
 import { useApiFetcher } from "@/api/use-api-fetcher";
 import { toggleReaction } from "@tiki-acca/client";
+import { colors } from "@/config";
+import { Avatar } from "@/components/avatar";
 import { ReactionBar } from "@/components/group-chat";
 import { outcomeColors } from "./helpers";
 import { styles } from "./styles";
@@ -67,6 +70,12 @@ export function LegsList({
           outcomeStyled
             ? outcomeColors(leg.outcome)
             : outcomeColors("pending");
+        const edgeColor =
+          leg.outcome === "won"
+            ? colors.success
+            : leg.outcome === "lost"
+              ? colors.danger
+              : colors.border;
         const nameLabel =
           showLegIndex && leg.legIndex != null
             ? `${leg.user.name} · leg ${leg.legIndex}`
@@ -76,15 +85,29 @@ export function LegsList({
           <View
             key={leg.id}
             style={[
-              styles.legCard,
+              localStyles.legCard,
               outcomeStyled
                 ? { borderColor: oc.border, backgroundColor: oc.bg }
                 : null,
+              { borderLeftColor: edgeColor },
             ]}
           >
-            <View style={styles.legHeader}>
-              <Text style={styles.legUser}>{nameLabel}</Text>
-              <View style={styles.legHeaderRight}>
+            <View style={localStyles.legRow}>
+              <Avatar name={leg.user.name} userId={leg.user.id} size={36} />
+              <View style={localStyles.legMain}>
+                <Text style={localStyles.legSelection}>{leg.selectionLabel}</Text>
+                <Text style={localStyles.legFixture}>
+                  {formatFixtureLabel(leg)} · {leg.marketLabel}
+                </Text>
+                <Text style={localStyles.legMeta}>
+                  {nameLabel}
+                  {leg.competition ? ` · ${leg.competition}` : ""}
+                </Text>
+              </View>
+              <View style={localStyles.legRight}>
+                <View style={localStyles.oddsPill}>
+                  <Text style={localStyles.oddsText}>{formatOdds(leg.odds)}</Text>
+                </View>
                 {showOutcome ? (
                   <View
                     style={[
@@ -99,16 +122,13 @@ export function LegsList({
                     </Text>
                   </View>
                 ) : null}
-                <Text style={styles.odds}>{formatOdds(leg.odds)}</Text>
               </View>
             </View>
-            <Text style={styles.legPick}>
-              {formatFixtureLabel(leg)} · {leg.marketLabel}: {leg.selectionLabel}
-            </Text>
-            <Text style={styles.meta}>
-              {leg.competition ?? ""}
-              {inProgress ? ` · Locked at ${leg.bookmakerName}` : ""}
-            </Text>
+            {inProgress ? (
+              <Text style={[styles.meta, localStyles.lockedNote]}>
+                Locked at {leg.bookmakerName}
+              </Text>
+            ) : null}
             {announcementByLegId?.get(leg.id) ? (
               <ReactionBar
                 message={announcementByLegId.get(leg.id)!}
@@ -126,3 +146,57 @@ export function LegsList({
     </View>
   );
 }
+
+const localStyles = StyleSheet.create({
+  legCard: {
+    borderWidth: 1,
+    borderLeftWidth: 3,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    borderRadius: 10,
+    padding: 12,
+  },
+  legRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  legMain: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
+  },
+  legSelection: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  legFixture: {
+    color: colors.muted,
+    fontSize: 13,
+  },
+  legMeta: {
+    color: colors.muted,
+    fontSize: 12,
+  },
+  legRight: {
+    alignItems: "flex-end",
+    gap: 6,
+  },
+  oddsPill: {
+    borderRadius: 999,
+    backgroundColor: colors.accentMuted,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  oddsText: {
+    color: colors.accent,
+    fontSize: 14,
+    fontWeight: "700",
+    fontVariant: ["tabular-nums"],
+  },
+  lockedNote: {
+    marginTop: 8,
+    fontSize: 12,
+  },
+});

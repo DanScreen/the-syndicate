@@ -102,9 +102,9 @@ Web uses Auth.js cookies; mobile uses a random **Bearer session token** on every
 | Group chat | Dedicated permanent Chat tab + group-scoped API; Report / Block on hover | Same tab on `useGroupThread`; Report / Block via long-press |
 | Leg picker | Progressive 4-step + competition + market tiers | `SubmitLegForm` — competition, tiers (core + load more), grouped markets; selected competition / fixture / market each collapse with Change controls |
 | Locked acca | `AccaSummary`, compare bookmakers until first result | `AccaSummary` + `LegsList` with outcomes; 60s poll when locked |
-| Group tabs | Bet / Leaderboard / Chat / Invite (+ Settings for owners) | `groups/[id]/_layout.tsx` + tab screens |
+| Group tabs | Bet / Leaderboard / Chat / Invite (+ Settings for owners) | Tabs Bet / Leaderboard / Chat; Invite and owner Settings are header buttons (`groups/[id]/_layout.tsx` + screens) |
 | Cross-group performance | `/performance` (group filter, share) | `(main)/performance.tsx` (group filter, share sheet) |
-| Invite | Invite tab: code, link, copy invite link | Invite tab (`groups/[id]/invite.tsx`): code, link, share invite link (native share sheet) |
+| Invite | Invite tab: code, link, copy invite link | Invite screen, opened from the group header (`groups/[id]/invite.tsx`): code, link, share invite link (native share sheet) |
 | Blocked members | Account → Blocked members | Account → Blocked members |
 | Admin | `/admin/*` | **Out of scope** |
 
@@ -205,7 +205,7 @@ Checklist for implementation. Web route → API → mobile screen.
 ### Phase 3 — Stats and navigation
 
 - [x] Persistent member navigation: bottom tabs for Groups / Performance / Account; compact logo-only top header
-- [x] Group tabs: Bet / Leaderboard / Chat / Invite (`group-nav.tsx`, nested routes; Performance merged into Leaderboard)
+- [x] Group tabs: Bet / Leaderboard / Chat (`group-nav.tsx`, nested routes; Performance merged into Leaderboard); Invite and owner Settings open from the compact group header
 - [x] Cross-group performance screen (`GET /api/user/stats` → `(main)/performance.tsx`)
 - [x] Round / bet history (`RoundHistory` on the Bet tab, paged by `useGroupHistory`; History tab removed September 2026)
 - [x] Group performance tab (`GET /api/groups/[id]/stats`, member drill-down)

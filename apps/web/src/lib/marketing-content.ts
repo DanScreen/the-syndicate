@@ -2,33 +2,59 @@ import { BRAND_HEADLINE, BRAND_TAGLINE } from "@tiki-acca/shared";
 
 export const tagline = BRAND_TAGLINE;
 
+/** Sign-up destination shared by the hero, pick-your-leg and the mobile sticky CTA. */
+export const signUpHref = "/sign-up";
+
 export const hero = {
   headline: BRAND_HEADLINE,
-  subhead:
-    "Tiki-taka is football's great passing game: everyone touches the ball. In a group acca, everyone touches the bet. Each member picks one leg and Tiki Acca handles the rest: locking in the best odds from UK bookmakers, tracking every result, and keeping score of who consistently delivers, and who lets the acca down. It's free for your whole group.",
+  subhead: "Everyone picks one leg. We find the best odds, keep score, and settle the arguments.",
+  compliance: "18+ · Not a bookmaker · Tiki Acca never takes bets or holds money",
 };
 
-export const valueProps = [
+/** Name of the example group in the homepage demos. */
+export const exampleGroupName = "Saturday Squad";
+
+/**
+ * Example group used by the homepage demos: Dan, Matty and Tom, the friends who
+ * pioneered the game, with the picks from the original homepage mock. Keep these
+ * names. All odds are illustrative ("Example") and never shown as live prices.
+ */
+export const exampleMates = [
+  { name: "Dan", color: "#a78bfa", selection: "Arsenal to win", fixture: "Arsenal vs Fulham", odds: 1.85 },
+  { name: "Matty", color: "#fb923c", selection: "Over 2.5 goals", fixture: "Spurs vs Brighton", odds: 1.72 },
+  { name: "Tom", color: "#818cf8", selection: "BTTS: Yes", fixture: "Newcastle vs Villa", odds: 1.65 },
+] as const;
+
+/** Selections the visitor can tap in the "Pick your leg" demo. */
+export const pickOptions = [
+  { id: "liverpool", label: "Liverpool to win", odds: 1.45 },
+  { id: "over", label: "Over 2.5 goals in Chelsea vs West Ham", odds: 1.6 },
+  { id: "btts", label: "Both teams to score in Everton vs Wolves", odds: 1.8 },
+] as const;
+
+export const scrollStory = [
   {
-    title: "Built For Friend Groups",
-    body: "Pub groups, WhatsApp groups, five-a-side teams. Create a private group, share an invite link, and everyone contributes one selection.",
-    icon: "users",
+    step: "01",
+    title: "Everyone picks a leg",
+    body: "One pick each. No passengers. The acca fills up as your mates commit.",
   },
   {
-    title: "Track Who’s Actually Good",
-    body: "Leaderboards, performance charts, and leg-by-leg stats. See who consistently finds winners and how your group performs over time.",
-    icon: "trophy",
+    step: "02",
+    title: "Locked at the best odds",
+    body: "When the last leg lands in the slip, we compare bookmakers and show where your acca pays best. You place the bet yourself, with them.",
   },
   {
-    title: "Best Odds, Done For You",
-    body: "We pull live prices from UK bookmakers, pick out the best odds per leg, and rank who offers the strongest combined acca when you lock.",
-    icon: "chart",
+    step: "03",
+    title: "Find out who’s carrying",
+    body: "Points for every leg that lands. A leaderboard that never forgets who let the acca down.",
   },
-  {
-    title: "You Place The Bets",
-    body: "We coordinate picks and link you to bookmaker betslips. We never take money or place bets on your behalf.",
-    icon: "shield",
-  },
+] as const;
+
+export const banterLines = [
+  "If your leg dies first you’re not living it down till Christmas.",
+  "Three weeks top of the leaderboard. I accept payment in pints.",
+  "Who picked a 0-0 specialist to score first?",
+  "Locked. No changing it now, Matty.",
 ] as const;
 
 export const howItWorks = [
@@ -46,21 +72,6 @@ export const howItWorks = [
     step: "03",
     title: "Lock And Compete",
     body: "When all legs are in, the acca locks at the best combined odds. Then everyone sweats together.",
-  },
-] as const;
-
-export const audiences = [
-  {
-    title: "Pub Groups",
-    body: "Replace the Saturday spreadsheet with a shared acca everyone can see and contribute to.",
-  },
-  {
-    title: "Friend Groups",
-    body: "Stop arguing about whose pick lost the acca. The stats settle it.",
-  },
-  {
-    title: "Office Leagues",
-    body: "Small groups, one leg each, bragging rights on the line every matchday.",
   },
 ] as const;
 
@@ -90,3 +101,8 @@ export const faqs = [
     a: "No. Plenty of groups play for points and pride alone. The leaderboard works exactly the same whether or not anyone places a bet.",
   },
 ] as const;
+
+/** Multiplies decimal odds and formats to two places, e.g. [1.4, 1.65] -> "2.31". */
+export function productOdds(odds: readonly number[]): string {
+  return odds.reduce((acc, value) => acc * value, 1).toFixed(2);
+}

@@ -130,43 +130,6 @@ export const styles = StyleSheet.create({
     marginTop: 4,
     opacity: 0.85,
   },
-  memberRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.card,
-    borderRadius: 10,
-    padding: 12,
-  },
-  memberName: {
-    color: colors.text,
-    fontSize: 14,
-  },
-  submitted: {
-    color: colors.accent,
-    fontSize: 14,
-  },
-  legCard: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.card,
-    borderRadius: 10,
-    padding: 12,
-  },
-  legHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: 8,
-  },
-  legHeaderRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    flexShrink: 1,
-  },
   legUser: {
     color: colors.text,
     fontWeight: "600",
@@ -380,16 +343,6 @@ export const styles = StyleSheet.create({
   outcomeOptionTextSelected: {
     color: colors.accent,
     fontWeight: "600",
-  },
-  leaderboardRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.card,
-    borderRadius: 10,
-    padding: 12,
   },
   historyCard: {
     borderWidth: 1,

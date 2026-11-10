@@ -1,6 +1,8 @@
-import { Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import type { GroupLeg, GroupMember } from "@tiki-acca/shared";
-import { formatKickoff } from "@tiki-acca/shared";
+import { formatKickoff, formatWaitingOnNames, getFirstName } from "@tiki-acca/shared";
+import { colors } from "@/config";
+import { Avatar } from "@/components/avatar";
 import { styles } from "./styles";
 
 export function RoundProgress({
@@ -56,25 +58,72 @@ export function RoundProgress({
           ) : null}
         </View>
       ) : null}
-      {members.map((member) => {
-        const count = counts.get(member.id) ?? 0;
-        const complete = count >= legsPerMember;
-        return (
-          <View key={member.id} style={styles.memberRow}>
-            <Text style={styles.memberName}>
-              {member.name}
-              {member.role === "owner" ? " (owner)" : ""}
-            </Text>
-            <Text style={complete ? styles.submitted : styles.meta}>
-              {legsPerMember === 1
-                ? complete
-                  ? "Submitted"
-                  : "Pending"
-                : `${count}/${legsPerMember}`}
-            </Text>
-          </View>
-        );
-      })}
+      <View style={localStyles.memberGrid}>
+        {members.map((member) => {
+          const count = counts.get(member.id) ?? 0;
+          const complete = count >= legsPerMember;
+          const firstName = getFirstName(member.name);
+          const ownerLabel = member.role === "owner" ? " (owner)" : "";
+          return (
+            <View
+              key={member.id}
+              accessible
+              accessibilityLabel={`${member.name}${ownerLabel}, ${complete ? "submitted" : "pending"}`}
+              style={localStyles.memberCell}
+            >
+              <Avatar
+                name={member.name}
+                userId={member.id}
+                size={40}
+                variant={complete ? "filled" : "pending"}
+              />
+              <Text
+                style={[
+                  localStyles.memberName,
+                  { color: complete ? colors.text : colors.muted },
+                ]}
+                numberOfLines={1}
+              >
+                {firstName}
+              </Text>
+              {legsPerMember > 1 ? (
+                <Text style={localStyles.memberCount}>{`${count}/${legsPerMember}`}</Text>
+              ) : null}
+            </View>
+          );
+        })}
+      </View>
+      {status === "open" && pending.length > 0 ? (
+        <Text style={localStyles.waitingLine}>
+          {formatWaitingOnNames(pending.map((m) => m.name))}
+        </Text>
+      ) : null}
     </View>
   );
 }
+
+const localStyles = StyleSheet.create({
+  memberGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+  memberCell: {
+    alignItems: "center",
+    width: 64,
+    gap: 4,
+  },
+  memberName: {
+    fontSize: 11,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  memberCount: {
+    color: colors.muted,
+    fontSize: 11,
+  },
+  waitingLine: {
+    color: colors.muted,
+    fontSize: 13,
+  },
+});

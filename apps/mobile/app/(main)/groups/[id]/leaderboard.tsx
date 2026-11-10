@@ -6,7 +6,7 @@ import { useGroupData } from "@tiki-acca/client";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function GroupLeaderboardScreen() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const { data } = useGroupData();
 
   if (!data || !token) return null;
@@ -15,9 +15,9 @@ export default function GroupLeaderboardScreen() {
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Leaderboard</Text>
       <Text style={styles.subtitle}>
-        Who&apos;s ahead in this group — points from settled and in-progress legs.
+        Points from settled and in-play legs.
       </Text>
-      <Leaderboard entries={data.leaderboard} />
+      <Leaderboard entries={data.leaderboard} currentUserId={user?.id} />
 
       <View style={styles.section}>
         <Text style={styles.title}>Stats & trends</Text>
