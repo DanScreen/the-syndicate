@@ -10,12 +10,12 @@ const LEG_COUNT = exampleMates.length;
 const LOCK_STEP = LEG_COUNT + 1;
 /** Step on which the result banner and the first chat bubble appear, after every leg settles. */
 const BANNER_STEP = LOCK_STEP + LEG_COUNT + 1;
-/** Final frame: all legs in, the acca is locked and settled, and Tom let it down. */
+/** Final frame: all legs in, the acca is locked and settled, and Matty let it down. */
 const FINAL_STEP = BANNER_STEP + 1;
 /** The loop holds on the final frame for three steps. */
 const CYCLE_LENGTH = FINAL_STEP + 3;
-/** Index of the one leg that loses (Tom). */
-const LOSING_INDEX = exampleMates.findIndex((mate) => mate.name === "Tom");
+/** Index of the one leg that loses (Matty). */
+const LOSING_INDEX = exampleMates.findIndex((mate) => mate.name === "Matty");
 const LOSER_NAME = exampleMates[LOSING_INDEX].name;
 /** Ring positions (percent of the wrapper), clockwise from the top, matching exampleMates order: a triangle, like the rondo logo. */
 const RING_POSITIONS = [
@@ -50,8 +50,8 @@ export function AccaHero() {
   const locked = step >= LOCK_STEP;
   const settled = step > LOCK_STEP ? Math.min(step - LOCK_STEP, LEG_COUNT) : 0;
   const showBanner = step >= BANNER_STEP;
-  const showMattyBubble = step >= BANNER_STEP;
-  const showTomBubble = step >= FINAL_STEP;
+  const showTomBubble = step >= BANNER_STEP;
+  const showMattyBubble = step >= FINAL_STEP;
   const dropping = step >= 1 && step <= exampleMates.length ? step - 1 : -1;
   const combined =
     legsIn > 0 ? productOdds(exampleMates.slice(0, legsIn).map((mate) => mate.odds)) : "—";
@@ -194,16 +194,16 @@ export function AccaHero() {
             </div>
 
             <div className="flex h-24 shrink-0 flex-col justify-end gap-1.5 px-4 pb-3">
-              {showMattyBubble && (
+              {showTomBubble && (
                 <p className="marketing-leg-in self-start rounded-2xl rounded-tl-sm bg-card px-3 py-1.5 text-xs">
-                  <span className="font-semibold text-muted">Matty: </span>
-                  TOM. Every. Single. Week.
+                  <span className="font-semibold text-muted">Tom: </span>
+                  MATTY. Every. Single. Week.
                 </p>
               )}
-              {showTomBubble && (
+              {showMattyBubble && (
                 <p className="marketing-leg-in self-end rounded-2xl rounded-tr-sm bg-accent-muted/60 px-3 py-1.5 text-xs">
-                  <span className="font-semibold text-muted">Tom: </span>
-                  Villa parked the bus, not my fault 😭
+                  <span className="font-semibold text-muted">Matty: </span>
+                  Brighton parked the bus, not my fault 😭
                 </p>
               )}
             </div>
@@ -213,7 +213,7 @@ export function AccaHero() {
 
       <p className="sr-only">
         Example animation: Dan, Matty and Tom each add one leg to a group acca, the combined odds build to
-        {productOdds(exampleMates.map((mate) => mate.odds))} and lock at the best price, then two legs land and Tom&apos;s loses.
+        {productOdds(exampleMates.map((mate) => mate.odds))} and lock at the best price, then two legs land and Matty&apos;s loses.
       </p>
     </div>
   );
