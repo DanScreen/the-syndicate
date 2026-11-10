@@ -9,6 +9,7 @@ import {
   copy,
   type ReactionEmoji,
   type RoundMessageDto,
+  continuesAuthorRun,
 } from "@tiki-acca/shared";
 import { canModerateMessage, useGroupThread } from "@tiki-acca/client";
 import { useCallback, useRef, useState } from "react";
@@ -36,17 +37,6 @@ function formatTime(iso: string) {
     hour: "2-digit",
     minute: "2-digit",
   });
-}
-
-/** A gap longer than this starts a new author block, so the avatar and name show again. */
-const AUTHOR_RUN_GAP_MS = 5 * 60 * 1000;
-
-/** True when `current` continues a run of user messages from the same author, close in time. */
-function continuesAuthorRun(previous: RoundMessageDto | undefined, current: RoundMessageDto) {
-  if (!previous || previous.kind !== "user" || current.kind !== "user") return false;
-  if (previous.user == null || current.user == null || previous.user.id !== current.user.id) return false;
-  const gap = new Date(current.createdAt).getTime() - new Date(previous.createdAt).getTime();
-  return gap <= AUTHOR_RUN_GAP_MS;
 }
 
 export function GroupThread({

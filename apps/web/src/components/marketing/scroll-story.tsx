@@ -18,9 +18,9 @@ const bookmakers = [
 ] as const;
 
 const leaderboard = [
-  { name: "Matty", color: mate("Matty").color, points: 42, form: [true, true, true, false, true], tag: "Banker" },
+  { name: "Tom", color: mate("Tom").color, points: 42, form: [true, true, true, false, true], tag: "Banker" },
   { name: "Dan", color: mate("Dan").color, points: 31, form: [true, false, true, true, false], tag: null },
-  { name: "Tom", color: mate("Tom").color, points: 12, form: [false, false, true, false, false], tag: "Acca killer" },
+  { name: "Matty", color: mate("Matty").color, points: 12, form: [false, false, true, false, false], tag: "Acca killer" },
 ] as const;
 
 function PicksMock() {

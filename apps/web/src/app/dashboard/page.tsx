@@ -6,10 +6,15 @@ import {
 import { PointsText } from "@/components/points-text";
 import { listGroupSummaries } from "@/lib/groups/list-group-summaries";
 import {
+  activeBetProgressLabel,
   copy,
+  deriveHomeCardState,
+  formatKickoff,
   formatLegPoints,
   formatRoundStatusBadge,
   yourLegStatusMessage,
+  type GroupSummary,
+  type GroupSummaryActiveBet,
 } from "@tiki-acca/shared";
 import { auth } from "@/lib/auth";
 import { greetingFirstName } from "@/lib/user-display";
@@ -91,56 +96,125 @@ export default async function DashboardPage() {
           {groups.length === 0 ? null : (
             <div className="grid gap-4 md:grid-cols-2">
               {groups.map((g) => (
-                <Link
-                  key={g.id}
-                  href={`/groups/${g.id}`}
-                  className="rounded-xl border border-border bg-card p-5 hover:border-accent/50"
-                >
-                  <div className="flex items-start justify-between">
-                    <h3 className="font-semibold">{g.name}</h3>
-                    <div className="flex items-center gap-2">
-                      {g.unreadMessageCount > 0 ? (
-                        <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-on-accent">
-                          {g.unreadMessageCount} new
-                        </span>
-                      ) : null}
-                      <span className="rounded-full bg-accent-muted px-2 py-0.5 text-xs text-accent">
-                        {g.activeBetCount > 1
-                          ? `${g.activeBetCount} Active`
-                          : formatRoundStatusBadge(g.status)}
-                      </span>
-                    </div>
-                  </div>
-                  <p className="mt-2 text-sm text-muted">
-                    {g.memberCount} members · Owner: {g.ownerName}
-                    {g.activeBetCount > 1 ? ` · ${g.activeBetCount} active bets` : ""}
-                  </p>
-                  <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
-                    <PointsText points={g.groupPoints} label="Group points" />
-                    <PointsText points={g.points} label="Your points" />
-                  </div>
-                  {g.activeBetCount > 1 ? (
-                    <ActiveBetsSummary bets={g.activeBets} />
-                  ) : (
-                    <ActiveBetslipSummary
-                      legs={g.activeLegs}
-                      currentUserId={session.user.id}
-                      combinedOdds={g.activeRound?.combinedOdds}
-                      waitingMessage={
-                        yourLegStatusMessage(g.status, g.yourLeg, {
-                          yourLegCount: g.yourLegCount,
-                          legsPerMember:
-                            g.activeRound?.legsPerMember ?? g.legsPerMember ?? 1,
-                        }) || undefined
-                      }
-                    />
-                  )}
-                </Link>
+                <GroupCard key={g.id} group={g} currentUserId={session.user.id} />
               ))}
             </div>
           )}
         </section>
       </main>
+    </div>
+  );
+}
+
+function GroupCard({
+  group,
+  currentUserId,
+}: {
+  group: GroupSummary;
+  currentUserId: string;
+}) {
+  const { state, bet } = deriveHomeCardState(group);
+  const round = group.activeRound;
+  const legs = group.activeLegs;
+  const multi = group.activeBetCount > 1;
+  const needsPick = state === "needs-pick";
+  // Nobody has picked yet: keep the card calm (no accent border, no "needed" line).
+  const quietPick = needsPick && legs.length === 0;
+  const odds = bet?.combinedOdds ?? round?.combinedOdds ?? null;
+
+  const waitingMessage =
+    yourLegStatusMessage(group.status, group.yourLeg, {
+      yourLegCount: group.yourLegCount,
+      legsPerMember: round?.legsPerMember ?? group.legsPerMember ?? 1,
+      unlimitedLegs: bet?.unlimitedLegs ?? false,
+      roundLegCount: legs.length,
+    }) || undefined;
+  // Pick prompt replaces the waiting text while you still owe a leg, unless
+  // there is no betslip yet (then the text explains why nothing is locked).
+  const showWaitingMessage = state === "fallback" || (needsPick && legs.length === 0);
+
+  return (
+    <Link
+      href={`/groups/${group.id}`}
+      className={`rounded-xl border bg-card p-5 ${
+        needsPick && !quietPick ? "border-accent" : "border-border hover:border-accent/50"
+      }`}
+    >
+      <div className="flex items-start justify-between">
+        <h3 className="font-semibold">{group.name}</h3>
+        <div className="flex items-center gap-2">
+          {group.unreadMessageCount > 0 ? (
+            <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-on-accent">
+              {group.unreadMessageCount} new
+            </span>
+          ) : null}
+          <span className="rounded-full bg-accent-muted px-2 py-0.5 text-xs text-accent">
+            {multi ? `${group.activeBetCount} Active` : formatRoundStatusBadge(group.status)}
+          </span>
+        </div>
+      </div>
+      <p className="mt-2 text-sm text-muted">
+        {group.memberCount} members · Owner: {group.ownerName}
+        {multi ? ` · ${group.activeBetCount} active bets` : ""}
+      </p>
+      <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+        <PointsText points={group.groupPoints} label="Group points" />
+        <PointsText points={group.points} label="Your points" />
+      </div>
+
+      {multi ? (
+        <>
+          <ActiveBetsSummary bets={group.activeBets ?? []} />
+          {needsPick ? <PickPrompt bet={bet} quiet={quietPick} /> : null}
+        </>
+      ) : (
+        <>
+          {state === "waiting" && bet ? (
+            <p className="mt-3 text-sm text-muted">
+              {bet.unlimitedLegs
+                ? activeBetProgressLabel(bet)
+                : `${bet.submittedLegCount} of ${bet.requiredLegCount} legs in`}
+            </p>
+          ) : null}
+          {state === "betslip" && bet ? (
+            <p className="mt-3 text-sm text-muted">
+              {bet.resolvedLegCount} of {bet.submittedLegCount} legs settled
+            </p>
+          ) : null}
+          <ActiveBetslipSummary
+            legs={legs}
+            currentUserId={currentUserId}
+            combinedOdds={odds}
+            prominentOdds={state === "betslip"}
+            waitingMessage={showWaitingMessage ? waitingMessage : undefined}
+          />
+          {needsPick ? <PickPrompt bet={bet} quiet={quietPick} /> : null}
+        </>
+      )}
+    </Link>
+  );
+}
+
+/**
+ * Call to action inside the card link (the whole card already goes to the group),
+ * so it is a styled span rather than a nested link.
+ */
+function PickPrompt({
+  bet,
+  quiet = false,
+}: {
+  bet: GroupSummaryActiveBet | null;
+  /** No legs in yet: just the button and lock time, no "needed" line. */
+  quiet?: boolean;
+}) {
+  const lock = bet?.firstKickoff ? formatKickoff(bet.firstKickoff) : null;
+  return (
+    <div className="mt-3 border-t border-border pt-3">
+      {quiet ? null : <p className="font-medium text-accent">Your pick is needed</p>}
+      {lock ? <p className="mt-1 text-sm text-muted">Locks {lock}</p> : null}
+      <span className="mt-3 inline-block rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:bg-accent-bright">
+        Pick your leg
+      </span>
     </div>
   );
 }

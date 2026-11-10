@@ -654,6 +654,10 @@ Presentation only: no API, schema or env changes.
 
 Not yet run on a device: layout was checked by typecheck, lint and code review only. The chat screen has no `KeyboardAvoidingView`.
 
+**Website (signed in)** — same treatment as the app: dashboard cards follow the acca state via `deriveHomeCardState` (`apps/web/src/app/dashboard/page.tsx`, legs in `components/active-betslip-summary.tsx`); group legs, the who-has-picked avatar row and the ranked leaderboard (`components/group/legs-list.tsx`, `round-progress.tsx`, `leaderboard.tsx`); chat bubbles grouped by author (`components/group/chat.tsx`). Avatars: `components/avatar.tsx`. The web group keeps its five tabs.
+
+**Pick labels** — legs show a readable pick from `formatLegPick` (`packages/shared/src/group-summary-display.ts`): "Man City to win", "Over 2.5 goals", "Both teams to score"; other markets read "Market: Selection". **No-picks copy** — when nobody has picked, cards say "No picks yet. Get the first leg in." in muted text with no accent border; the amber "Waiting for your pick" only appears once others have picked.
+
 **Web homepage** (`apps/web/src/app/page.tsx`, content in `lib/marketing-content.ts`, components in `components/marketing/`)
 
 Hero with an animated example acca in a phone frame (`acca-hero.tsx`; static under `prefers-reduced-motion`), a three-step scroll story (`scroll-story.tsx`), a playable "Pick your leg" demo (`pick-your-leg.tsx`), an example group chat strip (`banter-strip.tsx`), FAQ accordions, closing CTA and a sticky sign-up bar on phones (`sticky-mobile-cta.tsx`). All demo odds and bookmakers are examples and labelled as such. The demo group is **Saturday Squad** with **Dan, Matty and Tom**, carried over from the original homepage: they are the friends who pioneered the game, so keep these names (`exampleMates` in `lib/marketing-content.ts`). No store badges: there is no public store listing URL yet.

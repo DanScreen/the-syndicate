@@ -34,7 +34,8 @@ export function Leaderboard({
     <View style={styles.stack}>
       {entries.map((entry, i) => {
         const rank = ranks[i];
-        const isLeader = rank === 1 && firstPlaceCount === 1;
+        // A sole leader only, and never in a one-member (solo) group.
+        const isLeader = rank === 1 && firstPlaceCount === 1 && entries.length > 1;
         const isTopThree = rank <= 3;
         const isMe = currentUserId !== undefined && entry.userId === currentUserId;
         const hitRate = formatWinRate(entry.legsWon, entry.legsLost);

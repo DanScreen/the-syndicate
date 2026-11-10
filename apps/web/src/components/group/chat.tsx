@@ -8,8 +8,10 @@ import {
   copy,
   type ReactionEmoji,
   type RoundMessageDto,
+  continuesAuthorRun,
 } from "@tiki-acca/shared";
 import { canModerateMessage, useGroupThread } from "@tiki-acca/client";
+import { Avatar } from "@/components/avatar";
 import { apiFetcher } from "@/lib/api-client";
 import {
   useCallback,
@@ -140,7 +142,7 @@ export function GroupThread({
       <div
         ref={scrollRef}
         onScroll={onScroll}
-        className="max-h-[60vh] min-h-[24rem] space-y-2 overflow-y-auto px-4 py-3"
+        className="max-h-[60vh] min-h-[24rem] overflow-y-auto px-4 py-3"
       >
         {hasMore ? (
           <button
@@ -159,10 +161,12 @@ export function GroupThread({
             No messages yet. Start the chat.
           </p>
         ) : (
-          messages.map((m) => (
+          messages.map((m, index) => (
             <ChatMessage
               key={m.id}
               message={m}
+              own={m.user?.id === currentUserId}
+              grouped={continuesAuthorRun(messages[index - 1], m)}
               canDelete={
                 !readOnly &&
                 m.kind === "user" &&
@@ -223,6 +227,8 @@ export function GroupThread({
 
 function ChatMessage({
   message,
+  own,
+  grouped,
   canDelete,
   canModerate,
   onDelete,
@@ -232,6 +238,10 @@ function ChatMessage({
   readOnly,
 }: {
   message: RoundMessageDto;
+  /** Sent by the current user: right-aligned, accent-tinted bubble. */
+  own: boolean;
+  /** Same author as the previous message: hide avatar and name, tighten the gap. */
+  grouped: boolean;
   canDelete: boolean;
   canModerate: boolean;
   onDelete: (id: string) => void;
@@ -244,8 +254,8 @@ function ChatMessage({
 
   if (message.kind === "system") {
     return (
-      <div className="px-2 py-1 text-center text-xs text-muted">
-        <p>
+      <div className="my-2 flex flex-col items-center gap-1 px-2">
+        <p className="max-w-[85%] rounded-2xl border border-border bg-card px-3 py-1 text-center text-xs text-muted">
           {message.betNumber != null ? (
             <span className="mr-2 rounded-full bg-accent-muted/40 px-2 py-0.5 font-medium not-italic text-accent">
               Bet #{message.betNumber}
@@ -260,57 +270,76 @@ function ChatMessage({
   }
 
   return (
-    <div className="group flex flex-col rounded-lg px-2 py-1 hover:bg-background/50">
-      <div className="flex items-baseline gap-2">
-        <span className="text-sm font-medium text-foreground">
-          {message.user?.name ?? "Someone"}
-        </span>
-        <span className="text-xs tabular-nums text-muted">
-          {formatTime(message.createdAt)}
-        </span>
-        {canDelete || canModerate ? (
-          <span className="ml-auto flex gap-3 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
-            {canModerate ? (
-              <>
-                <button
-                  type="button"
-                  onClick={() => onReport(message)}
-                  className="text-xs text-muted hover:text-foreground"
-                >
-                  Report
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onBlock(message)}
-                  className="text-xs text-muted hover:text-danger"
-                >
-                  Block
-                </button>
-              </>
-            ) : null}
-            {canDelete ? (
-              <button
-                type="button"
-                onClick={() => onDelete(message.id)}
-                className="text-xs text-muted hover:text-danger"
-                aria-label="Delete message"
-              >
-                Delete
-              </button>
-            ) : null}
+    <div
+      className={`group flex items-end gap-2 ${own ? "justify-end" : "justify-start"} ${
+        grouped ? "mt-0.5" : "mt-2"
+      }`}
+    >
+      {own ? null : !grouped && message.user ? (
+        <Avatar name={message.user.name} userId={message.user.id} size="sm" />
+      ) : (
+        <span aria-hidden="true" className="w-8 shrink-0" />
+      )}
+      <div className={`flex min-w-0 flex-col ${own ? "items-end" : "items-start"}`}>
+        {!own && !grouped ? (
+          <span className="mb-0.5 ml-1 text-xs font-semibold text-muted">
+            {message.user?.name ?? "Someone"}
           </span>
         ) : null}
+        <div
+          className={`max-w-[80%] rounded-2xl border px-3 py-2 ${
+            own ? "border-accent/40 bg-accent-muted/40" : "border-border bg-card"
+          }`}
+        >
+          <p
+            className={
+              deleted
+                ? "text-sm italic text-muted"
+                : "whitespace-pre-wrap break-words text-sm text-foreground"
+            }
+          >
+            {message.body}
+          </p>
+          <div className={`mt-0.5 flex flex-wrap items-center gap-2 ${own ? "justify-end" : ""}`}>
+            <span className="text-xs tabular-nums text-muted">
+              {formatTime(message.createdAt)}
+            </span>
+            {canDelete || canModerate ? (
+              <span className="flex gap-3 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+                {canModerate ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => onReport(message)}
+                      className="text-xs text-muted hover:text-foreground"
+                    >
+                      Report
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onBlock(message)}
+                      className="text-xs text-muted hover:text-danger"
+                    >
+                      Block
+                    </button>
+                  </>
+                ) : null}
+                {canDelete ? (
+                  <button
+                    type="button"
+                    onClick={() => onDelete(message.id)}
+                    className="text-xs text-muted hover:text-danger"
+                    aria-label="Delete message"
+                  >
+                    Delete
+                  </button>
+                ) : null}
+              </span>
+            ) : null}
+          </div>
+        </div>
+        <ReactionBar message={message} onReact={onReact} readOnly={readOnly} />
       </div>
-      <p
-        className={
-          deleted
-            ? "text-sm italic text-muted"
-            : "whitespace-pre-wrap break-words text-sm text-foreground"
-        }
-      >
-        {message.body}
-      </p>
-      <ReactionBar message={message} onReact={onReact} readOnly={readOnly} />
     </div>
   );
 }

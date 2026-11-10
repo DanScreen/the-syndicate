@@ -5,6 +5,7 @@ import {
   activeBetProgressLabel,
   activeBetStatusLabel,
   yourLegStatusMessage,
+  formatLegPick,
 } from "./group-summary-display";
 
 function bet(
@@ -85,6 +86,33 @@ describe("solo acca group-card labels", () => {
     );
   });
 
+  it("invites rather than warns when nobody has picked yet", () => {
+    assert.equal(
+      yourLegStatusMessage("open", null, {
+        yourLegCount: 0,
+        legsPerMember: 1,
+        roundLegCount: 0,
+      }),
+      "No picks yet. Get the first leg in."
+    );
+    assert.equal(
+      yourLegStatusMessage("open", null, {
+        yourLegCount: 0,
+        legsPerMember: 3,
+        roundLegCount: 0,
+      }),
+      "No picks yet. Get the first leg in."
+    );
+    assert.equal(
+      yourLegStatusMessage("open", null, {
+        yourLegCount: 0,
+        legsPerMember: 1,
+        roundLegCount: 2,
+      }),
+      "Waiting for your pick — group can't lock until you submit"
+    );
+  });
+
   it("never tells a solo player someone is waiting on them", () => {
     assert.equal(
       yourLegStatusMessage("open", null, {
@@ -110,5 +138,29 @@ describe("solo acca group-card labels", () => {
       }),
       ""
     );
+  });
+});
+
+describe("formatLegPick", () => {
+  const pick = (marketLabel: string, selectionLabel: string) =>
+    formatLegPick({ marketLabel, selectionLabel });
+
+  it("reads match result picks as a team to win", () => {
+    assert.equal(pick("Match Winner", "Man City"), "Man City to win");
+    assert.equal(pick("Match winner", "Draw"), "Draw");
+    assert.equal(pick("Match Result", "Arsenal"), "Arsenal to win");
+  });
+
+  it("names goal lines and both-teams-to-score", () => {
+    assert.equal(pick("Over/Under 2.5 Goals", "Over 2.5"), "Over 2.5 goals");
+    assert.equal(pick("Over/Under 1.5 Goals", "Under 1.5"), "Under 1.5 goals");
+    assert.equal(pick("Both Teams to Score", "Yes"), "Both teams to score");
+    assert.equal(pick("Both Teams to Score", "No"), "Both teams not to score");
+  });
+
+  it("keeps double chance and prefixes anything else with its market", () => {
+    assert.equal(pick("Double Chance", "Man Utd or Draw"), "Man Utd or Draw");
+    assert.equal(pick("Asian Handicap", "Mexico -0.5"), "Asian Handicap: Mexico -0.5");
+    assert.equal(pick("", "Mexico"), "Mexico");
   });
 });

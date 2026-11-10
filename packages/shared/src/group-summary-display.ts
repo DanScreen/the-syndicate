@@ -12,6 +12,8 @@ export function yourLegStatusMessage(
     yourLegCount?: number;
     legsPerMember?: number;
     unlimitedLegs?: boolean;
+    /** Legs anyone has submitted on this round. 0 means nobody has picked yet. */
+    roundLegCount?: number;
   }
 ): string {
   const quota = options?.legsPerMember ?? 1;
@@ -28,6 +30,10 @@ export function yourLegStatusMessage(
   if (count >= quota) return "";
 
   if (roundStatus === "open") {
+    if (count === 0 && options?.roundLegCount === 0) {
+      // A fresh acca with no picks yet: an invitation, not a warning.
+      return "No picks yet. Get the first leg in.";
+    }
     if (count === 0) {
       return quota === 1
         ? "Waiting for your pick — group can't lock until you submit"
@@ -94,4 +100,29 @@ export function activeBetProgressLabel(bet: GroupSummaryActiveBet): string {
     return `${bet.resolvedLegCount}/${bet.submittedLegCount} settled`;
   }
   return `${bet.submittedLegCount} leg${bet.submittedLegCount === 1 ? "" : "s"}`;
+}
+
+/**
+ * A pick that reads on its own, e.g. "Man City to win", "Over 2.5 goals",
+ * "Both teams to score". Falls back to "Market: Selection" for anything else,
+ * so a bare "Yes" or "Over 2.5" never appears without its market.
+ */
+export function formatLegPick(leg: { marketLabel: string; selectionLabel: string }): string {
+  const market = leg.marketLabel.trim();
+  const selection = leg.selectionLabel.trim();
+  const m = market.toLowerCase();
+  if (!market) return selection;
+
+  if (m.includes("both teams to score")) {
+    if (/^yes$/i.test(selection)) return "Both teams to score";
+    if (/^no$/i.test(selection)) return "Both teams not to score";
+  }
+  if (m.includes("goals") && /^(over|under) \d+(\.\d+)?$/i.test(selection)) {
+    return `${selection} goals`;
+  }
+  if (m === "match winner" || m === "match result" || m === "full time result" || m === "1x2") {
+    return /^draw$/i.test(selection) ? "Draw" : `${selection} to win`;
+  }
+  if (m === "double chance") return selection;
+  return `${market}: ${selection}`;
 }

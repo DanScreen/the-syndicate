@@ -7,6 +7,7 @@ import {
 } from "react-native";
 import {
   formatFixtureLabel,
+  formatLegPick,
   formatOdds,
   legOutcomeLabel,
 } from "@tiki-acca/shared";
@@ -95,10 +96,8 @@ export function LegsList({
             <View style={localStyles.legRow}>
               <Avatar name={leg.user.name} userId={leg.user.id} size={36} />
               <View style={localStyles.legMain}>
-                <Text style={localStyles.legSelection}>{leg.selectionLabel}</Text>
-                <Text style={localStyles.legFixture}>
-                  {formatFixtureLabel(leg)} · {leg.marketLabel}
-                </Text>
+                <Text style={localStyles.legSelection}>{formatLegPick(leg)}</Text>
+                <Text style={localStyles.legFixture}>{formatFixtureLabel(leg)}</Text>
                 <Text style={localStyles.legMeta}>
                   {nameLabel}
                   {leg.competition ? ` · ${leg.competition}` : ""}
