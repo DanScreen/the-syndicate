@@ -12,6 +12,8 @@ export function yourLegStatusMessage(
     yourLegCount?: number;
     legsPerMember?: number;
     unlimitedLegs?: boolean;
+    /** Legs anyone has submitted on this round. 0 means nobody has picked yet. */
+    roundLegCount?: number;
   }
 ): string {
   const quota = options?.legsPerMember ?? 1;
@@ -28,6 +30,10 @@ export function yourLegStatusMessage(
   if (count >= quota) return "";
 
   if (roundStatus === "open") {
+    if (count === 0 && options?.roundLegCount === 0) {
+      // A fresh acca with no picks yet: an invitation, not a warning.
+      return "No picks yet. Get the first leg in.";
+    }
     if (count === 0) {
       return quota === 1
         ? "Waiting for your pick — group can't lock until you submit"

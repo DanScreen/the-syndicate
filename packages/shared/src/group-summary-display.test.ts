@@ -85,6 +85,33 @@ describe("solo acca group-card labels", () => {
     );
   });
 
+  it("invites rather than warns when nobody has picked yet", () => {
+    assert.equal(
+      yourLegStatusMessage("open", null, {
+        yourLegCount: 0,
+        legsPerMember: 1,
+        roundLegCount: 0,
+      }),
+      "No picks yet. Get the first leg in."
+    );
+    assert.equal(
+      yourLegStatusMessage("open", null, {
+        yourLegCount: 0,
+        legsPerMember: 3,
+        roundLegCount: 0,
+      }),
+      "No picks yet. Get the first leg in."
+    );
+    assert.equal(
+      yourLegStatusMessage("open", null, {
+        yourLegCount: 0,
+        legsPerMember: 1,
+        roundLegCount: 2,
+      }),
+      "Waiting for your pick — group can't lock until you submit"
+    );
+  });
+
   it("never tells a solo player someone is waiting on them", () => {
     assert.equal(
       yourLegStatusMessage("open", null, {

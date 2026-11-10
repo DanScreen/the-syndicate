@@ -35,6 +35,7 @@ export function HomeGroupCard({
     yourLegCount: group.yourLegCount,
     legsPerMember: round?.legsPerMember ?? group.legsPerMember ?? 1,
     unlimitedLegs: bet?.unlimitedLegs ?? false,
+    roundLegCount: legs.length,
   });
   const needsPick = state === "needs-pick";
   const hasProgressLine = bet != null && (state === "waiting" || state === "betslip");
