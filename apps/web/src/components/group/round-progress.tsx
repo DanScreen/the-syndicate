@@ -71,7 +71,9 @@ export function RoundProgress({
               className="flex w-16 flex-col items-center gap-1 text-center"
             >
               <span className="sr-only">
-                {`${member.name}${ownerLabel}, ${complete ? "submitted" : "pending"}`}
+                {`${member.name}${ownerLabel}, ${complete ? "submitted" : "pending"}${
+                  legsPerMember > 1 ? `, ${count} of ${legsPerMember} legs` : ""
+                }`}
               </span>
               <Avatar
                 name={member.name}

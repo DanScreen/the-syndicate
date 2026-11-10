@@ -32,7 +32,8 @@ export function Leaderboard({
     <ol className="space-y-2">
       {entries.map((entry, i) => {
         const rank = ranks[i];
-        const isLeader = rank === 1 && firstPlaceCount === 1;
+        // A sole leader only, and never in a one-member (solo) group.
+        const isLeader = rank === 1 && firstPlaceCount === 1 && entries.length > 1;
         const isMe = currentUserId !== undefined && entry.userId === currentUserId;
         const tag = tags[entry.userId];
         const hitRate = formatWinRate(entry.legsWon, entry.legsLost);

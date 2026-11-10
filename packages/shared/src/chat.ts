@@ -137,3 +137,22 @@ export type RoundMessagesResponse = {
 /** Preferred group-scoped names; round-prefixed aliases remain for compatibility. */
 export type GroupMessageDto = RoundMessageDto;
 export type GroupMessagesResponse = RoundMessagesResponse;
+
+/** A gap longer than this starts a new author block, so the avatar and name show again. */
+export const AUTHOR_RUN_GAP_MS = 5 * 60 * 1000;
+
+/**
+ * True when `current` continues a run of user messages from the same author,
+ * close in time. Both chat UIs use it to hide the repeated avatar and name.
+ */
+export function continuesAuthorRun(
+  previous: Pick<RoundMessageDto, "kind" | "user" | "createdAt"> | undefined,
+  current: Pick<RoundMessageDto, "kind" | "user" | "createdAt">
+): boolean {
+  if (!previous || previous.kind !== "user" || current.kind !== "user") return false;
+  if (previous.user == null || current.user == null || previous.user.id !== current.user.id) {
+    return false;
+  }
+  const gap = new Date(current.createdAt).getTime() - new Date(previous.createdAt).getTime();
+  return gap <= AUTHOR_RUN_GAP_MS;
+}
